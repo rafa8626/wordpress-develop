@@ -1758,6 +1758,7 @@ final class WP_Customize_Manager {
 							'value'     => $setting->js_value(),
 							'transport' => $setting->transport,
 							'dirty'     => $setting->dirty,
+							'type'      => $setting->type,
 						) )
 					);
 				}
