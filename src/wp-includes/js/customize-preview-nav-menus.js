@@ -291,7 +291,7 @@
 
 			selector = menuSelectors.join( ',' );
 
-			$( selector ).attr( 'title', settings.l10n.menuTooltip );
+			$( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
 
 			// Open expand the widget control when shift+clicking the widget element
 			$(document).on( 'click', selector, function ( e ) {
