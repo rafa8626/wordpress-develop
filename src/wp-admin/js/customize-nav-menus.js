@@ -2447,7 +2447,7 @@
 		});
 
 		// Open and focus menu control
-		api.previewer.bind( 'focus-menu-control', api.Menus.focusMenuControl );
+		api.previewer.bind( 'focus-nav-menu-item-control', api.Menus.focusMenuItemControl );
 	} );
 
 	/**
@@ -2688,19 +2688,6 @@
 				setting.preview(); // Send to the preview now so that menu refresh will use the inserted menu.
 			}
 		});
-	};
-
-	/**
-	 * Focus a menu control.
-	 *
-	 * @param {string} menuId
-	 */
-	api.Menus.focusMenuControl = function( menuId ) {
-		var control = api.Menus.getMenuControl( menuId );
-
-		if ( control ) {
-			control.focus();
-		}
 	};
 
 	/**

@@ -278,47 +278,32 @@
 		},
 
 		highlightControls : function() {
-			var menuSelectors = [],
-				selector,
-				menuId,
-				matches,
-				instance,
-				instanceNumber;
-
-			_.each( settings.navMenuInstanceArgs, function( instance, instanceNumber ) {
-				menuSelectors.push( '.partial-refreshable-nav-menu-' + String( instanceNumber ) );
-			} );
-
-			selector = menuSelectors.join( ',' );
+			var selector = '.menu-item',
+				navMenuItemParts,
+				navMenuItemID;
 
 			$( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
 
-			// Open expand the widget control when shift+clicking the widget element
-			$(document).on( 'click', selector, function ( e ) {
+			// Open expand the menu item control when shift+clicking the menu item
+			$( document ).on( 'click', selector, function ( e ) {
 				if ( ! e.shiftKey ) {
 					return;
 				}
 				e.preventDefault();
 
-				matches = $( this ).attr( 'class' ).match( /partial-refreshable-nav-menu-(\d+)/ );
-				instanceNumber = parseInt( matches[1], 10 );
+				navMenuItemParts = $( this ).attr( 'id' ).match( /menu-item-(\d+)/ );
+				navMenuItemID = parseInt( navMenuItemParts[1], 10 );
 
-				if ( ! settings.navMenuInstanceArgs[ instanceNumber ] ) {
-					throw new Error( 'unknown_instance_number' );
+				if ( 'undefined' === typeof navMenuItemID ) {
+					throw new Error( 'Expected navMenuItemID property to be set.' );
 				}
 
-				instance = settings.navMenuInstanceArgs[ instanceNumber ];
-
-				if ( _.isNumber( instance.menu ) ) {
-					menuId = instance.menu;
-				} else if ( instance.theme_location && api.has( 'nav_menu_locations[' + instance.theme_location + ']' ) ) {
-					menuId = api( 'nav_menu_locations[' + instance.theme_location + ']' ).get();
-				}
-
-				if ( menuId ) {
-					api.preview.send( 'focus-menu-control', menuId );
-				}
+				api.preview.send( 'focus-nav-menu-item-control', navMenuItemID );
 			});
+
+			$( document ).on( 'customize-preview-menu-refreshed', function() {
+				$( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
+			} );
 		}
 	};
 
