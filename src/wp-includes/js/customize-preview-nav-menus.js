@@ -283,7 +283,6 @@
 		highlightControls: function() {
 			var selector = '.menu-item[id^=menu-item-]',
 				navMenuItemParts,
-				navMenuItemID,
 				addTooltips;
 
 			// Open expand the menu item control when shift+clicking the menu item
@@ -291,10 +290,11 @@
 				if ( ! e.shiftKey ) {
 					return;
 				}
-				e.preventDefault();
 
 				navMenuItemParts = $( this ).attr( 'id' ).match( /^menu-item-(\d+)$/ );
 				if ( navMenuItemParts ) {
+					e.preventDefault();
+					e.stopPropagation(); // Make sure a sub-nav menu item will get focused instead of parent items.
 					api.preview.send( 'focus-nav-menu-item-control', parseInt( navMenuItemParts[1], 10 ) );
 				}
 			});
