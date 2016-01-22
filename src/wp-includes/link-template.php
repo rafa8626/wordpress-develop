@@ -926,9 +926,8 @@ function get_edit_term_link( $term_id, $taxonomy, $object_type = '' ) {
 	}
 
 	$args = array(
-		'action' => 'edit',
 		'taxonomy' => $taxonomy,
-		'tag_ID' => $term->term_id,
+		'term_id'  => $term->term_id,
 	);
 
 	if ( $object_type ) {
@@ -938,7 +937,7 @@ function get_edit_term_link( $term_id, $taxonomy, $object_type = '' ) {
 	}
 
 	if ( $tax->show_ui ) {
-		$location = add_query_arg( $args, admin_url( 'edit-tags.php' ) );
+		$location = add_query_arg( $args, admin_url( 'term.php' ) );
 	} else {
 		$location = '';
 	}
@@ -1110,19 +1109,33 @@ function get_search_comments_feed_link($search_query = '', $feed = '') {
 }
 
 /**
- * Retrieve the permalink for a post type archive.
+ * Retrieves the permalink for a post type archive.
  *
  * @since 3.1.0
+ * @since 4.5.0 Support for posts was added.
  *
  * @global WP_Rewrite $wp_rewrite
  *
- * @param string $post_type Post type
+ * @param string $post_type Post type.
  * @return string|false The post type archive permalink.
  */
 function get_post_type_archive_link( $post_type ) {
 	global $wp_rewrite;
 	if ( ! $post_type_obj = get_post_type_object( $post_type ) )
 		return false;
+
+	if ( 'post' === $post_type ) {
+		$show_on_front = get_option( 'show_on_front' );
+		$page_for_posts  = get_option( 'page_for_posts' );
+
+		if ( 'page' == $show_on_front && $page_for_posts ) {
+			$link = get_permalink( $page_for_posts );
+		} else {
+			$link = get_home_url();
+		}
+		/** This filter is documented in wp-includes/link-template.php */
+		return apply_filters( 'post_type_archive_link', $link, $post_type );
+	}
 
 	if ( ! $post_type_obj->has_archive )
 		return false;

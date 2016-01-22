@@ -114,6 +114,13 @@
 	clear: both;
 }
 
+/* modern clearfix */
+.wp-clearfix:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
 /* Hide visually but not from screen readers */
 .screen-reader-text,
 .screen-reader-text span,
@@ -267,11 +274,11 @@ a:active {
 a:focus,
 a:focus .media-icon img {
 	color: #124964;
-    -webkit-box-shadow:
-    	0 0 0 1px #5b9dd9,
+	-webkit-box-shadow:
+		0 0 0 1px #5b9dd9,
 		0 0 2px 1px rgba(30, 140, 190, .8);
-    box-shadow:
-    	0 0 0 1px #5b9dd9,
+	box-shadow:
+		0 0 0 1px #5b9dd9,
 		0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
@@ -1663,7 +1670,7 @@ form.upgrade .hint {
 }
 
 .screen-options + .screen-options {
-    margin-top: 10px;
+	margin-top: 10px;
 }
 
 .metabox-prefs .submit {
@@ -1836,6 +1843,23 @@ html.wp-toolbar {
 .metabox-holder .postbox-container .empty-container {
 	border: 3px dashed #b4b9be;
 	height: 250px;
+	position: relative;
+}
+
+.metabox-holder .postbox-container .empty-container:after {
+	content: attr(data-emptystring);
+	margin: auto;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	height: 1em;
+	width: 200px;
+	text-align: center;
+	color: #ccc;
+	font-size:18px;
+	display: none;
 }
 
 .metabox-holder.columns-1 .postbox-container .empty-container,
@@ -2060,15 +2084,22 @@ h1.nav-tab-wrapper, /* Back-compat for pre-4.4 */
 h3.nav-tab-wrapper {
 	border-bottom: 1px solid #ccc;
 	margin: 0;
-	padding: 9px 15px 0 0;
+	padding-top: 9px;
 	line-height: inherit;
 }
 
-/* contain floats */
-.nav-tab-wrapper:after {
-	content: "";
-	display: table;
-	clear: both;
+/* Back-compat for plugins. Deprecated. Use .wp-clearfix instead. */
+.nav-tab-wrapper:not(.wp-clearfix):after {
+ 	content: "";
+ 	display: table;
+ 	clear: both;
+ }
+
+.ie8 .nav-tab-wrapper {
+	/* contain floats establishing a new block formatting context */
+	display: inline-block;
+	width: 100%;
+	vertical-align: top;
 }
 
 /*------------------------------------------------------------------------------
@@ -2938,10 +2969,10 @@ img {
 
 .js .postbox .handlediv:focus .toggle-indicator:before {
 	-webkit-box-shadow:
-    	0 0 0 1px #5b9dd9,
+		0 0 0 1px #5b9dd9,
 		0 0 2px 1px rgba(30, 140, 190, .8);
-    box-shadow:
-    	0 0 0 1px #5b9dd9,
+	box-shadow:
+		0 0 0 1px #5b9dd9,
 		0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
@@ -3635,15 +3666,13 @@ img {
 	h1.nav-tab-wrapper,
 	.wrap h2.nav-tab-wrapper,
 	h3.nav-tab-wrapper {
-		padding-left: 0;
 		border-bottom: 0;
 	}
 
 	h1 .nav-tab,
 	h2 .nav-tab,
 	h3 .nav-tab {
-		margin-top: 10px;
-		margin-right: 10px;
+		margin: 10px 10px 0 0;
 		border-bottom: 1px solid #ccc;
 	}
 }

@@ -83,7 +83,7 @@ validateForm = function( form ) {
 		.addClass( 'form-invalid' )
 		.find( 'input:visible' )
 		.change( function() { $( this ).closest( '.form-invalid' ).removeClass( 'form-invalid' ); } )
-		.size();
+		.length;
 };
 
 // stub for doing better warnings
@@ -397,7 +397,7 @@ $document.ready( function() {
 	 * The `.below-h2` class is here just for backwards compatibility with plugins
 	 * that are (incorrectly) using it. Do not use. Use `.inline` instead. See #34570.
 	 */
-	$( 'div.updated, div.error, div.notice' ).not( '.inline, .below-h2' ).insertAfter( $( '.wrap' ).children( ':header' ).first() );
+	$( 'div.updated, div.error, div.notice' ).not( '.inline, .below-h2' ).insertAfter( $( '.wrap h1, .wrap h2' ).first() );
 
 	// Make notices dismissible
 	function makeNoticesDismissible() {
