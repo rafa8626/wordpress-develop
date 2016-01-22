@@ -277,7 +277,10 @@
 			);
 		},
 
-		highlightControls : function() {
+		/**
+		 * Connect nav menu items with their corresponding controls in the pane.
+		 */
+		highlightControls: function() {
 			var selector = '.menu-item',
 				navMenuItemParts,
 				navMenuItemID;

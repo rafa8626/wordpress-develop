@@ -2446,7 +2446,7 @@
 			api.previewer.refresh();
 		});
 
-		// Open and focus menu control
+		// Open and focus menu control.
 		api.previewer.bind( 'focus-nav-menu-item-control', api.Menus.focusMenuItemControl );
 	} );
 
