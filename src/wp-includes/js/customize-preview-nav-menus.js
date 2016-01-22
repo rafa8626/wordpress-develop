@@ -283,12 +283,11 @@
 		highlightControls: function() {
 			var selector = '.menu-item',
 				navMenuItemParts,
-				navMenuItemID;
-
-			$( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
+				navMenuItemID,
+				addTooltips;
 
 			// Open expand the menu item control when shift+clicking the menu item
-			$( document ).on( 'click', selector, function ( e ) {
+			$( document ).on( 'click', selector, function( e ) {
 				if ( ! e.shiftKey ) {
 					return;
 				}
@@ -304,9 +303,12 @@
 				api.preview.send( 'focus-nav-menu-item-control', navMenuItemID );
 			});
 
-			$( document ).on( 'customize-preview-menu-refreshed', function() {
-				$( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
-			} );
+			addTooltips = function( e, params ) {
+				params.newContainer.find( selector ).attr( 'title', settings.l10n.editNavMenuItemTooltip );
+			};
+
+			addTooltips( null, { newContainer: $( document.body ) } );
+			$( document ).on( 'customize-preview-menu-refreshed', addTooltips );
 		}
 	};
 
