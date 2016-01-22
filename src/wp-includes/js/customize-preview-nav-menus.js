@@ -281,7 +281,7 @@
 		 * Connect nav menu items with their corresponding controls in the pane.
 		 */
 		highlightControls: function() {
-			var selector = '.menu-item',
+			var selector = '.menu-item[id^=menu-item-]',
 				navMenuItemParts,
 				navMenuItemID,
 				addTooltips;
@@ -293,14 +293,10 @@
 				}
 				e.preventDefault();
 
-				navMenuItemParts = $( this ).attr( 'id' ).match( /menu-item-(\d+)/ );
-				navMenuItemID = parseInt( navMenuItemParts[1], 10 );
-
-				if ( 'undefined' === typeof navMenuItemID ) {
-					throw new Error( 'Expected navMenuItemID property to be set.' );
+				navMenuItemParts = $( this ).attr( 'id' ).match( /^menu-item-(\d+)$/ );
+				if ( navMenuItemParts ) {
+					api.preview.send( 'focus-nav-menu-item-control', parseInt( navMenuItemParts[1], 10 ) );
 				}
-
-				api.preview.send( 'focus-nav-menu-item-control', navMenuItemID );
 			});
 
 			addTooltips = function( e, params ) {
