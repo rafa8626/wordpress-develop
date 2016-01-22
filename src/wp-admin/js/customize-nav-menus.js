@@ -216,7 +216,7 @@
 					.prop( 'tabIndex', -1 )
 					.removeClass( 'is-visible' );
 			}
-			
+
 			this.searchTerm = event.target.value;
 			this.pages.search = 1;
 			this.doSearch( 1 );
@@ -631,12 +631,10 @@
 		},
 
 		hidden: function() {
-			this.hidden = function() {
-				return $( '.hide-column-tog' ).not( ':checked' ).map( function() {
-					var id = this.id;
-					return id.substring( id, id.length - 5 );
-				}).get().join( ',' );
-			};
+			return $( '.hide-column-tog' ).not( ':checked' ).map( function() {
+				var id = this.id;
+				return id.substring( 0, id.length - 5 );
+			}).get().join( ',' );
 		}
 	} );
 
