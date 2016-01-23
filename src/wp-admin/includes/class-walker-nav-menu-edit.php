@@ -151,44 +151,58 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 			</div>
 
 			<div class="menu-item-settings" id="menu-item-settings-<?php echo $item_id; ?>">
-				<?php if ( 'custom' == $item->type ) : ?>
+				<?php $nav_menu_item_fields = array(); ?>
+				<?php if ( 'custom' === $item->type ) : ?>
+					<?php ob_start(); ?>
 					<p class="field-url description description-wide">
 						<label for="edit-menu-item-url-<?php echo $item_id; ?>">
 							<?php _e( 'URL' ); ?><br />
 							<input type="text" id="edit-menu-item-url-<?php echo $item_id; ?>" class="widefat code edit-menu-item-url" name="menu-item-url[<?php echo $item_id; ?>]" value="<?php echo esc_attr( $item->url ); ?>" />
 						</label>
 					</p>
+					<?php $nav_menu_item_fields['custom'] = ob_get_clean(); ?>
 				<?php endif; ?>
+				<?php ob_start(); ?>
 				<p class="description description-wide">
 					<label for="edit-menu-item-title-<?php echo $item_id; ?>">
 						<?php _e( 'Navigation Label' ); ?><br />
 						<input type="text" id="edit-menu-item-title-<?php echo $item_id; ?>" class="widefat edit-menu-item-title" name="menu-item-title[<?php echo $item_id; ?>]" value="<?php echo esc_attr( $item->title ); ?>" />
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['title'] = ob_get_clean(); ?>
+				<?php ob_start(); ?>
 				<p class="field-title-attribute description description-wide">
 					<label for="edit-menu-item-attr-title-<?php echo $item_id; ?>">
 						<?php _e( 'Title Attribute' ); ?><br />
 						<input type="text" id="edit-menu-item-attr-title-<?php echo $item_id; ?>" class="widefat edit-menu-item-attr-title" name="menu-item-attr-title[<?php echo $item_id; ?>]" value="<?php echo esc_attr( $item->post_excerpt ); ?>" />
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['attr-title'] = ob_get_clean(); ?>
+				<?php ob_start(); ?>
 				<p class="field-link-target description">
 					<label for="edit-menu-item-target-<?php echo $item_id; ?>">
 						<input type="checkbox" id="edit-menu-item-target-<?php echo $item_id; ?>" value="_blank" name="menu-item-target[<?php echo $item_id; ?>]"<?php checked( $item->target, '_blank' ); ?> />
 						<?php _e( 'Open link in a new tab' ); ?>
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['link-target'] = ob_get_clean(); ?>
+				<?php ob_start(); ?>
 				<p class="field-css-classes description description-thin">
 					<label for="edit-menu-item-classes-<?php echo $item_id; ?>">
 						<?php _e( 'CSS Classes (optional)' ); ?><br />
 						<input type="text" id="edit-menu-item-classes-<?php echo $item_id; ?>" class="widefat code edit-menu-item-classes" name="menu-item-classes[<?php echo $item_id; ?>]" value="<?php echo esc_attr( implode(' ', $item->classes ) ); ?>" />
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['css-classes'] = ob_get_clean(); ?>
+				<?php ob_start(); ?>
 				<p class="field-xfn description description-thin">
 					<label for="edit-menu-item-xfn-<?php echo $item_id; ?>">
 						<?php _e( 'Link Relationship (XFN)' ); ?><br />
 						<input type="text" id="edit-menu-item-xfn-<?php echo $item_id; ?>" class="widefat code edit-menu-item-xfn" name="menu-item-xfn[<?php echo $item_id; ?>]" value="<?php echo esc_attr( $item->xfn ); ?>" />
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['xfn'] = ob_get_clean(); ?>
+				<?php ob_start(); ?>
 				<p class="field-description description description-wide">
 					<label for="edit-menu-item-description-<?php echo $item_id; ?>">
 						<?php _e( 'Description' ); ?><br />
@@ -196,6 +210,30 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 						<span class="description"><?php _e('The description will be displayed in the menu if the current theme supports it.'); ?></span>
 					</label>
 				</p>
+				<?php $nav_menu_item_fields['description'] = ob_get_clean(); ?>
+
+				<?php
+				/**
+				 * Filter the nav menu fields to edit.
+				 *
+				 * This filter applies on the nav menus admin page for a specific nav menu item.
+				 *
+				 * @since 4.5.0
+				 *
+				 * @param array $nav_menu_item_fields Mapping of ID to the field paragraph HTML.
+				 * @param array $context {
+				 *     Context for applied filter.
+				 *
+				 *     @type Walker_Nav_Menu_Edit $walker Nav menu walker.
+				 *     @type object               $item   Menu item data object.
+				 *     @type int                  $depth  Current depth.
+				 * }
+				 */
+				$walker = $this;
+				$nav_menu_item_fields = apply_filters( 'wp_nav_menu_item_fields', $nav_menu_item_fields, compact( 'item', 'depth', 'walker' ) );
+
+				echo join( "\n", array_values( $nav_menu_item_fields ) );
+				?>
 
 				<p class="field-move hide-if-no-js description description-wide">
 					<label>

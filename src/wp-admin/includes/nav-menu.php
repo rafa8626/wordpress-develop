@@ -940,14 +940,25 @@ function wp_get_nav_menu_to_edit( $menu_id = 0 ) {
  * @return array Columns.
  */
 function wp_nav_menu_manage_columns() {
-	return array(
-		'_title'      => __( 'Show advanced menu properties' ),
-		'cb'          => '<input type="checkbox" />',
+	$columns = array(
 		'link-target' => __( 'Link Target' ),
 		'attr-title'  => __( 'Title Attribute' ),
 		'css-classes' => __( 'CSS Classes' ),
 		'xfn'         => __( 'Link Relationship (XFN)' ),
 		'description' => __( 'Description' ),
+	);
+
+	/**
+	 * Filter columns which can be toggled on the nav menu page.
+	 */
+	$columns = apply_filters( 'wp_nav_menu_manage_columns', $columns );
+
+	return array_merge(
+		array(
+			'_title' => __( 'Show advanced menu properties' ),
+			'cb'     => '<input type="checkbox" />',
+		),
+		$columns
 	);
 }
 
