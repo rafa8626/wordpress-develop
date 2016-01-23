@@ -3605,9 +3605,11 @@
 		// Bind site title display to the corresponding field.
 		if ( title.length ) {
 			api( 'blogname', function( setting ) {
-				setting.bind( function( value ) {
-					title.text( $.trim( value ) || api.l10n.untitledBlogName );
-				} );
+				var updateTitle = function() {
+					title.text( $.trim( setting() ) || api.l10n.untitledBlogName );
+				};
+				setting.bind( updateTitle );
+				updateTitle();
 			} );
 		}
 
