@@ -937,7 +937,7 @@ function wp_get_nav_menu_to_edit( $menu_id = 0 ) {
  *
  * @since 3.0.0
  *
- * @return string|WP_Error $output The menu formatted to edit or error object on failure.
+ * @return array Columns.
  */
 function wp_nav_menu_manage_columns() {
 	return array(
