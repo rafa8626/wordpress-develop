@@ -99,17 +99,24 @@
 		/**
 		 * Create/update a setting value.
 		 *
-		 * @param {string} id    - Setting ID.
-		 * @param {*}      value - Setting value.
+		 * @param {string}  id            - Setting ID.
+		 * @param {*}       value         - Setting value.
+		 * @param {boolean} [createDirty] - Whether to create a setting as dirty. Defaults to false.
 		 */
-		setValue = function( id, value ) {
+		setValue = function( id, value, createDirty ) {
 			var setting = api( id );
 			if ( setting ) {
 				setting.set( value );
 			} else {
-				api.create( id, value, {
+				createDirty = createDirty || false;
+				setting = api.create( id, value, {
 					id: id
 				} );
+
+				// Mark dynamically-created settings as dirty so they will get posted.
+				if ( createDirty ) {
+					setting._dirty = true;
+				}
 			}
 		};
 
@@ -127,7 +134,8 @@
 		} );
 
 		api.preview.bind( 'setting', function( args ) {
-			setValue.apply( null, args.slice() );
+			var createDirty = true;
+			setValue.apply( null, args.concat( createDirty ) );
 		});
 
 		api.preview.bind( 'sync', function( events ) {
