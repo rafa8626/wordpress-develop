@@ -84,35 +84,50 @@
 	});
 
 	$( function() {
-		api.settings = window._wpCustomizeSettings;
-		if ( ! api.settings )
-			return;
+		var bg, setValue;
 
-		var bg;
+		api.settings = window._wpCustomizeSettings;
+		if ( ! api.settings ) {
+			return;
+		}
 
 		api.preview = new api.Preview({
 			url: window.location.href,
 			channel: api.settings.channel
 		});
 
+		/**
+		 * Create/update a setting value.
+		 *
+		 * @param {string} id    - Setting ID.
+		 * @param {*}      value - Setting value.
+		 */
+		setValue = function( id, value ) {
+			var setting = api( id );
+			if ( setting ) {
+				setting.set( value );
+			} else {
+				api.create( id, value, {
+					id: id
+				} );
+			}
+		};
+
 		api.preview.bind( 'settings', function( values ) {
-			$.each( values, function( id, value ) {
-				if ( api.has( id ) )
-					api( id ).set( value );
-				else
-					api.create( id, value );
-			});
+			$.each( values, setValue );
 		});
 
 		api.preview.trigger( 'settings', api.settings.values );
 
+		$.each( api.settings._dirty, function( i, id ) {
+			var setting = api( id );
+			if ( setting ) {
+				setting._dirty = true;
+			}
+		} );
+
 		api.preview.bind( 'setting', function( args ) {
-			var value;
-
-			args = args.slice();
-
-			if ( value = api( args.shift() ) )
-				value.set.apply( value, args );
+			setValue.apply( null, args.slice() );
 		});
 
 		api.preview.bind( 'sync', function( events ) {
@@ -129,6 +144,16 @@
 
 			api.preview.send( 'documentTitle', document.title );
 		});
+
+		api.preview.bind( 'saved', function( response ) {
+			api.trigger( 'saved', response );
+		} );
+
+		api.bind( 'saved', function() {
+			api.each( function( setting ) {
+				setting._dirty = false;
+			} );
+		} );
 
 		/*
 		 * Send a message to the parent customize frame with a list of which
