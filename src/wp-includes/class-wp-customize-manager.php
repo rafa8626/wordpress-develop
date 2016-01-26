@@ -801,6 +801,10 @@ final class WP_Customize_Manager {
 	 */
 	public function customize_preview_settings() {
 		$settings = array(
+			'theme'    => array(
+				'stylesheet' => $this->get_stylesheet(),
+				'active'     => $this->is_theme_active(),
+			),
 			'channel' => wp_unslash( $_POST['customize_messenger_channel'] ),
 			'activePanels' => array(),
 			'activeSections' => array(),
@@ -808,12 +812,13 @@ final class WP_Customize_Manager {
 			'_dirty' => array_keys( $this->unsanitized_post_values() ),
 		);
 
-		if ( 2 == $this->nonce_tick ) {
-			$settings['nonce'] = array(
-				'save' => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
-				'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() )
-			);
-		}
+		$settings['nonce'] = array(
+			'save' => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
+			'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
+		);
+
+		/** This filter is documented in wp-includes/class-wp-customize-manager.php */
+		$settings['nonce'] = apply_filters( 'customize_refresh_nonces', $settings['nonce'], $this );
 
 		foreach ( $this->panels as $panel_id => $panel ) {
 			if ( $panel->check_capabilities() ) {
@@ -1702,6 +1707,9 @@ final class WP_Customize_Manager {
 			'autofocus' => array(),
 			'documentTitleTmpl' => $this->get_document_title_template(),
 		);
+
+		/** This filter is documented in wp-includes/class-wp-customize-manager.php */
+		$settings['nonce'] = apply_filters( 'customize_refresh_nonces', $settings['nonce'], $this );
 
 		// Prepare Customize Section objects to pass to JavaScript.
 		foreach ( $this->sections() as $id => $section ) {
