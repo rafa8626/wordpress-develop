@@ -369,6 +369,36 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test get_nonces() methods.
+	 *
+	 * @see WP_Customize_Manager::get_nonces()
+	 */
+	function test_nonces() {
+		$nonces = $this->manager->get_nonces();
+		$this->assertInternalType( 'array', $nonces );
+		$this->assertArrayHasKey( 'save', $nonces );
+		$this->assertArrayHasKey( 'preview', $nonces );
+
+		add_filter( 'customize_refresh_nonces', array( $this, 'filter_customize_refresh_nonces' ), 10, 2 );
+		$nonces = $this->manager->get_nonces();
+		$this->assertArrayHasKey( 'foo', $nonces );
+		$this->assertEquals( wp_create_nonce( 'foo' ), $nonces['foo'] );
+	}
+
+	/**
+	 * Filter for customize_refresh_nonces.
+	 *
+	 * @param array                $nonces  Nonces.
+	 * @param WP_Customize_Manager $manager Manager.
+	 * @return array Nonces.
+	 */
+	function filter_customize_refresh_nonces( $nonces, $manager ) {
+		$this->assertInstanceOf( 'WP_Customize_Manager', $manager );
+		$nonces['foo'] = wp_create_nonce( 'foo' );
+		return $nonces;
+	}
+
+	/**
 	 * Test customize_pane_settings() method.
 	 *
 	 * @see WP_Customize_Manager::customize_pane_settings()

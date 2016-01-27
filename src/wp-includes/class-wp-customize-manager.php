@@ -809,16 +809,9 @@ final class WP_Customize_Manager {
 			'activePanels' => array(),
 			'activeSections' => array(),
 			'activeControls' => array(),
+			'nonce' => $this->get_nonces(),
 			'_dirty' => array_keys( $this->unsanitized_post_values() ),
 		);
-
-		$settings['nonce'] = array(
-			'save' => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
-			'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
-		);
-
-		/** This filter is documented in wp-includes/class-wp-customize-manager.php */
-		$settings['nonce'] = apply_filters( 'customize_refresh_nonces', $settings['nonce'], $this );
 
 		foreach ( $this->panels as $panel_id => $panel ) {
 			if ( $panel->check_capabilities() ) {
@@ -1030,22 +1023,7 @@ final class WP_Customize_Manager {
 			wp_send_json_error( 'not_preview' );
 		}
 
-		$nonces = array(
-			'save'    => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
-			'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
-		);
-
-		/**
-		 * Filter nonces for a customize_refresh_nonces AJAX request.
-		 *
-		 * @since 4.2.0
-		 *
-		 * @param array                $nonces Array of refreshed nonces for save and
-		 *                                     preview actions.
-		 * @param WP_Customize_Manager $this   WP_Customize_Manager instance.
-		 */
-		$nonces = apply_filters( 'customize_refresh_nonces', $nonces, $this );
-		wp_send_json_success( $nonces );
+		wp_send_json_success( $this->get_nonces() );
 	}
 
 	/**
@@ -1641,6 +1619,32 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Get nonces for the Customizer.
+	 *
+	 * @since 4.5.0
+	 * @return array Nonces.
+	 */
+	public function get_nonces() {
+		$nonces = array(
+			'save' => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
+			'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
+		);
+
+		/**
+		 * Filter nonces for Customizer.
+		 *
+		 * @since 4.2.0
+		 *
+		 * @param array                $nonces Array of refreshed nonces for save and
+		 *                                     preview actions.
+		 * @param WP_Customize_Manager $this   WP_Customize_Manager instance.
+		 */
+		$nonces = apply_filters( 'customize_refresh_nonces', $nonces, $this );
+
+		return $nonces;
+	}
+
+	/**
 	 * Print JavaScript settings for parent window.
 	 *
 	 * @since 4.4.0
@@ -1700,16 +1704,10 @@ final class WP_Customize_Manager {
 			),
 			'panels'   => array(),
 			'sections' => array(),
-			'nonce'    => array(
-				'save'    => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
-				'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
-			),
+			'nonce'    => $this->get_nonces(),
 			'autofocus' => array(),
 			'documentTitleTmpl' => $this->get_document_title_template(),
 		);
-
-		/** This filter is documented in wp-includes/class-wp-customize-manager.php */
-		$settings['nonce'] = apply_filters( 'customize_refresh_nonces', $settings['nonce'], $this );
 
 		// Prepare Customize Section objects to pass to JavaScript.
 		foreach ( $this->sections() as $id => $section ) {
