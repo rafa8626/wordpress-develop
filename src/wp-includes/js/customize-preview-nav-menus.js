@@ -258,6 +258,9 @@
 				container.removeClass( 'customize-partial-refreshing' );
 				$( document ).trigger( 'customize-preview-menu-refreshed', [ eventParam ] );
 			} );
+			request.fail( function() {
+				api.preview.send( 'refresh' );
+			} );
 		},
 
 		refreshMenuInstanceDebounced : function( instanceNumber ) {
