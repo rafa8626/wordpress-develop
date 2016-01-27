@@ -940,11 +940,6 @@ final class WP_Customize_Nav_Menus {
 			'renderNonceValue'      => wp_create_nonce( self::RENDER_AJAX_ACTION ),
 			'renderNoncePostKey'    => self::RENDER_NONCE_POST_KEY,
 			'requestUri'            => empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
-			'theme'                 => array(
-				'stylesheet' => $this->manager->get_stylesheet(),
-				'active'     => $this->manager->is_theme_active(),
-			),
-			'previewCustomizeNonce' => wp_create_nonce( 'preview-customize_' . $this->manager->get_stylesheet() ),
 			'navMenuInstanceArgs'   => $this->preview_nav_menu_instance_args,
 			'l10n'                  => array(
 				'editNavMenuItemTooltip' => __( 'Shift-click to edit this menu item.' ),
