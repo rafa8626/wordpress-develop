@@ -939,7 +939,6 @@ final class WP_Customize_Nav_Menus {
 			'renderQueryVar'        => self::RENDER_QUERY_VAR,
 			'renderNonceValue'      => wp_create_nonce( self::RENDER_AJAX_ACTION ),
 			'renderNoncePostKey'    => self::RENDER_NONCE_POST_KEY,
-			'requestUri'            => empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
 			'navMenuInstanceArgs'   => $this->preview_nav_menu_instance_args,
 			'l10n'                  => array(
 				'editNavMenuItemTooltip' => __( 'Shift-click to edit this menu item.' ),

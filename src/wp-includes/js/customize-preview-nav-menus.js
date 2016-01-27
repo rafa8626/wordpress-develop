@@ -234,7 +234,7 @@
 
 			request = wp.ajax.send( null, {
 				data: data,
-				url: settings.requestUri
+				url: api.settings.url.self
 			} );
 			request.done( function( data ) {
 				// If the menu is now not visible, refresh since the page layout may have changed.
