@@ -152,7 +152,15 @@ do_action( 'customize_controls_print_scripts' );
 			<?php if ( ! empty( $previewable_devices ) ) : ?>
 			<div class="devices">
 				<?php foreach ( $previewable_devices as $device => $settings ) : ?>
-					<button type="button" class="preview-<?php echo $device; if ( isset( $settings['default'] ) && $settings['default'] ) { echo ' active" aria-pressed="true"'; } else { echo '" aria-pressed="false"'; } ?> data-device="<?php esc_attr_e( $device ); ?>">
+					<?php
+					$active = ! empty( $settings['default'] );
+					$class = "preview-$device";
+					if ( $active ) {
+						$class .= ' active';
+					}
+					$aria_pressed = $active ? 'true' : 'false';
+					?>
+					<button type="button" class="<?php echo esc_attr( $class ); ?>" aria-pressed="<?php echo esc_attr( $aria_pressed ) ?>" data-device="<?php echo esc_attr( $device ); ?>">
 						<span class="screen-reader-text"><?php echo $settings['label']; ?></span>
 					</button>
 				<?php endforeach; ?>
