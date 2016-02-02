@@ -1700,8 +1700,8 @@ final class WP_Customize_Manager {
 			),
 			'autofocus' => array(),
 			'documentTitleTmpl' => $this->get_document_title_template(),
+			'previewableDevices' => $this->get_previewable_devices(),
 		);
-		$this->add_setting( 'previewedDevice', array( 'default' => 'desktop' ) );
 
 		// Prepare Customize Section objects to pass to JavaScript.
 		foreach ( $this->sections() as $id => $section ) {
@@ -1775,6 +1775,39 @@ final class WP_Customize_Manager {
 		?>
 		</script>
 		<?php
+	}
+
+	/**
+	 * Returns a list of devices to allow previewing.
+	 *
+	 * @access public
+	 * @since 4.5.0
+	 * @return array List of devices with labels and default setting.
+	 */
+	public function get_previewable_devices() {
+		$devices = array(
+			'desktop' => array(
+				'label' => __( 'Enter desktop preview mode' ),
+				'default' => true,
+			),
+			'tablet' => array(
+				'label' => __( 'Enter tablet preview mode' ),
+			),
+			'mobile' => array(
+				'label' => __( 'Enter mobile preview mode' ),
+			),
+		);
+		/**
+		 * Filter the available devices to allow previewing in the Customizer.
+		 *
+		 * @since 4.5.0
+		 *
+		 * @see WP_Customize_Manager::get_previewable_devices()
+		 *
+		 * @param array $devices List of devices with labels and default setting.
+		 */
+		$devices = apply_filters( 'customize_previewable_devices', $devices );
+		return $devices;
 	}
 
 	/**

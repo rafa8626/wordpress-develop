@@ -1338,10 +1338,14 @@ body.cheatin p {
 	cursor: pointer;
 	background: transparent;
 	border: none;
-	padding: 0;
+	height: 45px;
+	padding: 0 3px;
+	margin: 0 0 0 -4px;
 	box-shadow: none;
-	-webkit-transition: color .1s ease-in-out;
-	transition: color .1s ease-in-out;
+	border-top: 1px solid transparent;
+	border-bottom: 4px solid transparent;
+	-webkit-transition: all .1s ease-in-out;
+	transition: all .1s ease-in-out;
 }
 
 #customize-footer-actions .devices button:focus {
@@ -1354,22 +1358,25 @@ body.cheatin p {
 	-webkit-font-smoothing: antialiased;
 	font: normal 20px/30px "dashicons";
 	vertical-align: top;
-	margin: 3px 1px;
+	margin: 3px 0;
 	padding: 4px 8px;
-	border-radius: 100%;
-	color: #656a6f; /* #82878c; would be better but doesn't meet color contrast guidelines */
+	color: #656a6f;
 }
 
-#customize-footer-actions .devices button.active:before {
-	color: #191e23;
-	box-shadow: 0 0 2px rgba(0, 0, 0, .75);
+#customize-footer-actions .devices button.active {
+	border-bottom-color: #191e23;
 }
 
+#customize-footer-actions .devices button:hover,
+#customize-footer-actions .devices button:focus {
+	background-color: #fff;
+	border-bottom-color: #0073aa;
+}
+
+#customize-footer-actions .devices button.active:before,
 #customize-footer-actions .devices button:hover:before,
 #customize-footer-actions .devices button:focus:before {
 	color: #191e23;
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 .wp-core-ui .wp-full-overlay .collapse-sidebar:hover,

@@ -3603,17 +3603,23 @@
 		});
 
 		// Preview size toggles.
+		api.previewedDevice = new api.Value();
 		$( '#customize-footer-actions .devices button' ).on( 'click', function( event ) {
-			var overlay = $( '.wp-full-overlay' ),
-			    device = $( event.currentTarget ).data( 'device' );
+			api.previewedDevice.set( $( event.currentTarget ).data( 'device' ) );
+		});
+
+		api.previewedDevice.bind( function( newDevice ) {
+			var overlay = $( '.wp-full-overlay' ), devices = '';
 			$( '#customize-footer-actions .devices button' ).removeClass( 'active' )
 			                                                .attr( 'aria-pressed', false );
-			overlay.removeClass( 'preview-full preview-desktop preview-tablet preview-mobile' )
-			       .toggleClass( 'preview-' + device );
-			$( event.currentTarget ).addClass( 'active' )
-			                        .attr( 'aria-pressed', true );
-			api.previewedDevice = device;
-		});
+			$.each( api.settings.previewableDevices, function( device, settings ) {
+				devices = devices + ' preview-' + device;
+			} );
+			overlay.removeClass( devices )
+			       .addClass( 'preview-' + newDevice );
+			$( '#customize-footer-actions .devices' ).find( '.preview-' + newDevice ).addClass( 'active' )
+			                                                                         .attr( 'aria-pressed', true );
+		} );
 
 		// Bind site title display to the corresponding field.
 		if ( title.length ) {
