@@ -161,7 +161,7 @@ function get_taxonomies( $args = array(), $output = 'names', $operator = 'and' )
  * It appears that this function can be used to find all of the names inside of
  * $wp_taxonomies global variable.
  *
- * `<?php $taxonomies = get_object_taxonomies('post'); ?>` Should
+ * `$taxonomies = get_object_taxonomies( 'post' )` Should
  * result in `Array( 'category', 'post_tag' )`
  *
  * @since 2.3.0
@@ -353,8 +353,8 @@ function register_taxonomy( $taxonomy, $object_type, $args = array() ) {
 	 * @since 4.4.0
 	 *
 	 * @param array  $args        Array of arguments for registering a taxonomy.
-	 * @param array  $object_type Array of names of object types for the taxonomy.
 	 * @param string $taxonomy    Taxonomy key.
+	 * @param array  $object_type Array of names of object types for the taxonomy.
 	 */
 	$args = apply_filters( 'register_taxonomy_args', $args, $taxonomy, (array) $object_type );
 
@@ -1354,7 +1354,8 @@ function get_terms( $taxonomies, $args = '' ) {
 	if ( ! empty( $args['name'] ) ) {
 		$names = (array) $args['name'];
 		foreach ( $names as &$_name ) {
-			$_name = sanitize_term_field( 'name', $_name, 0, reset( $taxonomies ), 'db' );
+			// `sanitize_term_field()` returns slashed data.
+			$_name = stripslashes( sanitize_term_field( 'name', $_name, 0, reset( $taxonomies ), 'db' ) );
 		}
 
 		$where .= " AND t.name IN ('" . implode( "', '", array_map( 'esc_sql', $names ) ) . "')";
@@ -3619,11 +3620,13 @@ function clean_term_cache($ids, $taxonomy = '', $clean_taxonomy = true) {
 		 * Fires once after each taxonomy's term cache has been cleaned.
 		 *
 		 * @since 2.5.0
+		 * @since 4.5.0 Added $clean_taxonomy param.
 		 *
-		 * @param array  $ids      An array of term IDs.
-		 * @param string $taxonomy Taxonomy slug.
+		 * @param array  $ids            An array of term IDs.
+		 * @param string $taxonomy       Taxonomy slug.
+		 * @param bool   $clean_taxonomy Whether or not to clean taxonomy-wide caches
 		 */
-		do_action( 'clean_term_cache', $ids, $taxonomy );
+		do_action( 'clean_term_cache', $ids, $taxonomy, $clean_taxonomy );
 	}
 
 	wp_cache_set( 'last_changed', microtime(), 'terms' );
@@ -3721,7 +3724,7 @@ function update_object_term_cache($object_ids, $object_type) {
 function update_term_cache( $terms, $taxonomy = '' ) {
 	foreach ( (array) $terms as $term ) {
 		// Create a copy in case the array was passed by reference.
-		$_term = $term;
+		$_term = clone $term;
 
 		// Object ID should not be cached.
 		unset( $_term->object_id );
