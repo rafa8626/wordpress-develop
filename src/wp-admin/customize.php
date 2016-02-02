@@ -148,9 +148,10 @@ do_action( 'customize_controls_print_scripts' );
 		</div>
 
 		<div id="customize-footer-actions" class="wp-full-overlay-footer">
-			<?php if ( $wp_customize->get_previewable_devices() ) : ?>
+			<?php $previewable_devices = $wp_customize->get_previewable_devices(); ?>
+			<?php if ( ! empty( $previewable_devices ) ) : ?>
 			<div class="devices">
-				<?php foreach ( $wp_customize->get_previewable_devices() as $device => $settings ) : ?>
+				<?php foreach ( $previewable_devices as $device => $settings ) : ?>
 					<button type="button" class="preview-<?php echo $device; if ( isset( $settings['default'] ) && $settings['default'] ) { echo ' active" aria-pressed="true"'; } else { echo '" aria-pressed="false"'; } ?> data-device="<?php esc_attr_e( $device ); ?>">
 						<span class="screen-reader-text"><?php echo $settings['label']; ?></span>
 					</button>
