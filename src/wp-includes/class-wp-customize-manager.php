@@ -1807,6 +1807,7 @@ final class WP_Customize_Manager {
 				'label' => __( 'Enter mobile preview mode' ),
 			),
 		);
+
 		/**
 		 * Filter the available devices to allow previewing in the Customizer.
 		 *

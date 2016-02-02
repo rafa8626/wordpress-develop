@@ -3229,7 +3229,8 @@
 			overlay = body.children( '.wp-full-overlay' ),
 			title = $( '#customize-info .panel-title.site-title' ),
 			closeBtn = $( '.customize-controls-close' ),
-			saveBtn = $( '#save' );
+			saveBtn = $( '#save' ),
+			footerActions = $( '#customize-footer-actions' );
 
 		// Prevent the form from saving when enter is pressed on an input or select element.
 		$('#customize-controls').on( 'keydown', function( e ) {
@@ -3607,21 +3608,24 @@
 
 		// Preview size toggles.
 		api.previewedDevice = new api.Value();
-		$( '#customize-footer-actions .devices button' ).on( 'click', function( event ) {
+		footerActions.find( '.devices button' ).on( 'click', function( event ) {
 			api.previewedDevice.set( $( event.currentTarget ).data( 'device' ) );
 		});
 
 		api.previewedDevice.bind( function( newDevice ) {
 			var overlay = $( '.wp-full-overlay' ), devices = '';
-			$( '#customize-footer-actions .devices button' ).removeClass( 'active' )
-			                                                .attr( 'aria-pressed', false );
-			$.each( api.settings.previewableDevices, function( device, settings ) {
+			footerActions.find( '.devices button' )
+				.removeClass( 'active' )
+				.attr( 'aria-pressed', false );
+			$.each( api.settings.previewableDevices, function( device ) {
 				devices = devices + ' preview-' + device;
 			} );
-			overlay.removeClass( devices )
-			       .addClass( 'preview-' + newDevice );
-			$( '#customize-footer-actions .devices' ).find( '.preview-' + newDevice ).addClass( 'active' )
-			                                                                         .attr( 'aria-pressed', true );
+			overlay
+				.removeClass( devices )
+				.addClass( 'preview-' + newDevice );
+			footerActions.find( '.devices .preview-' + newDevice )
+				.addClass( 'active' )
+				.attr( 'aria-pressed', true );
 		} );
 
 		// Bind site title display to the corresponding field.
