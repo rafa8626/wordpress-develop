@@ -3610,9 +3610,9 @@
 		api.previewedDevice = new api.Value();
 
 		// Set the default device.
-		api.bind( 'ready', function () {
+		api.bind( 'ready', function() {
 			_.find( api.settings.previewableDevices, function( value, key ) {
-				if ( true === value.default ) {
+				if ( true === value['default'] ) {
 					api.previewedDevice.set( key );
 					return true;
 				}
