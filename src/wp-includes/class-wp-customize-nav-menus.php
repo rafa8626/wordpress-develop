@@ -381,6 +381,7 @@ final class WP_Customize_Nav_Menus {
 				'nav_menu'      => $temp_nav_menu_setting->default,
 				'nav_menu_item' => $temp_nav_menu_item_setting->default,
 			),
+			'locationSlugMappedToName' => get_registered_nav_menus(),
 		);
 
 		$data = sprintf( 'var _wpCustomizeNavMenusSettings = %s;', wp_json_encode( $settings ) );
