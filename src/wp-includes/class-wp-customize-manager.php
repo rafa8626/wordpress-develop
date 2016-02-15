@@ -1792,6 +1792,7 @@ final class WP_Customize_Manager {
 	 *
 	 * @access public
 	 * @since 4.5.0
+	 *
 	 * @return array List of devices with labels and default setting.
 	 */
 	public function get_previewable_devices() {
@@ -1818,6 +1819,7 @@ final class WP_Customize_Manager {
 		 * @param array $devices List of devices with labels and default setting.
 		 */
 		$devices = apply_filters( 'customize_previewable_devices', $devices );
+
 		return $devices;
 	}
 

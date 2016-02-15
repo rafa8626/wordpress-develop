@@ -3606,26 +3606,44 @@
 			event.preventDefault();
 		});
 
-		// Preview size toggles.
+		// Previewed device bindings.
 		api.previewedDevice = new api.Value();
+
+		// Set the default device.
+		api.bind( 'ready', function () {
+			_.find( api.settings.previewableDevices, function( value, key ) {
+				if ( true === value.default ) {
+					api.previewedDevice.set( key );
+					return true;
+				}
+			} );
+		} );
+
+		// Set the toggled device.
 		footerActions.find( '.devices button' ).on( 'click', function( event ) {
 			api.previewedDevice.set( $( event.currentTarget ).data( 'device' ) );
 		});
 
+		// Bind device changes.
 		api.previewedDevice.bind( function( newDevice ) {
-			var overlay = $( '.wp-full-overlay' ), devices = '';
+			var overlay = $( '.wp-full-overlay' ),
+				devices = '';
+
 			footerActions.find( '.devices button' )
 				.removeClass( 'active' )
 				.attr( 'aria-pressed', false );
-			$.each( api.settings.previewableDevices, function( device ) {
-				devices = devices + ' preview-' + device;
-			} );
-			overlay
-				.removeClass( devices )
-				.addClass( 'preview-' + newDevice );
+
 			footerActions.find( '.devices .preview-' + newDevice )
 				.addClass( 'active' )
 				.attr( 'aria-pressed', true );
+
+			$.each( api.settings.previewableDevices, function( device ) {
+				devices += ' preview-' + device;
+			} );
+
+			overlay
+				.removeClass( devices )
+				.addClass( 'preview-' + newDevice );
 		} );
 
 		// Bind site title display to the corresponding field.

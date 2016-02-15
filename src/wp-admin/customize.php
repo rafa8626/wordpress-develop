@@ -151,17 +151,19 @@ do_action( 'customize_controls_print_scripts' );
 			<?php $previewable_devices = $wp_customize->get_previewable_devices(); ?>
 			<?php if ( ! empty( $previewable_devices ) ) : ?>
 			<div class="devices">
-				<?php foreach ( $previewable_devices as $device => $settings ) : ?>
+				<?php foreach ( (array) $previewable_devices as $device => $settings ) : ?>
 					<?php
+					if ( empty( $settings['label'] ) ) {
+						continue;
+					}
 					$active = ! empty( $settings['default'] );
-					$class = "preview-$device";
+					$class = 'preview-' . $device;
 					if ( $active ) {
 						$class .= ' active';
 					}
-					$aria_pressed = $active ? 'true' : 'false';
 					?>
-					<button type="button" class="<?php echo esc_attr( $class ); ?>" aria-pressed="<?php echo esc_attr( $aria_pressed ) ?>" data-device="<?php echo esc_attr( $device ); ?>">
-						<span class="screen-reader-text"><?php echo $settings['label']; ?></span>
+					<button type="button" class="<?php echo esc_attr( $class ); ?>" aria-pressed="<?php echo esc_attr( $active ) ?>" data-device="<?php echo esc_attr( $device ); ?>">
+						<span class="screen-reader-text"><?php echo esc_html( $settings['label'] ); ?></span>
 					</button>
 				<?php endforeach; ?>
 			</div>
