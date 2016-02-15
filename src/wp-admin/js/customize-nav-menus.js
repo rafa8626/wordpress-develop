@@ -24,7 +24,8 @@
 		defaultSettingValues: {
 			nav_menu: {},
 			nav_menu_item: {}
-		}
+		},
+		locationSlugMappedToName: {}
 	};
 	if ( 'undefined' !== typeof _wpCustomizeNavMenusSettings ) {
 		$.extend( api.Menus.data, _wpCustomizeNavMenusSettings );
@@ -812,8 +813,9 @@
 			$title = section.container.find( '.accordion-section-title:first' );
 			$title.find( '.menu-in-location' ).remove();
 			_.each( themeLocationSlugs, function( themeLocationSlug ) {
-				var $label = $( '<span class="menu-in-location"></span>' );
-				var locationName = api.Menus.data.locationSlugMappedToName[ themeLocationSlug ];
+				var $label, locationName;
+				$label = $( '<span class="menu-in-location"></span>' );
+				locationName = api.Menus.data.locationSlugMappedToName[ themeLocationSlug ];
 				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', locationName ) );
 				$title.append( $label );
 			});
