@@ -1528,11 +1528,10 @@ final class WP_Customize_Widgets {
 
 		wp_enqueue_script( 'customize-preview-widgets' );
 		wp_enqueue_style( 'customize-preview' );
-		wp_enqueue_style( 'customize-partial-refresh-widgets-preview' );
 	}
 
 	/**
-	 * Keep track of the arguments that are being passed to the_widget().
+	 * Inject selective refresh data attributes into widget container elements.
 	 *
 	 * @param array $params {
 	 *     Dynamic sidebar params.
