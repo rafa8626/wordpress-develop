@@ -129,13 +129,14 @@ class WP_Customize_Partial {
 	 * If `$args['settings']` is not defined, use the $id as the setting ID.
 	 *
 	 * @since 4.5.0
+	 * @access public
 	 *
 	 * @param WP_Customize_Selective_Refresh $component Customize Partial Refresh plugin instance.
 	 * @param string                         $id        Control ID.
 	 * @param array                          $args      {
 	 *     Optional. Arguments to override class property defaults.
 	 *
-	 *     @type array|string  $settings        All settings IDs tied to the partial. If undefined, `$id` will be used.
+	 *     @type array|string $settings All settings IDs tied to the partial. If undefined, `$id` will be used.
 	 * }
 	 */
 	public function __construct( WP_Customize_Selective_Refresh $component, $id, $args = array() ) {
@@ -146,8 +147,8 @@ class WP_Customize_Partial {
 			}
 		}
 
-		$this->component = $component;
-		$this->id = $id;
+		$this->component       = $component;
+		$this->id              = $id;
 		$this->id_data['keys'] = preg_split( '/\[/', str_replace( ']', '', $this->id ) );
 		$this->id_data['base'] = array_shift( $this->id_data['keys'] );
 
@@ -161,13 +162,14 @@ class WP_Customize_Partial {
 		} else if ( is_string( $this->settings ) ) {
 			$this->settings = array( $this->settings );
 		}
+
 		if ( empty( $this->primary_setting ) ) {
 			$this->primary_setting = current( $this->settings );
 		}
 	}
 
 	/**
-	 * Get parsed ID data for multidimensional setting.
+	 * Retrieves parsed ID data for multidimensional setting.
 	 *
 	 * @since 4.5.0
 	 * @access public
@@ -184,18 +186,20 @@ class WP_Customize_Partial {
 	}
 
 	/**
-	 * Render the template partial involving the associated settings.
+	 * Renders the template partial involving the associated settings.
 	 *
 	 * @since 4.5.0
 	 * @access public
 	 *
-	 * @param array $container_context Optional array of context data associated with the target container (placement).
-	 * @return string|array|false The rendered partial as a string, raw data array (for client-side JS template), or false if no render applied.
+	 * @param array $container_context Optional. Array of context data associated with the target container (placement).
+	 *                                 Default empty array.
+	 * @return string|array|false The rendered partial as a string, raw data array (for client-side JS template),
+	 *                            or false if no render applied.
 	 */
 	final public function render( $container_context = array() ) {
-		$partial = $this;
-
+		$partial  = $this;
 		$rendered = false;
+
 		if ( ! empty( $this->render_callback ) ) {
 			ob_start();
 			$return_render = call_user_func( $this->render_callback, $this, $container_context );
@@ -205,33 +209,36 @@ class WP_Customize_Partial {
 				_doing_it_wrong( __FUNCTION__, __( 'Partial render must echo the content or return the content string (or array), but not both.' ), '4.5.0' );
 			}
 
-			// Note that the string return takes precedence because the $ob_render may just include PHP warnings or notices.
-			if ( null !== $return_render ) {
-				$rendered = $return_render;
-			} else {
-				$rendered = $ob_render;
-			}
+			/*
+			 * Note that the string return takes precedence because the $ob_render may just\
+			 * include PHP warnings or notices.
+			 */
+			$rendered = null !== $return_render ? $return_render : $ob_render;
 		}
 
 		/**
-		 * Filter partial rendering.
+		 * Filters partial rendering.
 		 *
 		 * @since 4.5.0
 		 *
 		 * @param string|array|false   $rendered          The partial value. Default false.
 		 * @param WP_Customize_Partial $partial           WP_Customize_Setting instance.
-		 * @param array                $container_context Optional array of context data associated with the target container.
+		 * @param array                $container_context Optional array of context data associated with
+		 *                                                the target container.
 		 */
 		$rendered = apply_filters( 'customize_partial_render', $rendered, $partial, $container_context );
 
 		/**
-		 * Filter partial rendering by the partial ID.
+		 * Filters partial rendering for a specific partial.
+		 *
+		 * The dynamic portion of the hook name, `$partial->ID` refers to the partial ID.
 		 *
 		 * @since 4.5.0
 		 *
 		 * @param string|array|false   $rendered          The partial value. Default false.
 		 * @param WP_Customize_Partial $partial           WP_Customize_Setting instance.
-		 * @param array                $container_context Optional array of context data associated with the target container.
+		 * @param array                $container_context Optional array of context data associated with
+		 *                                                the target container.
 		 */
 		$rendered = apply_filters( "customize_partial_render_{$partial->id}", $rendered, $partial, $container_context );
 
@@ -250,8 +257,8 @@ class WP_Customize_Partial {
 	 * may return an array for supporting Partial JS subclasses to render by
 	 * applying to client-side templating.
 	 *
-	 * @access public
 	 * @since 4.5.0
+	 * @access public
 	 *
 	 * @return string|array|false
 	 */
@@ -260,20 +267,22 @@ class WP_Customize_Partial {
 	}
 
 	/**
-	 * Get the data to export to the client via JSON.
+	 * Retrieves the data to export to the client via JSON.
 	 *
 	 * @since 4.5.0
+	 * @access public
 	 *
 	 * @return array Array of parameters passed to the JavaScript.
 	 */
 	public function json() {
-		$exports = array();
-		$exports['settings'] = $this->settings;
-		$exports['primarySetting'] = $this->primary_setting;
-		$exports['selector'] = $this->selector;
-		$exports['type'] = $this->type;
-		$exports['fallbackRefresh'] = $this->fallback_refresh;
-		$exports['containerInclusive'] = $this->container_inclusive;
+		$exports = array(
+			'settings'           => $this->settings,
+			'primarySetting'     => $this->primary_setting,
+			'selector'           => $this->selector,
+			'type'               => $this->type,
+			'fallbackRefresh'    => $this->fallback_refresh,
+			'containerInclusive' => $this->container_inclusive,
+		);
 		return $exports;
 	}
 }

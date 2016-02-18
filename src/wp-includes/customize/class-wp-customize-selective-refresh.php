@@ -8,7 +8,7 @@
  */
 
 /**
- * WordPress Customize Selective Refresh class
+ * WordPress Customize Selective Refresh class.
  *
  * @since 4.5.0
  */
@@ -29,20 +29,6 @@ class WP_Customize_Selective_Refresh {
 	public $manager;
 
 	/**
-	 * Plugin bootstrap for Partial Refresh functionality.
-	 *
-	 * @since 4.5.0
-	 *
-	 * @param WP_Customize_Manager $manager Manager.
-	 */
-	public function __construct( WP_Customize_Manager $manager ) {
-		$this->manager = $manager;
-		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-partial.php' );
-
-		add_action( 'customize_preview_init', array( $this, 'init_preview' ) );
-	}
-
-	/**
 	 * Registered instances of WP_Customize_Partial.
 	 *
 	 * @since 4.5.0
@@ -52,26 +38,58 @@ class WP_Customize_Selective_Refresh {
 	protected $partials = array();
 
 	/**
-	 * Get the registered partials.
+	 * Log of errors triggered when partials are rendered.
+	 *
+	 * @since 4.5.0
+	 * @access private
+	 * @var array
+	 */
+	protected $triggered_errors = array();
+
+	/**
+	 * Keep track of the current partial being rendered.
+	 *
+	 * @since 4.5.0
+	 * @access private
+	 * @var string
+	 */
+	protected $current_partial_id;
+
+	/**
+	 * Plugin bootstrap for Partial Refresh functionality.
 	 *
 	 * @since 4.5.0
 	 * @access public
 	 *
-	 * @return WP_Customize_Partial[] Partials.
+	 * @param WP_Customize_Manager $manager Manager instance.
+	 */
+	public function __construct( WP_Customize_Manager $manager ) {
+		$this->manager = $manager;
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-partial.php' );
+
+		add_action( 'customize_preview_init', array( $this, 'init_preview' ) );
+	}
+
+	/**
+	 * Retrieves the registered partials.
+	 *
+	 * @since 4.5.0
+	 * @access public
+	 *
+	 * @return array Partials.
 	 */
 	public function partials() {
 		return $this->partials;
 	}
 
 	/**
-	 * Add a customize partial.
+	 * Adds a partial.
 	 *
 	 * @since 4.5.0
 	 * @access public
 	 *
 	 * @param WP_Customize_Partial|string $id   Customize Partial object, or Panel ID.
 	 * @param array                       $args Optional. Partial arguments. Default empty array.
-	 *
 	 * @return WP_Customize_Partial             The instance of the panel that was added.
 	 */
 	public function add_partial( $id, $args = array() ) {
@@ -94,13 +112,13 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Retrieve a customize partial.
+	 * Retrieves a partial.
 	 *
 	 * @since 4.5.0
 	 * @access public
 	 *
 	 * @param string $id Customize Partial ID.
-	 * @return WP_Customize_Partial|null The partial, if set.
+	 * @return WP_Customize_Partial|null The partial, if set. Otherwise null.
 	 */
 	public function get_partial( $id ) {
 		if ( isset( $this->partials[ $id ] ) ) {
@@ -111,7 +129,7 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Remove a customize partial.
+	 * Removes a partial.
 	 *
 	 * @since 4.5.0
 	 * @access public
@@ -123,7 +141,7 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Initialize Customizer preview.
+	 * Initializes the Customizer preview.
 	 *
 	 * @since 4.5.0
 	 * @access public
@@ -134,7 +152,7 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Enqueue preview scripts.
+	 * Enqueues preview scripts.
 	 *
 	 * @since 4.5.0
 	 * @access public
@@ -145,14 +163,14 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Export data in preview after it has finished rendering so that partials can be added at runtime.
+	 * Exports data in preview after it has finished rendering so that partials can be added at runtime.
 	 *
 	 * @since 4.5.0
 	 * @access public
 	 */
 	public function export_preview_data() {
-
 		$partials = array();
+
 		foreach ( $this->partials() as $partial ) {
 			$partials[ $partial->id ] = $partial->json();
 		}
@@ -170,14 +188,15 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Register dynamically-created partials.
+	 * Registers dynamically-created partials.
 	 *
 	 * @since 4.5.0
 	 * @access public
+	 *
 	 * @see WP_Customize_Manager::add_dynamic_settings()
 	 *
-	 * @param array $partial_ids         The partial ID to add.
-	 * @return array                     Added WP_Customize_Partial instances.
+	 * @param array $partial_ids The partial ID to add.
+	 * @return array Added WP_Customize_Partial instances.
 	 */
 	public function add_dynamic_partials( $partial_ids ) {
 		$new_partials = array();
@@ -194,7 +213,7 @@ class WP_Customize_Selective_Refresh {
 			$partial_class = 'WP_Customize_Partial';
 
 			/**
-			 * Filter a dynamic partial's constructor args.
+			 * Filters a dynamic partial's constructor arguments.
 			 *
 			 * For a dynamic partial to be registered, this filter must be employed
 			 * to override the default false value with an array of args to pass to
@@ -211,6 +230,8 @@ class WP_Customize_Selective_Refresh {
 			}
 
 			/**
+			 * Filters the class used to construct partials.
+			 *
 			 * Allow non-statically created partials to be constructed with custom WP_Customize_Partial subclass.
 			 *
 			 * @since 4.5.0
@@ -230,7 +251,7 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Check whether the request is for rendering partials.
+	 * Checks whether the request is for rendering partials.
 	 *
 	 * Note that this will not consider whether the request is authorized or valid,
 	 * just that essentially the route is a match.
@@ -245,25 +266,7 @@ class WP_Customize_Selective_Refresh {
 	}
 
 	/**
-	 * Log of errors triggered when partials are rendered.
-	 *
-	 * @since 4.5.0
-	 * @access private
-	 * @var array
-	 */
-	protected $triggered_errors = array();
-
-	/**
-	 * Keep track of the current partial being rendered.
-	 *
-	 * @since 4.5.0
-	 * @access private
-	 * @var string
-	 */
-	protected $current_partial_id;
-
-	/**
-	 * Handle PHP error triggered during rendering the partials.
+	 * Handles PHP errors triggered during rendering the partials.
 	 *
 	 * These errors will be relayed back to the client in the Ajax response.
 	 *
@@ -274,21 +277,21 @@ class WP_Customize_Selective_Refresh {
 	 * @param string $errstr  Error string.
 	 * @param string $errfile Error file.
 	 * @param string $errline Error line.
-	 * @return bool
+	 * @return true Always true.
 	 */
 	public function handle_error( $errno, $errstr, $errfile = null, $errline = null ) {
 		$this->triggered_errors[] = array(
-			'partial' => $this->current_partial_id,
+			'partial'      => $this->current_partial_id,
 			'error_number' => $errno,
 			'error_string' => $errstr,
-			'error_file' => $errfile,
-			'error_line' => $errline,
+			'error_file'   => $errfile,
+			'error_line'   => $errline,
 		);
 		return true;
 	}
 
 	/**
-	 * Handle Ajax request to return the rendered partials for the requested placements.
+	 * Handles the Ajax request to return the rendered partials for the requested placements.
 	 *
 	 * @since 4.5.0
 	 * @access public
@@ -312,17 +315,20 @@ class WP_Customize_Selective_Refresh {
 			status_header( 400 );
 			wp_send_json_error( 'missing_partials' );
 		}
+
 		$partials = json_decode( wp_unslash( $_POST['partials'] ), true );
+
 		if ( ! is_array( $partials ) ) {
 			wp_send_json_error( 'malformed_partials' );
 		}
+
 		$this->add_dynamic_partials( array_keys( $partials ) );
 
 		/**
-		 * Do setup before rendering each partial.
+		 * Fires immediately before partials are rendered.
 		 *
-		 * Plugins may do things like call <code>wp_enqueue_scripts()</code> and
-		 * gather a list of the scripts and styles which may get enqueued in the response.
+		 * Plugins may do things like call wp_enqueue_scripts() and gather a list of the scripts
+		 * and styles which may get enqueued in the response.
 		 *
 		 * @since 4.5.0
 		 *
@@ -334,14 +340,18 @@ class WP_Customize_Selective_Refresh {
 		do_action( 'customize_render_partials_before', $this, $partials );
 
 		set_error_handler( array( $this, 'handle_error' ), error_reporting() );
+
 		$contents = array();
+
 		foreach ( $partials as $partial_id => $container_contexts ) {
 			$this->current_partial_id = $partial_id;
+
 			if ( ! is_array( $container_contexts ) ) {
 				wp_send_json_error( 'malformed_container_contexts' );
 			}
 
 			$partial = $this->get_partial( $partial_id );
+
 			if ( ! $partial ) {
 				$contents[ $partial_id ] = null;
 				continue;
@@ -360,13 +370,14 @@ class WP_Customize_Selective_Refresh {
 			}
 		}
 		$this->current_partial_id = null;
+
 		restore_error_handler();
 
 		/**
-		 * Do finalization after rendering each partial.
+		 * Fires immediately after partials are rendered.
 		 *
-		 * Plugins may do things like call <code>wp_footer()</code> to scrape scripts output and
-		 * return them via the customize_render_partials_response filter.
+		 * Plugins may do things like call wp_footer() to scrape scripts output and return them
+		 * via the {@see 'customize_render_partials_response'} filter.
 		 *
 		 * @since 4.5.0
 		 *
@@ -380,33 +391,35 @@ class WP_Customize_Selective_Refresh {
 		$response = array(
 			'contents' => $contents,
 		);
+
 		if ( defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY ) {
 			$response['errors'] = $this->triggered_errors;
 		}
 
 		/**
-		 * Filter the response from rendering the partials.
+		 * Filters the response from rendering the partials.
 		 *
-		 * Plugins may use this filter to inject <code>$scripts</code> and
-		 * <code>$styles</code> which are dependencies for the partials being
-		 * rendered. The response data will be available to the client via the
-		 * <code>render-partials-response</code> JS event, so the client can then
-		 * inject the scripts and styles into the DOM if they have not already
-		 * been enqueued there. If plugins do this, they'll need to take care
-		 * for any scripts that do <code>document.write()</code> and make sure
-		 * that these are not injected, or else to override the function to no-op,
+		 * Plugins may use this filter to inject `$scripts` and `$styles`, which are dependencies
+		 * for the partials being rendered. The response data will be available to the client via
+		 * the `render-partials-response` JS event, so the client can then inject the scripts and
+		 * styles into the DOM if they have not already been enqueued there.
+		 *
+		 * If plugins do this, they'll need to take care for any scripts that do `document.write()`
+		 * and make sure that these are not injected, or else to override the function to no-op,
 		 * or else the page will be destroyed.
 		 *
-		 * Plugins should be aware that <code>$scripts</code> and <code>$styles</code>
-		 * these may eventually be included by default in the response.
+		 * Plugins should be aware that `$scripts` and `$styles` may eventually be included by
+		 * default in the response.
 		 *
 		 * @since 4.5.0
 		 *
 		 * @param array $response {
 		 *     Response.
 		 *
-		 *     @type array $contents  Associative array mapping a partial ID its corresponding array of contents for the containers requested.
-		 *     @type array [$errors]  List of errors triggered during rendering of partials, if WP_DEBUG_DISPLAY is enabled.
+		 *     @type array $contents Associative array mapping a partial ID its corresponding array of contents
+		 *                           for the containers requested.
+		 *     @type array $errors   List of errors triggered during rendering of partials, if `WP_DEBUG_DISPLAY`
+		 *                           is enabled.
 		 * }
 		 * @param WP_Customize_Selective_Refresh $this     Selective refresh component.
 		 * @param array                          $partials Placements' context data for the partials rendered in the request.

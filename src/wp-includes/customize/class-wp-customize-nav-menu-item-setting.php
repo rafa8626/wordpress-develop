@@ -67,6 +67,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 * Default transport.
 	 *
 	 * @since 4.3.0
+	 * @since 4.5.0 Default changed to 'refresh'
 	 * @access public
 	 * @var string
 	 */

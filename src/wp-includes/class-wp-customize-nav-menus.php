@@ -62,6 +62,7 @@ final class WP_Customize_Nav_Menus {
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
 
+		// Selective Refresh partials.
 		add_filter( 'customize_dynamic_partial_args', array( $this, 'customize_dynamic_partial_args' ), 10, 2 );
 	}
 
@@ -808,17 +809,18 @@ final class WP_Customize_Nav_Menus {
 	<?php
 	}
 
-	/*
-	 * Start functionality specific to partial-refresh of menu changes in Customizer preview.
-	 */
+	//
+	// Start functionality specific to partial-refresh of menu changes in Customizer preview.
+	//
 
 	/**
-	 * Filter args for dynamic nav_menu partials.
+	 * Filters arguments for dynamic nav_menu selective refresh partials.
 	 *
 	 * @since 4.5.0
+	 * @access public
 	 *
 	 * @param array|false $partial_args Partial args.
-	 * @param string      $partial_id  Partial ID.
+	 * @param string      $partial_id   Partial ID.
 	 * @return array Partial args
 	 */
 	public function customize_dynamic_partial_args( $partial_args, $partial_id ) {
@@ -830,8 +832,8 @@ final class WP_Customize_Nav_Menus {
 			$partial_args = array_merge(
 				$partial_args,
 				array(
-					'type' => 'nav_menu_instance',
-					'render_callback' => array( $this, 'render_nav_menu_partial' ),
+					'type'                => 'nav_menu_instance',
+					'render_callback'     => array( $this, 'render_nav_menu_partial' ),
 					'container_inclusive' => true,
 				)
 			);
@@ -883,13 +885,17 @@ final class WP_Customize_Nav_Menus {
 				( isset( $args['items_wrap'] ) && '<' === substr( $args['items_wrap'], 0, 1 ) )
 			)
 		);
+
 		if ( ! $can_partial_refresh ) {
 			return $args;
 		}
 
 		$exported_args = $args;
 
-		// Replace object menu arg with a term_id menu arg, as this exports better to JS and is easier to compare hashes.
+		/*
+		 * Replace object menu arg with a term_id menu arg, as this exports better
+		 * to JS and is easier to compare hashes.
+		 */
 		if ( ! empty( $exported_args['menu'] ) && is_object( $exported_args['menu'] ) ) {
 			$exported_args['menu'] = $exported_args['menu']->term_id;
 		}
@@ -903,7 +909,9 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Prepare wp_nav_menu() calls for partial refresh. Injects attributes into container element.
+	 * Prepares wp_nav_menu() calls for partial refresh.
+	 *
+	 * Injects attributes into container element.
 	 *
 	 * @since 4.3.0
 	 * @access public
@@ -925,7 +933,8 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Hash (hmac) the nav menu args to ensure they are not tampered with when submitted in the Ajax request.
+	 * Hashes (hmac) the nav menu arguments to ensure they are not tampered with when
+	 * submitted in the Ajax request.
 	 *
 	 * Note that the array is expected to be pre-sorted.
 	 *
@@ -933,7 +942,7 @@ final class WP_Customize_Nav_Menus {
 	 * @access public
 	 *
 	 * @param array $args The arguments to hash.
-	 * @return string
+	 * @return string Hashed nav menu arguments.
 	 */
 	public function hash_nav_menu_args( $args ) {
 		return wp_hash( serialize( $args ) );
@@ -956,11 +965,10 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Export data from PHP to JS.
+	 * Exports data from PHP to JS.
 	 *
-	 * @deprecated
 	 * @since 4.3.0
-	 * @since 4.5.0 Obsolete.
+	 * @deprecated 4.5.0 Obsolete
 	 * @access public
 	 */
 	public function export_preview_data() {
@@ -983,14 +991,17 @@ final class WP_Customize_Nav_Menus {
 		unset( $partial );
 
 		if ( ! isset( $nav_menu_args['args_hmac'] ) ) {
-			return false; // Error: missing_args_hmac.
+			// Error: missing_args_hmac.
+			return false;
 		}
+
 		$nav_menu_args_hmac = $nav_menu_args['args_hmac'];
 		unset( $nav_menu_args['args_hmac'] );
 
 		ksort( $nav_menu_args );
 		if ( ! hash_equals( $this->hash_nav_menu_args( $nav_menu_args ), $nav_menu_args_hmac ) ) {
-			return false; // Error: args_hmac_mismatch.
+			// Error: args_hmac_mismatch.
+			return false;
 		}
 
 		ob_start();

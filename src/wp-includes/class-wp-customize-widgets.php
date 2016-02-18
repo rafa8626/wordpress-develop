@@ -101,6 +101,7 @@ final class WP_Customize_Widgets {
 		add_filter( 'is_active_sidebar',                       array( $this, 'tally_sidebars_via_is_active_sidebar_calls' ), 10, 2 );
 		add_filter( 'dynamic_sidebar_has_widgets',             array( $this, 'tally_sidebars_via_dynamic_sidebar_calls' ), 10, 2 );
 
+		// Selective Refresh.
 		add_filter( 'customize_dynamic_partial_args',          array( $this, 'customize_dynamic_partial_args' ), 10, 2 );
 		add_filter( 'widget_customizer_setting_args',          array( $this, 'filter_widget_customizer_setting_args' ), 10, 2 );
 		add_action( 'customize_preview_init',                  array( $this, 'selective_refresh_init' ) );
@@ -1758,11 +1759,16 @@ final class WP_Customize_Widgets {
 	 * @return string|false
 	 */
 	public function render_widget_partial( $partial, $context ) {
-		$id_data = $partial->id_data();
+		$id_data   = $partial->id_data();
 		$widget_id = array_shift( $id_data['keys'] );
-		if ( ! is_array( $context ) || empty( $context['sidebar_id'] ) || ! is_registered_sidebar( $context['sidebar_id'] ) ) {
+
+		if ( ! is_array( $context )
+			|| empty( $context['sidebar_id'] )
+			|| ! is_registered_sidebar( $context['sidebar_id'] )
+		) {
 			return false;
 		}
+
 		$this->rendering_sidebar_id = $context['sidebar_id'];
 
 		if ( isset( $context['sidebar_instance_number'] ) ) {
@@ -1782,6 +1788,7 @@ final class WP_Customize_Widgets {
 
 		// Reset variables for next partial render.
 		remove_filter( 'sidebars_widgets', $filter_callback, 1000 );
+
 		$this->context_sidebar_instance_number = null;
 		$this->rendering_sidebar_id = null;
 		$this->rendering_widget_id = null;
@@ -1789,9 +1796,9 @@ final class WP_Customize_Widgets {
 		return $container;
 	}
 
-	/*
-	 * Option Update Capturing
-	 */
+	//
+	// Option Update Capturing
+	//
 
 	/**
 	 * List of captured widget option updates.

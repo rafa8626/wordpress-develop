@@ -262,10 +262,12 @@ final class WP_Customize_Manager {
 			require_once( ABSPATH . WPINC . '/class-wp-customize-widgets.php' );
 			$this->widgets = new WP_Customize_Widgets( $this );
 		}
+
 		if ( in_array( 'nav_menus', $components, true ) ) {
 			require_once( ABSPATH . WPINC . '/class-wp-customize-nav-menus.php' );
 			$this->nav_menus = new WP_Customize_Nav_Menus( $this );
 		}
+
 		if ( in_array( 'selective_refresh', $components, true ) ) {
 			require_once( ABSPATH . WPINC . '/customize/class-wp-customize-selective-refresh.php' );
 			$this->selective_refresh = new WP_Customize_Selective_Refresh( $this );
