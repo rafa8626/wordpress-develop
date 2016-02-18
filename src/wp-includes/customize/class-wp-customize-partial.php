@@ -158,7 +158,7 @@ class WP_Customize_Partial {
 		// Process settings.
 		if ( empty( $this->settings ) ) {
 			$this->settings = array( $id );
-		} else if ( ! is_array( $this->settings ) ) {
+		} else if ( is_string( $this->settings ) ) {
 			$this->settings = array( $this->settings );
 		}
 		if ( empty( $this->primary_setting ) ) {
@@ -189,7 +189,7 @@ class WP_Customize_Partial {
 	 * @since 4.5.0
 	 * @access public
 	 *
-	 * @param array $container_context Optional array of context data associated with the target container.
+	 * @param array $container_context Optional array of context data associated with the target container (placement).
 	 * @return string|array|false The rendered partial as a string, raw data array (for client-side JS template), or false if no render applied.
 	 */
 	final public function render( $container_context = array() ) {

@@ -6,6 +6,7 @@
  * @subpackage UnitTests
  * @since      4.5.0
  * @group      ajax
+ * @group      customize
  */
 
 /**
