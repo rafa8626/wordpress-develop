@@ -39,7 +39,6 @@ class WP_Customize_Selective_Refresh {
 		$this->manager = $manager;
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-partial.php' );
 
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'enqueue_pane_scripts' ) );
 		add_action( 'customize_preview_init', array( $this, 'init_preview' ) );
 	}
 
@@ -132,16 +131,6 @@ class WP_Customize_Selective_Refresh {
 	public function init_preview() {
 		add_action( 'template_redirect', array( $this, 'handle_render_partials_request' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_preview_scripts' ) );
-	}
-
-	/**
-	 * Enqueue pane scripts.
-	 *
-	 * @since 4.5.0
-	 * @access public
-	 */
-	public function enqueue_pane_scripts() {
-		wp_enqueue_script( 'customize-controls-hacks' );
 	}
 
 	/**
