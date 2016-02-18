@@ -70,7 +70,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 * @access public
 	 * @var string
 	 */
-	public $transport = 'postMessage';
+	public $transport = 'refresh';
 
 	/**
 	 * The post ID represented by this setting instance. This is the db_id.

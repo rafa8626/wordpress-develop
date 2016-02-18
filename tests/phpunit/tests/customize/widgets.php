@@ -121,7 +121,7 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 		$default_args = array(
 			'type' => 'option',
 			'capability' => 'edit_theme_options',
-			'transport' => 'refresh',
+			'transport' => 'postMessage',
 			'default' => array(),
 			'sanitize_callback' => array( $this->manager->widgets, 'sanitize_widget_instance' ),
 			'sanitize_js_callback' => array( $this->manager->widgets, 'sanitize_widget_js_instance' ),
@@ -150,7 +150,7 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 		$default_args = array(
 			'type' => 'option',
 			'capability' => 'edit_theme_options',
-			'transport' => 'refresh',
+			'transport' => 'postMessage',
 			'default' => array(),
 			'sanitize_callback' => array( $this->manager->widgets, 'sanitize_sidebar_widgets' ),
 			'sanitize_js_callback' => array( $this->manager->widgets, 'sanitize_sidebar_widgets_js_instance' ),
