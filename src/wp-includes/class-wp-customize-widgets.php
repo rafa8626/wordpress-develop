@@ -103,7 +103,6 @@ final class WP_Customize_Widgets {
 
 		// Selective Refresh.
 		add_filter( 'customize_dynamic_partial_args',          array( $this, 'customize_dynamic_partial_args' ), 10, 2 );
-		add_filter( 'widget_customizer_setting_args',          array( $this, 'filter_widget_customizer_setting_args' ), 10, 2 );
 		add_action( 'customize_preview_init',                  array( $this, 'selective_refresh_init' ) );
 	}
 
@@ -1469,19 +1468,6 @@ final class WP_Customize_Widgets {
 	/*
 	 * Selective Refresh Methods
 	 */
-
-	/**
-	 * Let sidebars_widgets and widget instance settings all have postMessage transport.
-	 *
-	 * The preview will determine whether or not the setting change requires a full refresh.
-	 *
-	 * @param array $args Setting args.
-	 * @return array
-	 */
-	public function filter_widget_customizer_setting_args( $args ) {
-		$args['transport'] = isset( $this->manager->selective_refresh ) ? 'postMessage' : 'refresh';
-		return $args;
-	}
 
 	/**
 	 * Filter args for dynamic widget partials.
