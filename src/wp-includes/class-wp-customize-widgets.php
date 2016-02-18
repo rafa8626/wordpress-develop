@@ -1489,6 +1489,7 @@ final class WP_Customize_Widgets {
 				array(
 					'type' => 'widget',
 					'render_callback' => array( $this, 'render_widget_partial' ),
+					'container_inclusive' => true,
 				)
 			);
 		}
