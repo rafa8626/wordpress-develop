@@ -1983,6 +1983,15 @@ final class WP_Customize_Manager {
 			'priority' => 0,
 		) ) );
 
+		if ( isset( $this->selective_refresh ) ) {
+			$this->selective_refresh->add_partial( 'site_logo', array(
+				'settings'            => array( 'site_logo' ),
+				'selector'            => '.site-logo-link',
+				'render_callback'     => array( $this, '_render_site_logo_partial' ),
+				'container_inclusive' => true,
+			) );
+		}
+
 		/* Colors */
 
 		$this->add_section( 'colors', array(
@@ -2211,6 +2220,24 @@ final class WP_Customize_Manager {
 			$color = get_theme_support( 'custom-header', 'default-text-color' );
 
 		return $color;
+	}
+
+	/**
+	 * Callback for rendering the site logo, used in the site_logo partial.
+	 *
+	 * This method exists because the partial object and context data are passed
+	 * into a partial's render_callback so we cannot use get_the_site_logo() as
+	 * the render_callback directly since it expects a blog ID as the first
+	 * argument. When WP no longer supports PHP 5.3, this method can be removed
+	 * in favor of an anonymous function.
+	 *
+	 * @see WP_Customize_Manager::register_controls()
+	 *
+	 * @since 4.5.0
+	 * @access private
+	 */
+	public function _render_site_logo_partial() {
+		return get_the_site_logo();
 	}
 }
 

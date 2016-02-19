@@ -63,7 +63,7 @@ class WP_Site_Logo {
 			);
 		}
 
-		// If we've got an array, reduce them to a string for output
+		// If we've got an array, reduce them to a string for output.
 		if ( is_array( $classes ) ) {
 			$classes = array_map( 'sanitize_html_class', $classes );
 			$classes = (string) '.' . implode( ', .', $classes );
@@ -104,7 +104,7 @@ class WP_Site_Logo {
 	 * @since 4.5.0
 	 * @access public
 	 *
-	 * @param array $sizes
+	 * @param array $sizes Image sizes.
 	 * @return array All default and registered custom image sizes.
 	 */
 	public function media_manager_image_sizes( $sizes ) {
@@ -146,7 +146,7 @@ class WP_Site_Logo {
 	 * @since 4.5.0
 	 * @access public
 	 *
-	 * @param int|string $input
+	 * @param int|string $input Input value.
 	 * @return int|string 1 if checked, empty string if not checked.
 	 */
 	public function sanitize_checkbox( $input ) {
@@ -155,6 +155,8 @@ class WP_Site_Logo {
 }
 
 /**
+ * WP_Site_Logo instance.
+ *
  * @global WP_Site_Logo $wp_site_logo
  */
 $GLOBALS['wp_site_logo'] = new WP_Site_Logo;
