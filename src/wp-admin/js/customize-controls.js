@@ -3801,6 +3801,11 @@
 			}
 		} );
 
+		// Refresh the preview when it requests.
+		api.previewer.bind( 'refresh', function() {
+			api.previewer.refresh();
+		});
+
 		api.trigger( 'ready' );
 
 		// Make sure left column gets focus
