@@ -1606,12 +1606,12 @@ final class WP_Customize_Widgets {
 	 * This is needed in case the $before_widget is run through wp_kses() when printed.
 	 *
 	 * @since 4.5.0
-	 * @access private
+	 * @access public
 	 *
 	 * @param array $allowed_html Allowed HTML.
 	 * @return array Allowed HTML.
 	 */
-	function filter_wp_kses_allowed_data_attributes( $allowed_html ) {
+	public function filter_wp_kses_allowed_data_attributes( $allowed_html ) {
 		foreach ( array_keys( $this->before_widget_tags_seen ) as $tag_name ) {
 			if ( ! isset( $allowed_html[ $tag_name ] ) ) {
 				$allowed_html[ $tag_name ] = array();
