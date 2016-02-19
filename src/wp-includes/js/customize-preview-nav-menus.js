@@ -79,9 +79,28 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			 * @returns {boolean}
 			 */
 			isRelatedSetting: function( setting, newValue, oldValue ) {
-				var partial = this, navMenuLocationSetting, navMenuId;
+				var partial = this, navMenuLocationSetting, navMenuId, isNavMenuItemSetting;
 				if ( _.isString( setting ) ) {
 					setting = api( setting );
+				}
+
+				/*
+				 * Prevent nav_menu_item changes only containing type_label differences triggering a refresh.
+				 * These settings in the preview do not include type_label property, and so if one of these
+				 * nav_menu_item settings is dirty, after a refresh the nav menu instance would do a selective
+				 * refresh immediately because the setting from the pane would have the type_label whereas
+				 * the setting in the preview would not, thus triggering a change event. The following
+				 * condition short-circuits this unnecessary selective refresh and also prevents an infinite
+				 * loop in the case where a nav_menu_instance partial had done a fallback refresh.
+				 * @todo Nav menu item settings should not include a type_label property to begin with.
+				 */
+				isNavMenuItemSetting = /^nav_menu_item\[/.test( setting.id );
+				if ( isNavMenuItemSetting && _.isObject( newValue ) && _.isObject( oldValue ) ) {
+					delete newValue.type_label;
+					delete oldValue.type_label;
+					if ( _.isEqual( oldValue, newValue ) ) {
+						return false;
+					}
 				}
 
 				if ( partial.params.navMenuArgs.theme_location ) {
@@ -101,9 +120,10 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 				}
 				return (
 					( 'nav_menu[' + navMenuId + ']' === setting.id ) ||
-					( /^nav_menu_item\[/.test( setting.id ) &&
-						( ( newValue && newValue.nav_menu_term_id === navMenuId ) || ( oldValue && oldValue.nav_menu_term_id === navMenuId ) )
-					)
+					( isNavMenuItemSetting && (
+						( newValue && newValue.nav_menu_term_id === navMenuId ) ||
+						( oldValue && oldValue.nav_menu_term_id === navMenuId )
+					) )
 				);
 			},
 
