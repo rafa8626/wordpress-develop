@@ -182,7 +182,8 @@ class WP_Customize_Selective_Refresh {
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
 				/* translators: %s: message from JS error */
 				'errorMessageTpl'  => __( 'Script error: %s' ),
-				'badDocumentWrite' => __( 'document.write() forbidden' ),
+				/* translators: %s: document.write() */
+				'badDocumentWrite' => sprintf( __( '%s is forbidden' ), 'document.write()' ),
 			),
 		);
 
