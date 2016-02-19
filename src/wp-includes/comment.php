@@ -469,6 +469,30 @@ function update_comment_meta($comment_id, $meta_key, $meta_value, $prev_value = 
 }
 
 /**
+ * Queue comments for metadata lazyloading.
+ *
+ * @since 4.5.0
+ *
+ * @param array $comments Array of comment objects.
+ */
+function wp_queue_comments_for_comment_meta_lazyload( $comments ) {
+	// Don't use `wp_list_pluck()` to avoid by-reference manipulation.
+	$comment_ids = array();
+	if ( is_array( $comments ) ) {
+		foreach ( $comments as $comment ) {
+			if ( $comment instanceof WP_Comment ) {
+				$comment_ids[] = $comment->comment_ID;
+			}
+		}
+	}
+
+	if ( $comment_ids ) {
+		$lazyloader = wp_metadata_lazyloader();
+		$lazyloader->queue_objects( 'comment', $comment_ids );
+	}
+}
+
+/**
  * Sets the cookies used to store an unauthenticated commentator's identity. Typically used
  * to recall previous comments by this commentator that are still held in moderation.
  *
@@ -2181,7 +2205,7 @@ function discover_pingback_server_uri( $url, $deprecated = '' ) {
 		return false;
 
 	//Do not search for a pingback server on our own uploads
-	$uploads_dir = wp_upload_dir();
+	$uploads_dir = wp_get_upload_dir();
 	if ( 0 === strpos($url, $uploads_dir['baseurl']) )
 		return false;
 
