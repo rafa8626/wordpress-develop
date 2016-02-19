@@ -180,6 +180,9 @@ class WP_Customize_Selective_Refresh {
 			'renderQueryVar' => self::RENDER_QUERY_VAR,
 			'l10n'           => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
+				/* translators: %s: message from JS error */
+				'errorMessageTpl'  => __( 'Script error: %s' ),
+				'badDocumentWrite' => __( 'document.write() forbidden' ),
 			),
 		);
 

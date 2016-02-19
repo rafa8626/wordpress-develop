@@ -255,7 +255,7 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 		 * @returns {boolean} Whether the rendering was successful and the fallback was not invoked.
 		 */
 		renderContent: function( placement ) {
-			var partial = this, content, newContainerElement;
+			var partial = this, content, newContainerElement, errorMessageElement;
 			if ( ! placement.container ) {
 				partial.fallback( new Error( 'no_container' ), [ placement ] );
 				return false;
@@ -272,36 +272,60 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 				return false;
 			}
 
-			content = placement.addedContent;
-			if ( wp.emoji && wp.emoji.parse && ! $.contains( document.head, placement.container[0] ) ) {
-				content = wp.emoji.parse( content );
-			}
-
-			// @todo Should containerInclusive be context information as opposed to a param?
-			if ( partial.params.containerInclusive ) {
-
-				// Note that content may be an empty string, and in this case jQuery will just remove the oldContainer
-				newContainerElement = $( content );
-
-				// Merge the new context on top of the old context.
-				placement.context = _.extend(
-					placement.context,
-					newContainerElement.data( 'customize-partial-placement-context' ) || {}
-				);
-				newContainerElement.data( 'customize-partial-placement-context', placement.context );
-
-				placement.removedNodes = placement.container;
-				placement.container = newContainerElement;
-				placement.removedNodes.replaceWith( placement.container );
-				placement.container.attr( 'title', self.data.l10n.shiftClickToEdit );
-			} else {
-				placement.removedNodes = document.createDocumentFragment();
-				while ( placement.container[0].firstChild ) {
-					placement.removedNodes.appendChild( placement.container[0].firstChild );
+			/* jshint ignore:start */
+			self.orginalDocumentWrite = document.write;
+			document.write = function() {
+				throw new Error( self.data.l10n.badDocumentWrite );
+			};
+			/* jshint ignore:end */
+			try {
+				content = placement.addedContent;
+				if ( wp.emoji && wp.emoji.parse && ! $.contains( document.head, placement.container[0] ) ) {
+					content = wp.emoji.parse( content );
 				}
 
-				placement.container.html( content );
+				if ( partial.params.containerInclusive ) {
+
+					// Note that content may be an empty string, and in this case jQuery will just remove the oldContainer
+					newContainerElement = $( content );
+
+					// Merge the new context on top of the old context.
+					placement.context = _.extend(
+						placement.context,
+						newContainerElement.data( 'customize-partial-placement-context' ) || {}
+					);
+					newContainerElement.data( 'customize-partial-placement-context', placement.context );
+
+					placement.removedNodes = placement.container;
+					placement.container = newContainerElement;
+					placement.removedNodes.replaceWith( placement.container );
+					placement.container.attr( 'title', self.data.l10n.shiftClickToEdit );
+				} else {
+					placement.removedNodes = document.createDocumentFragment();
+					while ( placement.container[0].firstChild ) {
+						placement.removedNodes.appendChild( placement.container[0].firstChild );
+					}
+
+					placement.container.html( content );
+				}
+
+				placement.container.removeClass( 'customize-render-content-error' );
+			} catch ( error ) {
+				if ( 'undefined' !== typeof console && console.error ) {
+					console.error( partial.id, error );
+				}
+				placement.container.addClass( 'customize-render-content-error' );
+				errorMessageElement = placement.container.find( '.customize-render-content-error-message:first' );
+				if ( ! errorMessageElement.length ) {
+					errorMessageElement = $( '<span class="customize-render-content-error-message"><span>' );
+					placement.container.append( errorMessageElement );
+				}
+				errorMessageElement.text( self.data.l10n.errorMessageTpl.replace( '%s', error.message ) );
 			}
+			/* jshint ignore:start */
+			document.write = self.orginalDocumentWrite;
+			self.orginalDocumentWrite = null;
+			/* jshint ignore:end */
 
 			placement.container.removeClass( 'customize-partial-refreshing' );
 
