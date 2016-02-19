@@ -1748,13 +1748,17 @@ function _media_states( $post ) {
 		$media_states[] = __( 'Site Icon' );
 	}
 
+	if ( $post->ID == get_option( 'site_logo' ) ) {
+		$media_states[] = __( 'Logo' );
+	}
+
 	/**
 	 * Filter the default media display states for items in the Media list table.
 	 *
 	 * @since 3.2.0
 	 *
 	 * @param array $media_states An array of media states. Default 'Header Image',
-	 *                            'Background Image', 'Site Icon'.
+	 *                            'Background Image', 'Site Icon', 'Logo'.
 	 */
 	$media_states = apply_filters( 'display_media_states', $media_states );
 

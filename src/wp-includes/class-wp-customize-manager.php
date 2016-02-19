@@ -217,6 +217,7 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-cropped-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-site-icon-control.php' );
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-site-logo-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-header-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-theme-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-widget-area-customize-control.php' );
@@ -1857,6 +1858,7 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Background_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
+		$this->register_control_type( 'WP_Customize_Site_Logo_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
 
 		/* Themes */
@@ -1932,6 +1934,23 @@ final class WP_Customize_Manager {
 			'section'    => 'title_tagline',
 		) );
 
+		// Add a setting to hide header text if the theme isn't supporting the feature itself.
+		// @todo
+		if ( ! current_theme_supports( 'custom-header' ) ) {
+			$this->add_setting( 'header_text', array(
+				'default'           => 1,
+				'sanitize_callback' => 'absint',
+				'transport'         => 'postMessage',
+			) );
+
+			$this->add_control( 'header_text', array(
+				'label'    => __( 'Display Site Title and Tagline' ),
+				'section'  => 'title_tagline',
+				'settings' => 'header_text',
+				'type'     => 'checkbox',
+			) );
+		}
+
 		$this->add_setting( 'site_icon', array(
 			'type'       => 'option',
 			'capability' => 'manage_options',
@@ -1949,6 +1968,19 @@ final class WP_Customize_Manager {
 			'priority'    => 60,
 			'height'      => 512,
 			'width'       => 512,
+		) ) );
+
+		$this->add_setting( 'site_logo', array(
+			'theme_supports' => array( 'site-logo' ),
+			'type'           => 'option',
+			'capability'     => 'manage_options',
+			'transport'      => 'postMessage',
+		) );
+
+		$this->add_control( new WP_Customize_Site_Logo_Control( $this, 'site_logo', array(
+			'label'    => __( 'Logo' ),
+			'section'  => 'title_tagline',
+			'priority' => 0,
 		) ) );
 
 		/* Colors */

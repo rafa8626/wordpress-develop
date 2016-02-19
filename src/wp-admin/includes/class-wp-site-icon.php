@@ -64,6 +64,7 @@ class WP_Site_Icon {
 
 		// Our regular Favicon.
 		32,
+
 	);
 
 	/**
