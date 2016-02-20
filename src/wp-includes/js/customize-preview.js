@@ -268,14 +268,14 @@
 			} );
 
 			// Focus on the control when the logo is clicked, if there is no site_logo partial.
-			if ( ! api.partial || ! api.partial.has( 'site_logo' ) ) {
+			if ( ! api.selectiveRefresh || ! api.selectiveRefresh.partial.has( 'site_logo' ) ) {
 				$( document.body ).on( 'click', '.site-logo-link', function( e ) {
 					if ( ! e.shiftKey ) {
 						return;
 					}
 					api.preview.send( 'focus-control-for-setting', 'site_logo' );
 				} );
-				$( '.site-logo-link' ).attr( 'title', 'Shift-click to edit the site logo.' );
+				$( '.site-logo-link' ).attr( 'title', api.settings.l10n.shiftClickToEdit );
 			}
 		} );
 
