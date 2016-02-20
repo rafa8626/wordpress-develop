@@ -829,6 +829,9 @@ final class WP_Customize_Manager {
 			'activeSections' => array(),
 			'activeControls' => array(),
 			'nonce' => $this->get_nonces(),
+			'l10n' => array(
+				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
+			),
 			'_dirty' => array_keys( $this->unsanitized_post_values() ),
 		);
 
@@ -2235,6 +2238,8 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.5.0
 	 * @access private
+	 *
+	 * @return string Site logo.
 	 */
 	public function _render_site_logo_partial() {
 		return get_the_site_logo();
