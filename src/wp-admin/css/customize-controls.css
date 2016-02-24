@@ -807,6 +807,11 @@ p.customize-section-description {
 	position: relative;
 	text-align: center;
 	cursor: default;
+	border: 1px dashed #b4b9be;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	min-height: 40px;
 }
 
 .customize-control-media .inner,
@@ -844,7 +849,7 @@ p.customize-section-description {
 .customize-control-header .inner,
 .customize-control-header .inner .dashicons {
 	line-height: 20px;
-	top: 10px;
+	top: 8px;
 }
 
 .customize-control-header .list .inner,
@@ -1221,7 +1226,7 @@ body.cheatin {
 }
 
 body.cheatin h1 {
-	border-bottom: 1px solid #dadada;
+	border-bottom: 1px solid #ddd;
 	clear: both;
 	color: #666;
 	font: 24px "Open Sans", sans-serif;
@@ -1279,6 +1284,7 @@ body.cheatin p {
 
 /* Reordering */
 .reorder-toggle {
+	color: #0073aa;
 	float: right;
 	padding: 5px 8px;
 	text-decoration: none;
@@ -1288,6 +1294,10 @@ body.cheatin p {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+}
+
+.reorder-toggle:hover {
+	color: #00a0d2;
 }
 
 .reorder-toggle:focus {
@@ -1342,6 +1352,7 @@ body.cheatin p {
 	height: 45px;
 	padding: 0 3px;
 	margin: 0 0 0 -4px;
+	-webkit-box-shadow: none;
 	box-shadow: none;
 	border-top: 1px solid transparent;
 	border-bottom: 4px solid transparent;
@@ -1350,6 +1361,7 @@ body.cheatin p {
 }
 
 #customize-footer-actions .devices button:focus {
+	-webkit-box-shadow: none;
 	box-shadow: none;
 	outline: none;
 }

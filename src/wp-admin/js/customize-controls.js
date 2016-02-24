@@ -1521,18 +1521,25 @@
 			settings = $.map( control.params.settings, function( value ) {
 				return value;
 			});
-			api.apply( api, settings.concat( function () {
-				var key;
 
+			if ( 0 === settings.length ) {
+				control.setting = null;
 				control.settings = {};
-				for ( key in control.params.settings ) {
-					control.settings[ key ] = api( control.params.settings[ key ] );
-				}
-
-				control.setting = control.settings['default'] || null;
-
 				control.embed();
-			}) );
+			} else {
+				api.apply( api, settings.concat( function() {
+					var key;
+
+					control.settings = {};
+					for ( key in control.params.settings ) {
+						control.settings[ key ] = api( control.params.settings[ key ] );
+					}
+
+					control.setting = control.settings['default'] || null;
+
+					control.embed();
+				}) );
+			}
 
 			// After the control is embedded on the page, invoke the "ready" method.
 			control.deferred.embedded.done( function () {
@@ -3784,6 +3791,26 @@
 					api.previewer.previewUrl.set( api.settings.url.home + '?page_id=' + pageId );
 				}
 			});
+		});
+
+		// Focus on the control that is associated with the given setting.
+		api.previewer.bind( 'focus-control-for-setting', function( settingId ) {
+			var matchedControl;
+			api.control.each( function( control ) {
+				var settingIds = _.pluck( control.settings, 'id' );
+				if ( -1 !== _.indexOf( settingIds, settingId ) ) {
+					matchedControl = control;
+				}
+			} );
+
+			if ( matchedControl ) {
+				matchedControl.focus();
+			}
+		} );
+
+		// Refresh the preview when it requests.
+		api.previewer.bind( 'refresh', function() {
+			api.previewer.refresh();
 		});
 
 		api.trigger( 'ready' );

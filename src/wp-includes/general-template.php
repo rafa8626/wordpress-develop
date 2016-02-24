@@ -386,7 +386,7 @@ function wp_registration_url() {
  *     @type string $redirect       URL to redirect to. Must be absolute, as in "https://example.com/mypage/".
  *                                  Default is to redirect back to the request URI.
  *     @type string $form_id        ID attribute value for the form. Default 'loginform'.
- *     @type string $label_username Label for the username field. Default 'Username'.
+ *     @type string $label_username Label for the username or email address field. Default 'Username or Email'.
  *     @type string $label_password Label for the password field. Default 'Password'.
  *     @type string $label_remember Label for the remember field. Default 'Remember Me'.
  *     @type string $label_log_in   Label for the submit button. Default 'Log In'.
@@ -408,7 +408,7 @@ function wp_login_form( $args = array() ) {
 		// Default 'redirect' value takes the user back to the request URI.
 		'redirect' => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
 		'form_id' => 'loginform',
-		'label_username' => __( 'Username' ),
+		'label_username' => __( 'Username or Email' ),
 		'label_password' => __( 'Password' ),
 		'label_remember' => __( 'Remember Me' ),
 		'label_log_in' => __( 'Log In' ),
@@ -1012,7 +1012,7 @@ function wp_title( $sep = '&raquo;', $display = true, $seplocation = '' ) {
 	$search   = get_query_var( 's' );
 	$title    = '';
 
-	$t_sep = '%WP_TITILE_SEP%'; // Temporary separator, for accurate flipping, if necessary
+	$t_sep = '%WP_TITLE_SEP%'; // Temporary separator, for accurate flipping, if necessary
 
 	// If there is a post
 	if ( is_single() || ( is_home() && ! is_front_page() ) || ( is_page() && ! is_front_page() ) ) {
@@ -2535,6 +2535,8 @@ function feed_links_extra( $args = array() ) {
 		'cattitle'    => __('%1$s %2$s %3$s Category Feed'),
 		/* translators: 1: blog name, 2: separator(raquo), 3: tag name */
 		'tagtitle'    => __('%1$s %2$s %3$s Tag Feed'),
+		/* translators: 1: blog name, 2: separator(raquo), 3: term name, 4: taxonomy singular name */
+		'taxtitle'    => __('%1$s %2$s %3$s %4$s Feed'),
 		/* translators: 1: blog name, 2: separator(raquo), 3: author name  */
 		'authortitle' => __('%1$s %2$s Posts by %3$s Feed'),
 		/* translators: 1: blog name, 2: separator(raquo), 3: search phrase */
@@ -2575,6 +2577,11 @@ function feed_links_extra( $args = array() ) {
 			$title = sprintf( $args['tagtitle'], get_bloginfo('name'), $args['separator'], $term->name );
 			$href = get_tag_feed_link( $term->term_id );
 		}
+	} elseif ( is_tax() ) {
+ 		$term = get_queried_object();
+ 		$tax = get_taxonomy( $term->taxonomy );
+ 		$title = sprintf( $args['taxtitle'], get_bloginfo('name'), $args['separator'], $term->name, $tax->labels->singular_name );
+ 		$href = get_term_feed_link( $term->term_id, $term->taxonomy );
 	} elseif ( is_author() ) {
 		$author_id = intval( get_query_var('author') );
 
@@ -3144,7 +3151,7 @@ function register_admin_color_schemes() {
 	wp_admin_css_color( 'fresh', _x( 'Default', 'admin color scheme' ),
 		false,
 		array( '#222', '#333', '#0073aa', '#00a0d2' ),
-		array( 'base' => '#999', 'focus' => '#00a0d2', 'current' => '#fff' )
+		array( 'base' => '#82878c', 'focus' => '#00a0d2', 'current' => '#fff' )
 	);
 
 	// Other color schemes are not available when running out of src
