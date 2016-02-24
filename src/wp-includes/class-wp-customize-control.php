@@ -65,6 +65,18 @@ class WP_Customize_Control {
 	public $setting = 'default';
 
 	/**
+	 * Capability required to use this control.
+	 *
+	 * Normally this is empty and the capability is derived from the capabilities
+	 * of the associated `$settings`.
+	 *
+	 * @since 4.5.0
+	 * @access public
+	 * @var string
+	 */
+	public $capability;
+
+	/**
 	 * @access public
 	 * @var int
 	 */
@@ -187,7 +199,7 @@ class WP_Customize_Control {
 		$this->instance_number = self::$instance_count;
 
 		// Process settings.
-		if ( empty( $this->settings ) ) {
+		if ( ! isset( $this->settings ) ) {
 			$this->settings = $id;
 		}
 
@@ -196,7 +208,7 @@ class WP_Customize_Control {
 			foreach ( $this->settings as $key => $setting ) {
 				$settings[ $key ] = $this->manager->get_setting( $setting );
 			}
-		} else {
+		} else if ( is_string( $this->settings ) ) {
 			$this->setting = $this->manager->get_setting( $this->settings );
 			$settings['default'] = $this->setting;
 		}
@@ -306,14 +318,20 @@ class WP_Customize_Control {
 	 * @return bool False if theme doesn't support the control or user doesn't have the required permissions, otherwise true.
 	 */
 	final public function check_capabilities() {
+		if ( ! empty( $this->capability ) && ! current_user_can( $this->capability ) ) {
+			return false;
+		}
+
 		foreach ( $this->settings as $setting ) {
-			if ( ! $setting->check_capabilities() )
+			if ( ! $setting->check_capabilities() ) {
 				return false;
+			}
 		}
 
 		$section = $this->manager->get_section( $this->section );
-		if ( isset( $section ) && ! $section->check_capabilities() )
+		if ( isset( $section ) && ! $section->check_capabilities() ) {
 			return false;
+		}
 
 		return true;
 	}
