@@ -133,11 +133,27 @@ do_action( 'customize_controls_print_scripts' );
 				<div class="accordion-section-title">
 					<span class="preview-notice"><?php
 						echo sprintf( __( 'You are customizing %s' ), '<strong class="panel-title site-title">' . __( 'Loading&hellip;' ) . '</strong>' );
-					?></span>
-					<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false"><span class="screen-reader-text"><?php _e( 'Help' ); ?></span></button>
+					?></span><?php
+
+					/**
+					 * Filter the description in the primary Customizer panel.
+					 *
+					 * @since 4.6
+					 *
+					 * @param string $customizer_description Appears at top of primary Customizer panel, under Customizer title.
+					 */
+					$customizer_description = apply_filters( 'customizer_primary_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
+					if ( ! empty( $customizer_description ) ) {
+						?>
+						<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false">
+							<span class="screen-reader-text"><?php _e( 'Help' ); ?></span>
+						</button>
+						<?php
+					}
+					?>
 				</div>
 				<div class="customize-panel-description"><?php
-					_e( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
+					echo esc_html( $customizer_description );
 				?></div>
 			</div>
 
