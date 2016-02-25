@@ -142,7 +142,7 @@ do_action( 'customize_controls_print_scripts' );
 					 *
 					 * @param string $customizer_description Appears at top of primary Customizer panel, under Customizer title.
 					 */
-					$customizer_description = apply_filters( 'customizer_primary_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
+					$customizer_description = apply_filters( 'customize_root_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
 					if ( ! empty( $customizer_description ) ) {
 						?>
 						<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false">
@@ -153,7 +153,7 @@ do_action( 'customize_controls_print_scripts' );
 					?>
 				</div>
 				<div class="customize-panel-description"><?php
-					echo esc_html( $customizer_description );
+					echo $customizer_description;
 				?></div>
 			</div>
 
