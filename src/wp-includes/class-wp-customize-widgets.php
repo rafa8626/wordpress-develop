@@ -1529,11 +1529,6 @@ final class WP_Customize_Widgets {
 	 * @access public
 	 */
 	public function customize_preview_enqueue_deps() {
-		if ( isset( $this->manager->selective_refresh ) ) {
-			$script = wp_scripts()->registered['customize-preview-widgets'];
-			$script->deps[] = 'customize-selective-refresh';
-		}
-
 		wp_enqueue_script( 'customize-preview-widgets' );
 		wp_enqueue_style( 'customize-preview' );
 	}

@@ -109,7 +109,7 @@ final class WP_Customize_Manager {
 	 * @access protected
 	 * @var array
 	 */
-	protected $components = array( 'widgets', 'nav_menus', 'selective_refresh' );
+	protected $components = array( 'widgets', 'nav_menus' );
 
 	/**
 	 * Registered instances of WP_Customize_Section.
@@ -259,6 +259,9 @@ final class WP_Customize_Manager {
 		 */
 		$components = apply_filters( 'customize_loaded_components', $this->components, $this );
 
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-selective-refresh.php' );
+		$this->selective_refresh = new WP_Customize_Selective_Refresh( $this );
+
 		if ( in_array( 'widgets', $components, true ) ) {
 			require_once( ABSPATH . WPINC . '/class-wp-customize-widgets.php' );
 			$this->widgets = new WP_Customize_Widgets( $this );
@@ -267,11 +270,6 @@ final class WP_Customize_Manager {
 		if ( in_array( 'nav_menus', $components, true ) ) {
 			require_once( ABSPATH . WPINC . '/class-wp-customize-nav-menus.php' );
 			$this->nav_menus = new WP_Customize_Nav_Menus( $this );
-		}
-
-		if ( in_array( 'selective_refresh', $components, true ) ) {
-			require_once( ABSPATH . WPINC . '/customize/class-wp-customize-selective-refresh.php' );
-			$this->selective_refresh = new WP_Customize_Selective_Refresh( $this );
 		}
 
 		add_filter( 'wp_die_handler', array( $this, 'wp_die_handler' ) );
@@ -1730,7 +1728,6 @@ final class WP_Customize_Manager {
 			'autofocus' => array(),
 			'documentTitleTmpl' => $this->get_document_title_template(),
 			'previewableDevices' => $this->get_previewable_devices(),
-			'selectiveRefreshEnabled' => isset( $this->selective_refresh ),
 		);
 
 		// Prepare Customize Section objects to pass to JavaScript.
@@ -1984,14 +1981,12 @@ final class WP_Customize_Manager {
 			'priority' => 0,
 		) ) );
 
-		if ( isset( $this->selective_refresh ) ) {
-			$this->selective_refresh->add_partial( 'site_logo', array(
-				'settings'            => array( 'site_logo' ),
-				'selector'            => '.site-logo-link',
-				'render_callback'     => array( $this, '_render_site_logo_partial' ),
-				'container_inclusive' => true,
-			) );
-		}
+		$this->selective_refresh->add_partial( 'site_logo', array(
+			'settings'            => array( 'site_logo' ),
+			'selector'            => '.site-logo-link',
+			'render_callback'     => array( $this, '_render_site_logo_partial' ),
+			'container_inclusive' => true,
+		) );
 
 		/* Colors */
 
