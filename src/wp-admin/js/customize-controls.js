@@ -3653,9 +3653,10 @@
 				.addClass( 'preview-' + newDevice );
 		} );
 
-		// Bind site title display to the corresponding field.
-		if ( title.length ) {
+		// Bind site title display to the corresponding field, if the filter 'customize_root_panel_title' hasn't changed it.
+		if ( title.length && ( ! title.hasClass( 'title-is-filtered' ) ) ) {
 			api( 'blogname', function( setting ) {
+                console.log( 'inside block' );
 				var updateTitle = function() {
 					title.text( $.trim( setting() ) || api.l10n.untitledBlogName );
 				};

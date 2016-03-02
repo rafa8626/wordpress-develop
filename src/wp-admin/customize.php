@@ -126,21 +126,34 @@ do_action( 'customize_controls_print_scripts' );
 				<span class="screen-reader-text"><?php _e( 'Cancel' ); ?></span>
 			</a>
 		</div>
-
 		<div id="widgets-right" class="wp-clearfix"><!-- For Widget Customizer, many widgets try to look for instances under div#widgets-right, so we have to add that ID to a container div in the Customizer for compat -->
 		<div class="wp-full-overlay-sidebar-content" tabindex="-1">
 			<div id="customize-info" class="accordion-section customize-info">
 				<div class="accordion-section-title">
 					<span class="preview-notice"><?php
-						echo sprintf( __( 'You are customizing %s' ), '<strong class="panel-title site-title">' . get_bloginfo( 'name' ) . '</strong>' );
+
+						$original_customizer_title = get_bloginfo( 'name' );
+
+						/**
+						 * Filter title in root Customizer panel.
+						 *
+						 * @since 4.6
+						 *
+						 * @param string $customizer_title Appears at top of root Customizer panel.
+						 */
+						$filtered_customizer_title = apply_filters( 'customize_root_panel_title', $original_customizer_title );
+
+						// If the title has been filtered, add a class so that JavaScript won't change it on updating the 'Site Title' control.
+						$is_filtered_class = ( $filtered_customizer_title === $original_customizer_title ) ? '' : ' title-is-filtered';
+						echo sprintf( __( 'You are customizing %s' ), '<strong class="panel-title site-title' . esc_attr( $is_filtered_class ) . '">' . $filtered_customizer_title . '</strong>' );
 					?></span><?php
 
 					/**
-					 * Filter the description in the primary Customizer panel.
+					 * Filter description in primary Customizer panel.
 					 *
 					 * @since 4.6
 					 *
-					 * @param string $customizer_description Appears at top of primary Customizer panel, under Customizer title.
+					 * @param string $customizer_description Appears at top of root Customizer panel, under Customizer title.
 					 */
 					$customizer_description = apply_filters( 'customize_root_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
 					if ( ! empty( $customizer_description ) ) {
