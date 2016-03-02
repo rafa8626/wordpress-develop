@@ -17,15 +17,15 @@
 
 	// Link settings.
 	api.Menus.data = {
-		nonce: '',
 		itemTypes: [],
 		l10n: {},
-		menuItemTransport: 'postMessage',
+		settingTransport: 'refresh',
 		phpIntMax: 0,
 		defaultSettingValues: {
 			nav_menu: {},
 			nav_menu_item: {}
-		}
+		},
+		locationSlugMappedToName: {}
 	};
 	if ( 'undefined' !== typeof _wpCustomizeNavMenusSettings ) {
 		$.extend( api.Menus.data, _wpCustomizeNavMenusSettings );
@@ -187,6 +187,8 @@
 
 			// Close the panel if the URL in the preview changes
 			api.previewer.bind( 'url', this.close );
+
+			self.delegateEvents();
 		},
 
 		// Search input change handler.
@@ -248,7 +250,7 @@
 			$section.addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'customize-menus-nonce': api.Menus.data.nonce,
+				'customize-menus-nonce': api.settings.nonce['customize-menus'],
 				'wp_customize': 'on',
 				'search': self.searchTerm,
 				'page': page
@@ -323,7 +325,7 @@
 			availableMenuItemContainer.find( '.accordion-section-title' ).addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'customize-menus-nonce': api.Menus.data.nonce,
+				'customize-menus-nonce': api.settings.nonce['customize-menus'],
 				'wp_customize': 'on',
 				'type': type,
 				'object': object,
@@ -804,19 +806,21 @@
 		/**
 		 * @param {array} themeLocations
 		 */
-		updateAssignedLocationsInSectionTitle: function( themeLocations ) {
+		updateAssignedLocationsInSectionTitle: function( themeLocationSlugs ) {
 			var section = this,
 				$title;
 
 			$title = section.container.find( '.accordion-section-title:first' );
 			$title.find( '.menu-in-location' ).remove();
-			_.each( themeLocations, function( themeLocation ) {
-				var $label = $( '<span class="menu-in-location"></span>' );
-				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', themeLocation ) );
+			_.each( themeLocationSlugs, function( themeLocationSlug ) {
+				var $label, locationName;
+				$label = $( '<span class="menu-in-location"></span>' );
+				locationName = api.Menus.data.locationSlugMappedToName[ themeLocationSlug ];
+				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', locationName ) );
 				$title.append( $label );
 			});
 
-			section.container.toggleClass( 'assigned-to-menu-location', 0 !== themeLocations.length );
+			section.container.toggleClass( 'assigned-to-menu-location', 0 !== themeLocationSlugs.length );
 
 		},
 
@@ -2306,7 +2310,7 @@
 			customizeId = 'nav_menu_item[' + String( placeholderId ) + ']';
 			settingArgs = {
 				type: 'nav_menu_item',
-				transport: 'postMessage',
+				transport: api.Menus.data.settingTransport,
 				previewer: api.previewer
 			};
 			setting = api.create( customizeId, customizeId, {}, settingArgs );
@@ -2395,7 +2399,7 @@
 			// Register the menu control setting.
 			api.create( customizeId, customizeId, {}, {
 				type: 'nav_menu',
-				transport: 'postMessage',
+				transport: api.Menus.data.settingTransport,
 				previewer: api.previewer
 			} );
 			api( customizeId ).set( $.extend(
@@ -2482,10 +2486,6 @@
 			}
 		} );
 
-		api.previewer.bind( 'refresh', function() {
-			api.previewer.refresh();
-		});
-
 		// Open and focus menu control.
 		api.previewer.bind( 'focus-nav-menu-item-control', api.Menus.focusMenuItemControl );
 	} );
@@ -2531,7 +2531,7 @@
 				newCustomizeId = 'nav_menu[' + String( update.term_id ) + ']';
 				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
 					type: 'nav_menu',
-					transport: 'postMessage',
+					transport: api.Menus.data.settingTransport,
 					previewer: api.previewer
 				} );
 
@@ -2679,7 +2679,7 @@
 				newCustomizeId = 'nav_menu_item[' + String( update.post_id ) + ']';
 				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
 					type: 'nav_menu_item',
-					transport: 'postMessage',
+					transport: api.Menus.data.settingTransport,
 					previewer: api.previewer
 				} );
 

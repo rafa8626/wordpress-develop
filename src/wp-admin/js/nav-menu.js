@@ -43,6 +43,7 @@ var wpNavMenu;
 
 			this.attachQuickSearchListeners();
 			this.attachThemeLocationsListeners();
+			this.attachMenuSaveSubmitListeners();
 
 			this.attachTabsPanelListeners();
 
@@ -179,7 +180,7 @@ var wpNavMenu;
 							return false;
 
 						// Show the ajax spinner
-						t.find( '.spinner' ).addClass( 'is-active' );
+						t.find( '.button-controls .spinner' ).addClass( 'is-active' );
 
 						// Retrieve menu item data
 						$(checkboxes).each(function(){
@@ -196,7 +197,7 @@ var wpNavMenu;
 						api.addItemToMenu(menuItems, processMethod, function(){
 							// Deselect the items and hide the ajax spinner
 							checkboxes.removeAttr('checked');
-							t.find( '.spinner' ).removeClass( 'is-active' );
+							t.find( '.button-controls .spinner' ).removeClass( 'is-active' );
 						});
 					});
 				},
@@ -834,6 +835,17 @@ var wpNavMenu;
 			});
 		},
 
+		attachMenuSaveSubmitListeners : function() {
+			/*
+			 * When a navigation menu is saved, store a JSON representation of all form data
+			 * in a single input to avoid PHP `max_input_vars` limitations. See #14134.
+			 */
+			$('#update-nav-menu').submit(function() {
+				var navMenuData = $('#update-nav-menu').serializeArray();
+				$('[name="nav-menu-data"]').val( JSON.stringify( navMenuData ) );
+			});
+		},
+
 		attachThemeLocationsListeners : function() {
 			var loc = $('#nav-menu-theme-locations'), params = {};
 			params.action = 'menu-locations-save';
@@ -854,8 +866,13 @@ var wpNavMenu;
 			var searchTimer,
 				inputEvent;
 
+			// Prevent form submission.
+			$( '#nav-menu-meta' ).on( 'submit', function( event ) {
+				event.preventDefault();
+			});
+
 			/*
-			 * Use feature detection to determine whether password inputs should use
+			 * Use feature detection to determine whether inputs should use
 			 * the `keyup` or `input` event. Input is preferred but lacks support
 			 * in legacy browsers. See changeset 34078, see also ticket #26600#comment:59
 			 */
@@ -865,13 +882,8 @@ var wpNavMenu;
 				inputEvent = 'keyup';
 			}
 
-			$( '.quick-search' ).on( inputEvent, function( e ) {
+			$( '.quick-search' ).on( inputEvent, function() {
 				var t = $(this);
-
-				if( 13 == e.which ) {
-					api.updateQuickSearchResults( t );
-					return false;
-				}
 
 				if( searchTimer ) clearTimeout(searchTimer);
 

@@ -30,7 +30,7 @@ $charset_collate = $wpdb->get_charset_collate();
  * @global wpdb $wpdb WordPress database abstraction object.
  *
  * @param string $scope Optional. The tables for which to retrieve SQL. Can be all, global, ms_global, or blog tables. Defaults to all.
- * @param int $blog_id Optional. The blog ID for which to retrieve SQL. Default is the current blog ID.
+ * @param int $blog_id Optional. The site ID for which to retrieve SQL. Default is the current site ID.
  * @return string The SQL needed to create the requested tables.
  */
 function wp_get_db_schema( $scope = 'all', $blog_id = null ) {
@@ -204,7 +204,8 @@ CREATE TABLE $wpdb->posts (
   display_name varchar(250) NOT NULL default '',
   PRIMARY KEY  (ID),
   KEY user_login_key (user_login),
-  KEY user_nicename (user_nicename)
+  KEY user_nicename (user_nicename),
+  KEY user_email (user_email)
 ) $charset_collate;\n";
 
 	// Multisite users table
@@ -223,7 +224,8 @@ CREATE TABLE $wpdb->posts (
   deleted tinyint(2) NOT NULL default '0',
   PRIMARY KEY  (ID),
   KEY user_login_key (user_login),
-  KEY user_nicename (user_nicename)
+  KEY user_nicename (user_nicename),
+  KEY user_email (user_email)
 ) $charset_collate;\n";
 
 	// Usermeta.
@@ -397,7 +399,7 @@ function populate_options() {
 	'siteurl' => $guessurl,
 	'home' => $guessurl,
 	'blogname' => __('My Site'),
-	/* translators: blog tagline */
+	/* translators: site tagline */
 	'blogdescription' => __('Just another WordPress site'),
 	'users_can_register' => 0,
 	'admin_email' => 'you@example.com',
@@ -529,7 +531,7 @@ function populate_options() {
 
 	// 3.0 multisite
 	if ( is_multisite() ) {
-		/* translators: blog tagline */
+		/* translators: site tagline */
 		$options[ 'blogdescription' ] = sprintf(__('Just another %s site'), get_current_site()->site_name );
 		$options[ 'permalink_structure' ] = '/%year%/%monthnum%/%day%/%postname%/';
 	}

@@ -69,7 +69,7 @@ ul.add-menu-item-tabs li {
 }
 
 .is-submenu {
-	color: #999;
+	color: #555d66; /* #fafafa background */
 	font-style: italic;
 	font-weight: normal;
 	margin-left: 4px;
@@ -134,7 +134,7 @@ ul.add-menu-item-tabs li {
 }
 
 .theme-location-set {
-	color: #999;
+	color: #72777c;
 	font-size: 11px;
 }
 
@@ -484,7 +484,7 @@ ul.add-menu-item-tabs li {
 }
 
 .menu-item-handle .menu-item-title.no-title {
-	color: #999;
+	color: #72777c;
 }
 
 /* Sortables */
@@ -674,7 +674,7 @@ body.menu-max-depth-11 { min-width: 1280px !important; }
 	margin: 0 0 10px;
 	padding: 3px 5px 5px;
 	border: 1px solid #dfdfdf;
-	color: #777;
+	color: #72777c;
 	font-size: 12px;
 	font-style: italic;
 }
@@ -745,23 +745,6 @@ body.menu-max-depth-11 { min-width: 1280px !important; }
 .nav-menus-php .major-publishing-actions .form-invalid {
 	padding-left: 4px;
 	margin-left: -4px;
-}
-
-/* Clearfix */
-#menu-item-name-wrap:after,
-#menu-item-url-wrap:after,
-#menu-name-label:after,
-#menu-settings-column .inside:after,
-#nav-menus-frame:after,
-.nav-menus-php #post-body-content:after,
-.nav-menus-php .button-controls:after,
-.nav-menus-php .major-publishing-actions:after,
-.nav-menus-php .menu-item-settings:after {
-	clear: both;
-	content: ".";
-	display: block;
-	height: 0;
-	visibility: hidden;
 }
 
 #nav-menus-frame,

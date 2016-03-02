@@ -49,6 +49,26 @@ $num_locations = count( array_keys( $locations ) );
 // Allowed actions: add, update, delete
 $action = isset( $_REQUEST['action'] ) ? $_REQUEST['action'] : 'edit';
 
+/*
+ * If a JSON blob of navigation menu data is found, expand it and inject it
+ * into `$_POST` to avoid PHP `max_input_vars` limitations. See #14134. 
+ */
+if ( isset( $_POST['nav-menu-data'] ) ) {
+	$data = json_decode( stripslashes( $_POST['nav-menu-data'] ) );
+	if ( ! is_null( $data ) && $data ) {
+		foreach ( $data as $post_input_data ) {
+			// For input names that are arrays (e.g. `menu-item-db-id[3]`), derive the array path keys via regex.
+			if ( preg_match( '#(.*)(?:\[(\d+)\])#', $post_input_data->name, $matches ) ) {
+				if ( empty( $_POST[ $matches[1] ] ) ) {
+					$_POST[ $matches[1] ] = array();
+				}
+				$_POST[ $matches[1] ][ (int) $matches[2] ] = wp_slash( $post_input_data->value );
+			} else {
+				$_POST[ $post_input_data->name ] = wp_slash( $post_input_data->value );
+			}
+		}
+	}
+}
 switch ( $action ) {
 	case 'add-menu-item':
 		check_admin_referer( 'add-menu_item', 'menu-settings-column-nonce' );
@@ -647,7 +667,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 				<?php } // foreach ?>
 				</tbody>
 			</table>
-			<p class="button-controls"><?php submit_button( __( 'Save Changes' ), 'primary left', 'nav-menu-locations', false ); ?></p>
+			<p class="button-controls wp-clearfix"><?php submit_button( __( 'Save Changes' ), 'primary left', 'nav-menu-locations', false ); ?></p>
 			<?php wp_nonce_field( 'save-menu-locations' ); ?>
 			<input type="hidden" name="menu" id="nav-menu-meta-object-id" value="<?php echo esc_attr( $nav_menu_selected_id ); ?>" />
 		</form>
@@ -714,7 +734,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 		</form>
 	<?php endif; ?>
 	</div><!-- /manage-menus -->
-	<div id="nav-menus-frame">
+	<div id="nav-menus-frame" class="wp-clearfix">
 	<div id="menu-settings-column" class="metabox-holder<?php if ( isset( $_GET['menu'] ) && '0' == $_GET['menu'] ) { echo ' metabox-holder-disabled'; } ?>">
 
 		<div class="clear"></div>
@@ -731,6 +751,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 		<div id="menu-management">
 			<form id="update-nav-menu" method="post" enctype="multipart/form-data">
 				<div class="menu-edit <?php if ( $add_new_screen ) echo 'blank-slate'; ?>">
+					<input type="hidden" name="nav-menu-data">
 					<?php
 					wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false );
 					wp_nonce_field( 'meta-box-order', 'meta-box-order-nonce', false );
@@ -748,7 +769,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
  					<input type="hidden" name="action" value="update" />
 					<input type="hidden" name="menu" id="menu" value="<?php echo esc_attr( $nav_menu_selected_id ); ?>" />
 					<div id="nav-menu-header">
-						<div class="major-publishing-actions">
+						<div class="major-publishing-actions wp-clearfix">
 							<label class="menu-name-label" for="menu-name"><?php _e( 'Menu Name' ); ?></label>
 							<input name="menu-name" id="menu-name" type="text" class="menu-name regular-text menu-item-textbox" <?php echo $menu_name_val . $menu_name_aria_desc; ?> />
 							<div class="publishing-action">
@@ -757,7 +778,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 						</div><!-- END .major-publishing-actions -->
 					</div><!-- END .nav-menu-header -->
 					<div id="post-body">
-						<div id="post-body-content">
+						<div id="post-body-content" class="wp-clearfix">
 							<?php if ( ! $add_new_screen ) : ?>
 							<h3><?php _e( 'Menu Structure' ); ?></h3>
 							<?php $starter_copy = ( $one_theme_location_no_menus ) ? __( 'Edit your default menu by adding or removing items. Drag each item into the order you prefer. Click Create Menu to save your changes.' ) : __( 'Drag each item into the order you prefer. Click the arrow on the right of the item to reveal additional configuration options.' ); ?>
@@ -822,10 +843,10 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 						</div><!-- /#post-body-content -->
 					</div><!-- /#post-body -->
 					<div id="nav-menu-footer">
-						<div class="major-publishing-actions">
+						<div class="major-publishing-actions wp-clearfix">
 							<?php if ( 0 != $menu_count && ! $add_new_screen ) : ?>
 							<span class="delete-action">
-								<a class="submitdelete deletion menu-delete" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'menu' => $nav_menu_selected_id, admin_url() ) ), 'delete-nav_menu-' . $nav_menu_selected_id) ); ?>"><?php _e('Delete Menu'); ?></a>
+								<a class="submitdelete deletion menu-delete" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'delete', 'menu' => $nav_menu_selected_id ), admin_url( 'nav-menus.php' ) ), 'delete-nav_menu-' . $nav_menu_selected_id) ); ?>"><?php _e('Delete Menu'); ?></a>
 							</span><!-- END .delete-action -->
 							<?php endif; ?>
 							<div class="publishing-action">

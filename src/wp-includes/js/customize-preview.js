@@ -84,35 +84,58 @@
 	});
 
 	$( function() {
-		api.settings = window._wpCustomizeSettings;
-		if ( ! api.settings )
-			return;
+		var bg, setValue;
 
-		var bg;
+		api.settings = window._wpCustomizeSettings;
+		if ( ! api.settings ) {
+			return;
+		}
 
 		api.preview = new api.Preview({
 			url: window.location.href,
 			channel: api.settings.channel
 		});
 
+		/**
+		 * Create/update a setting value.
+		 *
+		 * @param {string}  id            - Setting ID.
+		 * @param {*}       value         - Setting value.
+		 * @param {boolean} [createDirty] - Whether to create a setting as dirty. Defaults to false.
+		 */
+		setValue = function( id, value, createDirty ) {
+			var setting = api( id );
+			if ( setting ) {
+				setting.set( value );
+			} else {
+				createDirty = createDirty || false;
+				setting = api.create( id, value, {
+					id: id
+				} );
+
+				// Mark dynamically-created settings as dirty so they will get posted.
+				if ( createDirty ) {
+					setting._dirty = true;
+				}
+			}
+		};
+
 		api.preview.bind( 'settings', function( values ) {
-			$.each( values, function( id, value ) {
-				if ( api.has( id ) )
-					api( id ).set( value );
-				else
-					api.create( id, value );
-			});
+			$.each( values, setValue );
 		});
 
 		api.preview.trigger( 'settings', api.settings.values );
 
+		$.each( api.settings._dirty, function( i, id ) {
+			var setting = api( id );
+			if ( setting ) {
+				setting._dirty = true;
+			}
+		} );
+
 		api.preview.bind( 'setting', function( args ) {
-			var value;
-
-			args = args.slice();
-
-			if ( value = api( args.shift() ) )
-				value.set.apply( value, args );
+			var createDirty = true;
+			setValue.apply( null, args.concat( createDirty ) );
 		});
 
 		api.preview.bind( 'sync', function( events ) {
@@ -123,12 +146,24 @@
 		});
 
 		api.preview.bind( 'active', function() {
-			if ( api.settings.nonce ) {
-				api.preview.send( 'nonce', api.settings.nonce );
-			}
+			api.preview.send( 'nonce', api.settings.nonce );
 
 			api.preview.send( 'documentTitle', document.title );
 		});
+
+		api.preview.bind( 'saved', function( response ) {
+			api.trigger( 'saved', response );
+		} );
+
+		api.bind( 'saved', function() {
+			api.each( function( setting ) {
+				setting._dirty = false;
+			} );
+		} );
+
+		api.preview.bind( 'nonce-refresh', function( nonce ) {
+			$.extend( api.settings.nonce, nonce );
+		} );
 
 		/*
 		 * Send a message to the parent customize frame with a list of which
@@ -187,6 +222,62 @@
 				this.bind( update );
 			});
 		});
+
+		/**
+		 * Site Logo
+		 *
+		 * The site logo setting only contains the attachment ID. To avoid having to send an AJAX request to get more
+		 * data, we send a separate message with the attachment data we get from the Customizer's media modal.
+		 * Therefore first callback handles only the event of a new logo being selected.
+		 *
+		 * We don't need any information about a removed logo, so the second callback only handles that.
+		 *
+		 * @since 4.5.0
+		 */
+		api.preview.bind( 'site-logo-attachment-data', function( attachment ) {
+			var $logo  = $( '.site-logo' ),
+				size   = $logo.data( 'size' ),
+				srcset = [];
+
+			// If the source was smaller than the size required by the theme, give the biggest we've got.
+			if ( ! attachment.sizes[ size ] ) {
+				size = 'full';
+			}
+
+			_.each( attachment.sizes, function( size ) {
+				srcset.push( size.url + ' ' + size.width + 'w' );
+			} );
+
+			$logo.attr( {
+				height: attachment.sizes[ size ].height,
+				width:  attachment.sizes[ size ].width,
+				src:    attachment.sizes[ size ].url,
+				srcset: srcset
+			} );
+
+			$( '.site-logo-link' ).show();
+			$( 'body' ).addClass( 'wp-site-logo' );
+		} );
+
+		api( 'site_logo', function( setting ) {
+			setting.bind( function( newValue ) {
+				if ( ! newValue ) {
+					$( '.site-logo-link' ).hide();
+					$( 'body' ).removeClass( 'wp-site-logo' );
+				}
+			} );
+
+			// Focus on the control when the logo is clicked, if there is no site_logo partial.
+			if ( ! api.selectiveRefresh || ! api.selectiveRefresh.partial.has( 'site_logo' ) ) {
+				$( document.body ).on( 'click', '.site-logo-link', function( e ) {
+					if ( ! e.shiftKey ) {
+						return;
+					}
+					api.preview.send( 'focus-control-for-setting', 'site_logo' );
+				} );
+				$( '.site-logo-link' ).attr( 'title', api.settings.l10n.shiftClickToEdit );
+			}
+		} );
 
 		api.trigger( 'preview-ready' );
 	});
