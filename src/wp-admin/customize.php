@@ -126,6 +126,7 @@ do_action( 'customize_controls_print_scripts' );
 				<span class="screen-reader-text"><?php _e( 'Cancel' ); ?></span>
 			</a>
 		</div>
+
 		<div id="widgets-right" class="wp-clearfix"><!-- For Widget Customizer, many widgets try to look for instances under div#widgets-right, so we have to add that ID to a container div in the Customizer for compat -->
 			<div class="wp-full-overlay-sidebar-content" tabindex="-1"><?php
 
@@ -140,7 +141,7 @@ do_action( 'customize_controls_print_scripts' );
 				 */
 				$filtered_customizer_title = apply_filters( 'customize_root_panel_title', $original_customizer_title );
 
-				if ( ! empty( $filtered_customizer_title ) ) :
+				if ( ! empty( $filtered_customizer_title ) ):
 				?>
 					<div id="customize-info" class="accordion-section customize-info">
 						<div class="accordion-section-title">
@@ -158,7 +159,7 @@ do_action( 'customize_controls_print_scripts' );
 							 * @param string $customizer_description Appears at top of root Customizer panel, under Customizer title.
 							 */
 							$customizer_description = apply_filters( 'customize_root_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
-							if ( ! empty( $customizer_description ) ) :
+							if ( ! empty( $customizer_description ) ):
 								?>
 								<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false">
 									<span class="screen-reader-text"><?php _e( 'Help' ); ?></span>
