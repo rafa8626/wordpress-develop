@@ -614,15 +614,21 @@
 			});
 		},
 
-		saveManageColumnsState: function() {
-			var hidden = this.hidden();
-			$.post( wp.ajax.settings.url, {
-				action: 'hidden-columns',
-				hidden: hidden,
+		saveManageColumnsState: _.debounce( function() {
+			var panel = this;
+			if ( panel._updateHiddenColumnsRequest ) {
+				panel._updateHiddenColumnsRequest.abort();
+			}
+
+			panel._updateHiddenColumnsRequest = wp.ajax.post( 'hidden-columns', {
+				hidden: panel.hidden(),
 				screenoptionnonce: $( '#screenoptionnonce' ).val(),
 				page: 'nav-menus'
-			});
-		},
+			} );
+			panel._updateHiddenColumnsRequest.always( function() {
+				panel._updateHiddenColumnsRequest = null;
+			} );
+		}, 2000 ),
 
 		checked: function( column ) {
 			this.container.addClass( 'field-' + column + '-active' );
