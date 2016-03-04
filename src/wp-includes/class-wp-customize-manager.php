@@ -184,6 +184,33 @@ final class WP_Customize_Manager {
 	protected $return_url;
 
 	/**
+	 * Original title of the Customizer, before being filtered.
+	 *
+	 * @since 4.6
+	 * @access protected
+	 * @var string
+	 */
+	protected $original_customizer_title;
+
+	/**
+	 * Filtered title of the Customizer, shown in the top of the root panel.
+	 *
+	 * @since 4.6
+	 * @access protected
+	 * @var string
+	 */
+	protected $filtered_root_panel_title;
+
+	/**
+	 * Filtered description of the Customizer, below the title.
+	 *
+	 * @since 4.6
+	 * @access protected
+	 * @var string
+	 */
+	protected $filtered_root_panel_description;
+
+	/**
 	 * Mapping of 'panel', 'section', 'control' to the ID which should be autofocused.
 	 *
 	 * @since 4.4.0
@@ -1601,6 +1628,93 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Get Customizer title at top of root Customizer panel.
+	 *
+	 * Appears after text "You are customizing."
+	 *
+	 * @since 4.6
+	 * @access public
+	 */
+	public function set_filtered_root_panel_title() {
+		$this->original_customizer_title = get_bloginfo( 'name' );
+
+		/**
+		 * Filter title in root Customizer panel.
+		 *
+		 * @since 4.6
+		 *
+		 * @param string $customizer_title Appears at top of root Customizer panel.
+		 */
+		$this->filtered_root_panel_title = apply_filters( 'customize_root_panel_title', $this->original_customizer_title );
+	}
+
+	/**
+	 * Get Customizer title at top of root Customizer panel
+	 *
+	 * Appears above the description.
+	 *
+	 * @since 4.6
+	 * @access public
+	 */
+	public function get_filtered_root_panel_title() {
+		if ( ! empty( $this->filtered_root_panel_title ) ) {
+			return $this->filtered_root_panel_title;
+		}
+	}
+
+	/**
+	 * Whether the Customizer root panel title has been filtered.
+	 *
+	 * True if this title is different from the original title.
+	 *
+	 * @since 4.6
+	 * @access public
+	 *
+	 * @return bool
+	 */
+	public function is_root_panel_title_filtered() {
+		if ( ( isset( $this->filtered_root_panel_title ) ) && ( isset( $this->original_customizer_title ) ) ) {
+			return ( $this->filtered_root_panel_title !== $this->original_customizer_title );
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Set Customizer description.
+	 *
+	 * To be shown at the top of the Customizer root panel.
+	 *
+	 * @since 4.6
+	 * @access public
+	 */
+	public function set_filtered_root_panel_description() {
+
+		/**
+		 * Filter description in primary Customizer panel.
+		 *
+		 * @since 4.6
+		 *
+		 * @param string $customizer_description Appears at top of root Customizer panel, under Customizer title.
+		 */
+		$this->filtered_root_panel_description = apply_filters( 'customize_root_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
+	}
+
+	/**
+	 * Get Customizer description, to be shown in the root panel.
+	 *
+	 * Appears after "You are customizing" and the Customizer title.
+	 *
+	 * @since 4.6
+	 * @access public
+	 */
+	public function get_filtered_root_panel_description() {
+		if ( ! empty( $this->filtered_root_panel_description ) ) {
+			return $this->filtered_root_panel_description;
+		}
+	}
+
+	/**
 	 * Set the autofocused constructs.
 	 *
 	 * @since 4.4.0
@@ -1686,6 +1800,10 @@ final class WP_Customize_Manager {
 			$allowed_urls[] = home_url( '/', 'https' );
 		}
 
+		// Set title and description displayed at top of root Customizer panel.
+		$this->set_filtered_root_panel_title();
+		$this->set_filtered_root_panel_description();
+
 		/**
 		 * Filter the list of URLs allowed to be clicked and followed in the Customizer preview.
 		 *
@@ -1727,6 +1845,9 @@ final class WP_Customize_Manager {
 			'documentTitleTmpl' => $this->get_document_title_template(),
 			'previewableDevices' => $this->get_previewable_devices(),
 			'selectiveRefreshEnabled' => isset( $this->selective_refresh ),
+			'filteredRootPanelTitle' => $this->get_filtered_root_panel_title(),
+			'isRootPanelTitleFiltered' => $this->is_root_panel_title_filtered(),
+			'filteredRootPanelDescription' => $this->get_filtered_root_panel_description(),
 		);
 
 		// Prepare Customize Section objects to pass to JavaScript.
