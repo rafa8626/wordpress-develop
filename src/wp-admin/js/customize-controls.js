@@ -1333,8 +1333,7 @@
 			}
 
 			// Note: there is a second argument 'args' passed
-			var position, scroll,
-				panel = this,
+			var panel = this,
 				accordionSection = panel.container.closest( '.accordion-section' ),
 				overlay = accordionSection.closest( '.wp-full-overlay' ),
 				container = accordionSection.closest( '.wp-full-overlay-sidebar-content' ),
@@ -1342,8 +1341,7 @@
 				topPanel = overlay.find( '#customize-theme-controls > ul > .accordion-section > .accordion-section-title' ),
 				backBtn = accordionSection.find( '.customize-panel-back' ),
 				panelTitle = accordionSection.find( '.accordion-section-title' ).first(),
-				content = accordionSection.find( '.control-panel-content' ),
-				headerActionsHeight = $( '#customize-header-actions' ).height();
+				content = accordionSection.find( '.control-panel-content' );
 
 			if ( expanded ) {
 
@@ -1361,8 +1359,6 @@
 
 				content.show( 0, function() {
 					content.parent().show();
-					position = content.offset().top;
-					scroll = container.scrollTop();
 					accordionSection.addClass( 'current-panel' );
 					overlay.addClass( 'in-sub-panel' );
 					container.scrollTop( 0 );
