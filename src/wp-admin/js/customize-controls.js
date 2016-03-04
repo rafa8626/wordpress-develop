@@ -3231,7 +3231,8 @@
 			return;
 		}
 
-		var parent, topFocus,
+		var rootPanelDescription, customizeHelpButton, parent, topFocus,
+			customizeInfoSection = $( '#customize-info'),
 			body = $( document.body ),
 			overlay = body.children( '.wp-full-overlay' ),
 			title = $( '#customize-info .panel-title.site-title' ),
@@ -3249,8 +3250,17 @@
 			}
 		});
 
+		rootPanelDescription = api.settings.filteredRootPanelDescription;
+		customizeInfoSection.find( '> .customize-panel-description' ).html( rootPanelDescription );
+
+		// Hide the '?' icon if the root panel description isn't present
+		customizeHelpButton = customizeInfoSection.find( '> .accordion-section-title .customize-help-toggle' );
+		if ( ! rootPanelDescription ) {
+			customizeHelpButton.hide();
+		}
+
 		// Expand/Collapse the main customizer customize info.
-		$( '.customize-info' ).find( '> .accordion-section-title .customize-help-toggle' ).on( 'click keydown', function( event ) {
+		customizeHelpButton.on( 'click keydown', function( event ) {
 			if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 				return;
 			}
@@ -3653,16 +3663,29 @@
 				.addClass( 'preview-' + newDevice );
 		} );
 
-		// Bind site title display to the corresponding field, if the filter 'customize_root_panel_title' hasn't changed it.
-		if ( title.length && ( ! title.hasClass( 'title-is-filtered' ) ) ) {
-			api( 'blogname', function( setting ) {
-				var updateTitle = function() {
+		// Bind site title display to the corresponding field.
+		api( 'blogname', function( setting ) {
+			var updateTitle = function() {
+                var filteredTitle;
+
+                // Set the Customizer title.
+				if ( api.settings.isRootPanelTitleFiltered ) {
+					title.text( api.settings.filteredRootPanelTitle || '' );
+				} else {
 					title.text( $.trim( setting() ) || api.l10n.untitledBlogName );
-				};
-				setting.bind( updateTitle );
-				updateTitle();
-			} );
-		}
+				}
+
+				// If there's no title, set a class on the info section. The CSS will hide it.
+				if ( ! title.text().length ) {
+					customizeInfoSection.addClass( 'no-title' );
+				} else {
+					customizeInfoSection.removeClass( 'no-title' );
+				}
+
+			};
+			setting.bind( updateTitle );
+			updateTitle();
+		} );
 
 		/*
 		 * Create a postMessage connection with a parent frame,
