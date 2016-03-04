@@ -3666,9 +3666,8 @@
 		// Bind site title display to the corresponding field.
 		api( 'blogname', function( setting ) {
 			var updateTitle = function() {
-                var filteredTitle;
 
-                // Set the Customizer title.
+				// Set the Customizer title.
 				if ( api.settings.isRootPanelTitleFiltered ) {
 					title.text( api.settings.filteredRootPanelTitle || '' );
 				} else {

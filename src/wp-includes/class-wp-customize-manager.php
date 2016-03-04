@@ -1628,7 +1628,7 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Get Customizer title at top of root Customizer panel.
+	 * Set Customizer title at top of root Customizer panel.
 	 *
 	 * Appears after text "You are customizing."
 	 *

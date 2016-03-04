@@ -418,6 +418,10 @@ h3.customize-section-title {
 	transition: left ease-in-out .18s;
 }
 
+#customize-info.no-title {
+	display:none;
+}
+
 .ios #customize-info,
 .ios #customize-theme-controls > ul > .accordion-section {
 	-webkit-transition: left 0s;
