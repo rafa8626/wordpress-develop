@@ -648,7 +648,8 @@
 				overlay = section.container.closest( '.wp-full-overlay' ),
 				backBtn = section.container.find( '.customize-section-back' ),
 				sectionTitle = section.container.find( '.accordion-section-title' ).first(),
-				resizeContentHeight, expand;
+				headerActionsHeight = $( '#customize-header-actions' ).height(),
+				resizeContentHeight, expand, position, scroll;
 
 			if ( expanded && ! section.container.hasClass( 'open' ) ) {
 
@@ -670,6 +671,9 @@
 					expand = function() {
 						section.container.addClass( 'open' );
 						overlay.addClass( 'section-open' );
+						position = content.offset().top;
+						scroll = container.scrollTop();
+						content.css( 'margin-top', ( headerActionsHeight - position - scroll ) );
 						resizeContentHeight();
 						sectionTitle.attr( 'tabindex', '-1' );
 						backBtn.attr( 'tabindex', '0' );
@@ -1363,11 +1367,9 @@
 					accordionSection.addClass( 'current-panel' );
 					overlay.addClass( 'in-sub-panel' );
 					container.scrollTop( 0 );
-					_.defer( function() {
-						panel._recalculateTopMargin();
-						topPanel.attr( 'tabindex', '-1' );
-						backBtn.attr( 'tabindex', '0' );
-					});
+					topPanel.attr( 'tabindex', '-1' );
+					backBtn.attr( 'tabindex', '0' );
+					panel._recalculateTopMargin();
 					_.delay( function() {
 						backBtn.focus();
 						if ( args.completeCallback ) {
