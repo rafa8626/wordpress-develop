@@ -351,10 +351,9 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->manager->set_filtered_root_panel_title();
 		$this->assertEquals( get_bloginfo( 'name' ), $this->manager->get_filtered_root_panel_title() );
 
-		$filtered_title = 'New Title';
-		add_filter( 'customize_root_panel_title', function() use ( $filtered_title ) { return $filtered_title; } );
+		add_filter( 'customize_root_panel_title', array( $this, 'filter_root_panel_title' ) );
 		$this->manager->set_filtered_root_panel_title();
-		$this->assertEquals( $filtered_title, $this->manager->get_filtered_root_panel_title() );
+		$this->assertEquals( 'New Title', $this->manager->get_filtered_root_panel_title() );
 	}
 
 	/**
@@ -367,9 +366,18 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertEquals( false, $this->manager->is_root_panel_title_filtered() );
 
 		$filtered_title = 'foo';
-		add_filter( 'customize_root_panel_title', function() use ( $filtered_title ) { return $filtered_title; } );
+		add_filter( 'customize_root_panel_title', array( $this, 'filter_root_panel_title' ) );
 		$this->manager->set_filtered_root_panel_title();
 		$this->assertEquals( true, $this->manager->is_root_panel_title_filtered() );
+	}
+
+	/**
+	 * Filter for title at top of root panel.
+	 *
+	 * @return string Title.
+	 */
+	function filter_root_panel_title() {
+		return 'New Title';
 	}
 
 	/**
@@ -386,9 +394,18 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertEquals( $original_description, $this->manager->get_filtered_root_panel_description() );
 
 		$filtered_description = 'bar';
-		add_filter( 'customize_root_panel_description' , function() use ( $filtered_description ) { return $filtered_description; } );
+		add_filter( 'customize_root_panel_description', array( $this, 'filter_root_panel_description' ) );
 		$this->manager->set_filtered_root_panel_description();
 		$this->assertEquals( 'bar', $this->manager->get_filtered_root_panel_description() );
+	}
+
+	/**
+	 * Filter for description at top of root panel.
+	 *
+	 * @return string Description.
+	 */
+	function filter_root_panel_description() {
+		return 'bar';
 	}
 
 	/**
