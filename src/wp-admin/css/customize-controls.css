@@ -430,14 +430,6 @@ h3.customize-section-title {
 	width: 300px;
 }
 
-.in-sub-panel #customize-info {
-	height: 0;
-}
-
-.in-sub-panel #customize-theme-controls > ul > .control-section:not(.current-panel) {
-	height: 0;
-}
-
 .in-sub-panel #customize-theme-controls .accordion-section.current-panel {
 	width: 100%;
 }
