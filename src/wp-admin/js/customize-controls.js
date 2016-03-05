@@ -1367,14 +1367,16 @@
 					accordionSection.addClass( 'current-panel' );
 					overlay.addClass( 'in-sub-panel' );
 					container.scrollTop( 0 );
-					if ( args.completeCallback ) {
-						args.completeCallback();
-					}
+					topPanel.attr( 'tabindex', '-1' );
+					backBtn.attr( 'tabindex', '0' );
+					panel._recalculateTopMargin();
+					_.delay( function() {
+						backBtn.focus();
+						if ( args.completeCallback ) {
+							args.completeCallback();
+						}
+					}, 180 );
 				} );
-				topPanel.attr( 'tabindex', '-1' );
-				backBtn.attr( 'tabindex', '0' );
-				backBtn.focus();
-				panel._recalculateTopMargin();
 			} else {
 				siblings.removeClass( 'open' );
 				accordionSection.removeClass( 'current-panel' );
