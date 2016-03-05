@@ -1657,7 +1657,7 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_filtered_root_panel_title() {
-		if ( ! empty( $this->filtered_root_panel_title ) ) {
+		if ( isset( $this->filtered_root_panel_title ) ) {
 			return $this->filtered_root_panel_title;
 		}
 	}
@@ -1709,7 +1709,7 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_filtered_root_panel_description() {
-		if ( ! empty( $this->filtered_root_panel_description ) ) {
+		if ( isset( $this->filtered_root_panel_description ) ) {
 			return $this->filtered_root_panel_description;
 		}
 	}

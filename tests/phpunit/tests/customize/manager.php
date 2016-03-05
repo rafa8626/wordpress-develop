@@ -340,6 +340,58 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test get_filtered_root_panel_title()/set_filtered_root_panel_title() methods.
+	 *
+	 * @see WP_Customize_Manager::get_filtered_root_panel_title();
+	 * @see WP_Customize_Manager::set_filtered_root_panel_title();
+	 */
+	function test_get_filtered_root_panel_title() {
+		$this->assertEmpty( $this->manager->get_filtered_root_panel_title() );
+
+		$this->manager->set_filtered_root_panel_title();
+		$this->assertEquals( get_bloginfo( 'name' ), $this->manager->get_filtered_root_panel_title() );
+
+		$filtered_title = 'New Title';
+		add_filter( 'customize_root_panel_title', function() use ( $filtered_title ) { return $filtered_title; } );
+		$this->manager->set_filtered_root_panel_title();
+		$this->assertEquals( $filtered_title, $this->manager->get_filtered_root_panel_title() );
+	}
+
+	/**
+	 * Test is_root_panel_title_filtered() method.
+	 *
+	 * @see WP_Customize_Manager::is_root_panel_title_filtered();
+	 */
+	function test_is_root_panel_title_filtered() {
+		$this->manager->set_filtered_root_panel_title();
+		$this->assertEquals( false, $this->manager->is_root_panel_title_filtered() );
+
+		$filtered_title = 'foo';
+		add_filter( 'customize_root_panel_title', function() use ( $filtered_title ) { return $filtered_title; } );
+		$this->manager->set_filtered_root_panel_title();
+		$this->assertEquals( true, $this->manager->is_root_panel_title_filtered() );
+	}
+
+	/**
+	 * Test get_filtered_root_panel_description()/set_filtered_root_panel_description() methods.
+	 *
+	 * @see WP_Customize_Manager::get_filtered_root_panel_title();
+	 * @see WP_Customize_Manager::set_filtered_root_panel_title();
+	 */
+	function test_get_filtered_root_panel_description() {
+		$this->assertEmpty( $this->manager->get_filtered_root_panel_description() );
+
+		$this->manager->set_filtered_root_panel_description();
+		$original_description = __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
+		$this->assertEquals( $original_description, $this->manager->get_filtered_root_panel_description() );
+
+		$filtered_description = 'bar';
+		add_filter( 'customize_root_panel_description' , function() use ( $filtered_description ) { return $filtered_description; } );
+		$this->manager->set_filtered_root_panel_description();
+		$this->assertEquals( 'bar', $this->manager->get_filtered_root_panel_description() );
+	}
+
+	/**
 	 * Test get_autofocus()/set_autofocus() methods.
 	 *
 	 * @see WP_Customize_Manager::get_autofocus()
