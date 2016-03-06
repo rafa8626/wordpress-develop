@@ -340,17 +340,17 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test get_filtered_root_panel_title()/set_filtered_root_panel_title() methods.
+	 * Test get_root_panel_title()/set_root_panel_title() methods.
 	 *
-	 * @see WP_Customize_Manager::get_filtered_root_panel_title();
-	 * @see WP_Customize_Manager::set_filtered_root_panel_title();
+	 * @see WP_Customize_Manager::get_root_panel_title();
+	 * @see WP_Customize_Manager::set_root_panel_title();
 	 */
 	function test_get_root_panel_title() {
 		$this->assertEquals( get_bloginfo( 'name' ), $this->manager->get_root_panel_title() );
 
 		$first_new_title = 'Different Title';
 		$this->manager->set_root_panel_title( $first_new_title );
-		$this->assertEquals( $new_title, $this->manager->get_root_panel_title() );
+		$this->assertEquals( $first_new_title, $this->manager->get_root_panel_title() );
 
 		$second_new_title = 'Renamed Title';
 		$this->manager->set_root_panel_title( $second_new_title );
@@ -358,40 +358,22 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Filter for title at top of root panel.
+	 * Test get_root_panel_description()/set_root_panel_description() methods.
 	 *
-	 * @return string Title.
+	 * @see WP_Customize_Manager::get_root_panel_title();
+	 * @see WP_Customize_Manager::set_root_panel_title();
 	 */
-	function filter_root_panel_title() {
-		return 'New Title';
-	}
+	function test_get_root_panel_description() {
+		$default_description = __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
+		$this->assertEquals( $default_description, $this->manager->get_root_panel_description() );
 
-	/**
-	 * Test get_filtered_root_panel_description()/set_filtered_root_panel_description() methods.
-	 *
-	 * @see WP_Customize_Manager::get_filtered_root_panel_title();
-	 * @see WP_Customize_Manager::set_filtered_root_panel_title();
-	 */
-	function test_get_filtered_root_panel_description() {
-		$this->assertEmpty( $this->manager->get_filtered_root_panel_description() );
+		$first_new_description = 'Another Description';
+		$this->manager->set_root_panel_description( $first_new_description );
+		$this->assertEquals( $first_new_description, $this->manager->get_root_panel_description() );
 
-		$this->manager->set_filtered_root_panel_description();
-		$original_description = __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
-		$this->assertEquals( $original_description, $this->manager->get_filtered_root_panel_description() );
-
-		$filtered_description = 'bar';
-		add_filter( 'customize_root_panel_description', array( $this, 'filter_root_panel_description' ) );
-		$this->manager->set_filtered_root_panel_description();
-		$this->assertEquals( 'bar', $this->manager->get_filtered_root_panel_description() );
-	}
-
-	/**
-	 * Filter for description at top of root panel.
-	 *
-	 * @return string Description.
-	 */
-	function filter_root_panel_description() {
-		return 'bar';
+		$second_new_description = '<em>Newest Description</em>';
+		$this->manager->set_root_panel_description( $second_new_description );
+		$this->assertEquals( $second_new_description, $this->manager->get_root_panel_description() );
 	}
 
 	/**
@@ -480,7 +462,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$data = json_decode( $json, true );
 		$this->assertNotEmpty( $data );
 
-		$this->assertEqualSets( array( 'theme', 'url', 'browser', 'panels', 'sections', 'nonce', 'autofocus', 'documentTitleTmpl', 'previewableDevices', 'selectiveRefreshEnabled', 'filteredRootPanelTitle', 'isRootPanelTitleFiltered', 'filteredRootPanelDescription' ), array_keys( $data ) );
+		$this->assertEqualSets( array( 'theme', 'url', 'browser', 'panels', 'sections', 'nonce', 'autofocus', 'documentTitleTmpl', 'previewableDevices', 'selectiveRefreshEnabled', 'filteredRootPanelTitle', 'isRootPanelTitleOverridden', 'filteredRootPanelDescription' ), array_keys( $data ) );
 		$this->assertEquals( $autofocus, $data['autofocus'] );
 		$this->assertArrayHasKey( 'save', $data['nonce'] );
 		$this->assertArrayHasKey( 'preview', $data['nonce'] );
