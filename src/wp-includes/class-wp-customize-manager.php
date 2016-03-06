@@ -184,22 +184,13 @@ final class WP_Customize_Manager {
 	protected $return_url;
 
 	/**
-	 * Original title of the Customizer, before being filtered.
-	 *
-	 * @since 4.6
-	 * @access protected
-	 * @var string
-	 */
-	protected $original_customizer_title;
-
-	/**
 	 * Filtered title of the Customizer, shown in the top of the root panel.
 	 *
 	 * @since 4.6
 	 * @access protected
 	 * @var string
 	 */
-	protected $filtered_root_panel_title;
+	protected $root_panel_title = null;
 
 	/**
 	 * Filtered description of the Customizer, below the title.
@@ -1635,8 +1626,7 @@ final class WP_Customize_Manager {
 	 * @since 4.6
 	 * @access public
 	 */
-	public function set_filtered_root_panel_title() {
-		$this->original_customizer_title = get_bloginfo( 'name' );
+	public function set_root_panel_title( $title ) {
 
 		/**
 		 * Filter title in root Customizer panel.
@@ -1645,7 +1635,7 @@ final class WP_Customize_Manager {
 		 *
 		 * @param string $customizer_title Appears at top of root Customizer panel.
 		 */
-		$this->filtered_root_panel_title = apply_filters( 'customize_root_panel_title', $this->original_customizer_title );
+		$this->root_panel_title = apply_filters( 'customize_root_panel_title', $title );
 	}
 
 	/**
@@ -1657,8 +1647,8 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_filtered_root_panel_title() {
-		if ( isset( $this->filtered_root_panel_title ) ) {
-			return $this->filtered_root_panel_title;
+		if ( isset( $this->root_panel_title ) ) {
+			return $this->root_panel_title;
 		}
 	}
 
@@ -1673,11 +1663,6 @@ final class WP_Customize_Manager {
 	 * @return bool
 	 */
 	public function is_root_panel_title_filtered() {
-		if ( ( isset( $this->filtered_root_panel_title ) ) && ( isset( $this->original_customizer_title ) ) ) {
-			return ( $this->filtered_root_panel_title !== $this->original_customizer_title );
-		} else {
-			return false;
-		}
 	}
 
 	/**
@@ -1799,10 +1784,6 @@ final class WP_Customize_Manager {
 		if ( is_ssl() && ! $cross_domain ) {
 			$allowed_urls[] = home_url( '/', 'https' );
 		}
-
-		// Set title and description displayed at top of root Customizer panel.
-		$this->set_filtered_root_panel_title();
-		$this->set_filtered_root_panel_description();
 
 		/**
 		 * Filter the list of URLs allowed to be clicked and followed in the Customizer preview.
