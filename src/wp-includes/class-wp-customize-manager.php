@@ -199,7 +199,7 @@ final class WP_Customize_Manager {
 	 * @access protected
 	 * @var string
 	 */
-	protected $root_panel_description;
+	protected $root_panel_description = null;
 
 	/**
 	 * Mapping of 'panel', 'section', 'control' to the ID which should be autofocused.
@@ -1649,17 +1649,10 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.6
 	 * @access public
+	 * @param string $root_panel_description Appears after Customizer title.
 	 */
-	public function set_root_panel_description() {
-
-		/**
-		 * Filter description in primary Customizer panel.
-		 *
-		 * @since 4.6
-		 *
-		 * @param string $customizer_description Appears at top of root Customizer panel, under Customizer title.
-		 */
-		$this->root_panel_description = apply_filters( 'customize_root_panel_description', __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' ) );
+	public function set_root_panel_description( $root_panel_description ) {
+		$this->root_panel_description = $root_panel_description;
 	}
 
 	/**
@@ -1671,9 +1664,8 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_root_panel_description() {
-		if ( isset( $this->root_panel_description ) ) {
-			return $this->root_panel_description;
-		}
+		$default_description = __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
+		return is_null( $this->root_panel_description ) ? $default_description : $this->root_panel_description;
 	}
 
 	/**
