@@ -190,7 +190,7 @@ final class WP_Customize_Manager {
 	 * @access protected
 	 * @var string
 	 */
-	protected $root_panel_title = null;
+	protected $root_panel_title;
 
 	/**
 	 * Description of the Customizer, below the title.
@@ -199,7 +199,7 @@ final class WP_Customize_Manager {
 	 * @access protected
 	 * @var string
 	 */
-	protected $root_panel_description = null;
+	protected $root_panel_description;
 
 	/**
 	 * Mapping of 'panel', 'section', 'control' to the ID which should be autofocused.
