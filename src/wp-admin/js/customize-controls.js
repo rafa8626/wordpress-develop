@@ -3231,7 +3231,7 @@
 			return;
 		}
 
-		var rootPanelDescription, customizeHelpButton, parent, topFocus,
+		var parent, topFocus,
 			body = $( document.body ),
 			overlay = body.children( '.wp-full-overlay' ),
 			title = $( '#customize-info .panel-title.site-title' ),

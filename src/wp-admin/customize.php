@@ -136,7 +136,7 @@ do_action( 'customize_controls_print_scripts' );
 					?></span>
 					<?php
 					$root_panel_description = $wp_customize->get_root_panel_description();
-					if ( ! empty ( $root_panel_description  ) ):
+					if ( ! empty ( $root_panel_description ) ):
 					?>
 						<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false"><span class="screen-reader-text"><?php _e( 'Help' ); ?></span></button>
 					<?php endif; ?>
