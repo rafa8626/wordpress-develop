@@ -358,21 +358,6 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test is_root_panel_title_filtered() method.
-	 *
-	 * @see WP_Customize_Manager::is_root_panel_title_filtered();
-	 */
-	function test_is_root_panel_title_filtered() {
-		$this->manager->set_filtered_root_panel_title();
-		$this->assertEquals( false, $this->manager->is_root_panel_title_filtered() );
-
-		$filtered_title = 'foo';
-		add_filter( 'customize_root_panel_title', array( $this, 'filter_root_panel_title' ) );
-		$this->manager->set_filtered_root_panel_title();
-		$this->assertEquals( true, $this->manager->is_root_panel_title_filtered() );
-	}
-
-	/**
 	 * Filter for title at top of root panel.
 	 *
 	 * @return string Title.
