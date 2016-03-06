@@ -3232,7 +3232,6 @@
 		}
 
 		var rootPanelDescription, customizeHelpButton, parent, topFocus,
-			customizeInfoSection = $( '#customize-info'),
 			body = $( document.body ),
 			overlay = body.children( '.wp-full-overlay' ),
 			title = $( '#customize-info .panel-title.site-title' ),
@@ -3250,17 +3249,8 @@
 			}
 		});
 
-		rootPanelDescription = api.settings.filteredRootPanelDescription;
-		customizeInfoSection.find( '> .customize-panel-description' ).html( rootPanelDescription );
-
-		// Hide the '?' icon if the root panel description isn't present
-		customizeHelpButton = customizeInfoSection.find( '> .accordion-section-title .customize-help-toggle' );
-		if ( ! rootPanelDescription ) {
-			customizeHelpButton.hide();
-		}
-
 		// Expand/Collapse the main customizer customize info.
-		customizeHelpButton.on( 'click keydown', function( event ) {
+		$( '#customize-info > .accordion-section-title .customize-help-toggle' ).on( 'click keydown', function( event ) {
 			if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 				return;
 			}
@@ -3676,9 +3666,9 @@
 
 				// If there's no title, set a class on the info section. The CSS will hide it.
 				if ( ! title.text().length ) {
-					customizeInfoSection.addClass( 'no-title' );
+					$( '#customize-info' ).addClass( 'no-title' );
 				} else {
-					customizeInfoSection.removeClass( 'no-title' );
+					$( '#customize-info' ).removeClass( 'no-title' );
 				}
 
 			};

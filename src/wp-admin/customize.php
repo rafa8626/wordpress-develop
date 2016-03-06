@@ -134,10 +134,15 @@ do_action( 'customize_controls_print_scripts' );
 					<span class="preview-notice"><?php
 						echo sprintf( __( 'You are customizing %s' ), '<strong class="panel-title site-title">' . get_bloginfo( 'name' ) . '</strong>' );
 					?></span>
-					<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false"><span class="screen-reader-text"><?php _e( 'Help' ); ?></span></button>
+					<?php
+					$root_panel_description = $wp_customize->get_root_panel_description();
+					if ( ! empty ( $root_panel_description  ) ):
+					?>
+						<button class="customize-help-toggle dashicons dashicons-editor-help" aria-expanded="false"><span class="screen-reader-text"><?php _e( 'Help' ); ?></span></button>
+					<?php endif; ?>
 				</div>
 				<div class="customize-panel-description">
-					<?php // Description produced with JavaScript ?>
+					<?php echo $root_panel_description; ?>
 				</div>
 			</div>
 

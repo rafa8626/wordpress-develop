@@ -1802,7 +1802,6 @@ final class WP_Customize_Manager {
 			'selectiveRefreshEnabled' => isset( $this->selective_refresh ),
 			'filteredRootPanelTitle' => $this->get_root_panel_title(),
 			'isRootPanelTitleOverridden' => ! is_null( $this->root_panel_title ),
-			'filteredRootPanelDescription' => $this->get_root_panel_description(),
 		);
 
 		// Prepare Customize Section objects to pass to JavaScript.
