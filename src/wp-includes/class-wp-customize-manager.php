@@ -1639,28 +1639,7 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_root_panel_title() {
-
-		/**
-		 * Filter title in root Customizer panel.
-		 *
-		 * @since 4.6
-		 *
-		 * @param string $customizer_title Appears at top of root Customizer panel.
-		 */
-		$this->root_panel_title = apply_filters( 'customize_root_panel_title', $this->root_panel_title );
-	}
-
-	/**
-	 * Whether the Customizer root panel title has been filtered.
-	 *
-	 * True if this title is different from the original title.
-	 *
-	 * @since 4.6
-	 * @access public
-	 *
-	 * @return bool
-	 */
-	public function is_root_panel_title_filtered() {
+		return is_null( $this->root_panel_title ) ? get_bloginfo( 'name' ) : $this->root_panel_title;
 	}
 
 	/**
@@ -1825,7 +1804,7 @@ final class WP_Customize_Manager {
 			'previewableDevices' => $this->get_previewable_devices(),
 			'selectiveRefreshEnabled' => isset( $this->selective_refresh ),
 			'filteredRootPanelTitle' => $this->get_root_panel_title(),
-			'isRootPanelTitleFiltered' => $this->is_root_panel_title_filtered(),
+			'isRootPanelTitleOverridden' => ! is_null( $this->root_panel_title ),
 			'filteredRootPanelDescription' => $this->get_root_panel_description(),
 		);
 

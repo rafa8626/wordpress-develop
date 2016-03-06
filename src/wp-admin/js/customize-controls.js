@@ -3668,7 +3668,7 @@
 			var updateTitle = function() {
 
 				// Set the Customizer title.
-				if ( api.settings.isRootPanelTitleFiltered ) {
+				if ( api.settings.isRootPanelTitleOverridden ) {
 					title.text( api.settings.filteredRootPanelTitle || '' );
 				} else {
 					title.text( $.trim( setting() ) || api.l10n.untitledBlogName );
