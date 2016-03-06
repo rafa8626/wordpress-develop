@@ -1627,15 +1627,7 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function set_root_panel_title( $root_panel_title ) {
-
-		/**
-		 * Filter title in root Customizer panel.
-		 *
-		 * @since 4.6
-		 *
-		 * @param string $customizer_title Appears at top of root Customizer panel.
-		 */
-		$this->root_panel_title = apply_filters( 'customize_root_panel_title', $root_panel_title );
+		$this->root_panel_title = $root_panel_title;
 	}
 
 	/**
@@ -1647,9 +1639,15 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function get_root_panel_title() {
-		if ( isset( $this->root_panel_title ) ) {
-			return $this->root_panel_title;
-		}
+
+		/**
+		 * Filter title in root Customizer panel.
+		 *
+		 * @since 4.6
+		 *
+		 * @param string $customizer_title Appears at top of root Customizer panel.
+		 */
+		$this->root_panel_title = apply_filters( 'customize_root_panel_title', $this->root_panel_title );
 	}
 
 	/**
