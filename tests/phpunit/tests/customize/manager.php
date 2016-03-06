@@ -345,15 +345,16 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::get_filtered_root_panel_title();
 	 * @see WP_Customize_Manager::set_filtered_root_panel_title();
 	 */
-	function test_get_filtered_root_panel_title() {
-		$this->assertEmpty( $this->manager->get_filtered_root_panel_title() );
+	function test_get_root_panel_title() {
+		$this->assertEquals( get_bloginfo( 'name' ), $this->manager->get_root_panel_title() );
 
-		$this->manager->set_filtered_root_panel_title();
-		$this->assertEquals( get_bloginfo( 'name' ), $this->manager->get_filtered_root_panel_title() );
+		$first_new_title = 'Different Title';
+		$this->manager->set_root_panel_title( $first_new_title );
+		$this->assertEquals( $new_title, $this->manager->get_root_panel_title() );
 
-		add_filter( 'customize_root_panel_title', array( $this, 'filter_root_panel_title' ) );
-		$this->manager->set_filtered_root_panel_title();
-		$this->assertEquals( 'New Title', $this->manager->get_filtered_root_panel_title() );
+		$second_new_title = 'Renamed Title';
+		$this->manager->set_root_panel_title( $second_new_title );
+		$this->assertEquals( $second_new_title, $this->manager->get_root_panel_title() );
 	}
 
 	/**
