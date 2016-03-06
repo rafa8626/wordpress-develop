@@ -1638,6 +1638,8 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.6
 	 * @access public
+	 *
+	 * @return string Root panel title.
 	 */
 	public function get_root_panel_title() {
 		return is_null( $this->root_panel_title ) ? get_bloginfo( 'name' ) : $this->root_panel_title;
@@ -1663,6 +1665,8 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.6
 	 * @access public
+	 *
+	 * @return string Root panel description.
 	 */
 	public function get_root_panel_description() {
 		$default_description = __( 'The Customizer allows you to preview changes to your site before publishing them. You can also navigate to different pages on your site to preview them.' );
