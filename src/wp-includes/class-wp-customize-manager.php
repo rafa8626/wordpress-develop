@@ -1625,6 +1625,7 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.6
 	 * @access public
+	 * @param string $root_panel_title Appears above description.
 	 */
 	public function set_root_panel_title( $root_panel_title ) {
 		$this->root_panel_title = $root_panel_title;
