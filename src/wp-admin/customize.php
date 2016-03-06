@@ -31,8 +31,6 @@ if ( ! empty( $autofocus ) && is_array( $autofocus ) ) {
 	$wp_customize->set_autofocus( wp_unslash( $autofocus ) );
 }
 
-$wp_customize->set_root_panel_title( get_bloginfo( 'name' ) );
-
 /**
  * @global WP_Scripts           $wp_scripts
  * @global WP_Customize_Manager $wp_customize
