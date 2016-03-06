@@ -428,10 +428,12 @@ h3.customize-section-title {
 .in-sub-panel #customize-theme-controls > ul > .accordion-section {
 	left: -300px;
 	width: 300px;
+	height: 0;
 }
 
 .in-sub-panel #customize-theme-controls .accordion-section.current-panel {
 	width: 100%;
+	height: auto;
 }
 
 #customize-theme-controls .control-section.current-panel {
