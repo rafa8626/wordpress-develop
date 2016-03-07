@@ -459,6 +459,14 @@ h3.customize-section-title {
 	overflow-y: hidden;
 }
 
+.wp-full-overlay.section-open #customize-theme-controls > ul > .accordion-section {
+	height: 0;
+}
+
+.wp-full-overlay.section-open #customize-theme-controls > ul > .accordion-section.open {
+	height: auto;
+}
+
 .wp-full-overlay.section-open .wp-full-overlay-sidebar-content .accordion-section.open {
 	visibility: visible;
 }
