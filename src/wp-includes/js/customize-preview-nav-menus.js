@@ -315,10 +315,18 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 		 * @this {wp.customize.Value}
 		 */
 		self.onChangeNavMenuLocationsSetting = function() {
-			var setting = this;
+			var setting = this, hasNavMenuInstance;
 			self.handleUnplacedNavMenuInstances( {
 				theme_location: setting._navMenuThemeLocation
 			} );
+
+			// If there are no wp_nav_menu() instances that refer to the theme location, do full refresh.
+			hasNavMenuInstance = !! _.findWhere( _.values( self.data.navMenuInstanceArgs ), {
+				theme_location: setting._navMenuThemeLocation
+			} );
+			if ( ! hasNavMenuInstance ) {
+				api.selectiveRefresh.requestFullRefresh();
+			}
 		};
 	}
 
