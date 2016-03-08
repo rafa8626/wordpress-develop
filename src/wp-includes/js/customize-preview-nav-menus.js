@@ -176,6 +176,12 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			 */
 			renderContent: function( placement ) {
 				var partial = this, previousContainer = placement.container;
+
+				// Do fallback behavior to refresh preview if menu is now empty.
+				if ( '' === placement.addedContent ) {
+					placement.partial.fallback();
+				}
+
 				if ( api.selectiveRefresh.Partial.prototype.renderContent.call( partial, placement ) ) {
 
 					// Trigger deprecated event.
