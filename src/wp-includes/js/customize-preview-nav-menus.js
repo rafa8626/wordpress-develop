@@ -22,7 +22,7 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 				self.bindSettingListener( setting );
 			} );
 			api.bind( 'add', function( setting ) {
-				self.bindSettingListener( setting );
+				self.bindSettingListener( setting, { fire: true } );
 			} );
 			api.bind( 'remove', function( setting ) {
 				self.unbindSettingListener( setting );
@@ -221,15 +221,22 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 		 * @since 4.5.0
 		 *
 		 * @param {wp.customize.Value} setting
+		 * @param {object}             options
+		 * @param {boolean}            options.fire Whether to invoke the callback after binding.
+		 *                                          This is used when a dynamic setting is added.
 		 * @return {boolean} Whether the setting was bound.
 		 */
-		self.bindSettingListener = function( setting ) {
+		self.bindSettingListener = function( setting, options ) {
 			var matches;
+			options = options || {};
 
 			matches = setting.id.match( /^nav_menu\[(-?\d+)]$/ );
 			if ( matches ) {
 				setting._navMenuId = parseInt( matches[1], 10 );
 				setting.bind( this.onChangeNavMenuSetting );
+				if ( options.fire ) {
+					this.onChangeNavMenuSetting.call( setting, setting(), false );
+				}
 				return true;
 			}
 
@@ -237,6 +244,9 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			if ( matches ) {
 				setting._navMenuItemId = parseInt( matches[1], 10 );
 				setting.bind( this.onChangeNavMenuItemSetting );
+				if ( options.fire ) {
+					this.onChangeNavMenuItemSetting.call( setting, setting(), false );
+				}
 				return true;
 			}
 
@@ -244,6 +254,9 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			if ( matches ) {
 				setting._navMenuThemeLocation = matches[1];
 				setting.bind( this.onChangeNavMenuLocationsSetting );
+				if ( options.fire ) {
+					this.onChangeNavMenuLocationsSetting.call( setting, setting(), false );
+				}
 				return true;
 			}
 
