@@ -164,7 +164,7 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			refresh: function() {
 				var partial = this, menuId, deferred = $.Deferred();
 
-				// Make sure the fallback behavior is invoked when
+				// Make sure the fallback behavior is invoked when the partial is no longer associated with a menu.
 				if ( _.isNumber( partial.params.navMenuArgs.menu ) ) {
 					menuId = partial.params.navMenuArgs.menu;
 				} else if ( partial.params.navMenuArgs.theme_location && api.has( 'nav_menu_locations[' + partial.params.navMenuArgs.theme_location + ']' ) ) {
