@@ -997,7 +997,7 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Export data from PHP to JS.
+	 * Exports data from PHP to JS.
 	 *
 	 * @since 4.3.0
 	 * @access public

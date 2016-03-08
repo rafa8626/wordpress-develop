@@ -144,6 +144,31 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			},
 
 			/**
+			 * Make sure that partial fallback behavior is invoked if there is no associated menu.
+			 *
+			 * @since 4.5.0
+			 *
+			 * @returns {Promise}
+			 */
+			refresh: function() {
+				var partial = this, menuId, deferred = $.Deferred();
+
+				// Make sure the fallback behavior is invoked when
+				if ( _.isNumber( partial.params.navMenuArgs.menu ) ) {
+					menuId = partial.params.navMenuArgs.menu;
+				} else if ( partial.params.navMenuArgs.theme_location && api.has( 'nav_menu_locations[' + partial.params.navMenuArgs.theme_location + ']' ) ) {
+					menuId = api( 'nav_menu_locations[' + partial.params.navMenuArgs.theme_location + ']' ).get();
+				}
+				if ( ! menuId ) {
+					partial.fallback();
+					deferred.reject();
+					return deferred.promise();
+				}
+
+				return api.selectiveRefresh.Partial.prototype.refresh.call( partial );
+			},
+
+			/**
 			 * Render content.
 			 *
 			 * @inheritdoc
