@@ -872,6 +872,7 @@ final class WP_Customize_Nav_Menus {
 		add_filter( 'wp_nav_menu_args', array( $this, 'filter_wp_nav_menu_args' ), 1000 );
 		add_filter( 'wp_nav_menu', array( $this, 'filter_wp_nav_menu' ), 10, 2 );
 		add_filter( 'wp_footer', array( $this, 'export_preview_data' ), 1 );
+		add_filter( 'customize_render_partials_response', array( $this, 'export_partial_rendered_nav_menu_instances' ) );
 	}
 
 	/**
@@ -1009,6 +1010,20 @@ final class WP_Customize_Nav_Menus {
 			'navMenuInstanceArgs' => $this->preview_nav_menu_instance_args,
 		);
 		printf( '<script>var _wpCustomizePreviewNavMenusExports = %s;</script>', wp_json_encode( $exports ) );
+	}
+
+	/**
+	 * Export any wp_nav_menu() calls during the rendering of any partials.
+	 *
+	 * @since 4.5.0
+	 * @access public
+	 *
+	 * @param array $response Response.
+	 * @return array Response.
+	 */
+	public function export_partial_rendered_nav_menu_instances( $response ) {
+		$response['nav_menu_instance_args'] = $this->preview_nav_menu_instance_args;
+		return $response;
 	}
 
 	/**

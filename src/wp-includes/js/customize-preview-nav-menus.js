@@ -18,6 +18,7 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 		var self = this;
 
 		if ( api.selectiveRefresh ) {
+			// Listen for changes to settings related to nav menus.
 			api.each( function( setting ) {
 				self.bindSettingListener( setting );
 			} );
@@ -26,6 +27,16 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 			} );
 			api.bind( 'remove', function( setting ) {
 				self.unbindSettingListener( setting );
+			} );
+
+			/*
+			 * Ensure that wp_nav_menu() instances nested inside of other partials
+			 * will be recognized as being present on the page.
+			 */
+			api.selectiveRefresh.bind( 'render-partials-response', function( response ) {
+				if ( response.nav_menu_instance_args ) {
+					_.extend( self.data.navMenuInstanceArgs, response.nav_menu_instance_args );
+				}
 			} );
 		}
 
@@ -221,7 +232,7 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 		 * @since 4.5.0
 		 *
 		 * @param {wp.customize.Value} setting
-		 * @param {object}             options
+		 * @param {object}             [options]
 		 * @param {boolean}            options.fire Whether to invoke the callback after binding.
 		 *                                          This is used when a dynamic setting is added.
 		 * @return {boolean} Whether the setting was bound.
