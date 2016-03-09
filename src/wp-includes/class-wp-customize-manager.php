@@ -217,7 +217,6 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-cropped-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-site-icon-control.php' );
-		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-site-logo-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-header-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-theme-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-widget-area-customize-control.php' );
@@ -1213,11 +1212,10 @@ final class WP_Customize_Manager {
 	public function remove_panel( $id ) {
 		// Removing core components this way is _doing_it_wrong().
 		if ( in_array( $id, $this->components, true ) ) {
-			/* translators: 1: panel id, 2: filter reference URL, 3: filter name */
-			$message = sprintf( __( 'Removing %1$s manually will cause PHP warnings. Use the <a href="%2$s">%3$s</a> filter instead.' ),
+			/* translators: 1: panel id, 2: link to 'customize_loaded_components' filter reference */
+			$message = sprintf( __( 'Removing %1$s manually will cause PHP warnings. Use the %2$s filter instead.' ),
 				$id,
-				esc_url( 'https://developer.wordpress.org/reference/hooks/customize_loaded_components/' ),
-				'<code>customize_loaded_components</code>'
+				'<a href="' . esc_url( 'https://developer.wordpress.org/reference/hooks/customize_loaded_components/' ) . '"><code>customize_loaded_components</code></a>'
 			);
 
 			_doing_it_wrong( __METHOD__, $message, '4.5' );
@@ -1400,7 +1398,9 @@ final class WP_Customize_Manager {
 	 */
 	public function render_control_templates() {
 		foreach ( $this->registered_control_types as $control_type ) {
-			$control = new $control_type( $this, 'temp', array() );
+			$control = new $control_type( $this, 'temp', array(
+				'settings' => array(),
+			) );
 			$control->print_template();
 		}
 	}
@@ -1725,7 +1725,7 @@ final class WP_Customize_Manager {
 			'panels'   => array(),
 			'sections' => array(),
 			'nonce'    => $this->get_nonces(),
-			'autofocus' => array(),
+			'autofocus' => $this->get_autofocus(),
 			'documentTitleTmpl' => $this->get_document_title_template(),
 			'previewableDevices' => $this->get_previewable_devices(),
 		);
@@ -1746,20 +1746,6 @@ final class WP_Customize_Manager {
 						$settings['sections'][ $section_id ] = $section->json();
 					}
 				}
-			}
-		}
-
-		// Pass to front end the Customizer construct being deeplinked.
-		foreach ( $this->get_autofocus() as $type => $id ) {
-			$can_autofocus = (
-				( 'control' === $type && $this->get_control( $id ) && $this->get_control( $id )->check_capabilities() )
-				||
-				( 'section' === $type && isset( $settings['sections'][ $id ] ) )
-				||
-				( 'panel' === $type && isset( $settings['panels'][ $id ] ) )
-			);
-			if ( $can_autofocus ) {
-				$settings['autofocus'][ $type ] = $id;
 			}
 		}
 
@@ -1858,7 +1844,6 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Background_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
-		$this->register_control_type( 'WP_Customize_Site_Logo_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
 
 		/* Themes */
@@ -1970,15 +1955,25 @@ final class WP_Customize_Manager {
 			'width'       => 512,
 		) ) );
 
-		$this->add_setting( 'site_logo', array(
-			'theme_supports' => array( 'site-logo' ),
+		$this->add_setting( 'custom_logo', array(
+			'theme_supports' => array( 'custom-logo' ),
 			'transport'      => 'postMessage',
 		) );
 
-		$this->add_control( new WP_Customize_Site_Logo_Control( $this, 'site_logo', array(
+		$this->add_control( new WP_Customize_Media_Control( $this, 'custom_logo', array(
 			'label'    => __( 'Logo' ),
 			'section'  => 'title_tagline',
 			'priority' => 0,
+			'mime_type' => 'image',
+			'button_labels' => array(
+				'select'       => __( 'Select logo' ),
+				'change'       => __( 'Change logo' ),
+				'remove'       => __( 'Remove' ),
+				'default'      => __( 'Default' ),
+				'placeholder'  => __( 'No logo selected' ),
+				'frame_title'  => __( 'Select logo' ),
+				'frame_button' => __( 'Choose logo' ),
+			),
 		) ) );
 
 		$this->selective_refresh->add_partial( 'site_logo', array(
@@ -2219,10 +2214,10 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Callback for rendering the site logo, used in the site_logo partial.
+	 * Callback for rendering the custom logo, used in the custom_logo partial.
 	 *
 	 * This method exists because the partial object and context data are passed
-	 * into a partial's render_callback so we cannot use get_the_site_logo() as
+	 * into a partial's render_callback so we cannot use get_custom_logo() as
 	 * the render_callback directly since it expects a blog ID as the first
 	 * argument. When WP no longer supports PHP 5.3, this method can be removed
 	 * in favor of an anonymous function.
@@ -2232,10 +2227,10 @@ final class WP_Customize_Manager {
 	 * @since 4.5.0
 	 * @access private
 	 *
-	 * @return string Site logo.
+	 * @return string Custom logo.
 	 */
-	public function _render_site_logo_partial() {
-		return get_the_site_logo();
+	public function _render_custom_logo_partial() {
+		return get_custom_logo();
 	}
 }
 

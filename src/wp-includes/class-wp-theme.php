@@ -343,7 +343,8 @@ final class WP_Theme implements ArrayAccess {
 	 *
 	 * @staticvar array $properties
 	 *
-	 * @return bool
+	 * @param string $offset Property to check if set.
+	 * @return bool Whether the given property is set.
 	 */
 	public function __isset( $offset ) {
 		static $properties = array(
@@ -1315,12 +1316,14 @@ final class WP_Theme implements ArrayAccess {
 	}
 
 	/**
-	 * Sort themes by name.
+	 * Sorts themes by name.
 	 *
 	 * @since 3.4.0
 	 *
 	 * @static
 	 * @access public
+	 *
+	 * @param array $themes Array of themes to sort, passed by reference.
 	 */
 	public static function sort_by_name( &$themes ) {
 		if ( 0 === strpos( get_locale(), 'en_' ) ) {
@@ -1341,7 +1344,10 @@ final class WP_Theme implements ArrayAccess {
 	 * @static
 	 * @access private
 	 *
-	 * @return int
+	 * @param string $a First name.
+	 * @param string $b Second name.
+	 * @return int Negative if `$a` falls lower in the natural order than `$b`. Zero if they fall equally.
+	 *             Greater than 0 if `$a` falls higher in the natural order than `$b`. Used with usort().
 	 */
 	private static function _name_sort( $a, $b ) {
 		return strnatcasecmp( $a->headers['Name'], $b->headers['Name'] );
@@ -1355,7 +1361,10 @@ final class WP_Theme implements ArrayAccess {
 	 * @static
 	 * @access private
 	 *
-	 * @return int
+	 * @param string $a First name.
+	 * @param string $b Second name.
+	 * @return int Negative if `$a` falls lower in the natural order than `$b`. Zero if they fall equally.
+	 *             Greater than 0 if `$a` falls higher in the natural order than `$b`. Used with usort().
 	 */
 	private static function _name_sort_i18n( $a, $b ) {
 		// Don't mark up; Do translate.

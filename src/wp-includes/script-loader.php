@@ -2,11 +2,6 @@
 /**
  * WordPress scripts and styles default loader.
  *
- * Most of the functionality that existed here was moved to
- * {@link http://backpress.automattic.com/ BackPress}. WordPress themes and
- * plugins will only be concerned about the filters and actions set in this
- * file.
- *
  * Several constants are used to manage the loading, concatenating and compression of scripts and CSS:
  * define('SCRIPT_DEBUG', true); loads the development (non-minified) versions of all scripts and CSS, and disables compression and concatenation,
  * define('CONCATENATE_SCRIPTS', false); disables compression and concatenation of scripts and CSS,
@@ -21,19 +16,19 @@
  * @package WordPress
  */
 
-/** BackPress: WordPress Dependencies Class */
+/** WordPress Dependencies Class */
 require( ABSPATH . WPINC . '/class.wp-dependencies.php' );
 
-/** BackPress: WordPress Scripts Class */
+/** WordPress Scripts Class */
 require( ABSPATH . WPINC . '/class.wp-scripts.php' );
 
-/** BackPress: WordPress Scripts Functions */
+/** WordPress Scripts Functions */
 require( ABSPATH . WPINC . '/functions.wp-scripts.php' );
 
-/** BackPress: WordPress Styles Class */
+/** WordPress Styles Class */
 require( ABSPATH . WPINC . '/class.wp-styles.php' );
 
-/** BackPress: WordPress Styles Functions */
+/** WordPress Styles Functions */
 require( ABSPATH . WPINC . '/functions.wp-styles.php' );
 
 /**
@@ -229,6 +224,14 @@ function wp_default_scripts( &$scripts ) {
 	$scripts->add( 'jquery-ui-tooltip', "/wp-includes/js/jquery/ui/tooltip$dev_suffix.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-position' ), '1.11.4', 1 );
 	$scripts->add( 'jquery-ui-widget', "/wp-includes/js/jquery/ui/widget$dev_suffix.js", array('jquery'), '1.11.4', 1 );
 
+	// Strings for 'jquery-ui-autocomplete' live region messages
+	did_action( 'init' ) && $scripts->localize( 'jquery-ui-autocomplete', 'uiAutocompleteL10n', array(
+			'noResults' => __( 'No search results.' ),
+			/* translators: Number of results found when using jQuery UI Autocomplete */
+			'oneResult' => __( '1 result found. Use up and down arrow keys to navigate.' ),
+			'manyResults' => __( '%d results found. Use up and down arrow keys to navigate.' ),
+	) );
+
 	// deprecated, not used in core, most functionality is included in jQuery 1.3
 	$scripts->add( 'jquery-form', "/wp-includes/js/jquery/jquery.form$suffix.js", array('jquery'), '3.37.0', 1 );
 
@@ -350,7 +353,7 @@ function wp_default_scripts( &$scripts ) {
 	) );
 
 
-	$scripts->add( 'wp-mediaelement', "/wp-includes/js/mediaelement/wp-mediaelement.js", array('mediaelement'), false, 1 );
+	$scripts->add( 'wp-mediaelement', "/wp-includes/js/mediaelement/wp-mediaelement$suffix.js", array('mediaelement'), false, 1 );
 	$mejs_settings = array(
 		'pluginPath' => includes_url( 'js/mediaelement/', 'relative' ),
 	);
@@ -366,7 +369,7 @@ function wp_default_scripts( &$scripts ) {
 	);
 
 	$scripts->add( 'froogaloop',  "/wp-includes/js/mediaelement/froogaloop.min.js", array(), '2.0' );
-	$scripts->add( 'wp-playlist', "/wp-includes/js/mediaelement/wp-playlist.js", array( 'wp-util', 'backbone', 'mediaelement' ), false, 1 );
+	$scripts->add( 'wp-playlist', "/wp-includes/js/mediaelement/wp-playlist$suffix.js", array( 'wp-util', 'backbone', 'mediaelement' ), false, 1 );
 
 	$scripts->add( 'zxcvbn-async', "/wp-includes/js/zxcvbn-async$suffix.js", array(), '1.0' );
 	did_action( 'init' ) && $scripts->localize( 'zxcvbn-async', '_zxcvbnSettings', array(
@@ -767,13 +770,13 @@ function wp_default_styles( &$styles ) {
 	$styles->add( 'imgareaselect',       '/wp-includes/js/imgareaselect/imgareaselect.css', array(), '0.9.8' );
 	$styles->add( 'wp-jquery-ui-dialog', "/wp-includes/css/jquery-ui-dialog$suffix.css", array( 'dashicons' ) );
 	$styles->add( 'mediaelement',        "/wp-includes/js/mediaelement/mediaelementplayer.min.css", array(), '2.18.1' );
-	$styles->add( 'wp-mediaelement',     "/wp-includes/js/mediaelement/wp-mediaelement.css", array( 'mediaelement' ) );
+	$styles->add( 'wp-mediaelement',     "/wp-includes/js/mediaelement/wp-mediaelement$suffix.css", array( 'mediaelement' ) );
 	$styles->add( 'thickbox',            '/wp-includes/js/thickbox/thickbox.css', array( 'dashicons' ) );
 
 	// Deprecated CSS
-	$styles->add( 'media',      "/wp-admin/css/deprecated-media$suffix.css" );
-	$styles->add( 'farbtastic', '/wp-admin/css/farbtastic.css', array(), '1.3u1' );
-	$styles->add( 'jcrop',      "/wp-includes/js/jcrop/jquery.Jcrop.min.css", array(), '0.9.12' );
+	$styles->add( 'deprecated-media', "/wp-admin/css/deprecated-media$suffix.css" );
+	$styles->add( 'farbtastic',       "/wp-admin/css/farbtastic$suffix.css", array(), '1.3u1' );
+	$styles->add( 'jcrop',            "/wp-includes/js/jcrop/jquery.Jcrop.min.css", array(), '0.9.12' );
 	$styles->add( 'colors-fresh', false, array( 'wp-admin', 'buttons' ) ); // Old handle.
 
 	// RTL CSS
@@ -786,7 +789,7 @@ function wp_default_styles( &$styles ) {
 		'buttons', 'admin-bar', 'wp-auth-check', 'editor-buttons', 'media-views', 'wp-pointer',
 		'wp-jquery-ui-dialog',
 		// deprecated
-		'media', 'farbtastic',
+		'deprecated-media', 'farbtastic',
 	);
 
 	foreach ( $rtl_styles as $rtl_style ) {
@@ -1147,6 +1150,7 @@ function print_late_styles() {
  * Print styles (internal use only)
  *
  * @ignore
+ * @since 3.3.0
  *
  * @global bool $compress_css
  */

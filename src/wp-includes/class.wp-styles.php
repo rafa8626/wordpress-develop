@@ -1,33 +1,121 @@
 <?php
 /**
- * BackPress Styles enqueue.
+ * Dependencies API: WP_Styles class
  *
- * These classes were refactored from the WordPress WP_Scripts and WordPress
- * script enqueue API.
+ * @since 2.6.0
  *
- * @package BackPress
- * @since r74
+ * @package WordPress
+ * @subpackage Dependencies
  */
 
 /**
- * BackPress Styles enqueue class.
+ * Core class used to register styles.
  *
- * @package BackPress
+ * @package WordPress
  * @uses WP_Dependencies
- * @since r74
+ * @since 2.6.0
  */
 class WP_Styles extends WP_Dependencies {
+	/**
+	 * Base URL for styles.
+	 *
+	 * Full URL with trailing slash.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 * @var string
+	 */
 	public $base_url;
+
+	/**
+	 * URL of the content directory.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var string
+	 */
 	public $content_url;
+
+	/**
+	 * Default version string for stylesheets.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 * @var string
+	 */
 	public $default_version;
+
+	/**
+	 * The current text direction.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 * @var string
+	 */
 	public $text_direction = 'ltr';
+
+	/**
+	 * Holds a list of style handles which will be concatenated.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var string
+	 */
 	public $concat = '';
+
+	/**
+	 * Holds a string which contains style handles and their version.
+	 *
+	 * @since 2.8.0
+	 * @deprecated 3.4.0
+	 * @access public
+	 * @var string
+	 */
 	public $concat_version = '';
+
+	/**
+	 * Whether to perform concatenation.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var bool
+	 */
 	public $do_concat = false;
+
+	/**
+	 * Holds HTML markup of styles and additional data if concatenation
+	 * is enabled.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var string
+	 */
 	public $print_html = '';
+
+	/**
+	 * Holds inline styles if concatenation is enabled.
+	 *
+	 * @since 3.3.0
+	 * @access public
+	 * @var string
+	 */
 	public $print_code = '';
+
+	/**
+	 * List of default directories.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var array
+	 */
 	public $default_dirs;
 
+	/**
+	 * Constructor.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 */
 	public function __construct() {
 		/**
 		 * Fires when the WP_Styles instance is initialized.
@@ -40,8 +128,15 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param string $handle
-	 * @return bool
+	 * Processes a style dependency.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 *
+	 * @see WP_Dependencies::do_item()
+	 *
+	 * @param string $handle The style's registered handle.
+	 * @return bool True on success, false on failure.
 	 */
 	public function do_item( $handle ) {
 		if ( !parent::do_item($handle) )
@@ -148,8 +243,14 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param string $handle
-	 * @param string $code
+	 * Adds extra CSS styles to a registered stylesheet.
+	 *
+	 * @since 3.3.0
+	 * @access public
+	 *
+	 * @param string $handle The style's registered handle.
+	 * @param string $code   String containing the CSS styles to be added.
+	 * @return bool True on success, false on failure.
 	 */
 	public function add_inline_style( $handle, $code ) {
 		if ( ! $code ) {
@@ -167,9 +268,15 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param string $handle
-	 * @param bool $echo
-	 * @return bool
+	 * Prints extra CSS styles of a registered stylesheet.
+	 *
+	 * @since 3.3.0
+	 * @access public
+	 *
+	 * @param string $handle The style's registered handle.
+	 * @param bool   $echo   Optional. Whether to echo the inline style instead of just returning it.
+	 *                       Default true.
+	 * @return string|bool False if no data exists, inline styles if `$echo` is true, true otherwise.
 	 */
 	public function print_inline_style( $handle, $echo = true ) {
 		$output = $this->get_data( $handle, 'after' );
@@ -190,14 +297,21 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param mixed $handles
-	 * @param bool $recursion
-	 * @param mixed $group
-	 * @return bool
+	 * Determines style dependencies.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 *
+	 * @see WP_Dependencies::all_deps()
+	 *
+	 * @param mixed     $handles   Item handle and argument (string) or item handles and arguments (array of strings).
+	 * @param bool      $recursion Internal flag that function is calling itself.
+	 * @param int|false $group     Group level: (int) level, (false) no groups.
+	 * @return bool True on success, false on failure.
 	 */
 	public function all_deps( $handles, $recursion = false, $group = false ) {
-		$r = parent::all_deps( $handles, $recursion );
-		if ( !$recursion ) {
+		$r = parent::all_deps( $handles, $recursion, $group );
+		if ( ! $recursion ) {
 			/**
 			 * Filter the array of enqueued styles before processing for output.
 			 *
@@ -211,10 +325,15 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param string $src
-	 * @param string $ver
-	 * @param string $handle
-	 * @return string
+	 * Generates an enqueued style's fully-qualified URL.
+	 *
+	 * @since 2.6.0
+	 * @access public
+	 *
+	 * @param string $src The source of the enqueued style.
+	 * @param string $ver The version of the enqueued style.
+	 * @param string $handle The style's registered handle.
+	 * @return string Style's fully-qualified URL.
 	 */
 	public function _css_href( $src, $ver, $handle ) {
 		if ( !is_bool($src) && !preg_match('|^(https?:)?//|', $src) && ! ( $this->content_url && 0 === strpos($src, $this->content_url) ) ) {
@@ -237,10 +356,15 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @param string $src
-	 * @return bool
+	 * Whether a handle's source is in a default directory.
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 *
+	 * @param string $src The source of the enqueued style.
+	 * @return bool True if found, false if not.
 	 */
-	public function in_default_dir($src) {
+	public function in_default_dir( $src ) {
 		if ( ! $this->default_dirs )
 			return true;
 
@@ -252,14 +376,26 @@ class WP_Styles extends WP_Dependencies {
 	}
 
 	/**
-	 * @return array
+	 * Processes items and dependencies for the footer group.
+	 *
+	 * HTML 5 allows styles in the body, grab late enqueued items and output them in the footer.
+	 *
+	 * @since 3.3.0
+	 * @access public
+	 *
+	 * @see WP_Dependencies::do_items()
+	 *
+	 * @return array Handles of items that have been processed.
 	 */
-	public function do_footer_items() { // HTML 5 allows styles in the body, grab late enqueued items and output them in the footer.
+	public function do_footer_items() {
 		$this->do_items(false, 1);
 		return $this->done;
 	}
 
 	/**
+	 * Resets class properties.
+	 *
+	 * @since 3.3.0
 	 * @access public
 	 */
 	public function reset() {

@@ -214,7 +214,9 @@ class Tests_User extends WP_UnitTestCase {
 	 */
 	function test_user_unset_lowercase_id( $user ) {
 		// Test 'id' (lowercase)
+		$id = $user->id;
 		unset( $user->id );
+		$this->assertSame( $id, $user->id );
 		return $user;
 	}
 
@@ -656,7 +658,7 @@ class Tests_User extends WP_UnitTestCase {
 	 */
 	function test_illegal_user_logins_multisite() {
 		if ( ! is_multisite() ) {
-			return;
+			$this->markTestSkipped( __METHOD__ . ' requires multisite.' );
 		}
 
 		$user_data = array(

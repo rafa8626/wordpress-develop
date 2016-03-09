@@ -68,10 +68,17 @@
 			return tinymce.trim( this.getEl().firstChild.value );
 		},
 		getLinkText: function() {
-			return tinymce.trim( this.getEl().firstChild.nextSibling.value );
+			var text = this.getEl().firstChild.nextSibling.value;
+
+			if ( ! tinymce.trim( text ) ) {
+				return '';
+			}
+
+			return text.replace( /[\r\n\t ]+/g, ' ' );
 		},
 		reset: function() {
 			var urlInput = this.getEl().firstChild;
+
 			urlInput.value = '';
 			urlInput.nextSibling.value = '';
 		}
@@ -82,6 +89,7 @@
 		var editToolbar;
 		var previewInstance;
 		var inputInstance;
+		var linkNode;
 		var $ = window.jQuery;
 
 		function getSelectedLink() {
@@ -101,7 +109,6 @@
 
 					if ( link ) {
 						editor.selection.select( link );
-						editor.nodeChanged();
 					}
 				}
 			}
@@ -137,19 +144,32 @@
 					'wp_link_remove'
 				], true );
 
-				editToolbar = editor.wp._createToolbar( [
+				var editButtons = [
 					'wp_link_input',
-					'wp_link_apply',
-					'wp_link_advanced'
-				], true );
+					'wp_link_apply'
+				];
+
+				if ( typeof window.wpLink !== 'undefined' ) {
+					editButtons.push( 'wp_link_advanced' );
+				}
+
+				editToolbar = editor.wp._createToolbar( editButtons, true );
 
 				editToolbar.on( 'show', function() {
-					var inputNode = editToolbar.find( 'toolbar' )[0];
-
-					if ( inputNode && ! tinymce.$( document.body ).hasClass( 'modal-open' ) ) {
+					if ( ! tinymce.$( document.body ).hasClass( 'modal-open' ) ) {
 						window.setTimeout( function() {
-							inputNode.focus( true );
-						});
+							var element = editToolbar.$el.find( 'input.ui-autocomplete-input' )[0],
+								selection = linkNode && ( linkNode.textContent || linkNode.innerText );
+
+							if ( element ) {
+								if ( ! element.value && selection && typeof window.wpLink !== 'undefined' ) {
+									element.value = window.wpLink.getUrlFromSelection( selection );
+								}
+
+								element.focus();
+								element.select();
+							}
+						} );
 					}
 				} );
 
@@ -162,25 +182,22 @@
 		} );
 
 		editor.addCommand( 'WP_Link', function() {
-			var link = getSelectedLink();
-
-			if ( tinymce.Env.ie && tinymce.Env.ie < 10 ) {
-				if ( typeof window.wpLink !== 'undefined' ) {
-					window.wpLink.open( editor.id );
-				}
-
+			if ( tinymce.Env.ie && tinymce.Env.ie < 10 && typeof window.wpLink !== 'undefined' ) {
+				window.wpLink.open( editor.id );
 				return;
 			}
 
-			if ( link ) {
-				editor.dom.setAttribs( link, { 'data-wplink-edit': true } );
+			linkNode = getSelectedLink();
+			editToolbar.tempHide = false;
+
+			if ( linkNode ) {
+				editor.dom.setAttribs( linkNode, { 'data-wplink-edit': true } );
 			} else {
 				removePlaceholders();
 				editor.execCommand( 'mceInsertLink', false, { href: '_wp_link_placeholder' } );
 
-				if ( tinymce.Env.ie ) {
-					editor.windowManager.wplinkBookmark = editor.selection.getBookmark();
-				}
+				linkNode = editor.$( 'a[href="_wp_link_placeholder"]' )[0];
+				editor.nodeChanged();
 			}
 		} );
 
@@ -189,18 +206,12 @@
 				return;
 			}
 
-			var href, text,
-				linkNode = getSelectedLink();
+			var href, text;
 
 			if ( linkNode ) {
 				href = inputInstance.getURL();
 				text = inputInstance.getLinkText();
 				editor.focus();
-
-				if ( tinymce.isIE ) {
-					editor.selection.moveToBookmark( editor.windowManager.wplinkBookmark );
-					editor.windowManager.wplinkBookmark = null;
-				}
 
 				if ( ! href ) {
 					editor.dom.remove( linkNode, true );
@@ -223,13 +234,11 @@
 		} );
 
 		editor.addCommand( 'wp_link_cancel', function() {
-			inputInstance.reset();
-			removePlaceholders();
-			editor.focus();
-
-			if ( tinymce.isIE ) {
-				editor.selection.moveToBookmark( editor.windowManager.wplinkBookmark );
-				editor.windowManager.wplinkBookmark = null;
+			if ( ! editToolbar.tempHide ) {
+				inputInstance.reset();
+				removePlaceholders();
+				editor.focus();
+				editToolbar.tempHide = false;
 			}
 		} );
 
@@ -285,8 +294,10 @@
 
 		// Prevent adding undo levels on inserting link placeholder.
 		editor.on( 'BeforeAddUndo', function( event ) {
-			if ( event.level.content ) {
-				event.level.content = removePlaceholderStrings( event.level.content );
+			if ( event.lastLevel && event.lastLevel.content && event.level.content &&
+				event.lastLevel.content === removePlaceholderStrings( event.level.content ) ) {
+
+				event.preventDefault();
 			}
 		});
 
@@ -354,6 +365,18 @@
 						minLength: 2,
 						position: {
 							my: 'left top+2'
+						},
+						messages: {
+							noResults: ( typeof window.uiAutocompleteL10n !== 'undefined' ) ? window.uiAutocompleteL10n.noResults : '',
+							results: function( number ) {
+								if ( typeof window.uiAutocompleteL10n !== 'undefined' ) {
+									if ( number > 1 ) {
+										return window.uiAutocompleteL10n.manyResults.replace( '%d', number );
+									}
+
+									return window.uiAutocompleteL10n.oneResult;
+								}
+							}
 						}
 					} ).autocomplete( 'instance' )._renderItem = function( ul, item ) {
 						return $( '<li role="option" id="mce-wp-autocomplete-' + item.ID + '">' )
@@ -378,6 +401,7 @@
 				tinymce.$( input ).on( 'keydown', function( event ) {
 					if ( event.keyCode === 13 ) {
 						editor.execCommand( 'wp_link_apply' );
+						event.preventDefault();
 					}
 				} );
 			}
@@ -388,8 +412,11 @@
 				$linkNode, href, edit;
 
 			if ( tinymce.$( document.body ).hasClass( 'modal-open' ) ) {
+				editToolbar.tempHide = true;
 				return;
 			}
+
+			editToolbar.tempHide = false;
 
 			if ( linkNode ) {
 				$linkNode = editor.$( linkNode );
@@ -432,8 +459,10 @@
 					var url = inputInstance.getURL() || null,
 						text = inputInstance.getLinkText() || null;
 
-					editor.focus();
-					window.wpLink.open( editor.id, url, text );
+					editor.focus(); // Needed for IE
+					window.wpLink.open( editor.id, url, text, linkNode );
+
+					editToolbar.tempHide = true;
 					inputInstance.reset();
 				}
 			}
@@ -447,8 +476,9 @@
 		} );
 
 		return {
-			hideEditToolbar: function() {
-				editToolbar.hide();
+			close: function() {
+				editToolbar.tempHide = false;
+				editor.execCommand( 'wp_link_cancel' );
 			}
 		};
 	} );

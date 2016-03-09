@@ -6,6 +6,33 @@
  */
 class Tests_L10n extends WP_UnitTestCase {
 
+	/**
+	 * @ticket 35961
+	 */
+	function test_n_noop() {
+		$text_domain   = 'text-domain';
+		$nooped_plural = _n_noop( '%s post', '%s posts', $text_domain );
+
+		$this->assertNotEmpty( $nooped_plural['domain'] );
+		$this->assertEquals( '%s posts', translate_nooped_plural( $nooped_plural, 0, $text_domain ) );
+		$this->assertEquals( '%s post', translate_nooped_plural( $nooped_plural, 1, $text_domain ) );
+		$this->assertEquals( '%s posts', translate_nooped_plural( $nooped_plural, 2, $text_domain ) );
+	}
+
+	/**
+	 * @ticket 35961
+	 */
+	function test_nx_noop() {
+		$text_domain   = 'text-domain';
+		$nooped_plural = _nx_noop( '%s post', '%s posts', 'my-context', $text_domain );
+
+		$this->assertNotEmpty( $nooped_plural['domain'] );
+		$this->assertNotEmpty( $nooped_plural['context'] );
+		$this->assertEquals( '%s posts', translate_nooped_plural( $nooped_plural, 0, $text_domain ) );
+		$this->assertEquals( '%s post', translate_nooped_plural( $nooped_plural, 1, $text_domain ) );
+		$this->assertEquals( '%s posts', translate_nooped_plural( $nooped_plural, 2, $text_domain ) );
+	}
+
 	function test_load_unload_textdomain() {
 		$this->assertFalse( is_textdomain_loaded( 'wp-tests-domain' ) );
 		$this->assertFalse( unload_textdomain( 'wp-tests-domain' ) );
@@ -45,6 +72,20 @@ class Tests_L10n extends WP_UnitTestCase {
 		$this->assertFalse( is_textdomain_loaded( 'wp-tests-domain' ) );
 		__( 'just some string', 'wp-tests-domain' );
 		$this->assertFalse( is_textdomain_loaded( 'wp-tests-domain' ) );
+	}
+
+	/**
+	 * @ticket 35950
+	 */
+	function test_get_available_languages() {
+		$array = get_available_languages();
+		$this->assertInternalType( 'array', $array );
+
+		$array = get_available_languages( '.' );
+		$this->assertEmpty( $array );
+
+		$array = get_available_languages( DIR_TESTDATA . '/languages/' );
+		$this->assertEquals( array( 'en_GB', 'es_ES' ), $array );
 	}
 
 	/**

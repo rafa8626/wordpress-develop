@@ -1,14 +1,19 @@
 <?php
 /**
- * BackPress Scripts enqueue
+ * Dependencies API: WP_Dependencies base class
  *
- * Classes were refactored from the WP_Scripts and WordPress script enqueue API.
+ * @since 2.6.0
  *
- * @since BackPress r74
+ * @package WordPress
+ * @subpackage Dependencies
+ */
+
+/**
+ * Core base class extended to register items.
  *
- * @package BackPress
+ * @package WordPress
+ * @since 2.6.0
  * @uses _WP_Dependency
- * @since r74
  */
 class WP_Dependencies {
 	/**
@@ -72,17 +77,19 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.8.0
+	 * @deprecated 4.5.0
 	 * @var int
 	 */
 	public $group = 0;
 
 	/**
-	 * Process the items and dependencies.
+	 * Processes the items and dependencies.
 	 *
 	 * Processes the items passed to it or the queue, and their dependencies.
 	 *
 	 * @access public
-	 * @since 2.1.0
+	 * @since 2.6.0
+	 * @since 2.8.0 Added the `$group` parameter.
 	 *
 	 * @param mixed $handles Optional. Items to be processed: Process queue (false), process item (string), process items (array of strings).
 	 * @param mixed $group   Group level: level (int), no groups (false).
@@ -115,7 +122,7 @@ class WP_Dependencies {
 	}
 
 	/**
-	 * Process a dependency.
+	 * Processes a dependency.
 	 *
 	 * @access public
 	 * @since 2.6.0
@@ -128,17 +135,19 @@ class WP_Dependencies {
 	}
 
 	/**
-	 * Determine dependencies.
+	 * Determines dependencies.
 	 *
 	 * Recursively builds an array of items to process taking
 	 * dependencies into account. Does NOT catch infinite loops.
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
+	 * @since 2.8.0 Added the `$group` parameter.
 	 *
-	 * @param mixed $handles   Item handle and argument (string) or item handles and arguments (array of strings).
-	 * @param bool  $recursion Internal flag that function is calling itself.
-	 * @param mixed $group     Group level: (int) level, (false) no groups.
+	 * @param mixed     $handles   Item handle and argument (string) or item handles and arguments (array of strings).
+	 * @param bool      $recursion Internal flag that function is calling itself.
+	 * @param int|false $group     Group level: (int) level, (false) no groups.
 	 * @return bool True on success, false on failure.
 	 */
 	public function all_deps( $handles, $recursion = false, $group = false ) {
@@ -153,7 +162,8 @@ class WP_Dependencies {
 			if ( in_array($handle, $this->done, true) ) // Already done
 				continue;
 
-			$moved = $this->set_group( $handle, $recursion, $group );
+			$moved     = $this->set_group( $handle, $recursion, $group );
+			$new_group = $this->groups[ $handle ];
 
 			if ( $queued && !$moved ) // already queued and in the right group
 				continue;
@@ -163,7 +173,7 @@ class WP_Dependencies {
 				$keep_going = false; // Item doesn't exist.
 			elseif ( $this->registered[$handle]->deps && array_diff($this->registered[$handle]->deps, array_keys($this->registered)) )
 				$keep_going = false; // Item requires dependencies that don't exist.
-			elseif ( $this->registered[$handle]->deps && !$this->all_deps( $this->registered[$handle]->deps, true, $group ) )
+			elseif ( $this->registered[$handle]->deps && !$this->all_deps( $this->registered[$handle]->deps, true, $new_group ) )
 				$keep_going = false; // Item requires dependencies that don't exist.
 
 			if ( ! $keep_going ) { // Either item or its dependencies don't exist.
@@ -192,6 +202,7 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
 	 *
 	 * @param string $handle Unique item name.
 	 * @param string $src    The item url.
@@ -254,6 +265,7 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
 	 *
 	 * @param mixed $handles Item handle and argument (string) or item handles and arguments (array of strings).
 	 * @return void
@@ -273,6 +285,7 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
 	 *
 	 * @param mixed $handles Item handle and argument (string) or item handles and arguments (array of strings).
 	 */
@@ -295,6 +308,7 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
 	 *
 	 * @param mixed $handles Item handle and argument (string) or item handles and arguments (array of strings).
 	 */
@@ -339,10 +353,11 @@ class WP_Dependencies {
 	 *
 	 * @access public
 	 * @since 2.1.0
+	 * @since 2.6.0 Moved from `WP_Scripts`.
 	 *
 	 * @param string $handle Name of the item. Should be unique.
 	 * @param string $list   Property name of list array.
-	 * @return bool Found, or object Item data.
+	 * @return bool|_WP_Dependency Found, or object Item data.
 	 */
 	public function query( $handle, $list = 'registered' ) {
 		switch ( $list ) {
@@ -384,16 +399,12 @@ class WP_Dependencies {
 	public function set_group( $handle, $recursion, $group ) {
 		$group = (int) $group;
 
-		if ( $recursion ) {
-			$group = min( $this->group, $group );
+		if ( isset( $this->groups[ $handle ] ) && $this->groups[ $handle ] <= $group ) {
+			return false;
 		}
 
-		$this->group = $group;
+		$this->groups[ $handle ] = $group;
 
-		if ( isset($this->groups[$handle]) && $this->groups[$handle] <= $group )
-			return false;
-
-		$this->groups[$handle] = $group;
 		return true;
 	}
 

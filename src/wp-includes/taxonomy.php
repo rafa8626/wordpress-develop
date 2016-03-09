@@ -156,13 +156,16 @@ function get_taxonomies( $args = array(), $output = 'names', $operator = 'and' )
 }
 
 /**
- * Return all of the taxonomy names that are of $object_type.
+ * Return the names or objects of the taxonomies which are registered for the requested object or object type, such as
+ * a post object or post type name.
  *
- * It appears that this function can be used to find all of the names inside of
- * $wp_taxonomies global variable.
+ * Example:
  *
- * `$taxonomies = get_object_taxonomies( 'post' )` Should
- * result in `Array( 'category', 'post_tag' )`
+ *     $taxonomies = get_object_taxonomies( 'post' );
+ * 
+ * This results in:
+ * 
+ *     Array( 'category', 'post_tag' )
  *
  * @since 2.3.0
  *
@@ -2970,7 +2973,7 @@ function wp_insert_term( $term, $taxonomy, $args = array() ) {
  *                                    Will replace all existing related terms in this taxonomy.
  * @param string           $taxonomy  The context in which to relate the term to the object.
  * @param bool             $append    Optional. If false will delete difference of terms. Default false.
- * @return array|WP_Error Affected Term IDs.
+ * @return array|WP_Error Term taxonomy IDs of the affected terms.
  */
 function wp_set_object_terms( $object_id, $terms, $taxonomy, $append = false ) {
 	global $wpdb;
@@ -3091,7 +3094,7 @@ function wp_set_object_terms( $object_id, $terms, $taxonomy, $append = false ) {
  * @param int              $object_id The ID of the object to which the terms will be added.
  * @param array|int|string $terms     The slug(s) or ID(s) of the term(s) to add.
  * @param array|string     $taxonomy  Taxonomy name.
- * @return array|WP_Error Affected Term IDs
+ * @return array|WP_Error Term taxonomy IDs of the affected terms.
  */
 function wp_add_object_terms( $object_id, $terms, $taxonomy ) {
 	return wp_set_object_terms( $object_id, $terms, $taxonomy, true );
