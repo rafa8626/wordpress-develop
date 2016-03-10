@@ -81,7 +81,7 @@
 		construct = this;
 		params = params || {};
 		focus = function () {
-			var focusContainer;
+			var focusContainer, focusElement;
 			if ( construct.extended( api.Panel ) && construct.expanded && construct.expanded() ) {
 				focusContainer = construct.container.find( 'ul.control-panel-content' );
 			} else if ( construct.extended( api.Section ) && construct.expanded && construct.expanded() ) {
@@ -91,7 +91,13 @@
 			}
 
 			// Note that we can't use :focusable due to a jQuery UI issue. See: https://github.com/jquery/jquery-ui/pull/1583
-			focusContainer.find( 'input, select, textarea, button, object, a[href], [tabindex]' ).filter( ':visible' ).first().focus();
+			focusElement = focusContainer.find( 'input, select, textarea, button' ).filter( ':visible' ).first();
+			// Focus on objects, links and other element only if no form element/input was found 
+			if ( 0 === focusElement.length ) {
+				focusElement = focusContainer.find( 'object, a[href], [tabindex]' ).filter( ':visible' ).first();
+			}
+			focusElement.focus();
+
 		};
 		if ( params.completeCallback ) {
 			completeCallback = params.completeCallback;
