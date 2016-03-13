@@ -1,20 +1,34 @@
-/* global wp */
+/* global equal, module, ok, test */
 
 jQuery( window ).load( function (){
 	'use strict';
 
-	var controlId, controlLabel, controlType, controlContent, controlDescription, controlData, mockControl,
-		mockControlInstance, controlExpectedValues, sectionId, sectionContent, sectionData, mockSection,
-		sectionInstance, sectionExpectedValues, panelId, panelTitle, panelDescription, panelContent, panelData,
-		mockPanel, panelExpectedValues, testCustomizerModel, settingId, settingValue, mockSetting;
+	var api, setupAndTearDown, controlId, controlLabel, controlType, controlContent,
+		controlDescription, controlData, mockControl, mockControlInstance, controlExpectedValues, sectionId, sectionContent,
+		sectionData, mockSection, sectionInstance, sectionExpectedValues, panelId, panelTitle, panelDescription, panelContent,
+		panelData, mockPanel, panelExpectedValues, testCustomizerModel, settingId, settingValue, mockSetting;
+
+	setupAndTearDown = ( function() {
+		return {
+					beforeEach: function() {
+						// To avoid altering global namespace, clone 'window.wp' to module-scope variable 'api'
+						api = jQuery.extend( true, {}, window.wp ).customize;
+					},
+					afterEach: function() {
+						api = null;
+					}
+			   };
+	})();
+
+	setupAndTearDown.beforeEach();
 
 	testCustomizerModel = function( model, expectedValues ) {
-		if ( ! expectedValues.type || ! wp.customize[ expectedValues.type ] ) {
+		if ( ! expectedValues.type || ! api[ expectedValues.type ] ) {
 			throw new Error( 'Must pass value type in expectedValues.' );
 		}
 		var type = expectedValues.type;
 		test( 'Model extends proper type', function () {
-			ok( model.extended( wp.customize[ type ] ) );
+			ok( model.extended( api[ type ] ) );
 		} );
 
 		if ( expectedValues.hasOwnProperty( 'id' ) ) {
@@ -76,65 +90,65 @@ jQuery( window ).load( function (){
 
 	};
 
-	module( 'Customizer Previewed Device' );
+	module( 'Customizer Previewed Device', setupAndTearDown );
 	test( 'Previewed device defaults to desktop.', function () {
-		equal( wp.customize.previewedDevice.get(), 'desktop' );
+		equal( api.previewedDevice.get(), 'desktop' );
 	} );
 
-	module( 'Customizer Setting in Fixture' );
+	module( 'Customizer Setting in Fixture', setupAndTearDown );
 	test( 'Setting has fixture value', function () {
-		equal( wp.customize( 'fixture-setting' )(), 'Lorem Ipsum' );
+		equal( api( 'fixture-setting' )(), 'Lorem Ipsum' );
 	} );
 
-	module( 'Customizer Control in Fixture' );
+	module( 'Customizer Control in Fixture', setupAndTearDown );
 	test( 'Control exists', function () {
-		ok( wp.customize.control.has( 'fixture-control' ) );
+		ok( api.control.has( 'fixture-control' ) );
 	} );
 	test( 'Control has the fixture setting', function () {
-		var control = wp.customize.control( 'fixture-control' );
+		var control = api.control( 'fixture-control' );
 		equal( control.setting(), 'Lorem Ipsum' );
 		equal( control.setting.id, 'fixture-setting' );
 	} );
 	test( 'Control has the section fixture section ID', function () {
-		var control = wp.customize.control( 'fixture-control' );
+		var control = api.control( 'fixture-control' );
 		equal( control.section(), 'fixture-section' );
 	} );
 
-	module( 'Customizer control without associated settings' );
+	module( 'Customizer control without associated settings', setupAndTearDown );
 	test( 'Control can be created without settings', function() {
-		var control = new wp.customize.Control( 'settingless', {
+		var control = new api.Control( 'settingless', {
 			params: {
 				content: jQuery( '<li class="settingless">Hello World</li>' ),
 				section: 'fixture-section'
 			}
 		} );
-		wp.customize.control.add( control.id, control );
+		api.control.add( control.id, control );
 		equal( control.deferred.embedded.state(), 'resolved' );
 		ok( null === control.setting );
 		ok( jQuery.isEmptyObject( control.settings ) );
 	} );
 
 	// Begin sections.
-	module( 'Customizer Section in Fixture' );
+	module( 'Customizer Section in Fixture', setupAndTearDown );
 	test( 'Fixture section exists', function () {
-		ok( wp.customize.section.has( 'fixture-section' ) );
+		ok( api.section.has( 'fixture-section' ) );
 	} );
 	test( 'Fixture section has control among controls()', function () {
-		var section = wp.customize.section( 'fixture-section' );
+		var section = api.section( 'fixture-section' );
 		ok( -1 !== _.pluck( section.controls(), 'id' ).indexOf( 'fixture-control' ) );
 	} );
 	test( 'Fixture section has has expected panel', function () {
-		var section = wp.customize.section( 'fixture-section' );
+		var section = api.section( 'fixture-section' );
 		equal( section.panel(), 'fixture-panel' );
 	} );
 
-	module( 'Customizer Default Section with Template in Fixture' );
+	module( 'Customizer Default Section with Template in Fixture', setupAndTearDown );
 	test( 'Fixture section exists', function () {
-		ok( wp.customize.section.has( 'fixture-section-default-templated' ) );
+		ok( api.section.has( 'fixture-section-default-templated' ) );
 	} );
 	test( 'Fixture section has expected content', function () {
 		var id = 'fixture-section-default-templated', section;
-		section = wp.customize.section( id );
+		section = api.section( id );
 		ok( ! section.params.content );
 		ok( !! section.container );
 		ok( section.container.is( '.control-section.control-section-default' ) );
@@ -142,33 +156,33 @@ jQuery( window ).load( function (){
 		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
 	} );
 
-	module( 'Customizer Custom Type (titleless) Section with Template in Fixture' );
+	module( 'Customizer Custom Type (titleless) Section with Template in Fixture', setupAndTearDown );
 	test( 'Fixture section exists', function () {
-		ok( wp.customize.section.has( 'fixture-section-titleless-templated' ) );
+		ok( api.section.has( 'fixture-section-titleless-templated' ) );
 	} );
 	test( 'Fixture section has expected content', function () {
 		var id = 'fixture-section-titleless-templated', section;
-		section = wp.customize.section( id );
+		section = api.section( id );
 		ok( ! section.params.content );
 		ok( !! section.container );
 		ok( section.container.is( '.control-section.control-section-titleless' ) );
 		ok( 0 === section.container.find( '> .accordion-section-title' ).length );
 		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
 	} );
-	module( 'Customizer Custom Type Section Lacking Specific Template' );
+	module( 'Customizer Custom Type Section Lacking Specific Template', setupAndTearDown );
 	test( 'Fixture section has expected content', function () {
 		var id = 'fixture-section-reusing-default-template', section;
-		section = wp.customize.section( id );
+		section = api.section( id );
 		ok( ! section.params.content );
 		ok( !! section.container );
 		ok( section.container.is( '.control-section.control-section-' + section.params.type ) );
 		ok( 1 === section.container.find( '> .accordion-section-title' ).length );
 		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
 	} );
-	module( 'Customizer Section lacking any params' );
+	module( 'Customizer Section lacking any params', setupAndTearDown );
 	test( 'Fixture section has default params supplied', function () {
 		var id = 'fixture-section-without-params', section, defaultParams;
-		section = wp.customize.section( id );
+		section = api.section( id );
 		defaultParams = {
 			title: '',
 			description: '',
@@ -188,32 +202,32 @@ jQuery( window ).load( function (){
 
 
 	// Begin panels.
-	module( 'Customizer Panel in Fixture' );
+	module( 'Customizer Panel in Fixture', setupAndTearDown );
 	test( 'Fixture panel exists', function () {
-		ok( wp.customize.panel.has( 'fixture-panel' ) );
+		ok( api.panel.has( 'fixture-panel' ) );
 	} );
 	test( 'Fixture panel has content', function () {
-		var panel = wp.customize.panel( 'fixture-panel' );
+		var panel = api.panel( 'fixture-panel' );
 		ok( !! panel.params.content );
 		ok( !! panel.container );
 	} );
 	test( 'Fixture panel has section among its sections()', function () {
-		var panel = wp.customize.panel( 'fixture-panel' );
+		var panel = api.panel( 'fixture-panel' );
 		ok( -1 !== _.pluck( panel.sections(), 'id' ).indexOf( 'fixture-section' ) );
 	} );
 	test( 'Panel is not expanded by default', function () {
-		var panel = wp.customize.panel( 'fixture-panel' );
+		var panel = api.panel( 'fixture-panel' );
 		ok( ! panel.expanded() );
 	} );
 	test( 'Panel is not expanded by default', function () {
-		var panel = wp.customize.panel( 'fixture-panel' );
+		var panel = api.panel( 'fixture-panel' );
 		ok( ! panel.expanded() );
 	} );
 	test( 'Focusing on a control will expand the panel and section', function () {
 		var panel, section, control;
-		panel = wp.customize.panel( 'fixture-panel' );
-		section = wp.customize.section( 'fixture-section' );
-		control = wp.customize.control( 'fixture-control' );
+		panel = api.panel( 'fixture-panel' );
+		section = api.section( 'fixture-section' );
+		control = api.control( 'fixture-control' );
 		ok( ! panel.expanded() );
 		ok( ! section.expanded() );
 		control.focus();
@@ -221,13 +235,13 @@ jQuery( window ).load( function (){
 		ok( panel.expanded() );
 	} );
 
-	module( 'Customizer Default Panel with Template in Fixture' );
+	module( 'Customizer Default Panel with Template in Fixture', setupAndTearDown );
 	test( 'Fixture section exists', function () {
-		ok( wp.customize.panel.has( 'fixture-panel-default-templated' ) );
+		ok( api.panel.has( 'fixture-panel-default-templated' ) );
 	} );
 	test( 'Fixture panel has expected content', function () {
 		var id = 'fixture-panel-default-templated', panel;
-		panel = wp.customize.panel( id );
+		panel = api.panel( id );
 		ok( ! panel.params.content );
 		ok( !! panel.container );
 		ok( panel.container.is( '.control-panel.control-panel-default' ) );
@@ -235,13 +249,13 @@ jQuery( window ).load( function (){
 		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
 	} );
 
-	module( 'Customizer Custom Type Panel (titleless) with Template in Fixture' );
+	module( 'Customizer Custom Type Panel (titleless) with Template in Fixture', setupAndTearDown );
 	test( 'Fixture panel exists', function () {
-		ok( wp.customize.panel.has( 'fixture-panel-titleless-templated' ) );
+		ok( api.panel.has( 'fixture-panel-titleless-templated' ) );
 	} );
 	test( 'Fixture panel has expected content', function () {
 		var id = 'fixture-panel-titleless-templated', panel;
-		panel = wp.customize.panel( id );
+		panel = api.panel( id );
 		ok( ! panel.params.content );
 		ok( !! panel.container );
 		ok( panel.container.is( '.control-panel.control-panel-titleless' ) );
@@ -249,20 +263,20 @@ jQuery( window ).load( function (){
 		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
 	} );
 
-	module( 'Customizer Custom Type Panel Lacking Specific Template' );
+	module( 'Customizer Custom Type Panel Lacking Specific Template', setupAndTearDown );
 	test( 'Fixture panel has expected content', function () {
 		var id = 'fixture-panel-reusing-default-template', panel;
-		panel = wp.customize.panel( id );
+		panel = api.panel( id );
 		ok( ! panel.params.content );
 		ok( !! panel.container );
 		ok( panel.container.is( '.control-panel.control-panel-' + panel.params.type ) );
 		ok( 1 === panel.container.find( '> .accordion-section-title' ).length );
 		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
 	} );
-	module( 'Customizer Panel lacking any params' );
+	module( 'Customizer Panel lacking any params', setupAndTearDown );
 	test( 'Fixture panel has default params supplied', function () {
 		var id = 'fixture-panel-without-params', panel, defaultParams;
-		panel = wp.customize.panel( id );
+		panel = api.panel( id );
 		defaultParams = {
 			title: '',
 			description: '',
@@ -278,25 +292,27 @@ jQuery( window ).load( function (){
 		} );
 	} );
 
-	module( 'Dynamically-created Customizer Setting Model' );
+	module( 'Dynamically-created Customizer Setting Model', setupAndTearDown );
 	settingId = 'new_blogname';
 	settingValue = 'Hello World';
 
 	test( 'Create a new setting', function () {
-		mockSetting = wp.customize.create(
+		mockSetting = api.create(
 			settingId,
 			settingId,
 			settingValue,
 			{
 				transport: 'refresh',
-				previewer: wp.customize.previewer
+				previewer: api.previewer
 			}
 		);
 		equal( mockSetting(), settingValue );
 		equal( mockSetting.id, settingId );
 	} );
 
-	module( 'Dynamically-created Customizer Section Model' );
+	module( 'Dynamically-created Customizer Section Model', setupAndTearDown );
+
+	setupAndTearDown.beforeEach();
 
 	sectionId = 'mock_title_tagline';
 	sectionContent = '<li id="accordion-section-mock_title_tagline" class="accordion-section control-section control-section-default"> <h3 class="accordion-section-title" tabindex="0"> Section Fixture <span class="screen-reader-text">Press return or enter to open</span> </h3> <ul class="accordion-section-content"> <li class="customize-section-description-container"> <div class="customize-section-title"> <button class="customize-section-back" tabindex="-1"> <span class="screen-reader-text">Back</span> </button> <h3> <span class="customize-action">Customizing &#9656; Fixture Panel</span> Section Fixture </h3> </div> </li> </ul> </li>';
@@ -305,8 +321,7 @@ jQuery( window ).load( function (){
 		active: true,
 		type: 'default'
 	};
-
-	mockSection = new wp.customize.Section( sectionId, { params: sectionData } );
+	mockSection = new api.Section( sectionId, { params: sectionData } );
 
 	sectionExpectedValues = {
 		type: 'Section',
@@ -317,20 +332,19 @@ jQuery( window ).load( function (){
 	};
 
 	testCustomizerModel( mockSection, sectionExpectedValues );
-
 	test( 'Section has been embedded', function () {
 		equal( mockSection.deferred.embedded.state(), 'resolved' );
 	} );
 
-	wp.customize.section.add( sectionId, mockSection );
+	api.section.add( sectionId, mockSection );
 
-	test( 'Section instance added to the wp.customize.section object', function () {
-		ok( wp.customize.section.has( sectionId ) );
+	test( 'Section instance added to the api.section object', function () {
+		ok( api.section.has( sectionId ) );
 	});
 
-	sectionInstance = wp.customize.section( sectionId );
+	sectionInstance = api.section( sectionId );
 
-	test( 'Section instance has right content when accessed from wp.customize.section()', function () {
+	test( 'Section instance has right content when accessed from api.section()', function () {
 		equal( sectionInstance.params.content, sectionContent );
 	});
 
@@ -338,7 +352,7 @@ jQuery( window ).load( function (){
 		equal( sectionInstance.controls().length, 0 );
 	});
 
-	module( 'Dynamically-created Customizer Control Model' );
+	module( 'Dynamically-created Customizer Control Model', setupAndTearDown );
 
 	controlId = 'new_blogname';
 	controlLabel = 'Site Title';
@@ -355,9 +369,9 @@ jQuery( window ).load( function (){
 		active: true // @todo This should default to true
 	};
 
-	mockControl = new wp.customize.Control( controlId, {
+	mockControl = new api.Control( controlId, {
 		params: controlData,
-		previewer: wp.customize.previewer
+		previewer: api.previewer
 	});
 
 	controlExpectedValues = {
@@ -382,13 +396,13 @@ jQuery( window ).load( function (){
 		equal( mockControl.selector, '#customize-control-new_blogname' );
 	});
 
-	wp.customize.control.add( controlId, mockControl );
+	api.control.add( controlId, mockControl );
 
 	test( 'Control instance was added to the control class.', function () {
-		ok( wp.customize.control.has( controlId ) );
+		ok( api.control.has( controlId ) );
 	});
 
-	mockControlInstance = wp.customize.control( controlId );
+	mockControlInstance = api.control( controlId );
 
 	test( 'Control instance has the right id when accessed from api.control().', function () {
 		equal( mockControlInstance.id, controlId );
@@ -407,7 +421,7 @@ jQuery( window ).load( function (){
 		equal( sectionInstance.controls()[0], mockControl );
 	});
 
-	module( 'Dynamically-created Customizer Panel Model' );
+	module( 'Dynamically-created Customizer Panel Model', setupAndTearDown );
 
 	panelId = 'mockPanelId';
 	panelTitle = 'Mock Panel Title';
@@ -421,7 +435,7 @@ jQuery( window ).load( function (){
 		type: 'default'
 	};
 
-	mockPanel = new wp.customize.Panel( panelId, { params: panelData } );
+	mockPanel = new api.Panel( panelId, { params: panelData } );
 
 	panelExpectedValues = {
 		type: 'Panel',
