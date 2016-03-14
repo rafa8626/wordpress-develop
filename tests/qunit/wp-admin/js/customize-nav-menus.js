@@ -42,11 +42,11 @@ jQuery( window ).load( function (){
 	} );
 
 	test( 'empty menus should have no Menu Item Controls', function() {
-		ok( 0 === wp.customize.Menus.getMenuControl( socialMenuId ).getMenuItemControls().length, 'empty menus' );
+		ok( 0 === api.Menus.getMenuControl( socialMenuId ).getMenuItemControls().length, 'empty menus' );
 	} );
 
 	test( 'populated menus should have no Menu Item Controls', function() {
-		ok( 0 !== wp.customize.Menus.getMenuControl( primaryMenuId ).getMenuItemControls().length, 'non-empty menus' );
+		ok( 0 !== api.Menus.getMenuControl( primaryMenuId ).getMenuItemControls().length, 'non-empty menus' );
 	} );
 
 	// @todo Add tests for api.Menus.AvailableMenuItemsPanelView (and api.Menus.AvailableItemCollection, api.Menus.AvailableItemCollection, api.Menus.AvailableItemModel)

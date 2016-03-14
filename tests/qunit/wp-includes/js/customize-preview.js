@@ -101,7 +101,7 @@ jQuery( function() {
 		notOk( mockPartial.renderContent( placementNoStringAddedContent ) );
 
 		notOk( ( function() {
-            var placementNoPartial;
+			var placementNoPartial;
 			try {
 				placementNoPartial = new api.selectiveRefresh.Placement( {
 					partial: false,
