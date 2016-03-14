@@ -3,10 +3,10 @@
 jQuery( window ).load( function (){
 	'use strict';
 
-	var api, setupAndTearDown, controlId, controlLabel, controlType, controlContent,
-		controlDescription, controlData, mockControl, mockControlInstance, controlExpectedValues, sectionId, sectionContent,
-		sectionData, mockSection, sectionInstance, sectionExpectedValues, panelId, panelTitle, panelDescription, panelContent,
-		panelData, mockPanel, panelExpectedValues, testCustomizerModel, settingId, settingValue, mockSetting;
+	var api, setupAndTearDown, controlId, controlLabel, controlType, controlContent, controlDescription, controlData,
+		mockControl, mockControlInstance, controlExpectedValues, sectionId, sectionContent, sectionData, mockSection,
+		sectionInstance, sectionExpectedValues, panelId, panelTitle, panelDescription, panelContent, panelData, mockPanel,
+		panelExpectedValues, testCustomizerModel, settingId, settingValue, mockSetting;
 
 	setupAndTearDown = ( function() {
 		return {
@@ -17,7 +17,7 @@ jQuery( window ).load( function (){
 					afterEach: function() {
 						api = null;
 					}
-			   };
+				};
 	})();
 
 	setupAndTearDown.beforeEach();

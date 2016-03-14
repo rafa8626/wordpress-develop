@@ -1,12 +1,25 @@
-/* global wp */
+/* global equal, module, ok, test */
 
 jQuery( function( $ ) {
-	var FooSuperClass, BarSubClass, foo, bar, ConstructorTestClass, newConstructor, constructorTest, $mockElement, mockString,
-	firstInitialValue, firstValueInstance, wasCallbackFired, mockValueCallback;
+	var api, setupAndTearDown, FooSuperClass, BarSubClass, foo, bar, ConstructorTestClass, newConstructor, constructorTest,
+		$mockElement, mockString, firstInitialValue, firstValueInstance, wasCallbackFired, mockValueCallback;
 
-	module( 'Customize Base: Class' );
+	setupAndTearDown = ( function() {
+		return {
+			beforeEach: function() {
+				// To avoid altering global namespace, clone 'window.wp'
+				api = jQuery.extend( true, {}, window.wp ).customize;
+			},
+			afterEach: function() {
+				api = null;
+			}
+		};
+	})();
 
-	FooSuperClass = wp.customize.Class.extend(
+	module( 'Customize Base: Class', setupAndTearDown );
+
+	setupAndTearDown.beforeEach();
+	FooSuperClass = api.Class.extend(
 		{
 			initialize: function ( instanceProps ) {
 				$.extend( this, instanceProps || {} );
@@ -35,7 +48,7 @@ jQuery( function( $ ) {
 
 	foo = new FooSuperClass( { instanceProp: 'instancePropValue' } );
 	test( 'FooSuperClass instance foo extended Class', function () {
-		equal( foo.extended( wp.customize.Class ), true );
+		equal( foo.extended( api.Class ), true );
 	});
 	test( 'foo instance has protoProp', function () {
 		equal( foo.protoProp, 'protoPropValue' );
@@ -89,7 +102,7 @@ jQuery( function( $ ) {
 			$.extend( this , instanceProps || {} );
 	};
 
-	ConstructorTestClass = wp.customize.Class.extend(
+	ConstructorTestClass = api.Class.extend(
 		{
 			constructor : newConstructor,
 			protoProp: 'protoPropValue'
@@ -112,7 +125,7 @@ jQuery( function( $ ) {
 	});
 
 	test( 'ConstructorTestClass instance constructorTest extended Class', function () {
-		equal( constructorTest.extended( wp.customize.Class ), true );
+		equal( constructorTest.extended( api.Class ), true );
 	});
 
 	test( 'ConstructorTestClass instance constructorTest has the added instance property', function () {
@@ -120,25 +133,25 @@ jQuery( function( $ ) {
 	});
 
 
-	module( 'Customize Base: wp.customizer.ensure' );
+	module( 'Customize Base: wp.customize.ensure', setupAndTearDown );
 
 	$mockElement = $( '<div id="mockElement"></div>' );
 
 	test( 'Handles jQuery argument' , function() {
-		equal( wp.customize.ensure( $mockElement ) , $mockElement );
+		equal( api.ensure( $mockElement ) , $mockElement );
 	});
 
 	mockString = '<div class="mockString"></div>';
 
 	test( 'Handles string argument' , function() {
-		ok( wp.customize.ensure( mockString ) instanceof jQuery );
+		ok( api.ensure( mockString ) instanceof jQuery );
 	});
 
 
 	module( 'Customize Base: Value Class' );
 
 	firstInitialValue = true;
-	firstValueInstance = new wp.customize.Value( firstInitialValue );
+	firstValueInstance = new api.Value( firstInitialValue );
 
 	test( 'Initialized with the right value' , function() {
 		equal( firstValueInstance.get() , firstInitialValue );
