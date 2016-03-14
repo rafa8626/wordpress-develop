@@ -8,14 +8,14 @@ jQuery( window ).load( function (){
 
 	setupAndTearDown = ( function() {
 		return {
-			beforeEach: function() {
-				// To avoid altering global namespace, clone 'window.wp' to module-scope variable 'api'
-				api = jQuery.extend( true, {}, window.wp ).customize;
-			},
-			afterEach: function() {
-				api = null;
-			}
-		};
+					beforeEach: function() {
+						// To avoid altering global namespace, clone 'window.wp' to module-scope variable 'api'
+						api = jQuery.extend( true, {}, window.wp ).customize;
+					},
+					afterEach: function() {
+						api = null;
+					}
+				};
 	})();
 
 	module( 'Customize Nav Menus', setupAndTearDown );
