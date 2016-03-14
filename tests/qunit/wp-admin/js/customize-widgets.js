@@ -1,9 +1,22 @@
-/* global wp */
+/* global module, ok, test */
 jQuery( window ).load( function() {
 
-	var api = wp.customize, $ = jQuery;
+	var $, api, setupAndTearDown;
+	$ = jQuery;
 
-	module( 'Customize Widgets' );
+	setupAndTearDown = ( function() {
+		return {
+			beforeEach: function() {
+				// To avoid altering global namespace, clone 'window.wp'
+				api = jQuery.extend( true, {}, window.wp ).customize;
+			},
+			afterEach: function() {
+				api = null;
+			}
+		};
+	})();
+
+	module( 'Customize Widgets', setupAndTearDown );
 
 	test( 'fixtures should be present', function() {
 		var widgetControl;
