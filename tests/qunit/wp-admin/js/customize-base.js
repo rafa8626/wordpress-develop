@@ -63,7 +63,7 @@ jQuery( function( $ ) {
 	// @todo Test Class.applicator?
 	// @todo do we test object.instance?
 
-	module( 'Customize Base: Subclass' );
+	module( 'Customize Base: Subclass', setupAndTearDown );
 
 	BarSubClass = FooSuperClass.extend(
 		{
@@ -96,7 +96,7 @@ jQuery( function( $ ) {
 
 
 	// Implements todo : Test Class.constructor() manipulation
-	module( 'Customize Base: Constructor Manipulation' );
+	module( 'Customize Base: Constructor Manipulation', setupAndTearDown );
 
 	newConstructor = function ( instanceProps ) {
 			$.extend( this , instanceProps || {} );
@@ -120,7 +120,7 @@ jQuery( function( $ ) {
 	});
 
 	constructorTest = new ConstructorTestClass( { instanceProp: 'instancePropValue' } );
-		test( 'ConstructorTestClass instance constructorTest has the new constructor', function () {
+	test( 'ConstructorTestClass instance constructorTest has the new constructor', function () {
 		equal( constructorTest.constructor, newConstructor );
 	});
 
@@ -148,7 +148,7 @@ jQuery( function( $ ) {
 	});
 
 
-	module( 'Customize Base: Value Class' );
+	module( 'Customize Base: Value Class', setupAndTearDown );
 
 	firstInitialValue = true;
 	firstValueInstance = new api.Value( firstInitialValue );

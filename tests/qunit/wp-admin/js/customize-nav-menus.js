@@ -1,11 +1,24 @@
-/* global wp */
+/* global equal, module, ok, test */
 jQuery( window ).load( function (){
 
-	var api = wp.customize,
-		primaryMenuId = 3,
-		socialMenuId = 2;
+	var api, primaryMenuId, socialMenuId, setupAndTearDown;
 
-	module( 'Customize Nav Menus' );
+	primaryMenuId = 3;
+	socialMenuId = 2;
+
+	setupAndTearDown = ( function() {
+		return {
+			beforeEach: function() {
+				// To avoid altering global namespace, clone 'window.wp' to module-scope variable 'api'
+				api = jQuery.extend( true, {}, window.wp ).customize;
+			},
+			afterEach: function() {
+				api = null;
+			}
+		};
+	})();
+
+	module( 'Customize Nav Menus', setupAndTearDown );
 
 	/**
 	 * Generate 20 ids and verify they are all unique.
