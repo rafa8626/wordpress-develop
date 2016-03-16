@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Customize Preview QUnit Test Suite</title>
+
+		<!-- Dependencies -->
+		<script src="../../src/wp-includes/js/jquery/jquery.js"></script>
+		<script src="../../src/wp-includes/js/jquery/ui/core.js"></script>
+		<script src="../../src/wp-includes/js/underscore.min.js"></script>
+		<script src="../../src/wp-includes/js/wp-util.js"></script>
+
+		<!-- QUnit -->
+		<link rel="stylesheet" href="vendor/qunit.css" type="text/css" media="screen" />
+		<script src="vendor/qunit.js"></script>
+		<script src="vendor/sinon.js"></script>
+		<script src="vendor/sinon-qunit.js"></script>
+		<script>QUnit.config.hidepassed = false;</script>
+	</head>
+	<body>
+		<div id="qunit"></div>
+		<div id="qunit-fixture">
+			<script src="fixtures/customize-preview.js"></script>
+			<div id="fixture-mock-partial"></div>
+		</div>
+
+		<!-- Tested files -->
+		<script src="../../src/wp-includes/js/customize-base.js"></script>
+		<script src="../../src/wp-includes/js/customize-preview.js"></script>
+		<script src="../../src/wp-includes/js/customize-selective-refresh.js"></script>
+
+		<!-- Unit tests -->
+		<script src="wp-includes/js/new-customize-preview.js"></script>
+	</body>
+</html>
