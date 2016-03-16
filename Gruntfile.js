@@ -210,14 +210,14 @@ module.exports = function(grunt) {
 		rtlcss: {
 			options: {
 				// rtlcss options
-				config: {
-					swapLeftRightInUrl: false,
-					swapLtrRtlInUrl: false,
-					autoRename: false,
-					preserveDirectives: true,
+				opts: {
+					clean: false,
+					processUrls: { atrule: true, decl: false },
 					stringMap: [
 						{
 							name: 'import-rtl-stylesheet',
+							priority: 10,
+							exclusive: true,
 							search: [ '.css' ],
 							replace: [ '-rtl.css' ],
 							options: {
@@ -227,29 +227,38 @@ module.exports = function(grunt) {
 						}
 					]
 				},
-				properties : [
+				saveUnmodified: false,
+				plugins: [
 					{
 						name: 'swap-dashicons-left-right-arrows',
-						expr: /content/im,
-						action: function( prop, value ) {
-							if ( value === '"\\f141"' ) { // dashicons-arrow-left
-								value = '"\\f139"';
-							} else if ( value === '"\\f340"' ) { // dashicons-arrow-left-alt
-								value = '"\\f344"';
-							} else if ( value === '"\\f341"' ) { // dashicons-arrow-left-alt2
-								value = '"\\f345"';
-							} else if ( value === '"\\f139"' ) { // dashicons-arrow-right
-								value = '"\\f141"';
-							} else if ( value === '"\\f344"' ) { // dashicons-arrow-right-alt
-								value = '"\\f340"';
-							} else if ( value === '"\\f345"' ) { // dashicons-arrow-right-alt2
-								value = '"\\f341"';
+						priority: 10,
+						directives: {
+							control: {},
+							value: []
+						},
+						processors: [
+							{
+								expr: /content/im,
+								action: function( prop, value ) {
+									if ( value === '"\\f141"' ) { // dashicons-arrow-left
+										value = '"\\f139"';
+									} else if ( value === '"\\f340"' ) { // dashicons-arrow-left-alt
+										value = '"\\f344"';
+									} else if ( value === '"\\f341"' ) { // dashicons-arrow-left-alt2
+										value = '"\\f345"';
+									} else if ( value === '"\\f139"' ) { // dashicons-arrow-right
+										value = '"\\f141"';
+									} else if ( value === '"\\f344"' ) { // dashicons-arrow-right-alt
+										value = '"\\f340"';
+									} else if ( value === '"\\f345"' ) { // dashicons-arrow-right-alt2
+										value = '"\\f341"';
+									}
+									return { prop: prop, value: value };
+								}
 							}
-							return { prop: prop, value: value };
-						}
+						]
 					}
-				],
-				saveUnmodified: false
+				]
 			},
 			core: {
 				expand: true,
@@ -659,7 +668,7 @@ module.exports = function(grunt) {
 		grunt.task.run( '_' + this.nameArgs );
 	} );
 
-	grunt.registerTask( 'precommit:core', [
+	grunt.registerTask( 'precommit:base', [
 		'imagemin:core'
 	] );
 
@@ -683,17 +692,17 @@ module.exports = function(grunt) {
 
 		// Figure out what tasks to run based on what files have been modified.
 		function enqueueTestingTasksForModifiedFiles( filesModified ) {
-			var taskList = ['precommit:core'];
+			var taskList = ['precommit:base'];
 			if ( /.*\.js/.test( filesModified ) ) {
-				grunt.log.write( 'JavaScript source files modified, will run JavaScript tests.\n');
+				grunt.log.write( 'JavaScript source files modified. JavaScript tests will be run.\n');
 				taskList = taskList.concat( ['precommit:js'] );
 			}
 			if ( /src.*\.css/.test( filesModified ) ) {
-				grunt.log.write( 'CSS source files modified, will run CSS tests.\n');
+				grunt.log.write( 'CSS source files modified. CSS tests will be run.\n');
 				taskList = taskList.concat( ['postcss:core'] );
 			}
 			if ( /.*\.php/.test( filesModified ) ) {
-				grunt.log.write( 'PHP source files modified, will run PHP tests.\n');
+				grunt.log.write( 'PHP source files modified. PHP tests will be run.\n');
 				taskList = taskList.concat( ['precommit:php'] );
 			}
 			grunt.task.run( taskList );
@@ -727,7 +736,7 @@ module.exports = function(grunt) {
 					}
 				);
 			} else {
-				grunt.log.write( 'This WordPress install is not under version control, no tests will be run.' );
+				grunt.log.write( 'This WordPress install is not under version control. No tests will be run.' );
 			}
 		});
 	});
@@ -757,6 +766,14 @@ module.exports = function(grunt) {
 		'includes:emoji',
 		'includes:embed',
 		'jsvalidate:build'
+	] );
+
+	grunt.registerTask( 'prerelease', [
+		'precommit:php',
+		'precommit:js',
+		'precommit:css',
+		'precommit:base',
+		'build'
 	] );
 
 	// Testing tasks.

@@ -79,8 +79,15 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 		if ( ! defined( 'imagick::COMPRESSION_JPEG' ) )
 			return false;
 
-		if ( array_diff( $required_methods, get_class_methods( 'Imagick' ) ) )
+		$class_methods = array_map( 'strtolower', get_class_methods( 'Imagick' ) );
+		if ( array_diff( $required_methods, $class_methods ) ) {
 			return false;
+		}
+
+		// HHVM Imagick does not support loading from URL, so fail to allow fallback to GD.
+		if ( defined( 'HHVM_VERSION' ) && isset( $args['path'] ) && preg_match( '|^https?://|', $args['path'] ) ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -677,11 +684,13 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	protected function strip_meta() {
 
 		if ( ! is_callable( array( $this->image, 'getImageProfiles' ) ) ) {
-			return new WP_Error( 'image_strip_meta_error', __('Imagick::getImageProfiles() is required to strip image meta.') );
+			/* translators: %s: ImageMagick method name */
+			return new WP_Error( 'image_strip_meta_error', sprintf( __( '%s is required to strip image meta.' ), '<code>Imagick::getImageProfiles()</code>' ) );
 		}
 
 		if ( ! is_callable( array( $this->image, 'removeImageProfile' ) ) ) {
-			return new WP_Error( 'image_strip_meta_error', __('Imagick::removeImageProfile() is required to strip image meta.') );
+			/* translators: %s: ImageMagick method name */
+			return new WP_Error( 'image_strip_meta_error', sprintf( __( '%s is required to strip image meta.' ), '<code>Imagick::removeImageProfile()</code>' ) );
 		}
 
 		/*
