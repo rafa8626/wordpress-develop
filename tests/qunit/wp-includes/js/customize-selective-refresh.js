@@ -1,20 +1,20 @@
-/* global equal, module, notOk, ok, test   */
+/* global QUnit */
 jQuery( function() {
 
 	var api = wp.customize;
 
-	module( 'Customize Selective Refresh' );
+    QUnit.module( 'Customize Selective Refresh' );
 
-	//test( 'Models look as expected', function() {
-	//	ok( wp.customize.selectiveRefresh.Partial.extended( wp.customize.Class ) );
+	//test( 'Models loassert.ok as expected', function() {
+	//	assert.ok( wp.customize.selectiveRefresh.Partial.extended( wp.customize.Class ) );
 	//} );
 
-	test( 'Initially, there are no partials', function() {
-		ok( _.isEmpty( api.selectiveRefresh.data.partials ) );
+	QUnit.test( 'Initially, there are no partials', function( assert ) {
+		assert.ok( _.isEmpty( api.selectiveRefresh.data.partials ) );
 	});
 
-	test( 'selectiveRefresh object has events from api.Events', function() {
-		ok( function() {
+	QUnit.test( 'selectiveRefresh object has events from api.Events', function( assert ) {
+		assert.ok( function() {
 			var eventsKeys, eventsMatch;
 			eventsKeys = _.keys( api.Events );
 			eventsMatch = eventsKeys.length ? true : false;
@@ -27,7 +27,7 @@ jQuery( function() {
 		});
 	});
 
-	test( 'Mocking a partial and placements, and testing their methods' , function() {
+	QUnit.test( 'Mocking a partial and placements, and testing their methods' , function( assert ) {
 		var partialId, selector, options, mockPartial, settingValue, relatedSetting,
 			expectedPlacement, placementNoContainer, placementNoAddedContent,
 			placementNoStringAddedContent, placementContext, placementContainer,
@@ -56,17 +56,17 @@ jQuery( function() {
 		expectedPlacement = mockPartial.placements()[ 0 ];
 		mockPartial.preparePlacement( expectedPlacement );
 
-		equal( mockPartial.id, partialId );
-		equal( mockPartial.params.selector, selector );
-		equal( mockPartial.params.containerInclusive, true );
-		equal( mockPartial.params.fallbackRefresh, false );
-		equal( expectedPlacement.partial.id, partialId );
-		equal( expectedPlacement.partial.params.selector, selector );
-		equal( mockPartial.settings(), partialId );
-		ok( mockPartial.isRelatedSetting( relatedSetting.id ) );
+		assert.equal( mockPartial.id, partialId );
+		assert.equal( mockPartial.params.selector, selector );
+		assert.equal( mockPartial.params.containerInclusive, true );
+		assert.equal( mockPartial.params.fallbackRefresh, false );
+		assert.equal( expectedPlacement.partial.id, partialId );
+		assert.equal( expectedPlacement.partial.params.selector, selector );
+		assert.equal( mockPartial.settings(), partialId );
+		assert.ok( mockPartial.isRelatedSetting( relatedSetting.id ) );
 
-		notOk( mockPartial.isRelatedSetting( 'fooBar' ) );
-		ok( jQuery( expectedPlacement.container ).hasClass( 'customize-partial-refreshing' ) );
+		assert.notOk( mockPartial.isRelatedSetting( 'fooBar' ) );
+		assert.ok( jQuery( expectedPlacement.container ).hasClass( 'customize-partial-refreshing' ) );
 
 		placementNoContainer = new api.selectiveRefresh.Placement( {
 			partial: mockPartial,
@@ -88,11 +88,11 @@ jQuery( function() {
 			addedContent: 124
 		});
 
-		notOk( mockPartial.renderContent( placementNoContainer ) );
-		notOk( mockPartial.renderContent( placementNoAddedContent ) );
-		notOk( mockPartial.renderContent( placementNoStringAddedContent ) );
+		assert.notOk( mockPartial.renderContent( placementNoContainer ) );
+		assert.notOk( mockPartial.renderContent( placementNoAddedContent ) );
+		assert.notOk( mockPartial.renderContent( placementNoStringAddedContent ) );
 
-		notOk( ( function() {
+		assert.notOk( ( function() {
 			var placementNoPartial;
 			try {
 				placementNoPartial = new api.selectiveRefresh.Placement( {
@@ -116,8 +116,8 @@ jQuery( function() {
 			addedContent: 'Additional content'
 		});
 
-		ok( _.isEqual( placementWithContextAndContainer.context, placementContext ) );
-		ok( _.isEqual( placementWithContextAndContainer.container, placementContainer ) );
+		assert.ok( _.isEqual( placementWithContextAndContainer.context, placementContext ) );
+		assert.ok( _.isEqual( placementWithContextAndContainer.container, placementContainer ) );
 
 	});
 
