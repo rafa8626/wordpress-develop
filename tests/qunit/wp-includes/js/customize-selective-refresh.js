@@ -1,21 +1,9 @@
 /* global equal, module, notOk, ok, test   */
 jQuery( function() {
 
-	var api, setupAndTearDown;
+	var api = wp.customize;
 
-	setupAndTearDown = ( function() {
-		return {
-			beforeEach: function() {
-				// To avoid altering global namespace, clone 'window.wp'
-				api = jQuery.extend( true, {}, window.wp ).customize;
-			},
-			afterEach: function() {
-				api = null;
-			}
-		};
-	})();
-
-	module( 'Customize Selective Refresh', setupAndTearDown );
+	module( 'Customize Selective Refresh' );
 
 	//test( 'Models look as expected', function() {
 	//	ok( wp.customize.selectiveRefresh.Partial.extended( wp.customize.Class ) );
