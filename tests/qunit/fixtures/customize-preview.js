@@ -30,5 +30,7 @@ window._wpCustomizeSettings = {
 
 window._wpCustomizeSettings.values = {};
 ( function( v ) {
-	v['fixture-control'] = 'Lorem Ipsum';
+	v.blogname = 'Foo Site Title';
+	v.blogdescription = 'bar Site Tagline';
+	v.custom_logo = 123;
 })( window._wpCustomizeSettings.values );
