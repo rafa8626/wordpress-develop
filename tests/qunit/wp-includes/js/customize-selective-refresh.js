@@ -48,11 +48,9 @@ jQuery( function() {
 		settingValue = 'bar';
 		relatedSetting = api.create(
 			partialId,
-			partialId,
 			settingValue,
 			{
-				transport: 'refresh',
-				previewer: api.previewer
+				id: partialId
 			}
 		);
 		expectedPlacement = mockPartial.placements()[ 0 ];
@@ -65,7 +63,7 @@ jQuery( function() {
 		equal( expectedPlacement.partial.id, partialId );
 		equal( expectedPlacement.partial.params.selector, selector );
 		equal( mockPartial.settings(), partialId );
-		ok( mockPartial.isRelatedSetting( relatedSetting.id ) ); // @todo This is failing.
+		ok( mockPartial.isRelatedSetting( relatedSetting.id ) );
 
 		notOk( mockPartial.isRelatedSetting( 'fooBar' ) );
 		ok( jQuery( expectedPlacement.container ).hasClass( 'customize-partial-refreshing' ) );
