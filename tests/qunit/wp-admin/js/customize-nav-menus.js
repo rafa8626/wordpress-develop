@@ -1,24 +1,11 @@
-/* global equal, module, ok, test */
+/* global wp */
 jQuery( window ).load( function (){
 
-	var api, primaryMenuId, socialMenuId, setupAndTearDown;
+	var api = wp.customize,
+		primaryMenuId = 3,
+		socialMenuId = 2;
 
-	primaryMenuId = 3;
-	socialMenuId = 2;
-
-	setupAndTearDown = ( function() {
-		return {
-					beforeEach: function() {
-						// To avoid altering global namespace, clone 'window.wp' to module-scope variable 'api'
-						api = jQuery.extend( true, {}, window.wp ).customize;
-					},
-					afterEach: function() {
-						api = null;
-					}
-				};
-	})();
-
-	module( 'Customize Nav Menus', setupAndTearDown );
+	module( 'Customize Nav Menus' );
 
 	/**
 	 * Generate 20 ids and verify they are all unique.
@@ -42,11 +29,11 @@ jQuery( window ).load( function (){
 	} );
 
 	test( 'empty menus should have no Menu Item Controls', function() {
-		ok( 0 === api.Menus.getMenuControl( socialMenuId ).getMenuItemControls().length, 'empty menus' );
+		ok( 0 === wp.customize.Menus.getMenuControl( socialMenuId ).getMenuItemControls().length, 'empty menus' );
 	} );
 
 	test( 'populated menus should have no Menu Item Controls', function() {
-		ok( 0 !== api.Menus.getMenuControl( primaryMenuId ).getMenuItemControls().length, 'non-empty menus' );
+		ok( 0 !== wp.customize.Menus.getMenuControl( primaryMenuId ).getMenuItemControls().length, 'non-empty menus' );
 	} );
 
 	// @todo Add tests for api.Menus.AvailableMenuItemsPanelView (and api.Menus.AvailableItemCollection, api.Menus.AvailableItemCollection, api.Menus.AvailableItemModel)

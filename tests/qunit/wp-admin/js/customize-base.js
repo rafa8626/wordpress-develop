@@ -1,25 +1,12 @@
-/* global equal, module, ok, test */
+/* global wp */
 
 jQuery( function( $ ) {
-	var api, setupAndTearDown, FooSuperClass, BarSubClass, foo, bar, ConstructorTestClass, newConstructor, constructorTest,
-		$mockElement, mockString, firstInitialValue, firstValueInstance, wasCallbackFired, mockValueCallback;
+	var FooSuperClass, BarSubClass, foo, bar, ConstructorTestClass, newConstructor, constructorTest, $mockElement, mockString,
+	firstInitialValue, firstValueInstance, wasCallbackFired, mockValueCallback;
 
-	setupAndTearDown = ( function() {
-		return {
-					beforeEach: function() {
-						// To avoid altering global namespace, clone 'window.wp'
-						api = jQuery.extend( true, {}, window.wp ).customize;
-					},
-					afterEach: function() {
-						api = null;
-					}
-				};
-	})();
+	module( 'Customize Base: Class' );
 
-	module( 'Customize Base: Class', setupAndTearDown );
-
-	setupAndTearDown.beforeEach();
-	FooSuperClass = api.Class.extend(
+	FooSuperClass = wp.customize.Class.extend(
 		{
 			initialize: function ( instanceProps ) {
 				$.extend( this, instanceProps || {} );
@@ -48,7 +35,7 @@ jQuery( function( $ ) {
 
 	foo = new FooSuperClass( { instanceProp: 'instancePropValue' } );
 	test( 'FooSuperClass instance foo extended Class', function () {
-		equal( foo.extended( api.Class ), true );
+		equal( foo.extended( wp.customize.Class ), true );
 	});
 	test( 'foo instance has protoProp', function () {
 		equal( foo.protoProp, 'protoPropValue' );
@@ -63,7 +50,7 @@ jQuery( function( $ ) {
 	// @todo Test Class.applicator?
 	// @todo do we test object.instance?
 
-	module( 'Customize Base: Subclass', setupAndTearDown );
+	module( 'Customize Base: Subclass' );
 
 	BarSubClass = FooSuperClass.extend(
 		{
@@ -96,13 +83,13 @@ jQuery( function( $ ) {
 
 
 	// Implements todo : Test Class.constructor() manipulation
-	module( 'Customize Base: Constructor Manipulation', setupAndTearDown );
+	module( 'Customize Base: Constructor Manipulation' );
 
 	newConstructor = function ( instanceProps ) {
 			$.extend( this , instanceProps || {} );
 	};
 
-	ConstructorTestClass = api.Class.extend(
+	ConstructorTestClass = wp.customize.Class.extend(
 		{
 			constructor : newConstructor,
 			protoProp: 'protoPropValue'
@@ -120,12 +107,12 @@ jQuery( function( $ ) {
 	});
 
 	constructorTest = new ConstructorTestClass( { instanceProp: 'instancePropValue' } );
-	test( 'ConstructorTestClass instance constructorTest has the new constructor', function () {
+		test( 'ConstructorTestClass instance constructorTest has the new constructor', function () {
 		equal( constructorTest.constructor, newConstructor );
 	});
 
 	test( 'ConstructorTestClass instance constructorTest extended Class', function () {
-		equal( constructorTest.extended( api.Class ), true );
+		equal( constructorTest.extended( wp.customize.Class ), true );
 	});
 
 	test( 'ConstructorTestClass instance constructorTest has the added instance property', function () {
@@ -133,25 +120,25 @@ jQuery( function( $ ) {
 	});
 
 
-	module( 'Customize Base: wp.customize.ensure', setupAndTearDown );
+	module( 'Customize Base: wp.customizer.ensure' );
 
 	$mockElement = $( '<div id="mockElement"></div>' );
 
 	test( 'Handles jQuery argument' , function() {
-		equal( api.ensure( $mockElement ) , $mockElement );
+		equal( wp.customize.ensure( $mockElement ) , $mockElement );
 	});
 
 	mockString = '<div class="mockString"></div>';
 
 	test( 'Handles string argument' , function() {
-		ok( api.ensure( mockString ) instanceof jQuery );
+		ok( wp.customize.ensure( mockString ) instanceof jQuery );
 	});
 
 
-	module( 'Customize Base: Value Class', setupAndTearDown );
+	module( 'Customize Base: Value Class' );
 
 	firstInitialValue = true;
-	firstValueInstance = new api.Value( firstInitialValue );
+	firstValueInstance = new wp.customize.Value( firstInitialValue );
 
 	test( 'Initialized with the right value' , function() {
 		equal( firstValueInstance.get() , firstInitialValue );
