@@ -74,9 +74,6 @@ function twentytwelve_setup() {
 	// This theme uses a custom image size for featured images, displayed on "standard" posts.
 	add_theme_support( 'post-thumbnails' );
 	set_post_thumbnail_size( 624, 9999 ); // Unlimited height, soft crop
-
-	// Indicate widget sidebars can use selective refresh in the Customizer.
-	add_theme_support( 'customize-selective-refresh-widgets' );
 }
 add_action( 'after_setup_theme', 'twentytwelve_setup' );
 
@@ -248,6 +245,7 @@ function twentytwelve_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -258,6 +256,7 @@ function twentytwelve_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -268,6 +267,7 @@ function twentytwelve_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 }
 add_action( 'widgets_init', 'twentytwelve_widgets_init' );

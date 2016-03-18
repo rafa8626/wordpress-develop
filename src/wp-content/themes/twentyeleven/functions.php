@@ -226,9 +226,6 @@ function twentyeleven_setup() {
 			'description' => __( 'Hanoi Plant', 'twentyeleven' )
 		)
 	) );
-
-	// Indicate widget sidebars can use selective refresh in the Customizer.
-	add_theme_support( 'customize-selective-refresh-widgets' );
 }
 endif; // twentyeleven_setup
 
@@ -452,6 +449,7 @@ function twentyeleven_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -462,6 +460,7 @@ function twentyeleven_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -472,6 +471,7 @@ function twentyeleven_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -482,6 +482,7 @@ function twentyeleven_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 
 	register_sidebar( array(
@@ -492,6 +493,7 @@ function twentyeleven_widgets_init() {
 		'after_widget' => '</aside>',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
+		'customize_selective_refresh' => true,
 	) );
 }
 add_action( 'widgets_init', 'twentyeleven_widgets_init' );

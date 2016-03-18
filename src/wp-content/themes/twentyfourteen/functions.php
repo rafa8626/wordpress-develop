@@ -113,9 +113,6 @@ function twentyfourteen_setup() {
 
 	// This theme uses its own gallery styles.
 	add_filter( 'use_default_gallery_style', '__return_false' );
-
-	// Indicate widget sidebars can use selective refresh in the Customizer.
-	add_theme_support( 'customize-selective-refresh-widgets' );
 }
 endif; // twentyfourteen_setup
 add_action( 'after_setup_theme', 'twentyfourteen_setup' );
@@ -178,6 +175,7 @@ function twentyfourteen_widgets_init() {
 		'after_widget'  => '</aside>',
 		'before_title'  => '<h1 class="widget-title">',
 		'after_title'   => '</h1>',
+		'customize_selective_refresh' => true,
 	) );
 	register_sidebar( array(
 		'name'          => __( 'Content Sidebar', 'twentyfourteen' ),
@@ -187,6 +185,7 @@ function twentyfourteen_widgets_init() {
 		'after_widget'  => '</aside>',
 		'before_title'  => '<h1 class="widget-title">',
 		'after_title'   => '</h1>',
+		'customize_selective_refresh' => true,
 	) );
 	register_sidebar( array(
 		'name'          => __( 'Footer Widget Area', 'twentyfourteen' ),
@@ -196,6 +195,7 @@ function twentyfourteen_widgets_init() {
 		'after_widget'  => '</aside>',
 		'before_title'  => '<h1 class="widget-title">',
 		'after_title'   => '</h1>',
+		'customize_selective_refresh' => true,
 	) );
 }
 add_action( 'widgets_init', 'twentyfourteen_widgets_init' );
