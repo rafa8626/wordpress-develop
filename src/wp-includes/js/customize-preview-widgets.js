@@ -65,8 +65,6 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 			options = options || {};
 			options.params = _.extend(
 				{
-					/* Note that a selector of ('#' + partial.widgetId) is faster, but jQuery will only return the one result. */
-					selector: '[id="' + partial.widgetId + '"]', // Alternatively, '[data-customize-widget-id="' + partial.widgetId + '"]'
 					settings: [ self.getWidgetSettingId( partial.widgetId ) ],
 					containerInclusive: true
 				},
