@@ -117,13 +117,14 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 	 * Test WP_Customize_Widgets::get_setting_args()
 	 */
 	function test_get_setting_args() {
+		global $wp_registered_sidebars;
 
 		add_filter( 'widget_customizer_setting_args', array( $this, 'filter_widget_customizer_setting_args' ), 10, 2 );
 
 		$default_args = array(
 			'type' => 'option',
 			'capability' => 'edit_theme_options',
-			'transport' => 'postMessage',
+			'transport' => 'refresh',
 			'default' => array(),
 			'sanitize_callback' => array( $this->manager->widgets, 'sanitize_widget_instance' ),
 			'sanitize_js_callback' => array( $this->manager->widgets, 'sanitize_widget_js_instance' ),
@@ -149,6 +150,7 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 		}
 		$this->assertEquals( 'WIDGET_BAR[3]', $args['uppercase_id_set_by_filter'] );
 
+		$wp_registered_sidebars['sidebar-1']['customize_selective_refresh'] = true;
 		$default_args = array(
 			'type' => 'option',
 			'capability' => 'edit_theme_options',
@@ -163,10 +165,11 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 		}
 		$this->assertEquals( 'SIDEBARS_WIDGETS[SIDEBAR-1]', $args['uppercase_id_set_by_filter'] );
 
+		$wp_registered_sidebars['sidebar-2']['customize_selective_refresh'] = false;
 		$override_args = array(
 			'type' => 'theme_mod',
 			'capability' => 'edit_posts',
-			'transport' => 'postMessage',
+			'transport' => 'refresh',
 			'default' => array( 'title' => 'asd' ),
 			'sanitize_callback' => '__return_empty_array',
 			'sanitize_js_callback' => '__return_empty_array',
@@ -409,6 +412,7 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 		global $wp_registered_sidebars;
 		register_sidebar( array(
 			'id' => 'foo',
+			'customize_selective_refresh' => true,
 		) );
 
 		$this->manager->widgets->selective_refresh_init();

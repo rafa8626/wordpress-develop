@@ -125,7 +125,7 @@ final class WP_Customize_Widgets {
 
 		$selective_refreshable_widgets = array();
 		foreach ( $wp_widget_factory->widgets as $wp_widget ) {
-			$selective_refreshable_widget[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
+			$selective_refreshable_widgets[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
 		}
 		return $selective_refreshable_widgets;
 	}
@@ -709,7 +709,7 @@ final class WP_Customize_Widgets {
 				'widgetReorderNav' => $widget_reorder_nav_tpl,
 				'moveWidgetArea'   => $move_widget_area_tpl,
 			),
-			'selectiveRefreshWidgets' => $this->get_selective_refreshable_widgets(),
+			'selectiveRefreshableWidgets' => $this->get_selective_refreshable_widgets(),
 		);
 
 		foreach ( $settings['registeredWidgets'] as &$registered_widget ) {
@@ -781,12 +781,14 @@ final class WP_Customize_Widgets {
 	 *
 	 * @since 3.9.0
 	 * @access public
+	 * @global array $wp_registered_sidebars
 	 *
 	 * @param string $id        Widget setting ID.
 	 * @param array  $overrides Array of setting overrides.
 	 * @return array Possibly modified setting arguments.
 	 */
 	public function get_setting_args( $id, $overrides = array() ) {
+		global $wp_registered_sidebars;
 		$args = array(
 			'type'       => 'option',
 			'capability' => 'edit_theme_options',
@@ -796,11 +798,11 @@ final class WP_Customize_Widgets {
 		if ( preg_match( $this->setting_id_patterns['sidebar_widgets'], $id, $matches ) ) {
 			$args['sanitize_callback'] = array( $this, 'sanitize_sidebar_widgets' );
 			$args['sanitize_js_callback'] = array( $this, 'sanitize_sidebar_widgets_js_instance' );
-			$args['transport'] = current_theme_supports( 'customize-selective-refresh-widgets' ) ? 'postMessage' : 'refresh';
+			$args['transport'] = ! empty( $wp_registered_sidebars[ $matches['sidebar_id'] ]['customize_selective_refresh'] ) ? 'postMessage' : 'refresh';
 		} elseif ( preg_match( $this->setting_id_patterns['widget_instance'], $id, $matches ) ) {
 			$args['sanitize_callback'] = array( $this, 'sanitize_widget_instance' );
 			$args['sanitize_js_callback'] = array( $this, 'sanitize_widget_js_instance' );
-			$args['transport'] = current_theme_supports( 'customize-selective-refresh-widgets', $matches['id_base'] ) ? 'postMessage' : 'refresh';
+			$args['transport'] = 'refresh'; // Will switch to postMessage in client if widget and sidebar support it.
 		}
 
 		$args = array_merge( $args, $overrides );
@@ -865,6 +867,8 @@ final class WP_Customize_Widgets {
 		usort( $sort, array( $this, '_sort_name_callback' ) );
 		$done = array();
 
+		$selective_refreshable_widgets = $this->get_selective_refreshable_widgets();
+
 		foreach ( $sort as $widget ) {
 			if ( in_array( $widget['callback'], $done, true ) ) { // We already showed this multi-widget
 				continue;
@@ -913,7 +917,7 @@ final class WP_Customize_Widgets {
 				'multi_number' => ( $args['_add'] === 'multi' ) ? $args['_multi_num'] : false,
 				'is_disabled'  => $is_disabled,
 				'id_base'      => $id_base,
-				'transport'    => current_theme_supports( 'customize-selective-refresh-widgets', $id_base ) ? 'postMessage' : 'refresh',
+				'transport'    => ! empty( $selective_refreshable_widgets[ $id_base ] ),
 				'width'        => $wp_registered_widget_controls[$widget['id']]['width'],
 				'height'       => $wp_registered_widget_controls[$widget['id']]['height'],
 				'is_wide'      => $this->is_wide_widget( $widget['id'] ),
@@ -1090,7 +1094,7 @@ final class WP_Customize_Widgets {
 			'l10n'               => array(
 				'widgetTooltip'  => __( 'Shift-click to edit this widget.' ),
 			),
-			'selectiveRefreshWidgets' => $this->get_selective_refreshable_widgets(),
+			'selectiveRefreshableWidgets' => $this->get_selective_refreshable_widgets(),
 		);
 		foreach ( $settings['registeredWidgets'] as &$registered_widget ) {
 			unset( $registered_widget['callback'] ); // may not be JSON-serializeable
@@ -1500,10 +1504,6 @@ final class WP_Customize_Widgets {
 	 * @return array (Maybe) modified partial arguments.
 	 */
 	public function customize_dynamic_partial_args( $partial_args, $partial_id ) {
-		if ( ! current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
-			return $partial_args;
-		}
-
 		if ( preg_match( '/^widget\[(?P<widget_id>.+)\]$/', $partial_id, $matches ) ) {
 			if ( false === $partial_args ) {
 				$partial_args = array();
@@ -1530,10 +1530,6 @@ final class WP_Customize_Widgets {
 	 * @access public
 	 */
 	public function selective_refresh_init() {
-		if ( ! current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
-			return;
-		}
-
 		add_action( 'wp_enqueue_scripts', array( $this, 'customize_preview_enqueue_deps' ) );
 		add_filter( 'dynamic_sidebar_params', array( $this, 'filter_dynamic_sidebar_params' ) );
 		add_filter( 'wp_kses_allowed_html', array( $this, 'filter_wp_kses_allowed_data_attributes' ) );
@@ -1562,10 +1558,13 @@ final class WP_Customize_Widgets {
 	 *     @type array $widget_args Widget args.
 	 * }
 	 * @see WP_Customize_Nav_Menus_Partial_Refresh::filter_wp_nav_menu_args()
+	 * @global array $wp_registered_sidebars
 	 *
 	 * @return array Params.
 	 */
 	public function filter_dynamic_sidebar_params( $params ) {
+		global $wp_registered_sidebars;
+
 		$sidebar_args = array_merge(
 			array(
 				'before_widget' => '',
@@ -1580,6 +1579,8 @@ final class WP_Customize_Widgets {
 			isset( $sidebar_args['id'] )
 			&&
 			is_registered_sidebar( $sidebar_args['id'] )
+			&&
+			! empty( $wp_registered_sidebars[ $sidebar_args['id'] ]['customize_selective_refresh'] )
 			&&
 			( isset( $this->current_dynamic_sidebar_id_stack[0] ) && $this->current_dynamic_sidebar_id_stack[0] === $sidebar_args['id'] )
 			&&
