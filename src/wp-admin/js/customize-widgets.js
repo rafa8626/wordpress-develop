@@ -1633,24 +1633,9 @@
 		 * Update ordering of widget control forms when the setting is updated
 		 */
 		_setupModel: function() {
-			var sidebarControl = this, setWidgetSettingTransports;
+			var self = this;
 
-			setWidgetSettingTransports = function( widgetIds ) {
-				_.each( widgetIds, function( widgetId ) {
-					var widgetSetting = api( widgetIdToSettingId( widgetId ) );
-					if ( ! widgetSetting ) {
-						return;
-					}
-					if ( api.Widgets.data.selectiveRefreshableWidgets[ parseWidgetId( widgetId ).id_base ] ) {
-						widgetSetting.transport = sidebarControl.setting.transport;
-					} else {
-						widgetSetting.transport = 'refresh';
-					}
-				} );
-			};
-			setWidgetSettingTransports( sidebarControl.setting() );
-
-			sidebarControl.setting.bind( function( newWidgetIds, oldWidgetIds ) {
+			this.setting.bind( function( newWidgetIds, oldWidgetIds ) {
 				var widgetFormControls, removedWidgetIds, priority;
 
 				removedWidgetIds = _( oldWidgetIds ).difference( newWidgetIds );
@@ -1666,7 +1651,7 @@
 					var widgetFormControl = api.Widgets.getWidgetFormControlForWidget( widgetId );
 
 					if ( ! widgetFormControl ) {
-						widgetFormControl = sidebarControl.addWidget( widgetId );
+						widgetFormControl = self.addWidget( widgetId );
 					}
 
 					return widgetFormControl;
@@ -1682,21 +1667,18 @@
 				priority = 0;
 				_( widgetFormControls ).each( function ( control ) {
 					control.priority( priority );
-					control.section( sidebarControl.section() );
+					control.section( self.section() );
 					priority += 1;
 				});
-				sidebarControl.priority( priority ); // Make sure sidebar control remains at end
+				self.priority( priority ); // Make sure sidebar control remains at end
 
 				// Re-sort widget form controls (including widgets form other sidebars newly moved here)
-				sidebarControl._applyCardinalOrderClassNames();
+				self._applyCardinalOrderClassNames();
 
 				// If the widget was dragged into the sidebar, make sure the sidebar_id param is updated
 				_( widgetFormControls ).each( function( widgetFormControl ) {
-					widgetFormControl.params.sidebar_id = sidebarControl.params.sidebar_id;
+					widgetFormControl.params.sidebar_id = self.params.sidebar_id;
 				} );
-
-				// Update added widget setting transports for selective refresh since this sidebar may not support it.
-				setWidgetSettingTransports( newWidgetIds );
 
 				// Cleanup after widget removal
 				_( removedWidgetIds ).each( function( removedWidgetId ) {
@@ -1708,7 +1690,7 @@
 
 						// Check if the widget is in another sidebar
 						api.each( function( otherSetting ) {
-							if ( otherSetting.id === sidebarControl.setting.id || 0 !== otherSetting.id.indexOf( 'sidebars_widgets[' ) || 'sidebars_widgets[wp_inactive_widgets]' === otherSetting.id ) {
+							if ( otherSetting.id === self.setting.id || 0 !== otherSetting.id.indexOf( 'sidebars_widgets[' ) || otherSetting.id === 'sidebars_widgets[wp_inactive_widgets]' ) {
 								return;
 							}
 
@@ -1728,7 +1710,7 @@
 						removedControl = api.Widgets.getWidgetFormControlForWidget( removedWidgetId );
 
 						// Detect if widget control was dragged to another sidebar
-						wasDraggedToAnotherSidebar = removedControl && $.contains( document, removedControl.container[0] ) && ! $.contains( sidebarControl.$sectionContent[0], removedControl.container[0] );
+						wasDraggedToAnotherSidebar = removedControl && $.contains( document, removedControl.container[0] ) && ! $.contains( self.$sectionContent[0], removedControl.container[0] );
 
 						// Delete any widget form controls for removed widgets
 						if ( removedControl && ! wasDraggedToAnotherSidebar ) {
@@ -1941,12 +1923,12 @@
 		 * @returns {object|false} widget_form control instance, or false on error
 		 */
 		addWidget: function( widgetId ) {
-			var control = this, controlHtml, $widget, controlType = 'widget_form', controlContainer, controlConstructor,
+			var self = this, controlHtml, $widget, controlType = 'widget_form', controlContainer, controlConstructor,
 				parsedWidgetId = parseWidgetId( widgetId ),
 				widgetNumber = parsedWidgetId.number,
 				widgetIdBase = parsedWidgetId.id_base,
 				widget = api.Widgets.availableWidgets.findWhere( {id_base: widgetIdBase} ),
-				settingId, isExistingWidget, widgetFormControl, sidebar, sidebarWidgets, settingArgs, setting, settingTransport;
+				settingId, isExistingWidget, widgetFormControl, sidebarWidgets, settingArgs, setting;
 
 			if ( ! widget ) {
 				return false;
@@ -1998,18 +1980,13 @@
 
 			// Only create setting if it doesn't already exist (if we're adding a pre-existing inactive widget)
 			isExistingWidget = api.has( settingId );
-			sidebar = api.Widgets.registeredSidebars.get( control.params.sidebar_id );
-			settingTransport = ( sidebar.get( 'customize_selective_refresh' ) && widget.get( 'customize_selective_refresh' ) ) ? 'postMessage' : 'refresh';
 			if ( ! isExistingWidget ) {
 				settingArgs = {
-					transport: settingTransport,
-					previewer: control.setting.previewer
+					transport: api.Widgets.data.selectiveRefreshWidgets[ widget.get( 'id_base' ) ] ? 'postMessage' : 'refresh',
+					previewer: this.setting.previewer
 				};
 				setting = api.create( settingId, settingId, '', settingArgs );
 				setting.set( {} ); // mark dirty, changing from '' to {}
-			} else {
-				setting = api( settingId );
-				setting.transport = settingTransport;
 			}
 
 			controlConstructor = api.controlConstructor[controlType];
@@ -2019,7 +1996,7 @@
 						'default': settingId
 					},
 					content: controlContainer,
-					sidebar_id: control.params.sidebar_id,
+					sidebar_id: self.params.sidebar_id,
 					widget_id: widgetId,
 					widget_id_base: widget.get( 'id_base' ),
 					type: controlType,
@@ -2029,13 +2006,13 @@
 					is_wide: widget.get( 'is_wide' ),
 					active: true
 				},
-				previewer: control.setting.previewer
+				previewer: self.setting.previewer
 			} );
 			api.control.add( settingId, widgetFormControl );
 
 			// Make sure widget is removed from the other sidebars
 			api.each( function( otherSetting ) {
-				if ( otherSetting.id === control.setting.id ) {
+				if ( otherSetting.id === self.setting.id ) {
 					return;
 				}
 

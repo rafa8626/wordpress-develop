@@ -13,7 +13,7 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 		l10n: {
 			widgetTooltip: ''
 		},
-		selectiveRefreshableWidgets: {}
+		selectiveRefreshWidgets: {}
 	};
 
 	/**
@@ -25,7 +25,10 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 		var self = this;
 
 		self.preview = api.preview;
-		self.addPartials();
+		if ( ! _.isEmpty( self.selectiveRefreshWidgets ) ) {
+			self.addPartials();
+		}
+
 		self.buildWidgetSelectors();
 		self.highlightControls();
 
@@ -61,7 +64,6 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 			}
 
 			partial.widgetId = matches[1];
-			partial.widgetIdParts = self.parseWidgetId( partial.widgetId );
 			options = options || {};
 			options.params = _.extend(
 				{
@@ -72,23 +74,6 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 			);
 
 			api.selectiveRefresh.Partial.prototype.initialize.call( partial, id, options );
-		},
-
-		/**
-		 * Refresh widget partial.
-		 *
-		 * @returns {Promise}
-		 */
-		refresh: function() {
-			var partial = this, refreshDeferred;
-			if ( ! self.selectiveRefreshableWidgets[ partial.widgetIdParts.idBase ] ) {
-				refreshDeferred = $.Deferred();
-				refreshDeferred.reject();
-				partial.fallback();
-				return refreshDeferred.promise();
-			} else {
-				return api.selectiveRefresh.Partial.prototype.refresh.call( partial );
-			}
 		},
 
 		/**
