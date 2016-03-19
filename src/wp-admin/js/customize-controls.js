@@ -2354,6 +2354,10 @@
 				api.HeaderTool.UploadsList,
 				api.HeaderTool.DefaultsList
 			]);
+
+			// Ensure custom-header-crop Ajax requests bootstrap the Customizer to activate the previewed theme.
+			wp.media.controller.Cropper.prototype.defaults.doCropArgs.wp_customize = 'on';
+			wp.media.controller.Cropper.prototype.defaults.doCropArgs.theme = api.settings.theme.stylesheet;
 		},
 
 		/**
