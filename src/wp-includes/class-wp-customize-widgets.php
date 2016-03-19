@@ -109,38 +109,6 @@ final class WP_Customize_Widgets {
 		// Selective Refresh.
 		add_filter( 'customize_dynamic_partial_args',          array( $this, 'customize_dynamic_partial_args' ), 10, 2 );
 		add_action( 'customize_preview_init',                  array( $this, 'selective_refresh_init' ) );
-
-		add_filter( 'current_theme_supports-customize-selective-refresh-widgets', array( $this, 'filter_current_theme_supports' ), 1, 3 );
-	}
-
-	/**
-	 * Filters theme support for customize-selective-refresh-widgets to whitelist widget support.
-	 *
-	 * @since 4.5.0
-	 * @access public
-	 *
-	 * @param bool  $theme_supports Whether the current theme supports selective refresh of widgets.
-	 * @param array $args           Array of arguments for the feature.
-	 * @param array $widgets        The widgets supported by the feature.
-	 * @return bool Whether the theme or widget can use selective refresh in the Customizer.
-	 */
-	public function filter_current_theme_supports( $theme_supports, $args, $widgets ) {
-		global $wp_widget_factory;
-		if ( $theme_supports && isset( $args[0] ) ) {
-			$widget_id_base = $args[0];
-
-			if ( is_array( $widgets ) && in_array( $widget_id_base, $widgets, true ) ) {
-				$theme_supports = true;
-			} else {
-				foreach ( $wp_widget_factory->widgets as $widget ) {
-					if ( $widget_id_base === $widget->id_base ) {
-						$theme_supports = ! empty( $widget->widget_options['customize_selective_refresh'] );
-						break;
-					}
-				}
-			}
-		}
-		return $theme_supports;
 	}
 
 	/**
@@ -156,10 +124,8 @@ final class WP_Customize_Widgets {
 		global $wp_widget_factory;
 
 		$selective_refreshable_widgets = array();
-		if ( current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
-			foreach ( $wp_widget_factory->widgets as $wp_widget ) {
-				$selective_refreshable_widgets[ $wp_widget->id_base ] = current_theme_supports( 'customize-selective-refresh-widgets', $wp_widget->id_base );
-			}
+		foreach ( $wp_widget_factory->widgets as $wp_widget ) {
+			$selective_refreshable_widget[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
 		}
 		return $selective_refreshable_widgets;
 	}
