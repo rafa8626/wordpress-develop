@@ -1473,14 +1473,29 @@
 			control.expandControlSection();
 
 			params.completeCallback = function() {
-				var focusable;
+				var tryFocus;
 
-				// Note that we can't use :focusable due to a jQuery UI issue. See: https://github.com/jquery/jquery-ui/pull/1583
-				focusable = control.container.find( '.menu-item-settings' ).find( 'input, select, textarea, button, object, a[href], [tabindex]' ).filter( ':visible' );
-				focusable.first().focus();
+				tryFocus = function() {
+					var focusable;
+					
+					// Note that we can't use :focusable due to a jQuery UI issue. See: https://github.com/jquery/jquery-ui/pull/1583
+					focusable = control.container.find( '.menu-item-settings' ).find( 'input, select, textarea, button, object, a[href], [tabindex]' ).filter( ':visible' );
+					
+					if ( 0 === focusable.length ) {
+						return false;
+					}
 
-				if ( originalCompleteCallback ) {
-					originalCompleteCallback();
+					focusable.first().focus();
+
+					if ( originalCompleteCallback ) {
+						originalCompleteCallback();
+					}
+
+					return true;
+				};
+
+				if ( ! tryFocus() ) {
+					_.delay( tryFocus, 180 );
 				}
 			};
 
