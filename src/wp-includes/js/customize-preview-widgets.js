@@ -13,7 +13,7 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 		l10n: {
 			widgetTooltip: ''
 		},
-		selectiveRefreshWidgets: {}
+		selectiveRefreshableWidgets: {}
 	};
 
 	/**
@@ -64,6 +64,7 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 			}
 
 			partial.widgetId = matches[1];
+			partial.widgetIdParts = self.parseWidgetId( partial.widgetId );
 			options = options || {};
 			options.params = _.extend(
 				{
@@ -74,6 +75,23 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 			);
 
 			api.selectiveRefresh.Partial.prototype.initialize.call( partial, id, options );
+		},
+
+		/**
+		 * Refresh widget partial.
+		 *
+		 * @returns {Promise}
+		 */
+		refresh: function() {
+			var partial = this, refreshDeferred;
+			if ( ! self.selectiveRefreshableWidgets[ partial.widgetIdParts.idBase ] ) {
+				refreshDeferred = $.Deferred();
+				refreshDeferred.reject();
+				partial.fallback();
+				return refreshDeferred.promise();
+			} else {
+				return api.selectiveRefresh.Partial.prototype.refresh.call( partial );
+			}
 		},
 
 		/**

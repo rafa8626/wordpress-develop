@@ -1982,7 +1982,7 @@
 			isExistingWidget = api.has( settingId );
 			if ( ! isExistingWidget ) {
 				settingArgs = {
-					transport: api.Widgets.data.selectiveRefreshWidgets[ widget.get( 'id_base' ) ] ? 'postMessage' : 'refresh',
+					transport: api.Widgets.data.selectiveRefreshableWidgets[ widget.get( 'id_base' ) ] ? 'postMessage' : 'refresh',
 					previewer: this.setting.previewer
 				};
 				setting = api.create( settingId, settingId, '', settingArgs );
