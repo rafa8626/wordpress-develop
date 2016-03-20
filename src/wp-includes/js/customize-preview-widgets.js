@@ -25,7 +25,7 @@ wp.customize.widgetsPreview = wp.customize.WidgetCustomizerPreview = (function( 
 		var self = this;
 
 		self.preview = api.preview;
-		if ( ! _.isEmpty( self.selectiveRefreshWidgets ) ) {
+		if ( ! _.isEmpty( self.selectiveRefreshableWidgets ) ) {
 			self.addPartials();
 		}
 
