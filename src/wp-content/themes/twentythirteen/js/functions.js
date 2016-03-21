@@ -120,13 +120,24 @@
 	 * Arranges footer widgets vertically.
 	 */
 	if ( $.isFunction( $.fn.masonry ) ) {
-		var columnWidth = body.is( '.sidebar' ) ? 228 : 245;
+		var columnWidth = body.is( '.sidebar' ) ? 228 : 245,
+			widgetArea = $( '#secondary .widget-area' );
 
-		$( '#secondary .widget-area' ).masonry( {
+		widgetArea.masonry( {
 			itemSelector: '.widget',
 			columnWidth: columnWidth,
 			gutterWidth: 20,
 			isRTL: body.is( '.rtl' )
 		} );
+
+		// Re-arrange footer widgets when sidebar is updated via selective refresh in the Customizer.
+		if ( 'undefined' !== typeof wp && wp.customize && wp.customize.selectiveRefresh ) {
+			wp.customize.selectiveRefresh.bind( 'sidebar-updated', function( sidebarPartial ) {
+				if ( 'sidebar-1' === sidebarPartial.sidebarId ) {
+					widgetArea.masonry( 'reloadItems' );
+					widgetArea.masonry( 'layout' );
+				}
+			} );
+		}
 	}
 } )( jQuery );
