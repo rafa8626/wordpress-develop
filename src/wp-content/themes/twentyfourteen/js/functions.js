@@ -146,7 +146,8 @@
 	} );
 
 	_window.load( function() {
-		var footerSidebar;
+		var footerSidebar,
+			isCustomizeSelectiveRefresh = ( 'undefined' !== typeof wp && wp.customize && wp.customize.selectiveRefresh );
 
 		// Arrange footer widgets vertically.
 		if ( $.isFunction( $.fn.masonry ) ) {
@@ -161,7 +162,7 @@
 				isRTL: $( 'body' ).is( '.rtl' )
 			} );
 
-			if ( 'undefined' !== typeof wp && wp.customize && wp.customize.selectiveRefresh ) {
+			if ( isCustomizeSelectiveRefresh ) {
 
 				// Retain previous masonry-brick initial position.
 				wp.customize.selectiveRefresh.bind( 'partial-content-rendered', function( placement ) {
@@ -188,6 +189,13 @@
 					}
 				} );
 			}
+		}
+
+		// Initialize audio and video players in Twenty_Fourteen_Ephemera_Widget widget when selectively refreshed in Customizer.
+		if ( isCustomizeSelectiveRefresh && wp.mediaelement ) {
+			wp.customize.selectiveRefresh.bind( 'partial-content-rendered', function() {
+				wp.mediaelement.initialize();
+			} );
 		}
 
 		// Initialize Featured Content slider.
