@@ -446,9 +446,9 @@ class Tests_Taxonomy extends WP_UnitTestCase {
 	/**
 	 * @ticket 21949
 	 */
-	public function test_nonpublic_taxonomy_should_not_be_queryable_using_taxname_query_var() {
+	public function test_nonpublicly_queryable_taxonomy_should_not_be_queryable_using_taxname_query_var() {
 		register_taxonomy( 'wptests_tax', 'post', array(
-			'public' => false,
+			'publicly_queryable' => false,
 		) );
 
 		$t = self::factory()->term->create_and_get( array(
@@ -466,11 +466,11 @@ class Tests_Taxonomy extends WP_UnitTestCase {
 	/**
 	 * @ticket 21949
 	 */
-	public function test_it_should_be_possible_to_register_a_query_var_that_matches_the_name_of_a_nonpublic_taxonomy() {
+	public function test_it_should_be_possible_to_register_a_query_var_that_matches_the_name_of_a_nonpublicly_queryable_taxonomy() {
 		global $wp;
 
 		register_taxonomy( 'wptests_tax', 'post', array(
-			'public' => false,
+			'publicly_queryable' => false,
 		) );
 		$t = $this->factory->term->create_and_get( array(
 			'taxonomy' => 'wptests_tax',
@@ -501,9 +501,9 @@ class Tests_Taxonomy extends WP_UnitTestCase {
 	/**
 	 * @ticket 21949
 	 */
-	public function test_nonpublic_taxonomy_should_not_be_queryable_using_taxonomy_and_term_vars() {
+	public function test_nonpublicly_queryable_taxonomy_should_not_be_queryable_using_taxonomy_and_term_vars() {
 		register_taxonomy( 'wptests_tax', 'post', array(
-			'public' => false,
+			'publicly_queryable' => false,
 		) );
 
 		$t = self::factory()->term->create_and_get( array(
@@ -517,4 +517,197 @@ class Tests_Taxonomy extends WP_UnitTestCase {
 
 		$this->assertFalse( is_tax( 'wptests_tax' ) );
 	}
+
+	/**
+	 * @ticket 34491
+	 */
+	public function test_public_taxonomy_should_be_publicly_queryable() {
+		register_taxonomy( 'wptests_tax', 'post', array(
+			'public' => true,
+		) );
+
+		$this->assertContains( 'wptests_tax', get_taxonomies( array( 'publicly_queryable' => true ) ) );
+
+		$t = self::factory()->term->create_and_get( array(
+			'taxonomy' => 'wptests_tax',
+		) );
+
+		$p = self::factory()->post->create();
+		wp_set_object_terms( $p, $t->slug, 'wptests_tax' );
+
+		$this->go_to( '/?wptests_tax=' . $t->slug );
+
+		$this->assertTrue( is_tax( 'wptests_tax' ) );
+	}
+
+	/**
+	 * @ticket 34491
+	 */
+	public function test_private_taxonomy_should_not_be_publicly_queryable() {
+		register_taxonomy( 'wptests_tax', 'post', array(
+			'public' => false,
+		) );
+
+		$this->assertContains( 'wptests_tax', get_taxonomies( array( 'publicly_queryable' => false ) ) );
+
+		$t = self::factory()->term->create_and_get( array(
+			'taxonomy' => 'wptests_tax',
+		) );
+
+		$p = self::factory()->post->create();
+		wp_set_object_terms( $p, $t->slug, 'wptests_tax' );
+
+		$this->go_to( '/?wptests_tax=' . $t->slug );
+
+		$this->assertFalse( is_tax( 'wptests_tax' ) );
+	}
+
+	/**
+	 * @ticket 34491
+	 */
+	public function test_private_taxonomy_should_be_overridden_by_publicly_queryable() {
+		register_taxonomy( 'wptests_tax', 'post', array(
+			'public' => false,
+			'publicly_queryable' => true,
+		) );
+
+		$this->assertContains( 'wptests_tax', get_taxonomies( array( 'publicly_queryable' => true ) ) );
+
+		$t = self::factory()->term->create_and_get( array(
+			'taxonomy' => 'wptests_tax',
+		) );
+
+		$p = self::factory()->post->create();
+		wp_set_object_terms( $p, $t->slug, 'wptests_tax' );
+
+		$this->go_to( '/?wptests_tax=' . $t->slug );
+
+		$this->assertTrue( is_tax( 'wptests_tax' ) );
+	}
+
+	/**
+	 * @ticket 35089
+	 */
+	public function test_query_var_should_be_forced_to_false_for_non_public_taxonomy() {
+		register_taxonomy( 'wptests_tax', 'post', array(
+			'public' => false,
+			'query_var' => true,
+		) );
+
+		$tax = get_taxonomy( 'wptests_tax' );
+		$this->assertFalse( $tax->query_var );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_unknown_taxonomy() {
+		$this->assertWPError( unregister_taxonomy( 'foo' ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_twice() {
+		register_taxonomy( 'foo', 'post' );
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+		$this->assertWPError( unregister_taxonomy( 'foo' ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_disallow_builtin_taxonomy() {
+		$this->assertWPError( unregister_taxonomy( 'post_tag' ) );
+		$this->assertWPError( unregister_taxonomy( 'category' ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_removes_query_vars() {
+		global $wp;
+
+		register_taxonomy( 'foo', 'post', array( 'query_var' => 'bar' ) );
+
+		$this->assertInternalType( 'int', array_search( 'bar', $wp->public_query_vars ) );
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+		$this->assertFalse( array_search( 'bar', $wp->public_query_vars ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_removes_permastruct() {
+		$this->set_permalink_structure( '/%postname%' );
+
+		global $wp_rewrite;
+
+		register_taxonomy( 'foo', 'post', array( 'query_var' => 'bar', 'rewrite' => true ) );
+
+		$this->assertInternalType( 'array', $wp_rewrite->extra_permastructs['foo'] );
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+		$this->assertFalse( isset($wp_rewrite->extra_permastructs['foo'] ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_removes_rewrite_rules() {
+		$this->set_permalink_structure( '/%postname%' );
+
+		global $wp_rewrite;
+
+		register_taxonomy( 'foo', 'post', array( 'query_var' => 'bar' ) );
+
+		$count_before = count( $wp_rewrite->rewritereplace );
+
+		$this->assertContains( '%foo%', $wp_rewrite->rewritecode );
+		$this->assertContains( 'bar=', $wp_rewrite->queryreplace );
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+		$this->assertNotContains( '%foo%', $wp_rewrite->rewritecode );
+		$this->assertNotContains( 'bar=', $wp_rewrite->queryreplace );
+		$this->assertSame( --$count_before, count( $wp_rewrite->rewritereplace ) ); // Array was reduced by one value.
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_removes_taxonomy_from_global() {
+		global $wp_taxonomies;
+
+		register_taxonomy( 'foo', 'post' );
+
+		$this->assertInternalType( 'object', $wp_taxonomies['foo'] );
+		$this->assertInternalType( 'object', get_taxonomy( 'foo' ) );
+
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+
+		$this->assertFalse( isset( $wp_taxonomies['foo'] ) );
+		$this->assertFalse( get_taxonomy( 'foo' ) );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_unregister_taxonomy_removes_meta_box_callback() {
+		global $wp_filter;
+
+		register_taxonomy( 'foo', 'post' );
+
+		$this->assertSame( 1, count( $wp_filter['wp_ajax_add-foo'] ) );
+		$this->assertTrue( unregister_taxonomy( 'foo' ) );
+		$this->assertSame( array(), $wp_filter['wp_ajax_add-foo'] );
+	}
+
+	/**
+	 * @ticket 35227
+	 */
+	public function test_taxonomy_does_not_exist_after_unregister_taxonomy() {
+		register_taxonomy( 'foo', 'post' );
+		$this->assertTrue( taxonomy_exists( 'foo' ) );
+		unregister_taxonomy( 'foo' );
+		$this->assertFalse( taxonomy_exists( 'foo' ) );
+	}
+
 }

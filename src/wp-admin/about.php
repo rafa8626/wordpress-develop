@@ -42,7 +42,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 		<div class="about-text"><?php printf( __( 'Thank you for updating! WordPress %s makes your site more connected and responsive.' ), $display_version ); ?></div>
 		<div class="wp-badge"><?php printf( __( 'Version %s' ), $display_version ); ?></div>
 
-		<h2 class="nav-tab-wrapper">
+		<h2 class="nav-tab-wrapper wp-clearfix">
 			<a href="about.php" class="nav-tab nav-tab-active"><?php _e( 'What&#8217;s New' ); ?></a>
 			<a href="credits.php" class="nav-tab"><?php _e( 'Credits' ); ?></a>
 			<a href="freedoms.php" class="nav-tab"><?php _e( 'Freedoms' ); ?></a>
@@ -139,7 +139,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 									'height'    => 550
 								);
 
-								$plugin_link = '<a href="' . esc_url( add_query_arg( $url_args, network_admin_url( 'plugin-install.php' ) ) ) . '" class="thickbox">WordPress REST API</a>';
+								$plugin_link = '<a href="' . esc_url( add_query_arg( $url_args, network_admin_url( 'plugin-install.php' ) ) ) . '" class="thickbox open-plugin-details-modal">WordPress REST API</a>';
 							} else {
 								$plugin_link = '<a href="https://wordpress.org/plugins/rest-api">WordPress REST API</a>';
 							}

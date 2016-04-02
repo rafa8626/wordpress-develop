@@ -143,8 +143,12 @@ if ( $action ) {
 					<ul class="ul-disc">
 					<?php
 						foreach ( $theme_info as $theme ) {
-							/* translators: 1: theme name, 2: theme author */
-							echo '<li>', sprintf( __('<strong>%1$s</strong> by <em>%2$s</em>' ), $theme->display('Name'), $theme->display('Author') ), '</li>';
+							echo '<li>' . sprintf(
+								/* translators: 1: theme name, 2: theme author */
+								_x( '%1$s by %2$s', 'theme' ),
+								'<strong>' . $theme->display( 'Name' ) . '</strong>',
+								'<em>' . $theme->display( 'Author' ) . '</em>'
+							) . '</li>';
 						}
 					?>
 					</ul>
@@ -239,8 +243,11 @@ require_once(ABSPATH . 'wp-admin/admin-header.php');
 
 <div class="wrap">
 <h1><?php echo esc_html( $title ); if ( current_user_can('install_themes') ) { ?> <a href="theme-install.php" class="page-title-action"><?php echo esc_html_x('Add New', 'theme'); ?></a><?php }
-if ( $s )
-	printf( '<span class="subtitle">' . __('Search results for &#8220;%s&#8221;') . '</span>', esc_html( $s ) ); ?>
+if ( isset( $_REQUEST['s'] ) && strlen( $_REQUEST['s'] ) ) {
+	/* translators: %s: search keywords */
+	printf( '<span class="subtitle">' . __( 'Search results for &#8220;%s&#8221;' ) . '</span>', esc_html( $s ) );
+}
+?>
 </h1>
 
 <?php
@@ -284,7 +291,7 @@ if ( isset( $_GET['enabled'] ) ) {
 $wp_list_table->views();
 
 if ( 'broken' == $status )
-	echo '<p class="clear">' . __('The following themes are installed but incomplete. Themes must have a stylesheet and a template.') . '</p>';
+	echo '<p class="clear">' . __( 'The following themes are installed but incomplete.' ) . '</p>';
 ?>
 
 <form method="post">

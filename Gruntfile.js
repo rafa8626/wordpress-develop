@@ -1,6 +1,7 @@
 /* jshint node:true */
 module.exports = function(grunt) {
 	var path = require('path'),
+		gitorsvn = require('git-or-svn'),
 		SOURCE_DIR = 'src/',
 		BUILD_DIR = 'build/',
 		autoprefixer = require('autoprefixer'),
@@ -93,7 +94,7 @@ module.exports = function(grunt) {
 					}
 				]
 			},
-			'wp-admin-rtl': {
+			'wp-admin-css-compat-rtl': {
 				options: {
 					processContent: function( src ) {
 						return src.replace( /\.css/g, '-rtl.css' );
@@ -102,14 +103,31 @@ module.exports = function(grunt) {
 				src: SOURCE_DIR + 'wp-admin/css/wp-admin.css',
 				dest: BUILD_DIR + 'wp-admin/css/wp-admin-rtl.css'
 			},
+			'wp-admin-css-compat-min': {
+				options: {
+					processContent: function( src ) {
+						return src.replace( /\.css/g, '.min.css' );
+					}
+				},
+				files: [
+					{
+						src: SOURCE_DIR + 'wp-admin/css/wp-admin.css',
+						dest: BUILD_DIR + 'wp-admin/css/wp-admin.min.css'
+					},
+					{
+						src:  BUILD_DIR + 'wp-admin/css/wp-admin-rtl.css',
+						dest: BUILD_DIR + 'wp-admin/css/wp-admin-rtl.min.css'
+					}
+				]
+			},
 			version: {
 				options: {
 					processContent: function( src ) {
 						return src.replace( /^\$wp_version = '(.+?)';/m, function( str, version ) {
 							version = version.replace( /-src$/, '' );
 
-							// If the version includes an SVN commit (-12345), it's not a released alpha/beta. Append a date.
-							version = version.replace( /-[\d]{5}$/, '-' + grunt.template.today( 'yyyymmdd' ) );
+							// If the version includes an SVN commit (-12345), it's not a released alpha/beta. Append a timestamp.
+							version = version.replace( /-[\d]{5}$/, '-' + grunt.template.today( 'yyyymmdd.HHMMss' ) );
 
 							/* jshint quotmark: true */
 							return "$wp_version = '" + version + "';";
@@ -154,7 +172,6 @@ module.exports = function(grunt) {
 		},
 		cssmin: {
 			options: {
-				'wp-admin': ['wp-admin', 'color-picker', 'customize-controls', 'customize-widgets', 'customize-nav-menus', 'ie', 'install', 'login', 'press-this', 'deprecated-*'],
 				compatibility: 'ie7'
 			},
 			core: {
@@ -163,8 +180,10 @@ module.exports = function(grunt) {
 				dest: BUILD_DIR,
 				ext: '.min.css',
 				src: [
-					'wp-admin/css/{<%= cssmin.options["wp-admin"] %>}.css',
-					'wp-includes/css/*.css'
+					'wp-admin/css/*.css',
+					'!wp-admin/css/wp-admin*.css',
+					'wp-includes/css/*.css',
+					'wp-includes/js/mediaelement/wp-mediaelement.css'
 				]
 			},
 			rtl: {
@@ -173,7 +192,8 @@ module.exports = function(grunt) {
 				dest: BUILD_DIR,
 				ext: '.min.css',
 				src: [
-					'wp-admin/css/{<%= cssmin.options["wp-admin"] %>}-rtl.css',
+					'wp-admin/css/*-rtl.css',
+					'!wp-admin/css/wp-admin*.css',
 					'wp-includes/css/*-rtl.css'
 				]
 			},
@@ -190,14 +210,14 @@ module.exports = function(grunt) {
 		rtlcss: {
 			options: {
 				// rtlcss options
-				config: {
-					swapLeftRightInUrl: false,
-					swapLtrRtlInUrl: false,
-					autoRename: false,
-					preserveDirectives: true,
+				opts: {
+					clean: false,
+					processUrls: { atrule: true, decl: false },
 					stringMap: [
 						{
 							name: 'import-rtl-stylesheet',
+							priority: 10,
+							exclusive: true,
 							search: [ '.css' ],
 							replace: [ '-rtl.css' ],
 							options: {
@@ -207,29 +227,38 @@ module.exports = function(grunt) {
 						}
 					]
 				},
-				properties : [
+				saveUnmodified: false,
+				plugins: [
 					{
 						name: 'swap-dashicons-left-right-arrows',
-						expr: /content/im,
-						action: function( prop, value ) {
-							if ( value === '"\\f141"' ) { // dashicons-arrow-left
-								value = '"\\f139"';
-							} else if ( value === '"\\f340"' ) { // dashicons-arrow-left-alt
-								value = '"\\f344"';
-							} else if ( value === '"\\f341"' ) { // dashicons-arrow-left-alt2
-								value = '"\\f345"';
-							} else if ( value === '"\\f139"' ) { // dashicons-arrow-right
-								value = '"\\f141"';
-							} else if ( value === '"\\f344"' ) { // dashicons-arrow-right-alt
-								value = '"\\f340"';
-							} else if ( value === '"\\f345"' ) { // dashicons-arrow-right-alt2
-								value = '"\\f341"';
+						priority: 10,
+						directives: {
+							control: {},
+							value: []
+						},
+						processors: [
+							{
+								expr: /content/im,
+								action: function( prop, value ) {
+									if ( value === '"\\f141"' ) { // dashicons-arrow-left
+										value = '"\\f139"';
+									} else if ( value === '"\\f340"' ) { // dashicons-arrow-left-alt
+										value = '"\\f344"';
+									} else if ( value === '"\\f341"' ) { // dashicons-arrow-left-alt2
+										value = '"\\f345"';
+									} else if ( value === '"\\f139"' ) { // dashicons-arrow-right
+										value = '"\\f141"';
+									} else if ( value === '"\\f344"' ) { // dashicons-arrow-right-alt
+										value = '"\\f340"';
+									} else if ( value === '"\\f345"' ) { // dashicons-arrow-right-alt2
+										value = '"\\f341"';
+									}
+									return { prop: prop, value: value };
+								}
 							}
-							return { prop: prop, value: value };
-						}
+						]
 					}
-				],
-				saveUnmodified: false
+				]
 			},
 			core: {
 				expand: true,
@@ -305,6 +334,7 @@ module.exports = function(grunt) {
 					// WordPress scripts inside directories
 					'wp-includes/js/jquery/jquery.table-hotkeys.js',
 					'wp-includes/js/mediaelement/wp-mediaelement.js',
+					'wp-includes/js/mediaelement/wp-playlist.js',
 					'wp-includes/js/plupload/handlers.js',
 					'wp-includes/js/plupload/wp-plupload.js',
 					'wp-includes/js/tinymce/plugins/wordpress/plugin.js',
@@ -421,6 +451,8 @@ module.exports = function(grunt) {
 				src: [
 					'wp-admin/js/*.js',
 					'wp-includes/js/*.js',
+					'wp-includes/js/mediaelement/wp-mediaelement.js',
+					'wp-includes/js/mediaelement/wp-playlist.js',
 					'wp-includes/js/plupload/handlers.js',
 					'wp-includes/js/plupload/wp-plupload.js',
 					'wp-includes/js/tinymce/plugins/wordpress/plugin.js',
@@ -636,18 +668,83 @@ module.exports = function(grunt) {
 		grunt.task.run( '_' + this.nameArgs );
 	} );
 
-	grunt.registerTask( 'precommit', 'Runs front-end dev/test tasks in preparation for a commit.', [
-		'postcss:core',
-		'imagemin:core',
+	grunt.registerTask( 'precommit:base', [
+		'imagemin:core'
+	] );
+
+	grunt.registerTask( 'precommit:js', [
 		'browserify',
 		'jshint:corejs',
 		'uglify:bookmarklet',
 		'qunit:compiled'
 	] );
 
+	grunt.registerTask( 'precommit:css', [
+		'postcss:core'
+	] );
+
+	grunt.registerTask( 'precommit:php', [
+		'phpunit'
+	] );
+
+	grunt.registerTask( 'precommit', 'Runs test and build tasks in preparation for a commit', function() {
+		var done = this.async();
+
+		// Figure out what tasks to run based on what files have been modified.
+		function enqueueTestingTasksForModifiedFiles( filesModified ) {
+			var taskList = ['precommit:base'];
+			if ( /.*\.js/.test( filesModified ) ) {
+				grunt.log.write( 'JavaScript source files modified. JavaScript tests will be run.\n');
+				taskList = taskList.concat( ['precommit:js'] );
+			}
+			if ( /src.*\.css/.test( filesModified ) ) {
+				grunt.log.write( 'CSS source files modified. CSS tests will be run.\n');
+				taskList = taskList.concat( ['postcss:core'] );
+			}
+			if ( /.*\.php/.test( filesModified ) ) {
+				grunt.log.write( 'PHP source files modified. PHP tests will be run.\n');
+				taskList = taskList.concat( ['precommit:php'] );
+			}
+			grunt.task.run( taskList );
+			done();
+		}
+		gitorsvn( __dirname, function(gitorsvn) {
+			if ( gitorsvn === 'svn' ) {
+				grunt.util.spawn(
+					{
+						cmd: 'svn',
+						args: ['status']
+					},
+					function(error, result, code) {
+						if ( code !== 0 ) {
+							grunt.fail.warn( 'The `svn status` command returned a non-zero exit code.', code );
+						}
+						enqueueTestingTasksForModifiedFiles( result.stdout );
+					}
+				);
+			} else if ( gitorsvn === 'git' ) {
+				grunt.util.spawn(
+					{
+						cmd: 'git',
+						args: ['diff', '--name-only']
+					},
+					function(error, result, code) {
+						if ( code !== 0 ) {
+							grunt.fail.warn( 'The `git diff --name-only` command returned a non-zero exit code.', code );
+						}
+						enqueueTestingTasksForModifiedFiles( result.stdout );
+					}
+				);
+			} else {
+				grunt.log.write( 'This WordPress install is not under version control. No tests will be run.' );
+			}
+		});
+	});
+
 	grunt.registerTask( 'copy:all', [
 		'copy:files',
-		'copy:wp-admin-rtl',
+		'copy:wp-admin-css-compat-rtl',
+		'copy:wp-admin-css-compat-min',
 		'copy:version'
 	] );
 
@@ -669,6 +766,14 @@ module.exports = function(grunt) {
 		'includes:emoji',
 		'includes:embed',
 		'jsvalidate:build'
+	] );
+
+	grunt.registerTask( 'prerelease', [
+		'precommit:php',
+		'precommit:js',
+		'precommit:css',
+		'precommit:base',
+		'build'
 	] );
 
 	// Testing tasks.

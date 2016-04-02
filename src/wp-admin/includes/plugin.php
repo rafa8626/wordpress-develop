@@ -117,11 +117,14 @@ function _get_plugin_data_markup_translate( $plugin_file, $plugin_data, $markup 
 	// Translate fields
 	if ( $translate ) {
 		if ( $textdomain = $plugin_data['TextDomain'] ) {
-			if ( $plugin_data['DomainPath'] )
-				load_plugin_textdomain( $textdomain, false, dirname( $plugin_file ) . $plugin_data['DomainPath'] );
-			else
-				load_plugin_textdomain( $textdomain, false, dirname( $plugin_file ) );
-		} elseif ( in_array( basename( $plugin_file ), array( 'hello.php', 'akismet.php' ) ) ) {
+			if ( ! is_textdomain_loaded( $textdomain ) ) {
+				if ( $plugin_data['DomainPath'] ) {
+					load_plugin_textdomain( $textdomain, false, dirname( $plugin_file ) . $plugin_data['DomainPath'] );
+				} else {
+					load_plugin_textdomain( $textdomain, false, dirname( $plugin_file ) );
+				}
+			}
+		} elseif ( 'hello.php' == basename( $plugin_file ) ) {
 			$textdomain = 'default';
 		}
 		if ( $textdomain ) {
@@ -424,7 +427,12 @@ function _get_dropins() {
 }
 
 /**
- * Check whether the plugin is active by checking the active_plugins list.
+ * Check whether a plugin is active.
+ *
+ * Only plugins installed in the plugins/ folder can be active.
+ *
+ * Plugins in the mu-plugins/ folder can't be "activated," so this function will
+ * return false for those plugins.
  *
  * @since 2.5.0
  *
@@ -452,6 +460,11 @@ function is_plugin_inactive( $plugin ) {
 
 /**
  * Check whether the plugin is active for the entire network.
+ *
+ * Only plugins installed in the plugins/ folder can be active.
+ *
+ * Plugins in the mu-plugins/ folder can't be "activated," so this function will
+ * return false for those plugins.
  *
  * @since 3.0.0
  *
@@ -508,11 +521,11 @@ function is_network_only_plugin( $plugin ) {
  *
  * @since 2.5.0
  *
- * @param string $plugin Plugin path to main plugin file with plugin data.
- * @param string $redirect Optional. URL to redirect to.
- * @param bool $network_wide Whether to enable the plugin for all sites in the
- *   network or just the current site. Multisite only. Default is false.
- * @param bool $silent Prevent calling activation hooks. Optional, default is false.
+ * @param string $plugin       Plugin path to main plugin file with plugin data.
+ * @param string $redirect     Optional. URL to redirect to.
+ * @param bool   $network_wide Optional. Whether to enable the plugin for all sites in the network
+ *                             or just the current site. Multisite only. Default false.
+ * @param bool   $silent       Optional. Whether to prevent calling activation hooks. Default false.
  * @return WP_Error|null WP_Error on invalid file or null on success.
  */
 function activate_plugin( $plugin, $redirect = '', $network_wide = false, $silent = false ) {
@@ -971,6 +984,17 @@ function uninstall_plugin($plugin) {
 	$file = plugin_basename($plugin);
 
 	$uninstallable_plugins = (array) get_option('uninstall_plugins');
+
+	/**
+	 * Fires in uninstall_plugin() immediately before the plugin is uninstalled.
+	 *
+	 * @since 4.5.0
+	 *
+	 * @param string $plugin                Relative plugin path from plugin directory.
+	 * @param array  $uninstallable_plugins Uninstallable plugins.
+	 */
+	do_action( 'pre_uninstall_plugin', $plugin, $uninstallable_plugins );
+
 	if ( file_exists( WP_PLUGIN_DIR . '/' . dirname($file) . '/uninstall.php' ) ) {
 		if ( isset( $uninstallable_plugins[$file] ) ) {
 			unset($uninstallable_plugins[$file]);

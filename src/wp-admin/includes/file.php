@@ -13,38 +13,48 @@
 
 /** The descriptions for theme files. */
 $wp_file_descriptions = array(
-	'index.php' => __( 'Main Index Template' ),
-	'style.css' => __( 'Stylesheet' ),
-	'editor-style.css' => __( 'Visual Editor Stylesheet' ),
-	'editor-style-rtl.css' => __( 'Visual Editor RTL Stylesheet' ),
-	'rtl.css' => __( 'RTL Stylesheet' ),
-	'comments.php' => __( 'Comments' ),
-	'footer.php' => __( 'Theme Footer' ),
-	'header.php' => __( 'Theme Header' ),
-	'sidebar.php' => __( 'Sidebar' ),
-	'archive.php' => __( 'Archives' ),
-	'author.php' => __( 'Author Template' ),
-	'tag.php' => __( 'Tag Template' ),
-	'category.php' => __( 'Category Template' ),
-	'page.php' => __( 'Page Template' ),
-	'search.php' => __( 'Search Results' ),
-	'searchform.php' => __( 'Search Form' ),
-	'single.php' => __( 'Single Post' ),
-	'404.php' => __( '404 Template' ),
-	'link.php' => __( 'Links Template' ),
-	'functions.php' => __( 'Theme Functions' ),
-	'attachment.php' => __( 'Attachment Template' ),
-	'image.php' => __('Image Attachment Template'),
-	'video.php' => __('Video Attachment Template'),
-	'audio.php' => __('Audio Attachment Template'),
-	'application.php' => __('Application Attachment Template'),
-	'my-hacks.php' => __( 'my-hacks.php (legacy hacks support)' ),
-	'.htaccess' => __( '.htaccess (for rewrite rules )' ),
+	'functions.php'         => __( 'Theme Functions' ),
+	'header.php'            => __( 'Theme Header' ),
+	'footer.php'            => __( 'Theme Footer' ),
+	'sidebar.php'           => __( 'Sidebar' ),
+	'comments.php'          => __( 'Comments' ),
+	'searchform.php'        => __( 'Search Form' ),
+	'404.php'               => __( '404 Template' ),
+	'link.php'              => __( 'Links Template' ),
+	// Archives
+	'index.php'             => __( 'Main Index Template' ),
+	'archive.php'           => __( 'Archives' ),
+	'author.php'            => __( 'Author Template' ),
+	'taxonomy.php'          => __( 'Taxonomy Template' ),
+	'category.php'          => __( 'Category Template' ),
+	'tag.php'               => __( 'Tag Template' ),
+	'home.php'              => __( 'Posts Page' ),
+	'search.php'            => __( 'Search Results' ),
+	'date.php'              => __( 'Date Template' ),
+	// Content
+	'singular.php'          => __( 'Singular Template' ),
+	'single.php'            => __( 'Single Post' ),
+	'page.php'              => __( 'Single Page' ),
+	'front-page.php'        => __( 'Static Front Page' ),
+	// Attachments
+	'attachment.php'        => __( 'Attachment Template' ),
+	'image.php'             => __( 'Image Attachment Template' ),
+	'video.php'             => __( 'Video Attachment Template' ),
+	'audio.php'             => __( 'Audio Attachment Template' ),
+	'application.php'       => __( 'Application Attachment Template' ),
+	// Stylesheets
+	'style.css'             => __( 'Stylesheet' ),
+	'editor-style.css'      => __( 'Visual Editor Stylesheet' ),
+	'editor-style-rtl.css'  => __( 'Visual Editor RTL Stylesheet' ),
+	'rtl.css'               => __( 'RTL Stylesheet' ),
+	// Other
+	'my-hacks.php'          => __( 'my-hacks.php (legacy hacks support)' ),
+	'.htaccess'             => __( '.htaccess (for rewrite rules )' ),
 	// Deprecated files
-	'wp-layout.css' => __( 'Stylesheet' ),
-	'wp-comments.php' => __( 'Comments Template' ),
+	'wp-layout.css'         => __( 'Stylesheet' ),
+	'wp-comments.php'       => __( 'Comments Template' ),
 	'wp-comments-popup.php' => __( 'Popup Comments Template' ),
-	'comments-popup.php' => __( 'Popup Comments' ),
+	'comments-popup.php'    => __( 'Popup Comments' ),
 );
 
 /**
@@ -214,6 +224,7 @@ function validate_file_to_edit( $file, $allowed_files = '' ) {
  * Handle PHP uploads in WordPress, sanitizing file names, checking extensions for mime type,
  * and moving the file to the appropriate directory within the uploads directory.
  *
+ * @access private
  * @since 4.0.0
  *
  * @see wp_handle_upload_error
@@ -399,7 +410,8 @@ function _wp_handle_upload( &$file, $overrides, $time, $action ) {
 		'file' => $new_file,
 		'url'  => $url,
 		'type' => $type
-	), 'wp_handle_sideload' === $action ? 'sideload' : 'upload' ); }
+	), 'wp_handle_sideload' === $action ? 'sideload' : 'upload' );
+}
 
 /**
  * Wrapper for _wp_handle_upload(), passes 'wp_handle_upload' action.
@@ -457,7 +469,7 @@ function wp_handle_sideload( &$file, $overrides = false, $time = null ) {
 
 
 /**
- * Downloads a url to a local temporary file using the WordPress HTTP Class.
+ * Downloads a URL to a local temporary file using the WordPress HTTP Class.
  * Please note, That the calling function must unlink() the file.
  *
  * @since 2.5.0

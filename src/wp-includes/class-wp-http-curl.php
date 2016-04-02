@@ -326,7 +326,7 @@ class WP_Http_Curl {
 	 * @access private
 	 *
 	 * @param resource $handle  cURL handle.
-	 * @param string   $headers cURL request headers.
+	 * @param string   $data    cURL request body.
 	 * @return int Total bytes of data written.
 	 */
 	private function stream_body( $handle, $data ) {
@@ -351,7 +351,7 @@ class WP_Http_Curl {
 	}
 
 	/**
-	 * Determines whether this class can be used for retrieving an URL.
+	 * Determines whether this class can be used for retrieving a URL.
 	 *
 	 * @static
 	 * @since 2.7.0
