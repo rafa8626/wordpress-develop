@@ -376,6 +376,8 @@ final class WP_Customize_Widgets {
 	public function customize_register() {
 		global $wp_registered_widgets, $wp_registered_widget_controls, $wp_registered_sidebars;
 
+		add_filter( 'sidebars_widgets', array( $this, 'preview_sidebars_widgets' ), 1 );
+
 		$sidebars_widgets = array_merge(
 			array( 'wp_inactive_widgets' => array() ),
 			array_fill_keys( array_keys( $wp_registered_sidebars ), array() ),
@@ -509,8 +511,6 @@ final class WP_Customize_Widgets {
 				$this->manager->get_setting( $new_setting_id )->preview();
 			}
 		}
-
-		add_filter( 'sidebars_widgets', array( $this, 'preview_sidebars_widgets' ), 1 );
 	}
 
 	/**
