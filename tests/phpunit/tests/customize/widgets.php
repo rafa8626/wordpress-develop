@@ -70,6 +70,11 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 
 	function set_customized_post_data( $customized ) {
 		$_POST['customized'] = wp_slash( wp_json_encode( $customized ) );
+		if ( $this->manager ) {
+			foreach ( $customized as $id => $value ) {
+				$this->manager->set_post_value( $id, $value );
+			}
+		}
 	}
 
 	function do_customize_boot_actions() {

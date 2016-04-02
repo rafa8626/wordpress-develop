@@ -99,7 +99,7 @@ final class WP_Customize_Widgets {
 		}
 
 		add_filter( 'customize_dynamic_setting_args',          array( $this, 'filter_customize_dynamic_setting_args' ), 10, 2 );
-		add_action( 'after_setup_theme',                       array( $this, 'register_settings' ) );
+		add_action( 'widgets_init',                            array( $this, 'register_settings' ), 95 );
 		add_action( 'wp_loaded',                               array( $this, 'override_sidebars_widgets_for_theme_switch' ) );
 		add_action( 'customize_controls_init',                 array( $this, 'customize_controls_init' ) );
 		add_action( 'customize_register',                      array( $this, 'schedule_customize_register' ), 1 );
