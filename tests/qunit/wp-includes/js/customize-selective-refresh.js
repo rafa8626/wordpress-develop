@@ -1,4 +1,4 @@
-/* global _, jQuery, QUnit */
+/* global _, jQuery, QUnit, wp */
 jQuery( function() {
 
 	var $, api, getAssertText, testSettingChange, titleMockSettings, descriptionMockSettings;
@@ -263,7 +263,7 @@ jQuery( function() {
 				done();
 
 			// Delay these assertions by slightly longer than the length of the buffer.
-			}, wp.customize.selectiveRefresh.data.refreshBuffer + 100 );
+			}, api.selectiveRefresh.data.refreshBuffer + 100 );
 		});
 
 	};
