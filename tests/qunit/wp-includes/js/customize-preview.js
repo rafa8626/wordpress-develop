@@ -1,6 +1,6 @@
-/* global jQuery, QUnit */
+/* global jQuery, QUnit, wp */
 
-wp.customize.bind( 'preview-ready', function() {
+var testCustomizePreview = function() {
 
 	QUnit.module( 'Custom Logo' );
 
@@ -12,4 +12,10 @@ wp.customize.bind( 'preview-ready', function() {
 		assert.ok( jQuery( document.body ).hasClass( 'wp-custom-logo' ) );
 	} );
 
-} );
+	// The 'Selective Refresh' unit test triggers this event.
+	// So unbind it, to avoid running this test many times.
+	wp.customize.unbind( 'preview-ready', testCustomizePreview );
+
+};
+
+wp.customize.bind( 'preview-ready', testCustomizePreview );
