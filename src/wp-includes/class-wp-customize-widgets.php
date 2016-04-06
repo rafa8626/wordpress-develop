@@ -68,7 +68,7 @@ final class WP_Customize_Widgets {
 	 * @access protected
 	 * @var array
 	 */
-	protected $selective_refreshable_widgets;
+	protected $selective_refreshable_widgets = array();
 
 	/**
 	 * Mapping of setting type to setting ID pattern.
@@ -137,11 +137,8 @@ final class WP_Customize_Widgets {
 		if ( ! current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
 			return array();
 		}
-		if ( ! isset( $this->selective_refreshable_widgets ) ) {
-			$this->selective_refreshable_widgets = array();
-			foreach ( $wp_widget_factory->widgets as $wp_widget ) {
-				$this->selective_refreshable_widgets[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
-			}
+		foreach ( $wp_widget_factory->widgets as $wp_widget ) {
+			$this->selective_refreshable_widgets[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
 		}
 		return $this->selective_refreshable_widgets;
 	}
@@ -156,8 +153,15 @@ final class WP_Customize_Widgets {
 	 * @return bool Whether the widget can be selective refreshed.
 	 */
 	public function is_widget_selective_refreshable( $id_base ) {
-		$selective_refreshable_widgets = $this->get_selective_refreshable_widgets();
-		return ! empty( $selective_refreshable_widgets[ $id_base ] );
+		if ( ! current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
+			return false;
+		}
+		if ( isset( $this->selective_refreshable_widgets[ $id_base ] ) ) {
+			return $this->selective_refreshable_widgets[ $id_base ];
+		} else {
+			$selective_refreshable_widgets = $this->get_selective_refreshable_widgets();
+			return ! empty( $selective_refreshable_widgets[ $id_base ] );
+		}
 	}
 
 	/**
