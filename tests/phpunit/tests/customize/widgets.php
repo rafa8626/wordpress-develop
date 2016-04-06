@@ -161,7 +161,7 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 	 * Test WP_Customize_Widgets::register_settings() with selective refresh enabled.
 	 *
 	 * @ticket 30988
-	 * @group trac-36389
+	 * @ticket 36389
 	 */
 	function test_register_settings() {
 		add_theme_support( 'customize-selective-refresh-widgets' );
@@ -214,7 +214,6 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 	 * Test registering settings without selective refresh enabled.
 	 *
 	 * @ticket 36389
-	 * @group trac-36389
 	 */
 	function test_register_settings_without_selective_refresh() {
 		remove_theme_support( 'customize-selective-refresh-widgets' );
@@ -225,7 +224,6 @@ class Tests_WP_Customize_Widgets extends WP_UnitTestCase {
 	 * Test registering settings with selective refresh enabled at a late after_setup_theme action.
 	 *
 	 * @ticket 36389
-	 * @group trac-36389
 	 */
 	function test_register_settings_with_late_theme_support_added() {
 		remove_theme_support( 'customize-selective-refresh-widgets' );
