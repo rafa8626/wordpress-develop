@@ -179,20 +179,20 @@ jQuery( function() {
 				mockSettings.settingId,
 				settingValue,
 				{
-					id: mockSettings.settingId
+				 id: mockSettings.settingId
 				}
 			);
 
 			options = {
-						params: {
-								 containerInclusive: isContainerInclusive,
-								 fallbackRefresh: false,
-								 selector: mockSettings.selector,
-								 settings: [ mockSettings.settingId ],
-								 primarySetting: mockSettings.settingId,
-								 type: 'default'
-								}
-					  };
+				params: {
+					containerInclusive: isContainerInclusive,
+					fallbackRefresh: false,
+					selector: mockSettings.selector,
+					settings: [ mockSettings.settingId ],
+					primarySetting: mockSettings.settingId,
+					type: 'default'
+				}
+			};
 
 			/**
 			 * Override ajax.send function, mocking a response from a server.
@@ -270,16 +270,16 @@ jQuery( function() {
 
 	// Selectors are already present in the document inside the '#qunit-fixture' element.
 	titleMockSettings = {
-						 settingId: 'blogname',
-						 selector: '.site-title a',
-						 prettyPrintSlug: 'Site Title'
-						};
+		settingId: 'blogname',
+		selector: '.site-title a',
+		prettyPrintSlug: 'Site Title'
+	};
 
 	descriptionMockSettings =  {
-								settingId: 'description',
-								selector: '.site-description',
-								prettyPrintSlug: 'Site Description'
-							   };
+		settingId: 'description',
+		selector: '.site-description',
+		prettyPrintSlug: 'Site Description'
+	};
 
 	testSettingChange( titleMockSettings );
 	testSettingChange( descriptionMockSettings );
