@@ -62,15 +62,6 @@ final class WP_Customize_Widgets {
 	protected $old_sidebars_widgets = array();
 
 	/**
-	 * Mapping of widget ID base to whether it supports selective refresh.
-	 *
-	 * @since 4.5.0
-	 * @access protected
-	 * @var array
-	 */
-	protected $selective_refreshable_widgets;
-
-	/**
 	 * Mapping of setting type to setting ID pattern.
 	 *
 	 * @since 4.2.0
@@ -137,13 +128,11 @@ final class WP_Customize_Widgets {
 		if ( ! current_theme_supports( 'customize-selective-refresh-widgets' ) ) {
 			return array();
 		}
-		if ( ! isset( $this->selective_refreshable_widgets ) ) {
-			$this->selective_refreshable_widgets = array();
-			foreach ( $wp_widget_factory->widgets as $wp_widget ) {
-				$this->selective_refreshable_widgets[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
-			}
+		$selective_refreshable_widgets = array();
+		foreach ( $wp_widget_factory->widgets as $wp_widget ) {
+			$selective_refreshable_widgets[ $wp_widget->id_base ] = ! empty( $wp_widget->widget_options['customize_selective_refresh'] );
 		}
-		return $this->selective_refreshable_widgets;
+		return $selective_refreshable_widgets;
 	}
 
 	/**
