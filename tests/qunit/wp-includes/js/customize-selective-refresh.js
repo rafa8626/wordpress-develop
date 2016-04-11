@@ -1,4 +1,4 @@
-/* global _, jQuery, QUnit, wp */
+/* global _, JSON, jQuery, QUnit, wp */
 jQuery( function() {
 
 	var $, api, getAssertText, PostMessageListener, ListenerForEventAttachedToContainer, testSettingChange,
@@ -470,7 +470,7 @@ jQuery( function() {
 					assertionText
 				);
 				done();
-				// Delay assertion by the length of the refresh buffer.
+			// Delay assertion by the length of the refresh buffer.
 			}, api.selectiveRefresh.data.refreshBuffer );
 		};
 
