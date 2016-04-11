@@ -1,7 +1,8 @@
 /* global _, jQuery, QUnit, wp */
 jQuery( function() {
 
-	var $, api, getAssertText, testSettingChange, titleMockSettings, descriptionMockSettings;
+	var $, api, getAssertText, PostMessageListener, ListenerForEventAttachedToContainer, testSettingChange,
+		titleMockSettings, descriptionMockSettings;
 
 	$ = jQuery;
 	api = wp.customize;
@@ -17,6 +18,90 @@ jQuery( function() {
 	getAssertText = function( valueName ) {
 		var assertText = 'The % value is set properly';
 		return assertText.replace( '%', valueName );
+	};
+
+	/**
+	 * Listen for messages sent via the postMessage transport.
+	 *
+	 * Must call init() method before listening for each message.
+	 * Cannot have separate instances.
+	 * This needs to override the method api.preview.targetWindow().postMessage
+	 *
+	 */
+	PostMessageListener = ( function() {
+		var self = this;
+
+		/**
+		 * Override previous function definition, to capture the messages that are sent via postMessage.
+		 */
+		api.preview.targetWindow = function() {
+			return {
+				postMessage: function( message ) {
+					var messageId = JSON.parse( message).id;
+					if ( self.messageIdsSent ) {
+						self.messageIdsSent.push( messageId );
+					}
+				}
+			};
+		};
+
+		return {
+			/**
+			 * Initialize with an empty array, to store message ids.
+			 *
+			 * @return {null}
+			 */
+			init: function() {
+				self.messageIdsSent = [];
+			},
+
+			/**
+			 * Find if a given message id was sent via the postMessage transport.
+			 *
+			 * @param {string} messageId The id that is passed as an argument to the postMessage method.
+			 * @returns {boolean|null} Whether a given message was sent since the init() method was called.
+			 */
+			wasMessageSent: function( messageId ) {
+				if ( ! self.messageIdsSent ) {
+					throw new Error( 'PostMessageListener must be initialized.' );
+				}
+				return self.messageIdsSent.includes( messageId );
+			}
+		};
+
+	} )();
+
+	/**
+	  * Capture whether an event was fired for a given object or function.
+	  *
+	  * Note: create a separate instance to listen to each event, using the 'New' keyword.
+	  *
+	  * @param {string} eventSlug The event to listen for.
+	  * @param {object|function} container Where the event was fired.
+	  *
+	  * @return {boolean} didEventFire Whether the event was fired since the instantiation.
+	  *
+	  */
+	ListenerForEventAttachedToContainer = function( eventSlug, container ) {
+		var self;
+		self = this;
+		self.didFire = false;
+
+		// Record when the event is fired.
+		container.bind( eventSlug, function() {
+			self.didFire = true;
+		});
+
+		return {
+			/**
+			 * Return whether the eventSlug passed in the instantiation has fired.
+			 *
+			 * @returns {boolean} didFire
+			 */
+			didEventFire: function () {
+				return self.didFire;
+			}
+		};
 	};
 
 	QUnit.module( 'Initial setup of Selective Refresh' );
@@ -71,6 +156,7 @@ jQuery( function() {
 
 		mockPartial = new api.selectiveRefresh.Partial( partialId, options );
 		api.selectiveRefresh.partial.add( partialId, mockPartial );
+
 		settingValue = 'bar';
 		relatedSetting = api.create(
 			partialId,
@@ -82,7 +168,8 @@ jQuery( function() {
 
 		expectedPlacement = mockPartial.placements()[ 0 ];
 
-		// Test that the mockPartial settings are correctly applied.
+		// Test that the mockPartial settings were correctly applied.
+		PostMessageListener.init();
 		assert.equal( mockPartial.id, partialId, getAssertText( 'id' ) );
 		assert.equal( mockPartial.params.selector, selector, getAssertText( 'selector' ) );
 		assert.equal( mockPartial.params.containerInclusive, true, getAssertText( 'containerInclusive' ) );
@@ -92,6 +179,9 @@ jQuery( function() {
 		assert.equal( mockPartial.settings(), partialId, getAssertText( 'settings' ) );
 		assert.ok( mockPartial.isRelatedSetting( relatedSetting.id ), 'The isRelatedSetting method identifies a related setting.' );
 		assert.notOk( mockPartial.isRelatedSetting( 'fooBar' ), 'The isRelatedSetting method identifies an unrelated setting.' );
+
+		mockPartial.showControl();
+		assert.ok( PostMessageListener.wasMessageSent( 'focus-control-for-setting' ), 'Calling the showControl method sends the proper type of message' );
 
 		placementNoContainer = new api.selectiveRefresh.Placement( {
 			partial: mockPartial,
@@ -115,7 +205,7 @@ jQuery( function() {
 
 		mockPartial.preparePlacement( expectedPlacement );
 		assert.ok( $( expectedPlacement.container ).hasClass( 'customize-partial-refreshing' ),
-				   'The placement has the correct class when prepared.'
+					'The placement has the correct class when prepared.'
 		);
 
 		assert.notOk( mockPartial.renderContent( placementNoContainer ), 'A placement with no container is not rendered.' );
@@ -152,9 +242,16 @@ jQuery( function() {
 		assert.ok( mockPartial.renderContent( placementWithContextAndContainer ),
 				   'A placement with sufficient arguments does not return false or an error when rendered'
 		);
+
+		PostMessageListener.init();
+		api.selectiveRefresh.requestFullRefresh();
+		assert.ok( PostMessageListener.wasMessageSent( 'refresh' ),
+			'On a request for a full-page refresh, the refresh message was sent via the postMessage transport.'
+		);
+
 	});
 
-	QUnit.module( 'Change setting values, and verify that the content is refreshed properly.' );
+	QUnit.module( 'Change setting values, and verify that the content was refreshed properly.' );
 
 	/**
 	 * Test the refresh of a partial, based on a settings change.
@@ -164,12 +261,13 @@ jQuery( function() {
 	 * @param {object} mockSettings The settings to change, including the id and selector.
 	 * @return {null}
 	 */
-	testSettingChange = function ( mockSettings ) {
+	testSettingChange = function( mockSettings ) {
 
 		QUnit.test( mockSettings.prettyPrintSlug, function ( assert ) {
 
 			var settingValue, changedSettingValue, isContainerInclusive, relatedSetting,
-				options, mockPartial, placement, done;
+				options, contentRenderedListener, renderPartialsResponseListener, mockPartial,
+				placement, done;
 
 			settingValue = 'Initial Setting';
 			changedSettingValue = 'Changed Setting';
@@ -195,7 +293,7 @@ jQuery( function() {
 			};
 
 			/**
-			 * Override ajax.send function, mocking a response from a server.
+			 * Override ajax.send function, mocking a successful response from a server.
 			 *
 			 * @since 4.6
 			 *
@@ -225,8 +323,13 @@ jQuery( function() {
 				return promise;
 			};
 
+			PostMessageListener.init();
+
 			// Insert the setting value into its place in the fixture markup.
 			$( mockSettings.selector ).html( settingValue );
+
+			contentRenderedListener = new ListenerForEventAttachedToContainer( 'partial-content-rendered', api.selectiveRefresh );
+			renderPartialsResponseListener = new ListenerForEventAttachedToContainer( 'render-partials-response', api.selectiveRefresh );
 
 			// Create a partial based on the setting, and add it to api.selectiveRefresh.
 			mockPartial = new api.selectiveRefresh.Partial( mockSettings.settingId, options);
@@ -260,10 +363,15 @@ jQuery( function() {
 				assert.equal( mockPartial.settings(), mockSettings.settingId, 'The mock partial settings were set.');
 				assert.ok( mockPartial.isRelatedSetting(relatedSetting.id), 'The partial selector was set.');
 				assert.equal( placement.container.data( 'customize-partial-content-rendered' ), true, 'The placement has the correct class based on its state.');
+				assert.ok( contentRenderedListener.didEventFire(), 'The partial-content-rendered event was fired.' );
+				assert.ok( renderPartialsResponseListener.didEventFire(), 'The render-partials-response event was fired.' );
+				assert.notOk( PostMessageListener.wasMessageSent( 'refresh' ),
+					'Does not send a refresh request via postMessage in a successful update of a partial'
+				);
 				done();
 
 			// Delay these assertions by slightly longer than the length of the buffer.
-			}, api.selectiveRefresh.data.refreshBuffer + 100 );
+			}, api.selectiveRefresh.data.refreshBuffer + 20 );
 		});
 
 	};
@@ -283,5 +391,92 @@ jQuery( function() {
 
 	testSettingChange( titleMockSettings );
 	testSettingChange( descriptionMockSettings );
+
+	QUnit.module( 'fallbackRefresh' );
+
+	QUnit.test( 'Full-page refresh is applied, as the partial options allow.', function( assert ) {
+		var createPartialWithFallbackRefreshSetTo, testFallbackWithRefreshSetTo;
+
+		/**
+		 * Override ajax.send function, to mock a failed response from a server.
+		 *
+		 * This failed response triggers a full page refresh if the partial settings allow it.
+		 *
+		 * @since 4.6
+		 *
+		 * @param {string} action The action to fire, unused in this mock function.
+		 * @param {object} options The options that would normally be sent with an ajax call.
+		 * @return {jQuery.Promise}
+		 */
+		wp.ajax.send = function ( action ) {
+			var deferred, promise;
+
+			deferred = $.Deferred();
+			deferred.rejectWith( action );
+			promise = deferred.promise();
+
+			// The 'api.selectiveRefresh.requestPartial' method sometimes calls the 'abort' method of the ajax request.
+			// So mock it with an empty function, to avoid an error.
+			promise.abort = function() {};
+			return promise;
+		};
+
+		/**
+		 * Factory function for a Partial, with a given fallbackRefresh setting.
+		 *
+		 * @param {bool} doFallbackRefresh Whether to do a full-page refresh as a fallback.
+		 * @returns {wp.customize.selectiveRefresh.Partial}
+		 */
+		createPartialWithFallbackRefreshSetTo = function( doFallbackRefresh ) {
+			var selector, options, partialId;
+
+			selector = '#fixture-mock-partial';
+			options = {
+				params : {
+					fallbackRefresh: doFallbackRefresh,
+					containerInclusive: true,
+					selector: selector,
+					settings: doFallbackRefresh ? [ 'foo-setting' ] : [ 'bar-setting' ]
+				}
+			};
+			partialId = doFallbackRefresh ? 'partial-true-refresh' : 'partial-false-refresh';
+
+			return new api.selectiveRefresh.Partial( partialId, options );
+		};
+
+		/**
+		 * Test the full-page refresh, based on partial options.
+		 *
+		 * @param {bool} doFallbackRefresh Setting for whether to apply a full-page refresh.
+		 * @return {null}
+		 */
+		testFallbackWithRefreshSetTo = function( doFallbackRefresh ) {
+			var mockPartial, assertionText, done;
+
+ 			mockPartial = createPartialWithFallbackRefreshSetTo( doFallbackRefresh );
+			api.selectiveRefresh.partial.add( mockPartial.id, mockPartial );
+
+			PostMessageListener.init();
+			mockPartial.refresh();
+
+			assertionText = doFallbackRefresh ?
+				'There is a refresh when fallbackRefresh is set to true in the partial options.' :
+				'There is no refresh when fallbackRefresh is set to false in the partial options.';
+
+			done = assert.async();
+			setTimeout( function () {
+				assert.equal( PostMessageListener.wasMessageSent( 'refresh' ),
+					doFallbackRefresh,
+					assertionText
+				);
+				done();
+				// Delay assertion by the length of the refresh buffer.
+			}, api.selectiveRefresh.data.refreshBuffer );
+		};
+
+		testFallbackWithRefreshSetTo( false );
+		testFallbackWithRefreshSetTo( true );
+
+	});
 
 });
