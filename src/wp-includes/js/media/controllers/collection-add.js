@@ -32,7 +32,7 @@
  * @param {string}                     attributes.collectionType         The collection type. (e.g. 'playlist').
  */
 var Selection = wp.media.model.Selection,
-	Library = require( './library.js' ),
+	Library = wp.media.controller.Library,
 	CollectionAdd;
 
 CollectionAdd = Library.extend({

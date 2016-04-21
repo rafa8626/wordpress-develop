@@ -1,7 +1,7 @@
 /**
  * wp.media.view.MediaFrame.AudioDetails
  *
- * @constructor
+ * @class
  * @augments wp.media.view.MediaFrame.MediaDetails
  * @augments wp.media.view.MediaFrame.Select
  * @augments wp.media.view.MediaFrame
@@ -11,10 +11,9 @@
  * @augments Backbone.View
  * @mixes wp.media.controller.StateMachine
  */
-var MediaDetails = require( './media-details' ),
-	MediaLibrary = require( '../../controllers/media-library.js' ),
-	AudioDetailsView = require( '../audio-details.js' ),
-	AudioDetailsController = require( '../../controllers/audio-details.js' ),
+var MediaDetails = wp.media.view.MediaFrame.MediaDetails,
+	MediaLibrary = wp.media.controller.MediaLibrary,
+
 	l10n = wp.media.view.l10n,
 	AudioDetails;
 
@@ -31,7 +30,7 @@ AudioDetails = MediaDetails.extend({
 	},
 
 	initialize: function( options ) {
-		options.DetailsView = AudioDetailsView;
+		options.DetailsView = wp.media.view.AudioDetails;
 		options.cancelText = l10n.audioDetailsCancel;
 		options.addText = l10n.audioAddSourceTitle;
 
@@ -47,7 +46,7 @@ AudioDetails = MediaDetails.extend({
 
 	createStates: function() {
 		this.states.add([
-			new AudioDetailsController( {
+			new wp.media.controller.AudioDetails( {
 				media: this.media
 			} ),
 

@@ -1,4 +1,12 @@
-var View = require( './view.js' ),
+/**
+ * wp.media.view.EditImage
+ *
+ * @class
+ * @augments wp.media.View
+ * @augments wp.Backbone.View
+ * @augments Backbone.View
+ */
+var View = wp.media.View,
 	EditImage;
 
 EditImage = View.extend({
@@ -13,11 +21,6 @@ EditImage = View.extend({
 
 	prepare: function() {
 		return this.model.toJSON();
-	},
-
-	render: function() {
-		View.prototype.render.apply( this, arguments );
-		return this;
 	},
 
 	loadEditor: function() {

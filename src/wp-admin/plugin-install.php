@@ -84,9 +84,15 @@ get_current_screen()->add_help_tab( array(
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
-	'<p>' . __('<a href="http://codex.wordpress.org/Plugins_Add_New_Screen" target="_blank">Documentation on Installing Plugins</a>') . '</p>' .
+	'<p>' . __('<a href="https://codex.wordpress.org/Plugins_Add_New_Screen" target="_blank">Documentation on Installing Plugins</a>') . '</p>' .
 	'<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
+
+get_current_screen()->set_screen_reader_content( array(
+	'heading_views'      => __( 'Filter plugins list' ),
+	'heading_pagination' => __( 'Plugins list navigation' ),
+	'heading_list'       => __( 'Plugins list' ),
+) );
 
 /**
  * WordPress Administration Template Header.
@@ -94,21 +100,36 @@ get_current_screen()->set_help_sidebar(
 include(ABSPATH . 'wp-admin/admin-header.php');
 ?>
 <div class="wrap">
-<h2>
+<h1>
 	<?php
 	echo esc_html( $title );
 	if ( ! empty( $tabs['upload'] ) && current_user_can( 'upload_plugins' ) ) {
 		if ( $tab === 'upload' ) {
 			$href = self_admin_url( 'plugin-install.php' );
-			$text = _x( 'Browse', 'plugins' );
+			$upload_tab_class = ' upload-tab';
 		} else {
 			$href = self_admin_url( 'plugin-install.php?tab=upload' );
-			$text = __( 'Upload Plugin' );
+			$upload_tab_class = '';
 		}
-		echo ' <a href="' . $href . '" class="upload add-new-h2">' . $text . '</a>';
+
+		printf( ' <a href="%s" class="upload-view-toggle page-title-action%s"><span class="upload">%s</span><span class="browse">%s</span></a>',
+			$href,
+			$upload_tab_class,
+			__( 'Upload Plugin' ),
+			__( 'Browse Plugins' )
+		);
 	}
 	?>
-</h2>
+</h1>
+
+<div class="upload-plugin-wrap<?php echo $upload_tab_class; ?>">
+<?php
+/*
+ * Output the upload plugin form on every plugin install screen, so it can be
+ * displayed via JavaScript rather then opening up the devoted upload plugin page.
+ */
+install_plugins_upload(); ?>
+</div>
 
 <?php
 if ( $tab !== 'upload' ) {
@@ -128,7 +149,10 @@ if ( $tab !== 'upload' ) {
  */
 do_action( "install_plugins_$tab", $paged ); ?>
 </div>
+
 <?php
+wp_print_request_filesystem_credentials_modal();
+
 /**
  * WordPress Administration Template Footer.
  */

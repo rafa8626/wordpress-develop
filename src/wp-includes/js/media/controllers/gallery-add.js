@@ -1,4 +1,6 @@
 /**
+ * wp.media.controller.GalleryAdd
+ *
  * A state for selecting more images to add to a gallery.
  *
  * @class
@@ -28,7 +30,7 @@
  *                                                                          Defaults to false because for this state, because the library of the Edit Gallery state is the selection.
  */
 var Selection = wp.media.model.Selection,
-	Library = require( './library.js' ),
+	Library = wp.media.controller.Library,
 	l10n = wp.media.view.l10n,
 	GalleryAdd;
 

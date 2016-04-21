@@ -1,6 +1,6 @@
 /**
- * Creates a dropzone on WP editor instances (elements with .wp-editor-wrap
- * or #wp-fullscreen-body) and relays drag'n'dropped files to a media workflow.
+ * Creates a dropzone on WP editor instances (elements with .wp-editor-wrap)
+ * and relays drag'n'dropped files to a media workflow.
  *
  * wp.media.view.EditorUploader
  *
@@ -9,7 +9,7 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var View = require( '../view.js' ),
+var View = wp.media.View,
 	l10n = wp.media.view.l10n,
 	$ = jQuery,
 	EditorUploader;
@@ -49,6 +49,10 @@ EditorUploader = View.extend({
 
 		this.$document.on( 'dragstart dragend drop', _.bind( function( event ) {
 			this.localDrag = event.type === 'dragstart';
+
+			if ( event.type === 'drop' ) {
+				this.containerDragleave();
+			}
 		}, this ) );
 
 		this.initialized = true;
@@ -107,7 +111,7 @@ EditorUploader = View.extend({
 		}
 
 		View.prototype.render.apply( this, arguments );
-		$( '.wp-editor-wrap, #wp-fullscreen-body' ).each( _.bind( this.attach, this ) );
+		$( '.wp-editor-wrap' ).each( _.bind( this.attach, this ) );
 		return this;
 	},
 
@@ -126,7 +130,7 @@ EditorUploader = View.extend({
 	 * @param  {jQuery.Event} event The 'drop' event.
 	 */
 	drop: function( event ) {
-		var $wrap = null, uploadView;
+		var $wrap, uploadView;
 
 		this.containerDragleave( event );
 		this.dropzoneDragleave( event );
@@ -143,13 +147,15 @@ EditorUploader = View.extend({
 		}
 
 		if ( ! this.workflow ) {
-			this.workflow = wp.media.editor.open( 'content', {
+			this.workflow = wp.media.editor.open( window.wpActiveEditor, {
 				frame:    'post',
 				state:    'insert',
 				title:    l10n.addMedia,
 				multiple: true
 			});
+
 			uploadView = this.workflow.uploader;
+
 			if ( uploadView.uploader && uploadView.uploader.ready ) {
 				this.addFiles.apply( this );
 			} else {

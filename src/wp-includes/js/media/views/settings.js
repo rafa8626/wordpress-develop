@@ -6,8 +6,8 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var View = require( './view.js' ),
-	$ = jQuery,
+var View = wp.media.View,
+	$ = Backbone.$,
 	Settings;
 
 Settings = View.extend({

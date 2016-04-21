@@ -12,8 +12,7 @@ require_once( dirname( __FILE__ ) . '/admin.php' );
 if ( !is_multisite() )
 	wp_die( __( 'Multisite support is not enabled.' ) );
 
-// @todo Create a delete blog cap.
-if ( ! current_user_can( 'manage_options' ) )
+if ( ! current_user_can( 'delete_site' ) )
 	wp_die(__( 'You do not have sufficient permissions to delete this site.'));
 
 if ( isset( $_GET['h'] ) && $_GET['h'] != '' && get_option( 'delete_blog_hash' ) != false ) {
@@ -33,7 +32,7 @@ $parent_file = 'tools.php';
 require_once( ABSPATH . 'wp-admin/admin-header.php' );
 
 echo '<div class="wrap">';
-echo '<h2>' . esc_html( $title ) . '</h2>';
+echo '<h1>' . esc_html( $title ) . '</h1>';
 
 if ( isset( $_POST['action'] ) && $_POST['action'] == 'deleteblog' && isset( $_POST['confirmdelete'] ) && $_POST['confirmdelete'] == '1' ) {
 	check_admin_referer( 'delete-blog' );
@@ -43,6 +42,7 @@ if ( isset( $_POST['action'] ) && $_POST['action'] == 'deleteblog' && isset( $_P
 
 	$url_delete = esc_url( admin_url( 'ms-delete-site.php?h=' . $hash ) );
 
+	/* translators: Do not translate USERNAME, URL_DELETE, SITE_NAME: those are placeholders. */
 	$content = __( "Howdy ###USERNAME###,
 
 You recently clicked the 'Delete Site' link on your site and filled in a
@@ -75,7 +75,7 @@ Webmaster
 	wp_mail( get_option( 'admin_email' ), "[ " . wp_specialchars_decode( get_option( 'blogname' ) ) . " ] ".__( 'Delete My Site' ), $content );
 	?>
 
-	<p><?php _e( 'Thank you. Please check your email for a link to confirm your action. Your site will not be deleted until this link is clicked. ') ?></p>
+	<p><?php _e( 'Thank you. Please check your email for a link to confirm your action. Your site will not be deleted until this link is clicked.' ) ?></p>
 
 <?php } else {
 	?>

@@ -15,7 +15,7 @@
 			$visualEditor = $(),
 			$textTop = $( '#ed_toolbar' ),
 			$textEditor = $( '#content' ),
-			$textEditorClone = $( '<div id="content-textarea-clone"></div>' ),
+			$textEditorClone = $( '<div id="content-textarea-clone" class="wp-exclude-emoji"></div>' ),
 			$bottom = $( '#post-status-info' ),
 			$menuBar = $(),
 			$statusBar = $(),
@@ -177,7 +177,7 @@
 				var node = editor.selection.getNode(),
 					range, view, offset;
 
-				if ( editor.plugins.wpview && ( view = editor.plugins.wpview.getView( node ) ) ) {
+				if ( editor.wp && editor.wp.getView && ( view = editor.wp.getView( node ) ) ) {
 					offset = view.getBoundingClientRect();
 				} else {
 					range = editor.selection.getRng();
@@ -887,10 +887,15 @@
 		}
 
 		function fadeOut( event ) {
-			var key = event && event.keyCode;
+			var isMac,
+				key = event && event.keyCode;
 
-			// fadeIn and return on Escape and keyboard shortcut Alt+Shift+W.
-			if ( key === 27 || ( key === 87 && event.altKey && event.shiftKey ) ) {
+			if ( window.navigator.platform ) {
+				isMac = ( window.navigator.platform.indexOf( 'Mac' ) > -1 );
+			}
+
+			// fadeIn and return on Escape and keyboard shortcut Alt+Shift+W and Ctrl+Opt+W.
+			if ( key === 27 || ( key === 87 && event.altKey && ( ( ! isMac && event.shiftKey ) || ( isMac && event.ctrlKey ) ) ) ) {
 				fadeIn( event );
 				return;
 			}
@@ -1143,7 +1148,7 @@
 			} );
 
 			editor.addCommand( 'wpToggleDFW', toggle );
-			editor.addShortcut( 'alt+shift+w', '', 'wpToggleDFW' );
+			editor.addShortcut( 'access+w', '', 'wpToggleDFW' );
 		} );
 
 		$document.on( 'tinymce-editor-init.focus', function( event, editor ) {
@@ -1184,7 +1189,7 @@
 				$document.on( 'dfw-on.focus', mceBind ).on( 'dfw-off.focus', mceUnbind );
 
 				// Make sure the body focuses when clicking outside it.
-				editor.on( 'click', function( event ) {
+				editor.on( 'click', function( event ) {
 					if ( event.target === editor.getDoc().documentElement ) {
 						editor.focus();
 					}

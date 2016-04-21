@@ -7,10 +7,7 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var Attachment = require( '../attachment.js' ),
-	EditLibrary;
-
-EditLibrary = Attachment.extend({
+var EditLibrary = wp.media.view.Attachment.extend({
 	buttons: {
 		close: true
 	}

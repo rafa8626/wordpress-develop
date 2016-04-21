@@ -5,7 +5,7 @@
  *
  * Used in the media grid view.
  *
- * @constructor
+ * @class
  * @augments wp.media.view.MediaFrame
  * @augments wp.media.view.Frame
  * @augments wp.media.View
@@ -13,12 +13,10 @@
  * @augments Backbone.View
  * @mixes wp.media.controller.StateMachine
  */
-var MediaFrame = require( '../media-frame.js' ),
-	UploaderWindow = require( '../uploader/window.js' ),
-	AttachmentsBrowser = require( '../attachments/browser.js' ),
-	Router = require( '../../routers/manage.js' ),
-	Library = require( '../../controllers/library.js' ),
-	$ = jQuery,
+var MediaFrame = wp.media.view.MediaFrame,
+	Library = wp.media.controller.Library,
+
+	$ = Backbone.$,
 	Manage;
 
 Manage = MediaFrame.extend({
@@ -26,7 +24,6 @@ Manage = MediaFrame.extend({
 	 * @global wp.Uploader
 	 */
 	initialize: function() {
-		var self = this;
 		_.defaults( this.options, {
 			title:     '',
 			modal:     false,
@@ -42,7 +39,7 @@ Manage = MediaFrame.extend({
 		this.$window = $( window );
 		this.$adminBar = $( '#wpadminbar' );
 		this.$window.on( 'scroll resize', _.debounce( _.bind( this.fixPosition, this ), 15 ) );
-		$( document ).on( 'click', '.add-new-h2', _.bind( this.addNewClickHandler, this ) );
+		$( document ).on( 'click', '.page-title-action', _.bind( this.addNewClickHandler, this ) );
 
 		// Ensure core and media grid view UI is enabled.
 		this.$el.addClass('wp-core-ui');
@@ -55,7 +52,7 @@ Manage = MediaFrame.extend({
 
 		// Initialize a window-wide uploader.
 		if ( this.options.uploader ) {
-			this.uploader = new UploaderWindow({
+			this.uploader = new wp.media.view.UploaderWindow({
 				controller: this,
 				uploader: {
 					dropzone:  document.body,
@@ -68,7 +65,7 @@ Manage = MediaFrame.extend({
 			this.options.uploader = false;
 		}
 
-		this.gridRouter = new Router();
+		this.gridRouter = new wp.media.view.MediaFrame.Manage.Router();
 
 		// Call 'initialize' directly on the parent class.
 		MediaFrame.prototype.initialize.apply( this, arguments );
@@ -79,15 +76,39 @@ Manage = MediaFrame.extend({
 		this.createStates();
 		this.bindRegionModeHandlers();
 		this.render();
+		this.bindSearchHandler();
+	},
+
+	bindSearchHandler: function() {
+		var search = this.$( '#media-search-input' ),
+			currentSearch = this.options.container.data( 'search' ),
+			searchView = this.browserView.toolbar.get( 'search' ).$el,
+			listMode = this.$( '.view-list' ),
+
+			input  = _.debounce( function (e) {
+				var val = $( e.currentTarget ).val(),
+					url = '';
+
+				if ( val ) {
+					url += '?search=' + val;
+				}
+				this.gridRouter.navigate( this.gridRouter.baseUrl( url ) );
+			}, 1000 );
 
 		// Update the URL when entering search string (at most once per second)
-		$( '#media-search-input' ).on( 'input', _.debounce( function(e) {
-			var val = $( e.currentTarget ).val(), url = '';
-			if ( val ) {
-				url += '?search=' + val;
+		search.on( 'input', _.bind( input, this ) );
+		searchView.val( currentSearch ).trigger( 'input' );
+
+		this.gridRouter.on( 'route:search', function () {
+			var href = window.location.href;
+			if ( href.indexOf( 'mode=' ) > -1 ) {
+				href = href.replace( /mode=[^&]+/g, 'mode=list' );
+			} else {
+				href += href.indexOf( '?' ) > -1 ? '&mode=list' : '?mode=list';
 			}
-			self.gridRouter.navigate( self.gridRouter.baseUrl( url ) );
-		}, 1000 ) );
+			href = href.replace( 'search=', 's=' );
+			listMode.prop( 'href', href );
+		} );
 	},
 
 	/**
@@ -194,7 +215,7 @@ Manage = MediaFrame.extend({
 		var state = this.state();
 
 		// Browse our library of attachments.
-		this.browserView = contentRegion.view = new AttachmentsBrowser({
+		this.browserView = contentRegion.view = new wp.media.view.AttachmentsBrowser({
 			controller: this,
 			collection: state.get('library'),
 			selection:  state.get('selection'),

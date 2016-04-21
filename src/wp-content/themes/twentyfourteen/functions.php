@@ -11,14 +11,14 @@
  * functions.php file. The child theme's functions.php file is included before
  * the parent theme's file, so the child theme functions would be used.
  *
- * @link http://codex.wordpress.org/Theme_Development
- * @link http://codex.wordpress.org/Child_Themes
+ * @link https://codex.wordpress.org/Theme_Development
+ * @link https://codex.wordpress.org/Child_Themes
  *
  * Functions that are not pluggable (not wrapped in function_exists()) are
  * instead attached to a filter or action hook.
  *
  * For more information on hooks, actions, and filters,
- * @link http://codex.wordpress.org/Plugin_API
+ * @link https://codex.wordpress.org/Plugin_API
  *
  * @package WordPress
  * @subpackage Twenty_Fourteen
@@ -94,7 +94,7 @@ function twentyfourteen_setup() {
 
 	/*
 	 * Enable support for Post Formats.
-	 * See http://codex.wordpress.org/Post_Formats
+	 * See https://codex.wordpress.org/Post_Formats
 	 */
 	add_theme_support( 'post-formats', array(
 		'aside', 'image', 'video', 'audio', 'quote', 'link', 'gallery',
@@ -113,6 +113,9 @@ function twentyfourteen_setup() {
 
 	// This theme uses its own gallery styles.
 	add_filter( 'use_default_gallery_style', '__return_false' );
+
+	// Indicate widget sidebars can use selective refresh in the Customizer.
+	add_theme_support( 'customize-selective-refresh-widgets' );
 }
 endif; // twentyfourteen_setup
 add_action( 'after_setup_theme', 'twentyfourteen_setup' );
@@ -215,7 +218,7 @@ function twentyfourteen_font_url() {
 			'family' => urlencode( 'Lato:300,400,700,900,300italic,400italic,700italic' ),
 			'subset' => urlencode( 'latin,latin-ext' ),
 		);
-		$font_url = add_query_arg( $query_args, '//fonts.googleapis.com/css' );
+		$font_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
 	}
 
 	return $font_url;
@@ -260,7 +263,7 @@ function twentyfourteen_scripts() {
 		) );
 	}
 
-	wp_enqueue_script( 'twentyfourteen-script', get_template_directory_uri() . '/js/functions.js', array( 'jquery' ), '20140616', true );
+	wp_enqueue_script( 'twentyfourteen-script', get_template_directory_uri() . '/js/functions.js', array( 'jquery' ), '20150315', true );
 }
 add_action( 'wp_enqueue_scripts', 'twentyfourteen_scripts' );
 
@@ -330,7 +333,7 @@ function twentyfourteen_the_attached_image() {
 
 		// or get the URL of the first image attachment.
 		else {
-			$next_attachment_url = get_attachment_link( array_shift( $attachment_ids ) );
+			$next_attachment_url = get_attachment_link( reset( $attachment_ids ) );
 		}
 	}
 

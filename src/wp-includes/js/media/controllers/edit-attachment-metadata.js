@@ -3,15 +3,14 @@
  *
  * A state for editing an attachment's metadata.
  *
- * @constructor
+ * @class
  * @augments wp.media.controller.State
  * @augments Backbone.Model
  */
-var State = require( './state.js' ),
-	l10n = wp.media.view.l10n,
+var l10n = wp.media.view.l10n,
 	EditAttachmentMetadata;
 
-EditAttachmentMetadata = State.extend({
+EditAttachmentMetadata = wp.media.controller.State.extend({
 	defaults: {
 		id:      'edit-attachment',
 		// Title string passed to the frame's title region view.

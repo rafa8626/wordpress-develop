@@ -134,27 +134,94 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('f'), '<?php f( g( "dyado", "chicho", "lelya "), "baba" ); ' ) );
 	}
 
+	/**
+	 * @group comment
+	 */
 	function test_find_function_calls_with_comment() {
 		$this->assertEquals(
 			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
-			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ f( "baba" ); ' ) );
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ f( "baba" ); ' )
+		);
 	}
 
+	/**
+	 * @group comment
+	 */
 	function test_find_function_calls_with_not_immediate_comment() {
 		$this->assertEquals(
 			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
-			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ $foo = g ( f( "baba" ) ); ' ) );
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ $foo = g ( f( "baba" ) ); ' )
+		);
 	}
 
+	/**
+	 * @group comment
+	 */
 	function test_find_function_calls_with_not_immediate_comment_include_only_latest() {
 		$this->assertEquals(
 			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
-			$this->extractor->find_function_calls( array('f'), '<?php /* translators: boo */ /* translators: let your ears fly! */ /* baba */ $foo = g ( f( "baba" ) ); ' ) );
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: boo */ /* translators: let your ears fly! */ /* baba */ $foo = g ( f( "baba" ) ); ' )
+		);
 	}
 
+	/**
+	 * @group comment
+	 */
+	function test_find_function_calls_with_multi_line_comment() {
+		$this->assertEquals( array( array(
+				'name' => '__', 'args' => array( 'on' ), 'line' => 6,
+				'comment' => "Translators: If there are characters in your language that are not supported by Lato, translate this to 'off'. Do not translate into your own language."
+			) ),
+			$this->extractor->find_function_calls( array( '__' ),
+				"<?php
+				/*
+				 * Translators: If there are characters in your language that are not supported
+				 * by Lato, translate this to 'off'. Do not translate into your own language.
+				 */
+				__( 'on' );"
+			)
+		);
+	}
+
+	/**
+	 * @group comment
+	 */
+	function test_find_function_calls_with_c_style_comment() {
+		$this->assertEquals( array( array(
+				'name' => '__', 'args' => array( 'on' ), 'line' => 3,
+				'comment' => 'translators: let your ears fly!'
+			) ),
+			$this->extractor->find_function_calls( array( '__' ),
+				"<?php
+				// translators: let your ears fly!
+				__( 'on' );"
+			)
+		);
+	}
+
+	/**
+	 * @group comment
+	 */
+	function test_find_function_calls_with_url_in_comment() {
+		$this->assertEquals( array( array(
+				'name' => '__', 'args' => array( 'F j, Y g:i a' ), 'line' => 3,
+				'comment' => 'translators: localized date and time format, see http://php.net/date'
+			) ),
+			$this->extractor->find_function_calls( array( '__' ),
+				"<?php
+				/* translators: localized date and time format, see http://php.net/date */
+				__( 'F j, Y g:i a' );"
+			)
+		);
+	}
+
+	/**
+	 * @group comment
+	 */
 	function test_comment_prefix_should_be_case_insensitive() {
 		$this->assertEquals(
 			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'Translators: let your ears fly!' ) ),
-			$this->extractor->find_function_calls( array('f'), '<?php /* Translators: let your ears fly! */ f( "baba" ); ' ) );
+			$this->extractor->find_function_calls( array('f'), '<?php /* Translators: let your ears fly! */ f( "baba" ); ' )
+		);
 	}
 }

@@ -1,10 +1,10 @@
 /*
 Theme Name: Twenty Fifteen
-Theme URI: https://wordpress.org/themes/twentyfifteen
+Theme URI: https://wordpress.org/themes/twentyfifteen/
 Author: the WordPress team
 Author URI: https://wordpress.org/
 Description: Our 2015 default theme is clean, blog-focused, and designed for clarity. Twenty Fifteen's simple, straightforward typography is readable on a wide variety of screen sizes, and suitable for multiple languages. We designed it using a mobile-first approach, meaning your content takes center-stage, regardless of whether your visitors arrive by smartphone, tablet, laptop, or desktop computer.
-Version: 1.0
+Version: 1.5
 License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: black, blue, gray, pink, purple, white, yellow, dark, light, two-columns, left-sidebar, fixed-layout, responsive-layout, accessibility-ready, custom-background, custom-colors, custom-header, custom-menu, editor-style, featured-images, microformats, post-formats, rtl-language-support, sticky-post, threaded-comments, translation-ready
@@ -55,10 +55,8 @@ Use it to make something cool, have fun, and share what you've learned with othe
 /**
  * 1.0 - Reset
  *
- * Resetting and rebuilding styles have been helped along thanks to the fine work of
- * Eric Meyer http://meyerweb.com/eric/tools/css/reset/index.html
- * along with Nicolas Gallagher and Jonathan Neal http://necolas.github.com/normalize.css/
- * and Blueprint http://www.blueprintcss.org/
+ * Resetting and rebuilding styles have been helped along thanks to the fine
+ * work of Eric Meyer, Nicolas Gallagher, Jonathan Neal, and Blueprint.
  */
 
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td {
@@ -123,6 +121,10 @@ th,
 td {
 	font-weight: normal;
 	text-align: left;
+}
+
+fieldset {
+	min-width: inherit;
 }
 
 blockquote:before,
@@ -492,6 +494,10 @@ textarea {
 
 button,
 input {
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
 	line-height: normal;
 }
 
@@ -880,6 +886,14 @@ a:focus {
 
 .social-navigation a[href$="/feed/"]:before {
 	content: "\f413";
+}
+
+.social-navigation a[href*="path.com"]:before {
+	content: "\f219";
+}
+
+.social-navigation a[href*="skype.com"]:before {
+	content: "\f220";
 }
 
 .secondary-toggle {
@@ -1300,6 +1314,15 @@ img.aligncenter {
 	font-weight: 700;
 	line-height: 1.3636;
 	margin-bottom: 0;
+}
+
+.custom-logo {
+	max-height: 84px;
+	width: auto;
+}
+
+.wp-custom-logo .site-title {
+	margin-top: 0.545454545em;
 }
 
 .site-description {
@@ -3075,6 +3098,14 @@ p > video {
 		line-height: 1.2069;
 	}
 
+	.custom-logo {
+		max-height: 105px;
+	}
+
+	.wp-custom-logo .site-title {
+		margin-top: 0.482758621em;
+	}
+
 	.site-description {
 		font-size: 14px;
 		font-size: 1.4rem;
@@ -3695,6 +3726,14 @@ p > video {
 		font-size: 32px;
 		font-size: 3.2rem;
 		line-height: 1.25;
+	}
+
+	.custom-logo {
+		max-height: 104px;
+	}
+
+	.wp-custom-logo .site-title {
+		margin-top: 0.5em;
 	}
 
 	.site-description {
@@ -4332,6 +4371,14 @@ p > video {
 		line-height: 1.3636;
 	}
 
+	.custom-logo {
+		max-height: none;
+	}
+
+	.wp-custom-logo .site-title {
+		margin-top: 0.545454545em;
+	}
+
 	.site-description {
 		font-size: 12px;
 		font-size: 1.2rem;
@@ -4951,6 +4998,10 @@ p > video {
 		line-height: 1.1667;
 	}
 
+	.wp-custom-logo .site-title {
+		margin-top: 0.583333333em;
+	}
+
 	.site-description {
 		font-size: 14px;
 		font-size: 1.4rem;
@@ -5487,6 +5538,10 @@ p > video {
 		font-size: 27px;
 		font-size: 2.7rem;
 		line-height: 1.1852;
+	}
+
+	.wp-custom-logo .site-title {
+		margin-top: 0.592592593em;
 	}
 
 	.site-description {

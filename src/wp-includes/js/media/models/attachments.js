@@ -20,14 +20,11 @@
  * @param {string} [options.filters]
  *
  */
-var Attachment = require( './attachment.js' ),
-	Attachments;
-
-Attachments = Backbone.Collection.extend({
+var Attachments = Backbone.Collection.extend({
 	/**
 	 * @type {wp.media.model.Attachment}
 	 */
-	model: Attachment,
+	model: wp.media.model.Attachment,
 	/**
 	 * @param {Array} [models=[]] Array of models used to populate the collection.
 	 * @param {Object} [options={}]
@@ -365,7 +362,7 @@ Attachments = Backbone.Collection.extend({
 				id = attrs.id;
 			}
 
-			attachment = Attachment.get( id );
+			attachment = wp.media.model.Attachment.get( id );
 			newAttributes = attachment.parse( attrs, xhr );
 
 			if ( ! _.isEqual( attachment.attributes, newAttributes ) ) {
@@ -381,12 +378,11 @@ Attachments = Backbone.Collection.extend({
 	 * @access private
 	 */
 	_requery: function( refresh ) {
-		var props, Query;
+		var props;
 		if ( this.props.get('query') ) {
-			Query = require( './query.js' );
 			props = this.props.toJSON();
 			props.cache = ( true !== refresh );
-			this.mirror( Query.get( props ) );
+			this.mirror( wp.media.model.Query.get( props ) );
 		}
 	},
 	/**
@@ -493,8 +489,23 @@ Attachments = Backbone.Collection.extend({
 		 * @returns {Boolean}
 		 */
 		type: function( attachment ) {
-			var type = this.props.get('type');
-			return ! type || -1 !== type.indexOf( attachment.get('type') );
+			var type = this.props.get('type'), atts = attachment.toJSON(), mime, found;
+
+			if ( ! type || ( _.isArray( type ) && ! type.length ) ) {
+				return true;
+			}
+
+			mime = atts.mime || ( atts.file && atts.file.type ) || '';
+
+			if ( _.isArray( type ) ) {
+				found = _.find( type, function (t) {
+					return -1 !== mime.indexOf( t );
+				} );
+			} else {
+				found = -1 !== mime.indexOf( type );
+			}
+
+			return found;
 		},
 		/**
 		 * @static

@@ -13,13 +13,7 @@
  * @augments Backbone.View
  * @mixes wp.media.controller.StateMachine
  */
-var Select = require( './select.js' ),
-	Toolbar = require( '../toolbar.js' ),
-	ImageDetailsController = require( '../../controllers/image-details.js' ),
-	ReplaceImageController = require( '../../controllers/replace-image.js' ),
-	EditImageController = require( '../../controllers/edit-image.js' ),
-	ImageDetailsView = require( '../image-details.js' ),
-	EditImageView = require( '../edit-image.js' ),
+var Select = wp.media.view.MediaFrame.Select,
 	l10n = wp.media.view.l10n,
 	ImageDetails;
 
@@ -53,11 +47,11 @@ ImageDetails = Select.extend({
 
 	createStates: function() {
 		this.states.add([
-			new ImageDetailsController({
+			new wp.media.controller.ImageDetails({
 				image: this.image,
 				editable: false
 			}),
-			new ReplaceImageController({
+			new wp.media.controller.ReplaceImage({
 				id: 'replace-image',
 				library: wp.media.query( { type: 'image' } ),
 				image: this.image,
@@ -67,7 +61,7 @@ ImageDetails = Select.extend({
 				priority:  80,
 				displaySettings: true
 			}),
-			new EditImageController( {
+			new wp.media.controller.EditImage( {
 				image: this.image,
 				selection: this.options.selection
 			} )
@@ -75,7 +69,7 @@ ImageDetails = Select.extend({
 	},
 
 	imageDetailsContent: function( options ) {
-		options.view = new ImageDetailsView({
+		options.view = new wp.media.view.ImageDetails({
 			controller: this,
 			model: this.state().image,
 			attachment: this.state().image.attachment
@@ -91,7 +85,7 @@ ImageDetails = Select.extend({
 			return;
 		}
 
-		view = new EditImageView( { model: model, controller: this } ).render();
+		view = new wp.media.view.EditImage( { model: model, controller: this } ).render();
 
 		this.content.set( view );
 
@@ -101,7 +95,7 @@ ImageDetails = Select.extend({
 	},
 
 	renderImageDetailsToolbar: function() {
-		this.toolbar.set( new Toolbar({
+		this.toolbar.set( new wp.media.view.Toolbar({
 			controller: this,
 			items: {
 				select: {
@@ -133,7 +127,7 @@ ImageDetails = Select.extend({
 			lastState = frame.lastState(),
 			previous = lastState && lastState.id;
 
-		this.toolbar.set( new Toolbar({
+		this.toolbar.set( new wp.media.view.Toolbar({
 			controller: this,
 			items: {
 				back: {

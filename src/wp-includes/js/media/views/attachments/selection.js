@@ -7,8 +7,7 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var Attachments = require( '../attachments.js' ),
-	AttachmentSelection = require( '../attachment/selection.js' ),
+var Attachments = wp.media.view.Attachments,
 	Selection;
 
 Selection = Attachments.extend({
@@ -19,7 +18,7 @@ Selection = Attachments.extend({
 			resize:     false,
 
 			// The single `Attachment` view to be used in the `Attachments` view.
-			AttachmentView: AttachmentSelection
+			AttachmentView: wp.media.view.Attachment.Selection
 		});
 		// Call 'initialize' directly on the parent class.
 		return Attachments.prototype.initialize.apply( this, arguments );

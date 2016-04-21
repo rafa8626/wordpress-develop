@@ -6,10 +6,7 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var View = require( './view.js' ),
-	Spinner;
-
-Spinner = View.extend({
+var Spinner = wp.media.View.extend({
 	tagName:   'span',
 	className: 'spinner',
 	spinnerTimeout: false,
@@ -18,7 +15,7 @@ Spinner = View.extend({
 	show: function() {
 		if ( ! this.spinnerTimeout ) {
 			this.spinnerTimeout = _.delay(function( $el ) {
-				$el.show();
+				$el.addClass( 'is-active' );
 			}, this.delay, this.$el );
 		}
 
@@ -26,7 +23,7 @@ Spinner = View.extend({
 	},
 
 	hide: function() {
-		this.$el.hide();
+		this.$el.removeClass( 'is-active' );
 		this.spinnerTimeout = clearTimeout( this.spinnerTimeout );
 
 		return this;

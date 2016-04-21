@@ -1,13 +1,12 @@
 /**
+ * wp.media.view.Label
+ *
  * @class
  * @augments wp.media.View
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var View = require( './view.js' ),
-	Label;
-
-Label = View.extend({
+var Label = wp.media.View.extend({
 	tagName: 'label',
 	className: 'screen-reader-text',
 

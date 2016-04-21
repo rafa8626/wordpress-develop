@@ -1,7 +1,7 @@
 /**
  * wp.media.view.AudioDetails
  *
- * @constructor
+ * @class
  * @augments wp.media.view.MediaDetails
  * @augments wp.media.view.Settings.AttachmentDisplay
  * @augments wp.media.view.Settings
@@ -9,7 +9,7 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var MediaDetails = require( './media-details' ),
+var MediaDetails = wp.media.view.MediaDetails,
 	AudioDetails;
 
 AudioDetails = MediaDetails.extend({

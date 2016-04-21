@@ -24,6 +24,7 @@ class WP_Filesystem_Base {
 	/**
 	 * Cached list of local filepaths to mapped remote filepaths.
 	 *
+	 * @access public
 	 * @since 2.7.0
 	 * @var array
 	 */
@@ -38,8 +39,14 @@ class WP_Filesystem_Base {
 	 */
 	public $method = '';
 
+	/**
+	 * @access public
+	 */
 	public $errors = null;
 
+	/**
+	 * @access public
+	 */
 	public $options = array();
 
 	/**
@@ -171,7 +178,6 @@ class WP_Filesystem_Base {
 	 * @return string|false The location of the remote path, false on failure.
 	 */
 	public function find_folder( $folder ) {
-
 		if ( isset( $this->cache[ $folder ] ) )
 			return $this->cache[ $folder ];
 
@@ -231,6 +237,7 @@ class WP_Filesystem_Base {
 	 *
 	 * Expects Windows sanitized path.
 	 *
+	 * @access public
 	 * @since 2.7.0
 	 *
 	 * @param string $folder The folder to locate.
@@ -244,8 +251,10 @@ class WP_Filesystem_Base {
 
 		$folder = untrailingslashit($folder);
 
-		if ( $this->verbose )
-			printf( "\n" . __('Looking for %1$s in %2$s') . "<br/>\n", $folder, $base );
+		if ( $this->verbose ) {
+			/* translators: 1: folder to locate, 2: folder to start searching from */
+			printf( "\n" . __( 'Looking for %1$s in %2$s' ) . "<br/>\n", $folder, $base );
+		}
 
 		$folder_parts = explode('/', $folder);
 		$folder_part_keys = array_keys( $folder_parts );
@@ -269,8 +278,10 @@ class WP_Filesystem_Base {
 
 				// Let's try that folder:
 				$newdir = trailingslashit(path_join($base, $key));
-				if ( $this->verbose )
-					printf( "\n" . __('Changing to %s') . "<br/>\n", $newdir );
+				if ( $this->verbose ) {
+					/* translators: %s: directory name */
+					printf( "\n" . __( 'Changing to %s' ) . "<br/>\n", $newdir );
+				}
 
 				// Only search for the remaining path tokens in the directory, not the full path again.
 				$newfolder = implode( '/', array_slice( $folder_parts, $index + 1 ) );
@@ -279,10 +290,13 @@ class WP_Filesystem_Base {
 			}
 		}
 
-		// Only check this as a last resort, to prevent locating the incorrect install. All above procedures will fail quickly if this is the right branch to take.
+		// Only check this as a last resort, to prevent locating the incorrect install.
+		// All above procedures will fail quickly if this is the right branch to take.
 		if (isset( $files[ $last_path ] ) ) {
-			if ( $this->verbose )
-				printf( "\n" . __('Found %s') . "<br/>\n",  $base . $last_path );
+			if ( $this->verbose ) {
+				/* translators: %s: directory name */
+				printf( "\n" . __( 'Found %s' ) . "<br/>\n",  $base . $last_path );
+			}
 			return trailingslashit($base . $last_path);
 		}
 
@@ -311,7 +325,7 @@ class WP_Filesystem_Base {
 	 * @return string The *nix-style representation of permissions.
 	 */
 	public function gethchmod( $file ){
-		$perms = $this->getchmod($file);
+		$perms = intval( $this->getchmod( $file ), 8 );
 		if (($perms & 0xC000) == 0xC000) // Socket
 			$info = 's';
 		elseif (($perms & 0xA000) == 0xA000) // Symbolic Link
@@ -353,6 +367,18 @@ class WP_Filesystem_Base {
 	}
 
 	/**
+	 * Gets the permissions of the specified file or filepath in their octal format
+	 *
+	 * @access public
+	 * @since 2.5.0
+	 * @param string $file
+	 * @return string the last 3 characters of the octal number
+	 */
+	public function getchmod( $file ) {
+		return '777';
+	}
+
+	/**
 	 * Convert *nix-style file permissions to a octal number.
 	 *
 	 * Converts '-rw-r--r--' to 0644
@@ -371,9 +397,11 @@ class WP_Filesystem_Base {
 		$legal =  array('', 'w', 'r', 'x', '-');
 		$attarray = preg_split('//', $mode);
 
-		for ($i=0; $i < count($attarray); $i++)
-		   if ($key = array_search($attarray[$i], $legal))
+		for ( $i = 0, $c = count( $attarray ); $i < $c; $i++ ) {
+		   if ($key = array_search($attarray[$i], $legal)) {
 			   $realmode .= $legal[$key];
+		   }
+		}
 
 		$mode = str_pad($realmode, 10, '-', STR_PAD_LEFT);
 		$trans = array('-'=>'0', 'r'=>'4', 'w'=>'2', 'x'=>'1');
@@ -389,6 +417,7 @@ class WP_Filesystem_Base {
 	/**
 	 * Determine if the string provided contains binary characters.
 	 *
+	 * @access public
 	 * @since 2.7.0
 	 *
 	 * @param string $text String to test against.
@@ -403,6 +432,7 @@ class WP_Filesystem_Base {
 	 *
 	 * Default behavior is to do nothing, override this in your subclass, if desired.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 *
 	 * @param string $file      Path to the file.
@@ -417,8 +447,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Connect filesystem.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @return bool True on success or false on failure (always true for WP_Filesystem_Direct).
 	 */
 	public function connect() {
@@ -428,8 +460,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Read entire file into a string.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Name of the file to read.
 	 * @return mixed|bool Returns the read data or false on failure.
 	 */
@@ -440,8 +474,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Read entire file into an array.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to the file.
 	 * @return array|bool the file contents in an array or false on failure.
 	 */
@@ -452,8 +488,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Write a string to a file.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file     Remote path to the file where to write the data.
 	 * @param string $contents The data to write.
 	 * @param int    $mode     Optional. The file permissions as octal number, usually 0644.
@@ -466,8 +504,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Get the current working directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @return string|bool The current working directory on success, or false on failure.
 	 */
 	public function cwd() {
@@ -477,10 +517,12 @@ class WP_Filesystem_Base {
 	/**
 	 * Change current directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $dir The new current directory.
-	 * @return bool Returns true on success or false on failure.
+	 * @return bool|string
 	 */
 	public function chdir( $dir ) {
 		return false;
@@ -489,12 +531,14 @@ class WP_Filesystem_Base {
 	/**
 	 * Change the file group.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file      Path to the file.
 	 * @param mixed  $group     A group name or number.
 	 * @param bool   $recursive Optional. If set True changes file group recursively. Defaults to False.
-	 * @return bool Returns true on success or false on failure.
+	 * @return bool|string
 	 */
 	public function chgrp( $file, $group, $recursive = false ) {
 		return false;
@@ -503,12 +547,14 @@ class WP_Filesystem_Base {
 	/**
 	 * Change filesystem permissions.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file      Path to the file.
 	 * @param int    $mode      Optional. The permissions as octal number, usually 0644 for files, 0755 for dirs.
 	 * @param bool   $recursive Optional. If set True changes file group recursively. Defaults to False.
-	 * @return bool Returns true on success or false on failure.
+	 * @return bool|string
 	 */
 	public function chmod( $file, $mode = false, $recursive = false ) {
 		return false;
@@ -517,8 +563,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Get the file owner.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 * 
 	 * @param string $file Path to the file.
 	 * @return string|bool Username of the user or false on error.
 	 */
@@ -529,8 +577,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Get the file's group.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to the file.
 	 * @return string|bool The group or false on error.
 	 */
@@ -541,8 +591,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Copy a file.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $source      Path to the source file.
 	 * @param string $destination Path to the destination file.
 	 * @param bool   $overwrite   Optional. Whether to overwrite the destination file if it exists.
@@ -558,8 +610,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Move a file.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $source      Path to the source file.
 	 * @param string $destination Path to the destination file.
 	 * @param bool   $overwrite   Optional. Whether to overwrite the destination file if it exists.
@@ -573,8 +627,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Delete a file or directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file      Path to the file.
 	 * @param bool   $recursive Optional. If set True changes file group recursively. Defaults to False.
 	 *                          Default false.
@@ -589,8 +645,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Check if a file or directory exists.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to file/directory.
 	 * @return bool Whether $file exists or not.
 	 */
@@ -601,8 +659,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Check if resource is a file.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file File path.
 	 * @return bool Whether $file is a file.
 	 */
@@ -613,8 +673,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Check if resource is a directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $path Directory path.
 	 * @return bool Whether $path is a directory.
 	 */
@@ -625,8 +687,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Check if a file is readable.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to file.
 	 * @return bool Whether $file is readable.
 	 */
@@ -637,8 +701,11 @@ class WP_Filesystem_Base {
 	/**
 	 * Check if a file or directory is writable.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
+	 * @param string $file Path to file.
 	 * @return bool Whether $file is writable.
 	 */
 	public function is_writable( $file ) {
@@ -648,8 +715,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Gets the file's last access time.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to file.
 	 * @return int|bool Unix timestamp representing last access time.
 	 */
@@ -660,8 +729,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Gets the file modification time.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to file.
 	 * @return int|bool Unix timestamp representing modification time.
 	 */
@@ -672,8 +743,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Gets the file size (in bytes).
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file Path to file.
 	 * @return int|bool Size of the file in bytes.
 	 */
@@ -686,8 +759,10 @@ class WP_Filesystem_Base {
 	 *
 	 * Note: If $file doesn't exist, it will be created.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $file  Path to file.
 	 * @param int    $time  Optional. Modified time to set for file.
 	 *                      Default 0.
@@ -702,8 +777,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Create a directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $path  Path for new directory.
 	 * @param mixed  $chmod Optional. The permissions as octal number, (or False to skip chmod)
 	 *                      Default false.
@@ -720,8 +797,10 @@ class WP_Filesystem_Base {
 	/**
 	 * Delete a directory.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
+	 *
 	 * @param string $path      Path to directory.
 	 * @param bool   $recursive Optional. Whether to recursively remove files/directories.
 	 *                          Default false.
@@ -734,6 +813,7 @@ class WP_Filesystem_Base {
 	/**
 	 * Get details for files in a directory or a specific file.
 	 *
+	 * @access public
 	 * @since 2.5.0
 	 * @abstract
 	 *

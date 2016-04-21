@@ -76,6 +76,11 @@ jQuery( window ).load( function (){
 
 	};
 
+	module( 'Customizer Previewed Device' );
+	test( 'Previewed device defaults to desktop.', function () {
+		equal( wp.customize.previewedDevice.get(), 'desktop' );
+	} );
+
 	module( 'Customizer Setting in Fixture' );
 	test( 'Setting has fixture value', function () {
 		equal( wp.customize( 'fixture-setting' )(), 'Lorem Ipsum' );
@@ -95,28 +100,106 @@ jQuery( window ).load( function (){
 		equal( control.section(), 'fixture-section' );
 	} );
 
+	module( 'Customizer control without associated settings' );
+	test( 'Control can be created without settings', function() {
+		var control = new wp.customize.Control( 'settingless', {
+			params: {
+				content: jQuery( '<li class="settingless">Hello World</li>' ),
+				section: 'fixture-section'
+			}
+		} );
+		wp.customize.control.add( control.id, control );
+		equal( control.deferred.embedded.state(), 'resolved' );
+		ok( null === control.setting );
+		ok( jQuery.isEmptyObject( control.settings ) );
+	} );
+
+	// Begin sections.
 	module( 'Customizer Section in Fixture' );
 	test( 'Fixture section exists', function () {
 		ok( wp.customize.section.has( 'fixture-section' ) );
 	} );
 	test( 'Fixture section has control among controls()', function () {
 		var section = wp.customize.section( 'fixture-section' );
-		equal( section.controls().length, 1 );
-		equal( section.controls()[0].id, 'fixture-control' );
+		ok( -1 !== _.pluck( section.controls(), 'id' ).indexOf( 'fixture-control' ) );
 	} );
-	test( 'Fixture section has control among controls()', function () {
+	test( 'Fixture section has has expected panel', function () {
 		var section = wp.customize.section( 'fixture-section' );
 		equal( section.panel(), 'fixture-panel' );
 	} );
 
+	module( 'Customizer Default Section with Template in Fixture' );
+	test( 'Fixture section exists', function () {
+		ok( wp.customize.section.has( 'fixture-section-default-templated' ) );
+	} );
+	test( 'Fixture section has expected content', function () {
+		var id = 'fixture-section-default-templated', section;
+		section = wp.customize.section( id );
+		ok( ! section.params.content );
+		ok( !! section.container );
+		ok( section.container.is( '.control-section.control-section-default' ) );
+		ok( 1 === section.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
+	} );
+
+	module( 'Customizer Custom Type (titleless) Section with Template in Fixture' );
+	test( 'Fixture section exists', function () {
+		ok( wp.customize.section.has( 'fixture-section-titleless-templated' ) );
+	} );
+	test( 'Fixture section has expected content', function () {
+		var id = 'fixture-section-titleless-templated', section;
+		section = wp.customize.section( id );
+		ok( ! section.params.content );
+		ok( !! section.container );
+		ok( section.container.is( '.control-section.control-section-titleless' ) );
+		ok( 0 === section.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
+	} );
+	module( 'Customizer Custom Type Section Lacking Specific Template' );
+	test( 'Fixture section has expected content', function () {
+		var id = 'fixture-section-reusing-default-template', section;
+		section = wp.customize.section( id );
+		ok( ! section.params.content );
+		ok( !! section.container );
+		ok( section.container.is( '.control-section.control-section-' + section.params.type ) );
+		ok( 1 === section.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === section.container.find( '> .accordion-section-content' ).length );
+	} );
+	module( 'Customizer Section lacking any params' );
+	test( 'Fixture section has default params supplied', function () {
+		var id = 'fixture-section-without-params', section, defaultParams;
+		section = wp.customize.section( id );
+		defaultParams = {
+			title: '',
+			description: '',
+			priority: 100,
+			panel: null,
+			type: 'default',
+			content: null,
+			active: true,
+			instanceNumber: null,
+			customizeAction: ''
+		};
+		jQuery.each( defaultParams, function ( key, value ) {
+			ok( 'undefined' !== typeof section.params[ key ] );
+			equal( value, section.params[ key ] );
+		} );
+	} );
+
+
+	// Begin panels.
 	module( 'Customizer Panel in Fixture' );
 	test( 'Fixture panel exists', function () {
 		ok( wp.customize.panel.has( 'fixture-panel' ) );
 	} );
-	test( 'Fixture section has control among controls()', function () {
+	test( 'Fixture panel has content', function () {
 		var panel = wp.customize.panel( 'fixture-panel' );
-		equal( panel.sections().length, 1 );
-		equal( panel.sections()[0].id, 'fixture-section' );
+		ok( !! panel.params.content );
+		ok( !! panel.container );
+	} );
+	test( 'Fixture panel has section among its sections()', function () {
+		var panel = wp.customize.panel( 'fixture-panel' );
+		ok( -1 !== _.pluck( panel.sections(), 'id' ).indexOf( 'fixture-section' ) );
 	} );
 	test( 'Panel is not expanded by default', function () {
 		var panel = wp.customize.panel( 'fixture-panel' );
@@ -138,6 +221,62 @@ jQuery( window ).load( function (){
 		ok( panel.expanded() );
 	} );
 
+	module( 'Customizer Default Panel with Template in Fixture' );
+	test( 'Fixture section exists', function () {
+		ok( wp.customize.panel.has( 'fixture-panel-default-templated' ) );
+	} );
+	test( 'Fixture panel has expected content', function () {
+		var id = 'fixture-panel-default-templated', panel;
+		panel = wp.customize.panel( id );
+		ok( ! panel.params.content );
+		ok( !! panel.container );
+		ok( panel.container.is( '.control-panel.control-panel-default' ) );
+		ok( 1 === panel.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
+	} );
+
+	module( 'Customizer Custom Type Panel (titleless) with Template in Fixture' );
+	test( 'Fixture panel exists', function () {
+		ok( wp.customize.panel.has( 'fixture-panel-titleless-templated' ) );
+	} );
+	test( 'Fixture panel has expected content', function () {
+		var id = 'fixture-panel-titleless-templated', panel;
+		panel = wp.customize.panel( id );
+		ok( ! panel.params.content );
+		ok( !! panel.container );
+		ok( panel.container.is( '.control-panel.control-panel-titleless' ) );
+		ok( 0 === panel.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
+	} );
+
+	module( 'Customizer Custom Type Panel Lacking Specific Template' );
+	test( 'Fixture panel has expected content', function () {
+		var id = 'fixture-panel-reusing-default-template', panel;
+		panel = wp.customize.panel( id );
+		ok( ! panel.params.content );
+		ok( !! panel.container );
+		ok( panel.container.is( '.control-panel.control-panel-' + panel.params.type ) );
+		ok( 1 === panel.container.find( '> .accordion-section-title' ).length );
+		ok( 1 === panel.container.find( '> .control-panel-content' ).length );
+	} );
+	module( 'Customizer Panel lacking any params' );
+	test( 'Fixture panel has default params supplied', function () {
+		var id = 'fixture-panel-without-params', panel, defaultParams;
+		panel = wp.customize.panel( id );
+		defaultParams = {
+			title: '',
+			description: '',
+			priority: 100,
+			type: 'default',
+			content: null,
+			active: true,
+			instanceNumber: null
+		};
+		jQuery.each( defaultParams, function ( key, value ) {
+			ok( 'undefined' !== typeof panel.params[ key ] );
+			equal( value, panel.params[ key ] );
+		} );
+	} );
 
 	module( 'Dynamically-created Customizer Setting Model' );
 	settingId = 'new_blogname';
@@ -160,10 +299,11 @@ jQuery( window ).load( function (){
 	module( 'Dynamically-created Customizer Section Model' );
 
 	sectionId = 'mock_title_tagline';
-	sectionContent = '<li id="accordion-section-mock_title_tagline" class="control-section accordion-section"></li>';
+	sectionContent = '<li id="accordion-section-mock_title_tagline" class="accordion-section control-section control-section-default"> <h3 class="accordion-section-title" tabindex="0"> Section Fixture <span class="screen-reader-text">Press return or enter to open</span> </h3> <ul class="accordion-section-content"> <li class="customize-section-description-container"> <div class="customize-section-title"> <button class="customize-section-back" tabindex="-1"> <span class="screen-reader-text">Back</span> </button> <h3> <span class="customize-action">Customizing &#9656; Fixture Panel</span> Section Fixture </h3> </div> </li> </ul> </li>';
 	sectionData = {
 		content: sectionContent,
-		active: true
+		active: true,
+		type: 'default'
 	};
 
 	mockSection = new wp.customize.Section( sectionId, { params: sectionData } );
@@ -272,12 +412,13 @@ jQuery( window ).load( function (){
 	panelId = 'mockPanelId';
 	panelTitle = 'Mock Panel Title';
 	panelDescription = 'Mock panel description';
-	panelContent = '<li id="accordion-panel-widgets" class="control-section control-panel accordion-section">';
+	panelContent = '<li id="accordion-panel-mockPanelId" class="accordion-section control-section control-panel control-panel-default"> <h3 class="accordion-section-title" tabindex="0"> Fixture Panel <span class="screen-reader-text">Press return or enter to open this panel</span> </h3> <ul class="accordion-sub-container control-panel-content"> <li class="panel-meta customize-info accordion-section cannot-expand"> <button class="customize-panel-back" tabindex="-1"><span class="screen-reader-text">Back</span></button> <div class="accordion-section-title"> <span class="preview-notice">You are customizing <strong class="panel-title">Fixture Panel</strong></span> <button class="customize-help-toggle dashicons dashicons-editor-help" tabindex="0" aria-expanded="false"><span class="screen-reader-text">Help</span></button> </div> </li> </ul> </li>';
 	panelData = {
 		content: panelContent,
 		title: panelTitle,
 		description: panelDescription,
-		active: true // @todo This should default to true
+		active: true, // @todo This should default to true
+		type: 'default'
 	};
 
 	mockPanel = new wp.customize.Panel( panelId, { params: panelData } );

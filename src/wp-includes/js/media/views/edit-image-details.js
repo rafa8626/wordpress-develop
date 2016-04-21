@@ -1,5 +1,14 @@
-var View = require( './view.js' ),
-	EditImage = require( './edit-image.js' ),
+/**
+ * wp.media.view.EditImage.Details
+ *
+ * @class
+ * @augments wp.media.view.EditImage
+ * @augments wp.media.View
+ * @augments wp.Backbone.View
+ * @augments Backbone.View
+ */
+var View = wp.media.View,
+	EditImage = wp.media.view.EditImage,
 	Details;
 
 Details = EditImage.extend({

@@ -2,7 +2,7 @@
 /**
  * Implement a custom header for Twenty Thirteen
  *
- * @link http://codex.wordpress.org/Custom_Headers
+ * @link https://codex.wordpress.org/Custom_Headers
  *
  * @package WordPress
  * @subpackage Twenty_Thirteen
@@ -13,7 +13,7 @@
  * Set up the WordPress core custom header arguments and settings.
  *
  * @uses add_theme_support() to register support for 3.4 and up.
- * @uses twentythirteen_header_style() to style front-end.
+ * @uses twentythirteen_header_style() to style front end.
  * @uses twentythirteen_admin_header_style() to style wp-admin form.
  * @uses twentythirteen_admin_header_image() to add custom markup to wp-admin form.
  * @uses register_default_headers() to set up the bundled header images.

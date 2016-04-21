@@ -1,13 +1,15 @@
 /**
+ * wp.media.view.DeleteSelectedButton
+ *
  * A button that handles bulk Delete/Trash logic
  *
- * @constructor
+ * @class
  * @augments wp.media.view.Button
  * @augments wp.media.View
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var Button = require( '../button.js' ),
+var Button = wp.media.view.Button,
 	l10n = wp.media.view.l10n,
 	DeleteSelected;
 
@@ -15,9 +17,9 @@ DeleteSelected = Button.extend({
 	initialize: function() {
 		Button.prototype.initialize.apply( this, arguments );
 		if ( this.options.filters ) {
-			this.listenTo( this.options.filters.model, 'change', this.filterChange );
+			this.options.filters.model.on( 'change', this.filterChange, this );
 		}
-		this.listenTo( this.controller, 'selection:toggle', this.toggleDisabled );
+		this.controller.on( 'selection:toggle', this.toggleDisabled, this );
 	},
 
 	filterChange: function( model ) {

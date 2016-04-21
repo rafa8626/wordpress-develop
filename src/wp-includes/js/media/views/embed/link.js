@@ -7,58 +7,80 @@
  * @augments wp.Backbone.View
  * @augments Backbone.View
  */
-var Settings = require( '../settings.js' ),
-	$ = jQuery,
+var $ = jQuery,
 	EmbedLink;
 
-EmbedLink = Settings.extend({
+EmbedLink = wp.media.view.Settings.extend({
 	className: 'embed-link-settings',
 	template:  wp.template('embed-link-settings'),
 
 	initialize: function() {
-		this.spinner = $('<span class="spinner" />');
-		this.$el.append( this.spinner[0] );
 		this.listenTo( this.model, 'change:url', this.updateoEmbed );
 	},
 
-	updateoEmbed: function() {
+	updateoEmbed: _.debounce( function() {
 		var url = this.model.get( 'url' );
 
-		this.$('.setting.title').show();
 		// clear out previous results
-		this.$('.embed-container').hide().find('.embed-preview').html('');
+		this.$('.embed-container').hide().find('.embed-preview').empty();
+		this.$( '.setting' ).hide();
 
-		// only proceed with embed if the field contains more than 6 characters
-		if ( url && url.length < 6 ) {
+		// only proceed with embed if the field contains more than 11 characters
+		// Example: http://a.io is 11 chars
+		if ( url && ( url.length < 11 || ! url.match(/^http(s)?:\/\//) ) ) {
 			return;
 		}
 
-		this.spinner.show();
-
-		setTimeout( _.bind( this.fetch, this ), 500 );
-	},
+		this.fetch();
+	}, wp.media.controller.Embed.sensitivity ),
 
 	fetch: function() {
+		var embed;
+
 		// check if they haven't typed in 500 ms
 		if ( $('#embed-url-field').val() !== this.model.get('url') ) {
 			return;
 		}
 
-		wp.ajax.send( 'parse-embed', {
-			data : {
+		if ( this.dfd && 'pending' === this.dfd.state() ) {
+			this.dfd.abort();
+		}
+
+		embed = new wp.shortcode({
+			tag: 'embed',
+			attrs: _.pick( this.model.attributes, [ 'width', 'height', 'src' ] ),
+			content: this.model.get('url')
+		});
+
+		this.dfd = $.ajax({
+			type:    'POST',
+			url:     wp.ajax.settings.url,
+			context: this,
+			data:    {
+				action: 'parse-embed',
 				post_ID: wp.media.view.settings.post.id,
-				shortcode: '[embed]' + this.model.get('url') + '[/embed]'
+				shortcode: embed.string()
 			}
-		} ).done( _.bind( this.renderoEmbed, this ) );
+		})
+			.done( this.renderoEmbed )
+			.fail( this.renderFail );
+	},
+
+	renderFail: function ( response, status ) {
+		if ( 'abort' === status ) {
+			return;
+		}
+		this.$( '.link-text' ).show();
 	},
 
 	renderoEmbed: function( response ) {
-		var html = ( response && response.body ) || '';
+		var html = ( response && response.data && response.data.body ) || '';
 
-		this.spinner.hide();
-
-		this.$('.setting.title').hide();
-		this.$('.embed-container').show().find('.embed-preview').html( html );
+		if ( html ) {
+			this.$('.embed-container').show().find('.embed-preview').html( html );
+		} else {
+			this.renderFail();
+		}
 	}
 });
 

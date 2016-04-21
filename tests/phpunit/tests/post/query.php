@@ -1,19 +1,19 @@
 <?php
 
+/**
+ * @group query
+ * @group post
+ */
 class Tests_Post_Query extends WP_UnitTestCase {
-	function setUp() {
-		parent::setUp();
-	}
-
 	/**
 	 * @group taxonomy
 	 */
 	function test_category__and_var() {
 		$q = new WP_Query();
 
-		$term_id = $this->factory->category->create( array( 'slug' => 'woo', 'name' => 'WOO!' ) );
-		$term_id2 = $this->factory->category->create( array( 'slug' => 'hoo', 'name' => 'HOO!' ) );
-		$post_id = $this->factory->post->create();
+		$term_id = self::factory()->category->create( array( 'slug' => 'woo', 'name' => 'WOO!' ) );
+		$term_id2 = self::factory()->category->create( array( 'slug' => 'hoo', 'name' => 'HOO!' ) );
+		$post_id = self::factory()->post->create();
 
 		wp_set_post_categories( $post_id, $term_id );
 
@@ -41,8 +41,8 @@ class Tests_Post_Query extends WP_UnitTestCase {
 	 * @group taxonomy
 	 */
 	function test_empty_category__in() {
-		$cat_id = $this->factory->category->create();
-		$post_id = $this->factory->post->create();
+		$cat_id = self::factory()->category->create();
+		$post_id = self::factory()->post->create();
 		wp_set_post_categories( $post_id, $cat_id );
 
 		$q1 = get_posts( array( 'category__in' => array( $cat_id ) ) );
@@ -71,7 +71,7 @@ class Tests_Post_Query extends WP_UnitTestCase {
 	 */
 	function test_the_posts_filter() {
 		// Create posts and clear their caches.
-		$post_ids = $this->factory->post->create_many( 10 );
+		$post_ids = self::factory()->post->create_many( 4 );
 		foreach ( $post_ids as $post_id )
 			clean_post_cache( $post_id );
 
@@ -79,12 +79,12 @@ class Tests_Post_Query extends WP_UnitTestCase {
 
 		$query = new WP_Query( array(
 			'post_type' => 'post',
-			'posts_per_page' => 5,
+			'posts_per_page' => 3,
 		) );
 
-		// Sixth post added in filter
-		$this->assertEquals( 6, count( $query->posts ) );
-		$this->assertEquals( 6, $query->post_count );
+		// Fourth post added in filter
+		$this->assertEquals( 4, count( $query->posts ) );
+		$this->assertEquals( 4, $query->post_count );
 
 		foreach ( $query->posts as $post ) {
 
@@ -115,19 +115,19 @@ class Tests_Post_Query extends WP_UnitTestCase {
 	}
 
 	function test_post__in_ordering() {
-		$post_id1 = $this->factory->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
-		$post_id2 = $this->factory->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
-		$post_id3 = $this->factory->post->create( array(
+		$post_id1 = self::factory()->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
+		$post_id2 = self::factory()->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
+		$post_id3 = self::factory()->post->create( array(
 			'post_type' => 'page',
 			'post_parent' => $post_id2,
 			'menu_order' => rand( 1, 100 )
 		) );
-		$post_id4 = $this->factory->post->create( array(
+		$post_id4 = self::factory()->post->create( array(
 			'post_type' => 'page',
 			'post_parent' => $post_id2,
 			'menu_order' => rand( 1, 100 )
 		) );
-		$post_id5 = $this->factory->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
+		$post_id5 = self::factory()->post->create( array( 'post_type' => 'page', 'menu_order' => rand( 1, 100 ) ) );
 
 		$ordered = array( $post_id2, $post_id4, $post_id3, $post_id1, $post_id5 );
 
@@ -140,26 +140,26 @@ class Tests_Post_Query extends WP_UnitTestCase {
 	}
 
 	function test_post__in_attachment_ordering() {
-		$post_id = $this->factory->post->create();
+		$post_id = self::factory()->post->create();
 		$att_ids = array();
 		$file = DIR_TESTDATA . '/images/canola.jpg';
-		$att_ids[1] = $this->factory->attachment->create_object( $file, $post_id, array(
+		$att_ids[1] = self::factory()->attachment->create_object( $file, $post_id, array(
 			'post_mime_type' => 'image/jpeg',
 			'menu_order' => rand( 1, 100 )
 		) );
-		$att_ids[2] = $this->factory->attachment->create_object( $file, $post_id, array(
+		$att_ids[2] = self::factory()->attachment->create_object( $file, $post_id, array(
 			'post_mime_type' => 'image/jpeg',
 			'menu_order' => rand( 1, 100 )
 		) );
-		$att_ids[3] = $this->factory->attachment->create_object( $file, $post_id, array(
+		$att_ids[3] = self::factory()->attachment->create_object( $file, $post_id, array(
 			'post_mime_type' => 'image/jpeg',
 			'menu_order' => rand( 1, 100 )
 		) );
-		$att_ids[4] = $this->factory->attachment->create_object( $file, $post_id, array(
+		$att_ids[4] = self::factory()->attachment->create_object( $file, $post_id, array(
 			'post_mime_type' => 'image/jpeg',
 			'menu_order' => rand( 1, 100 )
 		) );
-		$att_ids[5] = $this->factory->attachment->create_object( $file, $post_id, array(
+		$att_ids[5] = self::factory()->attachment->create_object( $file, $post_id, array(
 			'post_mime_type' => 'image/jpeg',
 			'menu_order' => rand( 1, 100 )
 		) );
@@ -176,6 +176,29 @@ class Tests_Post_Query extends WP_UnitTestCase {
 			'orderby' => 'post__in'
 		) );
 		$this->assertEqualSets( $ordered, wp_list_pluck( $attached->posts, 'ID' ) );
+	}
+
+	/**
+	 * @ticket 36515
+	 */
+	public function test_post_name__in_ordering() {
+		$post_id1 = self::factory()->post->create( array( 'post_name' => 'id-1', 'post_type' => 'page' ) );
+		$post_id2 = self::factory()->post->create( array( 'post_name' => 'id-2', 'post_type' => 'page' ) );
+		$post_id3 = self::factory()->post->create( array(
+			'post_name' => 'id-3',
+			'post_type' => 'page',
+			'post_parent' => $post_id2
+		) );
+
+		$ordered = array( 'id-2', 'id-3', 'id-1' );
+
+		$q = new WP_Query( array(
+			'post_type' => 'any',
+			'post_name__in' => $ordered,
+			'orderby' => 'post_name__in'
+		) );
+
+		$this->assertSame( $ordered, wp_list_pluck( $q->posts, 'post_name' ) );
 	}
 
 	function test_post_status() {
@@ -301,5 +324,68 @@ class Tests_Post_Query extends WP_UnitTestCase {
 		$this->assertNotContains( 'ORDER BY', $q5->request );
 		$this->assertNotContains( 'DESC', $q5->request );
 		$this->assertNotContains( 'ASC', $q5->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_with_seed() {
+		$q = new WP_Query( array(
+			'orderby' => 'RAND(5)',
+		) );
+
+		$this->assertContains( 'ORDER BY RAND(5)', $q->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_should_ignore_invalid_seed() {
+		$q = new WP_Query( array(
+			'orderby' => 'RAND(foo)',
+		) );
+
+		$this->assertNotContains( 'ORDER BY RAND', $q->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_with_seed_should_be_case_insensitive() {
+		$q = new WP_Query( array(
+			'orderby' => 'rand(5)',
+		) );
+
+		$this->assertContains( 'ORDER BY RAND(5)', $q->request );
+	}
+
+	/**
+	 * Tests the post_name__in attribute of WP_Query.
+	 *
+	 * @ticket 33065
+	 */
+	public function test_post_name__in() {
+		$q = new WP_Query();
+
+		$post_ids[0] = self::factory()->post->create( array( 'post_title' => 'woo', 'post_date' => '2015-07-23 00:00:00' ) );
+		$post_ids[1] = self::factory()->post->create( array( 'post_title' => 'hoo', 'post_date' => '2015-07-23 00:00:00' ) );
+		$post_ids[2] = self::factory()->post->create( array( 'post_title' => 'test', 'post_date' => '2015-07-23 00:00:00' ) );
+		$post_ids[3] = self::factory()->post->create( array( 'post_title' => 'me', 'post_date' => '2015-07-23 00:00:00' ) );
+
+		$requested = array( $post_ids[0], $post_ids[3] );
+		$q->query( array(
+			'post_name__in' => array( 'woo', 'me' ),
+			'fields' => 'ids',
+		) );
+		$actual_posts = $q->get_posts();
+		$this->assertEqualSets( $requested, $actual_posts );
+
+		$requested = array( $post_ids[1], $post_ids[2] );
+		$q->query( array(
+			'post_name__in' => array( 'hoo', 'test' ),
+			'fields' => 'ids',
+		) );
+		$actual_posts = $q->get_posts();
+		$this->assertEqualSets( $requested, $actual_posts );
 	}
 }

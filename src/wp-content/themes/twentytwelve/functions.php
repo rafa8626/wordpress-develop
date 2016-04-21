@@ -6,8 +6,8 @@
  * in the theme as custom template tags. Others are attached to action and
  * filter hooks in WordPress to change core functionality.
  *
- * When using a child theme (see http://codex.wordpress.org/Theme_Development and
- * http://codex.wordpress.org/Child_Themes), you can override certain functions
+ * When using a child theme (see https://codex.wordpress.org/Theme_Development and
+ * https://codex.wordpress.org/Child_Themes), you can override certain functions
  * (those wrapped in a function_exists() call) by defining them first in your child theme's
  * functions.php file. The child theme's functions.php file is included before the parent
  * theme's file, so the child theme functions would be used.
@@ -15,7 +15,7 @@
  * Functions that are not pluggable (not wrapped in function_exists()) are instead attached
  * to a filter or action hook.
  *
- * For more information on hooks, actions, and filters, @link http://codex.wordpress.org/Plugin_API
+ * For more information on hooks, actions, and filters, @link https://codex.wordpress.org/Plugin_API
  *
  * @package WordPress
  * @subpackage Twenty_Twelve
@@ -74,6 +74,9 @@ function twentytwelve_setup() {
 	// This theme uses a custom image size for featured images, displayed on "standard" posts.
 	add_theme_support( 'post-thumbnails' );
 	set_post_thumbnail_size( 624, 9999 ); // Unlimited height, soft crop
+
+	// Indicate widget sidebars can use selective refresh in the Customizer.
+	add_theme_support( 'customize-selective-refresh-widgets' );
 }
 add_action( 'after_setup_theme', 'twentytwelve_setup' );
 
@@ -113,19 +116,18 @@ function twentytwelve_get_font_url() {
 		elseif ( 'vietnamese' == $subset )
 			$subsets .= ',vietnamese';
 
-		$protocol = is_ssl() ? 'https' : 'http';
 		$query_args = array(
 			'family' => 'Open+Sans:400italic,700italic,400,700',
 			'subset' => $subsets,
 		);
-		$font_url = add_query_arg( $query_args, "$protocol://fonts.googleapis.com/css" );
+		$font_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
 	}
 
 	return $font_url;
 }
 
 /**
- * Enqueue scripts and styles for front-end.
+ * Enqueue scripts and styles for front end.
  *
  * @since Twenty Twelve 1.0
  */
@@ -481,8 +483,45 @@ function twentytwelve_customize_register( $wp_customize ) {
 	$wp_customize->get_setting( 'blogname' )->transport         = 'postMessage';
 	$wp_customize->get_setting( 'blogdescription' )->transport  = 'postMessage';
 	$wp_customize->get_setting( 'header_textcolor' )->transport = 'postMessage';
+
+	if ( isset( $wp_customize->selective_refresh ) ) {
+		$wp_customize->selective_refresh->add_partial( 'blogname', array(
+			'selector' => '.site-title > a',
+			'container_inclusive' => false,
+			'render_callback' => 'twentytwelve_customize_partial_blogname',
+		) );
+		$wp_customize->selective_refresh->add_partial( 'blogdescription', array(
+			'selector' => '.site-description',
+			'container_inclusive' => false,
+			'render_callback' => 'twentytwelve_customize_partial_blogdescription',
+		) );
+	}
 }
 add_action( 'customize_register', 'twentytwelve_customize_register' );
+
+/**
+ * Render the site title for the selective refresh partial.
+ *
+ * @since Twenty Twelve 2.0
+ * @see twentytwelve_customize_register()
+ *
+ * @return void
+ */
+function twentytwelve_customize_partial_blogname() {
+	bloginfo( 'name' );
+}
+
+/**
+ * Render the site tagline for the selective refresh partial.
+ *
+ * @since Twenty Twelve 2.0
+ * @see twentytwelve_customize_register()
+ *
+ * @return void
+ */
+function twentytwelve_customize_partial_blogdescription() {
+	bloginfo( 'description' );
+}
 
 /**
  * Enqueue Javascript postMessage handlers for the Customizer.

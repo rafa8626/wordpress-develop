@@ -19,12 +19,11 @@
  * @param {string} [attributes.url]                   The embed URL.
  * @param {object} [attributes.metadata={}]           Properties of the embed, which will override attributes.url if set.
  */
-var State = require( './state.js' ),
-	l10n = wp.media.view.l10n,
-	$ = jQuery,
+var l10n = wp.media.view.l10n,
+	$ = Backbone.$,
 	Embed;
 
-Embed = State.extend({
+Embed = wp.media.controller.State.extend({
 	defaults: {
 		id:       'embed',
 		title:    l10n.insertFromUrlTitle,
@@ -38,7 +37,7 @@ Embed = State.extend({
 	},
 
 	// The amount of time used when debouncing the scan.
-	sensitivity: 200,
+	sensitivity: 400,
 
 	initialize: function(options) {
 		this.metadata = options.metadata;
