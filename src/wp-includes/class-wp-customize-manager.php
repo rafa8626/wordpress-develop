@@ -854,38 +854,6 @@ final class WP_Customize_Manager {
 	 */
 	public function set_post_value( $setting_id, $value ) {
 		// @todo _deprecated_function( __METHOD__, '0.4.2', 'WP_Customize_Manager::transaction::set()' ); ?
-		// @todo The following should be moved to the WP_Customize_Transaction::set().
-
-		/**
-		 * Announce when a specific setting's unsanitized post value has been set.
-		 *
-		 * Fires when the {@see WP_Customize_Manager::set_post_value()} method is called.
-		 *
-		 * The dynamic portion of the hook name, `$setting_id`, refers to the setting ID.
-		 *
-		 * @since 4.4.0
-		 *
-		 * @param mixed                $value Unsanitized setting post value.
-		 * @param WP_Customize_Manager $this  WP_Customize_Manager instance.
-		 */
-		do_action( "customize_post_value_set_{$setting_id}", $value, $this );
-
-		/**
-		 * Announce when any setting's unsanitized post value has been set.
-		 *
-		 * Fires when the {@see WP_Customize_Manager::set_post_value()} method is called.
-		 *
-		 * This is useful for `WP_Customize_Setting` instances to watch
-		 * in order to update a cached previewed value.
-		 *
-		 * @since 4.4.0
-		 *
-		 * @param string               $setting_id Setting ID.
-		 * @param mixed                $value      Unsanitized setting post value.
-		 * @param WP_Customize_Manager $this       WP_Customize_Manager instance.
-		 */
-		do_action( 'customize_post_value_set', $setting_id, $value, $this );
-
 		$this->transaction->set( $this->get_setting( $setting_id ), $value );
 	}
 
