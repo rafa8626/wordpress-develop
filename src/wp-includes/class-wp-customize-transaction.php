@@ -271,7 +271,6 @@ class WP_Customize_Transaction {
 	 * @param mixed $value Must be JSON-serializable
 	 */
 	public function set( WP_Customize_Setting $setting, $value ) {
-		$value = wp_slash( $value ); // WP_Customize_Setting::sanitize() erroneously does wp_unslash again
 		$value = $setting->sanitize( $value );
 		$this->data[ $setting->id ] = $value;
 	}
