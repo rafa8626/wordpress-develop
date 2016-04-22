@@ -6,7 +6,7 @@
  *
  * @package WordPress
  * @subpackage Customize
- * @since 4.2.0
+ * @since 4.6.0
  */
 class WP_Customize_Transaction {
 
@@ -15,14 +15,14 @@ class WP_Customize_Transaction {
 	/**
 	 * WP_Customize_Manager instance.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 * @access public
 	 * @var WP_Customize_Manager
 	 */
 	public $manager;
 
 	/**
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 * @access public
 	 * @var string
 	 */
@@ -41,7 +41,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Initial loader.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 * @access public
 	 *
 	 * @param WP_Customize_Manager $manager Customize manager bootstrap instance.
@@ -94,7 +94,7 @@ class WP_Customize_Transaction {
 	 * Note that this can't be called prior to the setup_theme action or else
 	 * magic quotes may end up getting added twice.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 */
 	public function populate_customized_post_var() {
 		$_POST['customized'] = add_magic_quotes( wp_json_encode( $this->data ) );
@@ -104,7 +104,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Generate a customizer transaction uuid
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return string
 	 */
@@ -123,7 +123,7 @@ class WP_Customize_Transaction {
 	 *
 	 * @param string $uuid
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return bool
 	 */
@@ -134,7 +134,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Get the wp_customize_transaction post associated with the provided UUID, or null if it does not exist.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return WP_Post|null
 	 */
@@ -168,7 +168,7 @@ class WP_Customize_Transaction {
 	/**
 	 * This is needed to ensure that draft posts can be queried by name.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @param WP_Query $query
 	 */
@@ -179,7 +179,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Get the value for a setting in the transaction.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @param WP_Customize_Setting|string $setting
 	 * @param mixed $default  Return value if the transaction lacks a value for the given setting.
@@ -220,7 +220,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Return all settings' values in the transaction.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return array
 	 */
@@ -236,7 +236,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Return the Customizer settings corresponding to the data contained in the transaction.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return WP_Customize_Setting[]
 	 */
@@ -254,7 +254,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Get the status of the transaction.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return string|null
 	 */
@@ -265,10 +265,10 @@ class WP_Customize_Transaction {
 	/**
 	 * Store a setting's sanitized value in the transaction's data.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @param WP_Customize_Setting $setting Setting to update.
-	 * @param mixed $value                  Must be JSON-serializable.
+	 * @param mixed                $value   Must be JSON-serializable.
 	 */
 	public function set( WP_Customize_Setting $setting, $value ) {
 		$value = $setting->sanitize( $value );
@@ -309,7 +309,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Return whether the transaction was saved (created/inserted) yet.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @return bool
 	 */
@@ -320,7 +320,7 @@ class WP_Customize_Transaction {
 	/**
 	 * Persist the data in the transaction in the transaction post content.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @param string $status
 	 *

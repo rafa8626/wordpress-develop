@@ -549,7 +549,7 @@ class WP_Customize_Setting {
 	/**
 	 * Obtain the sanitized value for the setting in the loaded transaction.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
 	 * @param mixed $default A default value which is used as a fallback. Default is null.
 	 * @return mixed The default value on failure, otherwise the sanitized value.
