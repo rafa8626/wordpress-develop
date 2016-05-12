@@ -280,6 +280,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 
 		$found = get_sample_permalink_html( $p );
 		$this->assertContains( 'href="' . get_option( 'home' ) . '/?p=' . $p . '"', $found );
+		$this->assertContains( '>' . get_option( 'home' ) . '/?p=' . $p . '<', $found );
 	}
 
 	/**
@@ -292,11 +293,33 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		wp_set_current_user( self::$admin_id );
 
 		$future_date = date( 'Y-m-d H:i:s', time() + 100 );
-		$p = self::factory()->post->create( array( 'post_status' => 'future', 'post_name' => 'foo', 'post_date' => $future_date ) );
+		$p = self::factory()->post->create( array( 'post_status' => 'future', 'post_name' => 'foo-صورة', 'post_date' => $future_date ) );
 
 		$found = get_sample_permalink_html( $p );
 		$post = get_post( $p );
 		$this->assertContains( 'href="' . get_option( 'home' ) . "/" . $post->post_name . '/"', $found );
+		$this->assertContains( '>' . urldecode( $post->post_name ) . '<', $found );
+	}
+
+	/**
+	 * @ticket 35980
+	 */
+	public function test_get_sample_permalink_html_should_use_pretty_permalink_for_view_attachment_link_when_pretty_permalinks_are_enabled() {
+		$this->set_permalink_structure( '/%postname%/' );
+
+		wp_set_current_user( self::$admin_id );
+
+		$p = self::factory()->attachment->create_object( 'صورة.jpg', 0, array(
+			'post_mime_type' => 'image/jpeg',
+			'post_type'      => 'attachment',
+			'post_title'     => 'صورة',
+			'post_status'    => 'inherit',
+		) );
+
+		$found = get_sample_permalink_html( $p );
+		$post = get_post( $p );
+		$this->assertContains( 'href="' . get_option( 'home' ) . "/" . $post->post_name . '/"', $found );
+		$this->assertContains( '>' . urldecode( get_permalink( $post ) ) . '<', $found );
 	}
 
 	/**
@@ -309,26 +332,28 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		wp_set_current_user( self::$admin_id );
 
 		// Published posts should use published permalink
-		$p = self::factory()->post->create( array( 'post_status' => 'publish', 'post_name' => 'foo' ) );
+		$p = self::factory()->post->create( array( 'post_status' => 'publish', 'post_name' => 'foo-صورة' ) );
 
-		$found = get_sample_permalink_html( $p, null, 'new_slug' );
+		$found = get_sample_permalink_html( $p, null, 'new_slug-صورة' );
 		$post = get_post( $p );
 		$message = 'Published post';
 		$this->assertContains( 'href="' . get_option( 'home' ) . "/" . $post->post_name . '/"', $found, $message );
+		$this->assertContains( '>new_slug-صورة<', $found, $message );
 
 		// Scheduled posts should use published permalink
 		$future_date = date( 'Y-m-d H:i:s', time() + 100 );
-		$p = self::factory()->post->create( array( 'post_status' => 'future', 'post_name' => 'bar', 'post_date' => $future_date ) );
+		$p = self::factory()->post->create( array( 'post_status' => 'future', 'post_name' => 'bar-صورة', 'post_date' => $future_date ) );
 
-		$found = get_sample_permalink_html( $p, null, 'new_slug' );
+		$found = get_sample_permalink_html( $p, null, 'new_slug-صورة' );
 		$post = get_post( $p );
 		$message = 'Scheduled post';
 		$this->assertContains( 'href="' . get_option( 'home' ) . "/" . $post->post_name . '/"', $found, $message );
+		$this->assertContains( '>new_slug-صورة<', $found, $message );
 
 		// Draft posts should use preview link
-		$p = self::factory()->post->create( array( 'post_status' => 'draft', 'post_name' => 'baz' ) );
+		$p = self::factory()->post->create( array( 'post_status' => 'draft', 'post_name' => 'baz-صورة' ) );
 
-		$found = get_sample_permalink_html( $p, null, 'new_slug' );
+		$found = get_sample_permalink_html( $p, null, 'new_slug-صورة' );
 		$post = get_post( $p );
 		$message = 'Draft post';
 
@@ -336,6 +361,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$preview_link = add_query_arg( 'preview', 'true', $preview_link );
 
 		$this->assertContains( 'href="' . esc_url( $preview_link ) . '"', $found, $message );
+		$this->assertContains( '>new_slug-صورة<', $found, $message );
 	}
 
 	/**
@@ -454,6 +480,29 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$this->assertEquals( '30', $found[1] );
 	}
 
+	/**
+	 * @ticket 35368
+	 */
+	public function test_get_sample_permalink_should_respect_hierarchy_of_draft_pages() {
+		$this->set_permalink_structure( '/%postname%/' );
+
+		$parent = self::factory()->post->create( array(
+			'post_type'  => 'page',
+			'post_title' => 'Parent Page',
+		) );
+
+		$child = self::factory()->post->create( array(
+			'post_type'   => 'page',
+			'post_title'  => 'Child Page',
+			'post_parent' => $parent,
+			'post_status' => 'draft',
+		) );
+
+		$actual = get_sample_permalink( $child );
+		$this->assertSame( home_url() . '/parent-page/%pagename%/', $actual[0] );
+		$this->assertSame( 'child-page', $actual[1] );
+	}
+
 	public function test_post_exists_should_match_title() {
 		$p = self::factory()->post->create( array(
 			'post_title' => 'Foo Bar',
@@ -472,6 +521,20 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 
 	public function test_post_exists_should_match_nonempty_content() {
 		$title = 'Foo Bar';
+		$content = 'Foo Bar Baz';
+		$p = self::factory()->post->create( array(
+			'post_title' => $title,
+			'post_content' => $content,
+		) );
+
+		$this->assertSame( $p, post_exists( $title, $content ) );
+	}
+
+	/**
+	 * @ticket 35246
+	 */
+	public function test_post_exists_should_match_content_with_no_title() {
+		$title = '';
 		$content = 'Foo Bar Baz';
 		$p = self::factory()->post->create( array(
 			'post_title' => $title,

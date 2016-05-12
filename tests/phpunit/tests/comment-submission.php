@@ -5,6 +5,8 @@
  */
 class Tests_Comment_Submission extends WP_UnitTestCase {
 
+	protected $preprocess_comment_data = array();
+
 	function setUp() {
 		parent::setUp();
 		require_once ABSPATH . WPINC . '/class-phpass.php';
@@ -588,6 +590,128 @@ class Tests_Comment_Submission extends WP_UnitTestCase {
 		$this->assertWPError( $comment );
 		$this->assertSame( $error, $comment->get_error_code() );
 
+	}
+
+	/**
+	 * @ticket 10377
+	 */
+	public function test_submitting_comment_with_content_too_long_returns_error() {
+		$error = 'comment_content_column_length';
+
+		$post = self::factory()->post->create_and_get();
+
+		$data = array(
+			'comment_post_ID' => $post->ID,
+			'comment'         => rand_long_str( 65536 ),
+			'author'          => 'Comment Author',
+			'email'           => 'comment@example.org',
+		);
+		$comment = wp_handle_comment_submission( $data );
+
+		$this->assertWPError( $comment );
+		$this->assertSame( $error, $comment->get_error_code() );
+	}
+
+	/**
+	 * @ticket 10377
+	 */
+	public function test_submitting_comment_with_author_too_long_returns_error() {
+		$error = 'comment_author_column_length';
+
+		$post = self::factory()->post->create_and_get();
+
+		$data = array(
+			'comment_post_ID' => $post->ID,
+			'comment'         => rand_str(),
+			'author'          => rand_long_str( 255 ),
+			'email'           => 'comment@example.org',
+		);
+		$comment = wp_handle_comment_submission( $data );
+
+		$this->assertWPError( $comment );
+		$this->assertSame( $error, $comment->get_error_code() );
+	}
+
+	/**
+	 * @ticket 10377
+	 */
+	public function test_submitting_comment_with_email_too_long_returns_error() {
+		$error = 'comment_author_email_column_length';
+
+		$post = self::factory()->post->create_and_get();
+
+		$data = array(
+			'comment_post_ID' => $post->ID,
+			'comment'         => rand_str(),
+			'author'          => 'Comment Author',
+			'email'           => rand_long_str( 90 ) . '@example.com',
+		);
+		$comment = wp_handle_comment_submission( $data );
+
+		$this->assertWPError( $comment );
+		$this->assertSame( $error, $comment->get_error_code() );
+	}
+
+	/**
+	 * @ticket 10377
+	 */
+	public function test_submitting_comment_with_url_too_long_returns_error() {
+		$error = 'comment_author_url_column_length';
+
+		$post = self::factory()->post->create_and_get();
+		$data = array(
+			'comment_post_ID' => $post->ID,
+			'comment'         => rand_str(),
+			'author'          => 'Comment Author',
+			'email'           => 'comment@example.org',
+			'url'             => rand_long_str( 201 ),
+		);
+		$comment = wp_handle_comment_submission( $data );
+
+		$this->assertWPError( $comment );
+		$this->assertSame( $error, $comment->get_error_code() );
+	}
+
+	/**
+	 * @ticket 34997
+	 */
+	public function test_comment_submission_sends_all_expected_parameters_to_preprocess_comment_filter() {
+
+		$user = self::factory()->user->create_and_get( array(
+			'role' => 'author',
+		) );
+		wp_set_current_user( $user->ID );
+
+		$post = self::factory()->post->create_and_get();
+		$data = array(
+			'comment_post_ID' => $post->ID,
+			'comment'         => 'Comment',
+		);
+
+		add_filter( 'preprocess_comment', array( $this, 'filter_preprocess_comment' ) );
+
+		$comment = wp_handle_comment_submission( $data );
+
+		remove_filter( 'preprocess_comment', array( $this, 'filter_preprocess_comment' ) );
+
+		$this->assertNotWPError( $comment );
+		$this->assertEquals( array(
+			'comment_post_ID'      => $post->ID,
+			'comment_author'       => $user->display_name,
+			'comment_author_email' => $user->user_email,
+			'comment_author_url'   => $user->user_url,
+			'comment_content'      => $data['comment'],
+			'comment_type'         => '',
+			'comment_parent'       => '0',
+			'user_ID'              => $user->ID,
+			'user_id'              => $user->ID,
+		), $this->preprocess_comment_data );
+
+	}
+
+	public function filter_preprocess_comment( $commentdata ) {
+		$this->preprocess_comment_data = $commentdata;
+		return $commentdata;
 	}
 
 }

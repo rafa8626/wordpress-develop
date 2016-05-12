@@ -307,4 +307,99 @@ class Tests_Category_WpListCategories extends WP_UnitTestCase {
 
 		$this->assertNotContains( '<li class="cat-item cat-item-' . $child2 . '">', $actual );
 	}
+
+	/**
+	 * @ticket 35156
+	 */
+	public function test_comma_separated_exclude_tree_should_be_merged_with_exclude() {
+		$c = self::factory()->category->create();
+		$parent = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent' ) );
+		$child = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child', 'parent' => $parent ) );
+		$parent2 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent2' ) );
+		$child2 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child2', 'parent' => $parent2 ) );
+		$parent3 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent3' ) );
+		$child3 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child3', 'parent' => $parent3 ) );
+		$parent4 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent4' ) );
+		$child4 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child4', 'parent' => $parent4 ) );
+
+
+		$args = array( 'echo' => 0, 'hide_empty' => 0, 'exclude_tree' => $parent );
+
+		$actual = wp_list_categories( array(
+			'echo' => 0,
+			'hide_empty' => 0,
+			'exclude' => "$parent,$parent2",
+			'exclude_tree' => "$parent3,$parent4",
+		) );
+
+		$this->assertContains( '<li class="cat-item cat-item-' . $c . '">', $actual );
+
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent2 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child2 . '">', $actual );
+
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent3 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent4 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child3 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child4 . '">', $actual );
+	}
+
+	/**
+	 * @ticket 35156
+	 */
+	public function test_array_exclude_tree_should_be_merged_with_exclude() {
+		$c = self::factory()->category->create();
+		$parent = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent' ) );
+		$child = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child', 'parent' => $parent ) );
+		$parent2 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent2' ) );
+		$child2 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child2', 'parent' => $parent2 ) );
+		$parent3 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent3' ) );
+		$child3 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child3', 'parent' => $parent3 ) );
+		$parent4 = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent4' ) );
+		$child4 = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child4', 'parent' => $parent4 ) );
+
+
+		$args = array( 'echo' => 0, 'hide_empty' => 0, 'exclude_tree' => $parent );
+
+		$actual = wp_list_categories( array(
+			'echo' => 0,
+			'hide_empty' => 0,
+			'exclude' => array( $parent, $parent2 ),
+			'exclude_tree' => array( $parent3, $parent4 ),
+		) );
+
+		$this->assertContains( '<li class="cat-item cat-item-' . $c . '">', $actual );
+
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent2 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child2 . '">', $actual );
+
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent3 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $parent4 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child3 . '">', $actual );
+		$this->assertNotContains( '<li class="cat-item cat-item-' . $child4 . '">', $actual );
+	}
+
+	/**
+	 * @ticket 10676
+	 */
+	public function test_class_containing_current_cat_ancestor() {
+		$parent = self::factory()->category->create( array( 'name' => 'Parent', 'slug' => 'parent' ) );
+		$child = self::factory()->category->create( array( 'name' => 'Child', 'slug' => 'child', 'parent' => $parent ) );
+		$child2 = self::factory()->category->create( array( 'name' => 'Child 2', 'slug' => 'child2', 'parent' => $parent ) );
+		$grandchild = self::factory()->category->create( array( 'name' => 'Grand Child', 'slug' => 'child', 'parent' => $child ) );
+
+		$actual = wp_list_categories( array(
+			'echo'             => 0,
+			'hide_empty'       => false,
+			'current_category' => $grandchild,
+		) );
+
+		$this->assertRegExp( '/class="[^"]*cat-item-' . $parent . '[^"]*current-cat-ancestor[^"]*"/', $actual );
+		$this->assertRegExp( '/class="[^"]*cat-item-' . $child . '[^"]*current-cat-ancestor[^"]*"/', $actual );
+		$this->assertNotRegExp( '/class="[^"]*cat-item-' . $grandchild . '[^"]*current-cat-ancestor[^"]*"/', $actual );
+		$this->assertNotRegExp( '/class="[^"]*cat-item-' . $child2 . '[^"]*current-cat-ancestor[^"]*"/', $actual );
+	}
 }

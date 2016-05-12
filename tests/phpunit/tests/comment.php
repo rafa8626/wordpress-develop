@@ -9,7 +9,7 @@ class Tests_Comment extends WP_UnitTestCase {
 
 	public function setUp() {
 		parent::setUp();
-		unset( $GLOBALS['phpmailer']->mock_sent );
+		reset_phpmailer_instance();
 	}
 
 	public static function wpSetUpBeforeClass( $factory ) {
@@ -68,6 +68,21 @@ class Tests_Comment extends WP_UnitTestCase {
 
 		$comment = get_comment( $comment_id );
 		$this->assertEquals( 1, $comment->user_id );
+	}
+
+	/**
+	 * @ticket 34954
+	 */
+	function test_wp_update_comment_with_no_post_id() {
+		$comment_id = self::factory()->comment->create( array( 'comment_post_ID' => 0 ) );
+
+		$updated_comment_text = 'I should be able to update a comment with a Post ID of zero';
+
+		$update = wp_update_comment( array( 'comment_ID' => $comment_id, 'comment_content' => $updated_comment_text, 'comment_post_ID' => 0 ) );
+		$this->assertSame( 1, $update );
+
+		$comment = get_comment( $comment_id );
+		$this->assertEquals( $updated_comment_text, $comment->comment_content );
 	}
 
 	public function test_get_approved_comments() {
@@ -278,6 +293,25 @@ class Tests_Comment extends WP_UnitTestCase {
 		$this->assertTrue( wp_notify_moderator( $c ) );
 	}
 
+	public function test_wp_new_comment_notify_postauthor_should_send_email_when_comment_is_approved() {
+		$c = self::factory()->comment->create( array(
+			'comment_post_ID' => self::$post_id,
+		) );
+
+		$sent = wp_new_comment_notify_postauthor( $c );
+		$this->assertTrue( $sent );
+	}
+
+	public function test_wp_new_comment_notify_postauthor_should_not_send_email_when_comment_is_unapproved() {
+		$c = self::factory()->comment->create( array(
+			'comment_post_ID' => self::$post_id,
+			'comment_approved' => '0',
+		) );
+
+		$sent = wp_new_comment_notify_postauthor( $c );
+		$this->assertFalse( $sent );
+	}
+
 	/**
 	 * @ticket 33587
 	 */
@@ -285,6 +319,19 @@ class Tests_Comment extends WP_UnitTestCase {
 		$c = self::factory()->comment->create( array(
 			'comment_post_ID' => self::$post_id,
 			'comment_approved' => 'spam',
+		) );
+
+		$sent = wp_new_comment_notify_postauthor( $c );
+		$this->assertFalse( $sent );
+	}
+
+	/**
+	 * @ticket 35006
+	 */
+	public function test_wp_new_comment_notify_postauthor_should_not_send_email_when_comment_has_been_trashed() {
+		$c = self::factory()->comment->create( array(
+			'comment_post_ID' => self::$post_id,
+			'comment_approved' => 'trash',
 		) );
 
 		$sent = wp_new_comment_notify_postauthor( $c );
@@ -511,7 +558,7 @@ class Tests_Comment extends WP_UnitTestCase {
 			&& WP_TESTS_EMAIL == $GLOBALS['phpmailer']->mock_sent[0]['to'][0][0]
 		) {
 			$email_sent_when_comment_added = true;
-			unset( $GLOBALS['phpmailer']->mock_sent );
+			reset_phpmailer_instance();
 		} else {
 			$email_sent_when_comment_added = false;
 		}
@@ -542,7 +589,7 @@ class Tests_Comment extends WP_UnitTestCase {
 		} else {
 			$email_sent_when_comment_approved = false;
 		}
-		unset( $GLOBALS['phpmailer']->mock_sent );
+		reset_phpmailer_instance();
 
 		// Post authors are notified when a new comment is added to their post.
 		$data = array(
@@ -560,7 +607,7 @@ class Tests_Comment extends WP_UnitTestCase {
 		     ! empty( $GLOBALS['phpmailer']->mock_sent ) &&
 		     'test@test.com' == $GLOBALS['phpmailer']->mock_sent[0]['to'][0][0] ) {
 			$email_sent_when_comment_added = true;
-			unset( $GLOBALS['phpmailer']->mock_sent );
+			reset_phpmailer_instance();
 		} else {
 			$email_sent_when_comment_added = false;
 		}
@@ -588,5 +635,56 @@ class Tests_Comment extends WP_UnitTestCase {
 		$draft_comment_status = _close_comments_for_old_post( true, $draft_id );
 
 		$this->assertTrue( $draft_comment_status );
+	}
+
+	/**
+	 * @ticket 35276
+	 */
+	public function test_wp_update_comment_author_id_and_agent() {
+
+		$default_data = array(
+			'comment_post_ID'      => self::$post_id,
+			'comment_author'       => rand_str(),
+			'comment_author_IP'    => '192.168.0.1',
+			'comment_agent'        => 'WRONG_AGENT',
+			'comment_author_url'   => '',
+			'comment_author_email' => '',
+			'comment_type'         => '',
+			'comment_content'      => rand_str(),
+		);
+
+		$comment_id = wp_new_comment( $default_data );
+
+		// Confirm that the IP and Agent are correct on initial save.
+		$save = get_comment( $comment_id );
+		$this->assertSame( $default_data['comment_author_IP'], $save->comment_author_IP );
+		$this->assertSame( $default_data['comment_agent'], $save->comment_agent );
+
+		// Update the comment.
+		wp_update_comment( array(
+			'comment_ID'        => $comment_id,
+			'comment_author_IP' => '111.111.1.1',
+			'comment_agent'     => 'SHIELD_AGENT',
+		) );
+
+		// Retrieve and check the new values.
+		$updated = get_comment( $comment_id );
+		$this->assertSame( '111.111.1.1', $updated->comment_author_IP );
+		$this->assertSame( 'SHIELD_AGENT', $updated->comment_agent );
+	}
+
+	public function test_wp_get_comment_fields_max_lengths() {
+		$expected = array(
+			'comment_author'       => 245,
+			'comment_author_email' => 100,
+			'comment_author_url'   => 200,
+			'comment_content'      => 65525,
+		);
+
+		$lengths = wp_get_comment_fields_max_lengths();
+
+		foreach ( $lengths as $field => $length ) {
+			$this->assertSame( $expected[ $field ], $length );
+		}
 	}
 }

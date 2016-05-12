@@ -674,8 +674,8 @@ class Tests_Post extends WP_UnitTestCase {
 		// try the child normally
 		$this->assertEquals( 'parent/child', get_page_uri( $child_id ) );
 
-		// now delete the parent and check
-		wp_delete_post( $parent_id );
+		// now delete the parent from the database and check
+		wp_delete_post( $parent_id, true );
 		$this->assertEquals( 'child', get_page_uri( $child_id ) );
 	}
 
@@ -984,23 +984,16 @@ class Tests_Post extends WP_UnitTestCase {
 			'link' => 'edit'
 		) );
 
+		preg_match_all( "|href='([^']+)'|", $wp_tag_cloud, $matches );
+		$this->assertSame( 1, count( $matches[1] ) );
+
 		$terms = get_terms( $tax );
 		$term = reset( $terms );
-		$url = sprintf( '%s?action=edit&#038;taxonomy=%s&#038;tag_ID=%d&#038;post_type=%s',
-			admin_url( 'edit-tags.php' ),
-			$tax,
-			$term->term_id,
-			$post_type
-		);
-		$expected_wp_tag_cloud = sprintf( "<a href='%s' class='tag-link-%d' title='1 topic' style='font-size: 8pt;'>%s</a>",
-			$url,
-			$term->term_id,
-			$term->name
-		);
-		$this->assertEquals( $expected_wp_tag_cloud, $wp_tag_cloud );
 
-		_unregister_post_type( $post_type );
-		_unregister_taxonomy( $tax );
+		foreach ( $matches[1] as $url ) {
+			$this->assertContains( 'tag_ID=' . $term->term_id, $url );
+			$this->assertContains( 'post_type=new_post_type', $url );
+		}
 	}
 
 	/**
@@ -1253,4 +1246,16 @@ class Tests_Post extends WP_UnitTestCase {
 		$this->assertEquals(get_date_from_gmt($post['post_date_gmt']), $out->post_date);
 		$this->assertEquals($post['post_date_gmt'], $out->post_date_gmt);
 	}
+
+	function test_wp_delete_post_reassign_hierarchical_post_type() {
+		$grandparent_page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		$parent_page_id = self::factory()->post->create( array( 'post_type' => 'page', 'post_parent' => $grandparent_page_id ) );
+		$page_id = self::factory()->post->create( array( 'post_type' => 'page', 'post_parent' => $parent_page_id ) );
+		$this->assertEquals( $parent_page_id, get_post( $page_id )->post_parent );
+		wp_delete_post( $parent_page_id, true );
+		$this->assertEquals( $grandparent_page_id, get_post( $page_id )->post_parent );
+		wp_delete_post( $grandparent_page_id, true );
+		$this->assertEquals( 0, get_post( $page_id )->post_parent );
+	}
+
 }

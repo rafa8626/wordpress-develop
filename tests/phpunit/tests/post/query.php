@@ -1,10 +1,10 @@
 <?php
 
+/**
+ * @group query
+ * @group post
+ */
 class Tests_Post_Query extends WP_UnitTestCase {
-	function setUp() {
-		parent::setUp();
-	}
-
 	/**
 	 * @group taxonomy
 	 */
@@ -178,6 +178,29 @@ class Tests_Post_Query extends WP_UnitTestCase {
 		$this->assertEqualSets( $ordered, wp_list_pluck( $attached->posts, 'ID' ) );
 	}
 
+	/**
+	 * @ticket 36515
+	 */
+	public function test_post_name__in_ordering() {
+		$post_id1 = self::factory()->post->create( array( 'post_name' => 'id-1', 'post_type' => 'page' ) );
+		$post_id2 = self::factory()->post->create( array( 'post_name' => 'id-2', 'post_type' => 'page' ) );
+		$post_id3 = self::factory()->post->create( array(
+			'post_name' => 'id-3',
+			'post_type' => 'page',
+			'post_parent' => $post_id2
+		) );
+
+		$ordered = array( 'id-2', 'id-3', 'id-1' );
+
+		$q = new WP_Query( array(
+			'post_type' => 'any',
+			'post_name__in' => $ordered,
+			'orderby' => 'post_name__in'
+		) );
+
+		$this->assertSame( $ordered, wp_list_pluck( $q->posts, 'post_name' ) );
+	}
+
 	function test_post_status() {
 		$statuses1 = get_post_stati();
 		$this->assertContains( 'auto-draft', $statuses1 );
@@ -301,6 +324,39 @@ class Tests_Post_Query extends WP_UnitTestCase {
 		$this->assertNotContains( 'ORDER BY', $q5->request );
 		$this->assertNotContains( 'DESC', $q5->request );
 		$this->assertNotContains( 'ASC', $q5->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_with_seed() {
+		$q = new WP_Query( array(
+			'orderby' => 'RAND(5)',
+		) );
+
+		$this->assertContains( 'ORDER BY RAND(5)', $q->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_should_ignore_invalid_seed() {
+		$q = new WP_Query( array(
+			'orderby' => 'RAND(foo)',
+		) );
+
+		$this->assertNotContains( 'ORDER BY RAND', $q->request );
+	}
+
+	/**
+	 * @ticket 35692
+	 */
+	public function test_orderby_rand_with_seed_should_be_case_insensitive() {
+		$q = new WP_Query( array(
+			'orderby' => 'rand(5)',
+		) );
+
+		$this->assertContains( 'ORDER BY RAND(5)', $q->request );
 	}
 
 	/**

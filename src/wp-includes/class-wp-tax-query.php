@@ -24,7 +24,7 @@ class WP_Tax_Query {
 	/**
 	 * Array of taxonomy queries.
 	 *
-	 * See {@see WP_Tax_Query::__construct()} for information on tax query arguments.
+	 * See WP_Tax_Query::__construct() for information on tax query arguments.
 	 *
 	 * @since 3.1.0
 	 * @access public
@@ -440,7 +440,7 @@ class WP_Tax_Query {
 				// Store the alias with this clause, so later siblings can use it.
 				$clause['alias'] = $alias;
 
-				$join .= " INNER JOIN $wpdb->term_relationships";
+				$join .= " LEFT JOIN $wpdb->term_relationships";
 				$join .= $i ? " AS $alias" : '';
 				$join .= " ON ($this->primary_table.$this->primary_id_column = $alias.object_id)";
 			}
@@ -557,7 +557,7 @@ class WP_Tax_Query {
 	 * @since 3.2.0
 	 * @access private
 	 *
-	 * @param array &$query The single query.
+	 * @param array $query The single query. Passed by reference.
 	 */
 	private function clean_query( &$query ) {
 		if ( empty( $query['taxonomy'] ) ) {
@@ -599,7 +599,7 @@ class WP_Tax_Query {
 	 *
 	 * @global wpdb $wpdb The WordPress database abstraction object.
 	 *
-	 * @param array  &$query          The single query.
+	 * @param array  $query           The single query. Passed by reference.
 	 * @param string $resulting_field The resulting field. Accepts 'slug', 'name', 'term_taxonomy_id',
 	 *                                or 'term_id'. Default 'term_id'.
 	 */

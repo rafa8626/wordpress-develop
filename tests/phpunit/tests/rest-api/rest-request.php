@@ -11,6 +11,8 @@
  */
 class Tests_REST_Request extends WP_UnitTestCase {
 	public function setUp() {
+		parent::setUp();
+
 		$this->request = new WP_REST_Request();
 	}
 
@@ -390,5 +392,76 @@ class Tests_REST_Request extends WP_UnitTestCase {
 
 		$this->assertArrayHasKey( 'someinteger', $data['params'] );
 		$this->assertArrayHasKey( 'someotherinteger', $data['params'] );
+	}
+
+	public function test_invalid_params_error_response_format() {
+		$this->request->set_url_params( array(
+			'someinteger' => '123',
+			'someotherparams' => '123',
+		));
+
+		$this->request->set_attributes( array(
+			'args' => array(
+				'someinteger' => array(
+					'validate_callback' => '__return_false',
+				),
+				'someotherparams' => array(
+					'validate_callback' => array( $this, '_return_wp_error_on_validate_callback' ),
+				),
+			),
+		));
+
+		$valid = $this->request->has_valid_params();
+		$this->assertWPError( $valid );
+		$error_data = $valid->get_error_data();
+
+		$this->assertEquals( array( 'someinteger', 'someotherparams' ), array_keys( $error_data['params'] ) );
+		$this->assertEquals( 'This is not valid!', $error_data['params']['someotherparams'] );
+	}
+
+	public function _return_wp_error_on_validate_callback() {
+		return new WP_Error( 'some-error', 'This is not valid!' );
+	}
+
+	public function data_from_url() {
+		return array(
+			array(
+				'permalink_structure' => '/%post_name%/',
+				'original_url'        => 'http://' . WP_TESTS_DOMAIN . '/wp-json/wp/v2/posts/1?foo=bar',
+			),
+			array(
+				'permalink_structure' => '',
+				'original_url'        => 'http://' . WP_TESTS_DOMAIN . '/?rest_route=%2Fwp%2Fv2%2Fposts%2F1&foo=bar',
+			),
+		);
+	}
+
+	/**
+	 * @dataProvider data_from_url
+	 */
+	public function test_from_url( $permalink_structure, $original_url ) {
+		update_option( 'permalink_structure', $permalink_structure );
+		$url = add_query_arg( 'foo', 'bar', rest_url( '/wp/v2/posts/1' ) );
+		$this->assertEquals( $original_url, $url );
+		$request = WP_REST_Request::from_url( $url );
+		$this->assertInstanceOf( 'WP_REST_Request', $request );
+		$this->assertEquals( '/wp/v2/posts/1', $request->get_route() );
+		$this->assertEqualSets( array(
+			'foo' => 'bar',
+		), $request->get_query_params() );
+	}
+
+	/**
+	 * @dataProvider data_from_url
+	 */
+	public function test_from_url_invalid( $permalink_structure ) {
+		update_option( 'permalink_structure', $permalink_structure );
+		$using_site = site_url( '/wp/v2/posts/1' );
+		$request = WP_REST_Request::from_url( $using_site );
+		$this->assertFalse( $request );
+
+		$using_home = home_url( '/wp/v2/posts/1' ) ;
+		$request = WP_REST_Request::from_url( $using_home );
+		$this->assertFalse( $request );
 	}
 }
