@@ -601,6 +601,31 @@ p.customize-section-description {
 	cursor: pointer;
 }
 
+
+.customize-control-notifications-container {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	display: none;
+}
+
+.customize-control-widget_form.customize-control-has-notifications .widget .widget-top {
+	background-color: #FFE0E0;
+}
+.customize-control-nav_menu_item.customize-control-has-notifications .menu-item-bar .menu-item-handle {
+	background-color: #FFE0E0;
+}
+
+.customize-control-notifications-container li {
+	list-style: disc;
+	margin-bottom: 0;
+	margin-left: 1em;
+}
+.customize-control-notifications-container li:only-child {
+	list-style: none;
+	margin-left: 0;
+}
+
+
 #customize-controls .thumbnail-audio .thumbnail {
 	max-width: 64px;
 	max-height: 64px;
