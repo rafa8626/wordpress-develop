@@ -3534,15 +3534,6 @@
 							}
 						} );
 
-						// Populate server-sanitized values.
-						_.each( response.sanitized_setting_values, function( value, id ) {
-							var setting = api( id );
-							if ( setting ) {
-								setting.set( value );
-								setting._dirty = false;
-							}
-						} );
-
 						api.previewer.send( 'saved', response );
 
 						api.trigger( 'saved', response );
