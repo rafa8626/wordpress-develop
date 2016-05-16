@@ -1567,7 +1567,10 @@
 				var debouncedRenderNotifications = _.debounce( function renderNotifications() {
 					control.renderNotifications();
 				} );
-				control.notifications.bind( 'add', debouncedRenderNotifications );
+				control.notifications.bind( 'add', function( notification ) {
+					wp.a11y.speak( notification.message, 'assertive' );
+					debouncedRenderNotifications();
+				} );
 				control.notifications.bind( 'remove', debouncedRenderNotifications );
 				control.renderNotifications();
 
@@ -1630,7 +1633,7 @@
 				return notificationsContainer;
 			}
 
-			notificationsContainer = $( '<div class="customize-control-notifications-container" aria-live="assertive"></div>' );
+			notificationsContainer = $( '<div class="customize-control-notifications-container"></div>' );
 
 			if ( control.container.hasClass( 'customize-control-nav_menu_item' ) ) {
 				control.container.find( '.menu-item-settings:first' ).prepend( notificationsContainer );
