@@ -126,6 +126,13 @@
 				<# } #>
 			</li>
 		</script>
+		<script type="text/html" id="tmpl-customize-control-notifications">
+			<ul>
+				<# _.each( data.notifications, function( notification ) { #>
+					<li class="notification-code-{{ notification.code }}">{{ notification.message || notification.code }}</li>
+				<# } ); #>
+			</ul>
+		</script>
 
 		<!-- Templates for Customizer Menus -->
 		<script type="text/html" id="tmpl-customize-control-nav_menu-content">
