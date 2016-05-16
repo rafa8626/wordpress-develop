@@ -494,7 +494,7 @@ p.customize-section-description {
 .customize-control input[type="search"],
 .customize-control input[type="tel"],
 .customize-control input[type="url"] {
-	width: 98%;
+	width: 100%;
 	line-height: 18px;
 	margin: 0;
 }
@@ -601,31 +601,6 @@ p.customize-section-description {
 	cursor: pointer;
 }
 
-
-.customize-control-notifications-container {
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
-	display: none;
-}
-
-.customize-control-widget_form.customize-control-has-notifications .widget .widget-top {
-	background-color: #FFE0E0;
-}
-.customize-control-nav_menu_item.customize-control-has-notifications .menu-item-bar .menu-item-handle {
-	background-color: #FFE0E0;
-}
-
-.customize-control-notifications-container li {
-	list-style: disc;
-	margin-bottom: 0;
-	margin-left: 1em;
-}
-.customize-control-notifications-container li:only-child {
-	list-style: none;
-	margin-left: 0;
-}
-
-
 #customize-controls .thumbnail-audio .thumbnail {
 	max-width: 64px;
 	max-height: 64px;
@@ -646,6 +621,35 @@ p.customize-section-description {
 	background: #eee;
 	border-right: 1px solid #ddd;
 }
+
+
+/**
+ * Notifications
+ */
+
+#customize-controls .customize-control-notifications-container { /* Scoped to #customize-controls for specificity over notification styles in common.css. */
+	margin: 4px 0 8px 0;
+	padding: 5px 10px;
+	display: none;
+	cursor: default;
+}
+
+.customize-control-widget_form.customize-control-has-notifications .widget .widget-top,
+.customize-control-nav_menu_item.customize-control-has-notifications .menu-item-bar .menu-item-handle {
+	background-color: #ffe0e0;
+}
+
+.customize-control-notifications-container li {
+	list-style: disc;
+	margin-bottom: 0;
+	margin-left: 1em;
+}
+
+.customize-control-notifications-container li:only-child {
+	list-style: none;
+	margin-left: 0;
+}
+
 
 /* Style for custom settings */
 
