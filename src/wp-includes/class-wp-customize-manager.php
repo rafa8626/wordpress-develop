@@ -1056,7 +1056,7 @@ final class WP_Customize_Manager {
 			}
 			$response = array(
 				'invalid_settings' => $settings_errors,
-				'message' => sprintf( _n( 'There is %d invalid setting.', 'There are %d invalid settings.', $invalid_count ), $invalid_count ),
+				'message' => sprintf( _n( 'There is %s invalid setting.', 'There are %s invalid settings.', $invalid_count ), number_format_i18n( $invalid_count ) ),
 			);
 
 			/** This filter is documented in wp-includes/class-wp-customize-manager.php */
