@@ -1641,7 +1641,7 @@
 				if ( controlTitle.length ) {
 					controlTitle.after( notificationsContainer );
 				} else {
-					control.container.append( notificationsContainer );
+					control.container.prepend( notificationsContainer );
 				}
 			}
 			return notificationsContainer;
