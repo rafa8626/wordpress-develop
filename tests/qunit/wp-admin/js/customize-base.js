@@ -163,13 +163,13 @@ jQuery( function( $ ) {
 	test( 'Notification object exists and has expected properties', function ( assert ) {
 		var notification = new wp.customize.Notification( 'mycode', {
 			'message': 'Hello World',
-			'type': 'error',
+			'type': 'update',
 			'data': { 'foo': 'bar' }
 		} );
 
 		assert.equal( 'mycode', notification.code );
 		assert.equal( 'Hello World', notification.message );
-		assert.equal( 'error', notification.type );
+		assert.equal( 'update', notification.type );
 		assert.deepEqual( { 'foo': 'bar' }, notification.data );
 
 		notification = new wp.customize.Notification( 'mycode2', {
@@ -177,7 +177,7 @@ jQuery( function( $ ) {
 		} );
 		assert.equal( 'mycode2', notification.code );
 		assert.equal( 'Hello Space', notification.message );
-		assert.equal( null, notification.type );
+		assert.equal( 'error', notification.type );
 		assert.equal( null, notification.data );
 	} );
 });

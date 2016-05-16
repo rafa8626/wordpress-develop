@@ -629,7 +629,7 @@ p.customize-section-description {
 
 #customize-controls .customize-control-notifications-container { /* Scoped to #customize-controls for specificity over notification styles in common.css. */
 	margin: 4px 0 8px 0;
-	padding: 5px 10px;
+	padding: 5px 0;
 	display: none;
 	cursor: default;
 }
@@ -640,11 +640,17 @@ p.customize-section-description {
 }
 
 .customize-control-notifications-container li {
-	list-style: disc;
+	list-style: disc inside;
 	margin-bottom: 0;
-	margin-left: 1em;
+	margin-left: 0;
+	border-left: solid 4px transparent;
+	padding-left: 8px;
+	padding-top: 4px;
+	padding-bottom: 4px;
 }
-
+.customize-control-notifications-container li[data-type="error"] {
+	border-left-color: #dc3232;
+}
 .customize-control-notifications-container li:only-child {
 	list-style: none;
 	margin-left: 0;

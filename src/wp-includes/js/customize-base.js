@@ -761,17 +761,17 @@ window.wp = window.wp || {};
 	 * @class
 	 * @augments wp.customize.Class
 	 *
-	 * @param {string} code           The error code.
-	 * @param {object} params         Params.
-	 * @param {string} params.message The error message.
-	 * @param {string} [params.type]  The notification type.
-	 * @param {*}      [params.data]  Any additional data.
+	 * @param {string} code                The error code.
+	 * @param {object} params              Params.
+	 * @param {string} params.message      The error message.
+	 * @param {string} [params.type=error] The notification type.
+	 * @param {*}      [params.data]       Any additional data.
 	 */
 	api.Notification = api.Class.extend({
 		initialize: function( code, params ) {
 			this.code = code;
 			this.message = params.message;
-			this.type = params.type || null;
+			this.type = params.type || 'error';
 			this.data = params.data || null;
 		}
 	});

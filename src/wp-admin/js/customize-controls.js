@@ -1630,7 +1630,7 @@
 				return notificationsContainer;
 			}
 
-			notificationsContainer = $( '<div class="customize-control-notifications-container error" aria-live="assertive"></div>' );
+			notificationsContainer = $( '<div class="customize-control-notifications-container" aria-live="assertive"></div>' );
 
 			if ( control.container.hasClass( 'customize-control-nav_menu_item' ) ) {
 				control.container.find( '.menu-item-settings:first' ).prepend( notificationsContainer );
