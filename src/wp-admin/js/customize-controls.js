@@ -1682,7 +1682,7 @@
 
 			control.container.toggleClass( 'has-notifications', 0 !== notifications.length );
 			container.empty().append( $.trim(
-				control.notificationsTemplate( { notifications: notifications } )
+				control.notificationsTemplate( { notifications: notifications, altNotice: Boolean( control.altNotice ) } )
 			) );
 		},
 

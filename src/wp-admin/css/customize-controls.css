@@ -639,21 +639,13 @@ p.customize-section-description {
 	background-color: #ffe0e0;
 }
 
-.customize-control-notifications-container li {
-	list-style: disc inside;
-	margin-bottom: 0;
+.customize-control-notifications-container li.notice {
+	list-style: none;
 	margin-left: 0;
-	border-left: solid 4px transparent;
+	margin-bottom: 4px;
 	padding-left: 8px;
 	padding-top: 4px;
 	padding-bottom: 4px;
-}
-.customize-control-notifications-container li[data-type="error"] {
-	border-left-color: #dc3232;
-}
-.customize-control-notifications-container li:only-child {
-	list-style: none;
-	margin-left: 0;
 }
 
 
