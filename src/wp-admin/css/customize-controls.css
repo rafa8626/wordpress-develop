@@ -634,8 +634,8 @@ p.customize-section-description {
 	cursor: default;
 }
 
-.customize-control-widget_form.customize-control-has-notifications .widget .widget-top,
-.customize-control-nav_menu_item.customize-control-has-notifications .menu-item-bar .menu-item-handle {
+.customize-control-widget_form.has-notifications .widget .widget-top,
+.customize-control-nav_menu_item.has-notifications .menu-item-bar .menu-item-handle {
 	background-color: #ffe0e0;
 }
 

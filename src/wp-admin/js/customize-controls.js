@@ -1677,7 +1677,7 @@
 				control.notificationsTemplate = wp.template( 'customize-control-notifications' );
 			}
 
-			control.container.toggleClass( 'customize-control-has-notifications', 0 !== notifications.length );
+			control.container.toggleClass( 'has-notifications', 0 !== notifications.length );
 			container.empty().append( $.trim(
 				control.notificationsTemplate( { notifications: notifications } )
 			) );
