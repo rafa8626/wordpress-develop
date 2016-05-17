@@ -1658,7 +1658,7 @@
 		 * of rendering notifications.
 		 */
 		renderNotifications: function() {
-			var control = this, container, notifications;
+			var control = this, container, notifications, hasError = false;
 			container = control.getNotificationsContainerElement();
 			if ( ! container || ! container.length ) {
 				return;
@@ -1666,6 +1666,9 @@
 			notifications = [];
 			control.notifications.each( function( notification ) {
 				notifications.push( notification );
+				if ( 'error' === notification.type ) {
+					hasError = true;
+				}
 			} );
 
 			if ( 0 === notifications.length ) {
@@ -1681,6 +1684,7 @@
 			}
 
 			control.container.toggleClass( 'has-notifications', 0 !== notifications.length );
+			control.container.toggleClass( 'has-error', hasError );
 			container.empty().append( $.trim(
 				control.notificationsTemplate( { notifications: notifications, altNotice: Boolean( control.altNotice ) } )
 			) );

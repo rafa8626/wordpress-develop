@@ -629,23 +629,33 @@ p.customize-section-description {
 
 #customize-controls .customize-control-notifications-container { /* Scoped to #customize-controls for specificity over notification styles in common.css. */
 	margin: 4px 0 8px 0;
-	padding: 5px 0;
+	padding: 0;
 	display: none;
 	cursor: default;
 }
 
-.customize-control-widget_form.has-notifications .widget .widget-top,
-.customize-control-nav_menu_item.has-notifications .menu-item-bar .menu-item-handle {
-	background-color: #ffe0e0;
+#customize-controls .customize-control-widget_form.has-error .widget .widget-top,
+.customize-control-nav_menu_item.has-error .menu-item-bar .menu-item-handle {
+	border-left: 4px solid #dc3232;
+	transition: .15s border-left linear;
 }
 
 .customize-control-notifications-container li.notice {
 	list-style: none;
-	margin-left: 0;
-	margin-bottom: 4px;
-	padding-left: 8px;
-	padding-top: 4px;
-	padding-bottom: 4px;
+	margin: 0 0 6px 0;
+	padding: 4px 8px;
+}
+
+.customize-control-notifications-container li.notice:last-child {
+	margin-bottom: 0;
+}
+
+#customize-controls .customize-control-nav_menu_item .customize-control-notifications-container {
+	margin-top: 0;
+}
+
+#customize-controls .customize-control-widget_form .customize-control-notifications-container {
+	margin-top: 8px;
 }
 
 
