@@ -1047,9 +1047,9 @@ final class WP_Customize_Manager {
 			$settings_errors = array();
 			foreach ( $validity_errors as $setting_id => $validity_error ) {
 				$settings_errors[ $setting_id ] = array();
-				foreach ( $validity_error->errors as $error_code => $error_message ) {
+				foreach ( $validity_error->errors as $error_code => $error_messages ) {
 					$settings_errors[ $setting_id ][ $error_code ] = array(
-						'message' => join( ' ', $error_message ),
+						'message' => join( ' ', $error_messages ),
 						'data' => $validity_error->get_error_data( $error_code ),
 					);
 				}

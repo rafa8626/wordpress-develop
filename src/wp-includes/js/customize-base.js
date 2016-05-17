@@ -760,6 +760,7 @@ window.wp = window.wp || {};
 	 *
 	 * @class
 	 * @augments wp.customize.Class
+	 * @since 4.6.0
 	 *
 	 * @param {string} code                The error code.
 	 * @param {object} params              Params.

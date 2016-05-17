@@ -147,7 +147,7 @@ class WP_Customize_Setting {
 			add_filter( "customize_validate_{$this->id}", $this->validate_callback, 10, 3 );
 		}
 		if ( $this->sanitize_callback ) {
-			add_filter( "customize_sanitize_{$this->id}", $this->sanitize_callback, 10, 3 );
+			add_filter( "customize_sanitize_{$this->id}", $this->sanitize_callback, 10, 2 );
 		}
 		if ( $this->sanitize_js_callback ) {
 			add_filter( "customize_sanitize_js_{$this->id}", $this->sanitize_js_callback, 10, 2 );

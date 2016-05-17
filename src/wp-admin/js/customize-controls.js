@@ -1622,6 +1622,7 @@
 		 * Injects the notification container for existing controls that lack the necessary container,
 		 * including special handling for nav menu items and widgets.
 		 *
+		 * @since 4.6.0
 		 * @returns {jQuery} Setting validation message element.
 		 * @this {wp.customize.Control}
 		 */
@@ -1656,6 +1657,9 @@
 		 * Renders the `control.notifications` into the control's container.
 		 * Control subclasses may override this method to do their own handling
 		 * of rendering notifications.
+		 *
+		 * @since 4.6.0
+		 * @this {wp.customize.Control}
 		 */
 		renderNotifications: function() {
 			var control = this, container, notifications, hasError = false;
@@ -3426,9 +3430,21 @@
 				};
 			},
 
+			/**
+			 * Handle invalid_settings in an error response for the customize-save request.
+			 *
+			 * Add notifications to the settings and focus on the first control that has an invalid setting.
+			 *
+			 * @since 4.6.0
+			 * @private
+			 *
+			 * @param {object} response
+			 * @param {object} response.invalid_settings
+			 * @returns {void}
+			 */
 			_handleInvalidSettingsError: function( response ) {
 				var invalidControls = [], wasFocused = false;
-				if ( ! response.invalid_settings || 0 === response.invalid_settings.length ) {
+				if ( _.isEmpty( response.invalid_settings ) ) {
 					return;
 				}
 
@@ -3496,10 +3512,15 @@
 
 					api.trigger( 'save', request );
 
-					// Remove all setting notifications prior to save, allowing server to respond with new notifications.
+					/*
+					 * Remove all setting error notifications prior to save, allowing
+					 * server to respond with fresh validation error notifications.
+					 */
 					api.each( function( setting ) {
 						setting.notifications.each( function( notification ) {
-							setting.notifications.remove( notification.code );
+							if ( 'error' === notification.type ) {
+								setting.notifications.remove( notification.code );
+							}
 						} );
 					} );
 
