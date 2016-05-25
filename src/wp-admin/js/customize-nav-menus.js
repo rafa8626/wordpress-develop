@@ -493,12 +493,13 @@
 
 		// Creates a new object and adds an associated menu item to the menu.
 		submitNew: function( container ) {
-			var menuItem, objectId,
+			var panel = this,
 				itemName = container.find( '.create-item-input' ),
 				dataContainer = container.find( '.available-menu-items-list' ),
 				itemType = dataContainer.data( 'type' ),
 				itemObject = dataContainer.data( 'object' ),
-				itemTypeLabel = dataContainer.data( 'type_label' );
+				itemTypeLabel = dataContainer.data( 'type_label' ),
+				promise;
 
 			if ( ! this.currentMenuControl ) {
 				return;
@@ -509,28 +510,36 @@
 				return;
 			}
 
-			if ( 'post_type' === itemType ) {
-				// @todo: add new post of type itemObject, get id for menu item parent object id.
-				objectId = -1;
-			} else {
-				// @todo: add new term in taxonomy itemObject, get id for menu item parent object id.
-				objectId = -1;
+			// Only posts are supported currently.
+			if ( 'post_type' !== itemType ) {
+				return;
 			}
 
-			menuItem = {
-				'title': itemName.val(),
-				'type': itemType,
-				'type_label': itemTypeLabel,
-				'object': itemObject,
-				'object_id': objectId
-			};
+			// Customize Posts is not available.
+			if ( ! wp.customize.Posts.insertAutoDraftPost ) {
+				return;
+			}
 
-			this.currentMenuControl.addItemToMenu( menuItem );
+			promise = wp.customize.Posts.insertAutoDraftPost( {
+				post_title: itemName.val(),
+				post_type: itemObject,
+				post_status: 'publish'
+			} );
+			promise.done( function( data ) {
+				var menuItem = {
+					'title': itemName.val(),
+					'type': itemType,
+					'type_label': itemTypeLabel,
+					'object': itemObject,
+					'object_id': data.postId
+				};
+				panel.currentMenuControl.addItemToMenu( menuItem );
 
-			// @todo: add the new item to the list of available items.
-			
-			// Reset the create content form.
-			itemName.val( '' );
+				// @todo: add the new item to the list of available items.
+
+				// Reset the create content form.
+				itemName.val( '' );
+			} );
 		},
 
 		// Opens the panel.
