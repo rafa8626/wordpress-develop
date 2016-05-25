@@ -794,16 +794,6 @@ final class WP_Customize_Nav_Menus {
 				</div>
 			</div>
 			<?php
-			/**
-			 * Filter the content types that do not allow new items to be created from nav menus.
-			 *
-			 * Types are formated as 'post_type'|'taxonomy' _ post_type_name; for example, 'taxonomy_post_format'.
-			 *
-			 * @since 4.6.0
-			 *
-			 * @param array  $types  Array of disallowed types.
-			 */
-			$disallowed_new_content_types = apply_filters( 'customize_nav_menus_disallow_new_content_types', array( 'taxonomy_post_format' ) );
 
 			// Containers for per-post-type item browsing; items are added with JS.
 			foreach ( $this->available_item_types() as $available_item_type ) {
@@ -823,22 +813,16 @@ final class WP_Customize_Nav_Menus {
 					</h4>
 					<div class="accordion-section-content">
 						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( $available_item_type['label'] ); ?>"></ul>
-						<?php if ( 'post_type' === $available_item_type['type'] ) {
-							$post_type = get_post_type_object( $available_item_type['object'] );
-							$cap = $post_type->cap->publish_posts;
-							$label = $post_type->labels->singular_name;
-						} else {
-							$taxonomy = get_taxonomy( $available_item_type['object'] );
-							$cap = $taxonomy->cap->manage_terms;
-							$label = $taxonomy->labels->singular_name;
-						}
-						if ( current_user_can( $cap ) && ! in_array( $available_item_type['type'] . '_' . $available_item_type['object'], $disallowed_new_content_types ) ) : ?>
-							<div class="new-content-item">
-								<input type="text" class="create-item-input" placeholder="<?php
-								/* translators: %s: Singular title of post type or taxonomy */
-								printf( __( 'Create New %s' ), $label ); ?>">
-								<button type="button" class="button add-content"><?php _e( 'Add' ); ?></button>
-							</div>
+						<?php if ( 'post_type' === $available_item_type['type'] ) : ?>
+							<?php $post_type_obj = get_post_type_object( $available_item_type['object'] ); ?>
+							<?php if ( current_user_can( $post_type_obj->cap->create_posts ) && current_user_can( $post_type_obj->cap->publish_posts ) ) : ?>
+								<div class="new-content-item">
+									<input type="text" class="create-item-input" placeholder="<?php
+									/* translators: %s: Singular title of post type or taxonomy */
+									printf( __( 'Create New %s' ), $post_type_obj->labels->singular_name ); ?>">
+									<button type="button" class="button add-content"><?php _e( 'Add' ); ?></button>
+								</div>
+							<?php endif; ?>
 						<?php endif; ?>
 					</div>
 				</div>
