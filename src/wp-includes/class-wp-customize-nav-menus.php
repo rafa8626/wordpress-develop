@@ -655,6 +655,7 @@ final class WP_Customize_Nav_Menus {
 			foreach ( $post_types as $slug => $post_type ) {
 				$item_types[] = array(
 					'title'  => $post_type->labels->name,
+					'label'  => $post_type->labels->singular_name,
 					'type'   => 'post_type',
 					'object' => $post_type->name,
 				);
@@ -669,6 +670,7 @@ final class WP_Customize_Nav_Menus {
 				}
 				$item_types[] = array(
 					'title'  => $taxonomy->labels->name,
+					'label'  => $taxonomy->labels->singular_name,
 					'type'   => 'taxonomy',
 					'object' => $taxonomy->name,
 				);
@@ -763,7 +765,7 @@ final class WP_Customize_Nav_Menus {
 					<span class="spinner"></span>
 					<span class="clear-results"><span class="screen-reader-text"><?php _e( 'Clear Results' ); ?></span></span>
 				</div>
-				<ul class="accordion-section-content" data-type="search"></ul>
+				<ul class="accordion-section-content available-menu-items-list" data-type="search"></ul>
 			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
 				<h4 class="accordion-section-title" role="presentation">
@@ -792,7 +794,18 @@ final class WP_Customize_Nav_Menus {
 				</div>
 			</div>
 			<?php
-			// Containers for per-post-type item browsing; items added with JS.
+			/**
+			 * Filter the content types that do not allow new items to be created from nav menus.
+			 *
+			 * Types are formated as 'post_type'|'taxonomy' _ post_type_name; for example, 'taxonomy_post_format'.
+			 *
+			 * @since 4.6.0
+			 *
+			 * @param array  $types  Array of disallowed types.
+			 */
+			$disallowed_new_content_types = apply_filters( 'customize_nav_menus_disallow_new_content_types', array( 'taxonomy_post_format' ) );
+
+			// Containers for per-post-type item browsing; items are added with JS.
 			foreach ( $this->available_item_types() as $available_item_type ) {
 				$id = sprintf( 'available-menu-items-%s-%s', $available_item_type['type'], $available_item_type['object'] );
 				?>
@@ -808,7 +821,26 @@ final class WP_Customize_Nav_Menus {
 							<span class="toggle-indicator" aria-hidden="true"></span>
 						</button>
 					</h4>
-					<ul class="accordion-section-content" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>"></ul>
+					<div class="accordion-section-content">
+						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( $available_item_type['label'] ); ?>"></ul>
+						<?php if ( 'post_type' === $available_item_type['type'] ) {
+							$post_type = get_post_type_object( $available_item_type['object'] );
+							$cap = $post_type->cap->publish_posts;
+							$label = $post_type->labels->singular_name;
+						} else {
+							$taxonomy = get_taxonomy( $available_item_type['object'] );
+							$cap = $taxonomy->cap->manage_terms;
+							$label = $taxonomy->labels->singular_name;
+						}
+						if ( current_user_can( $cap ) && ! in_array( $available_item_type['type'] . '_' . $available_item_type['object'], $disallowed_new_content_types ) ) : ?>
+							<div class="new-content-item">
+								<input type="text" class="create-item-input" placeholder="<?php
+								/* translators: %s: Singular title of post type or taxonomy */
+								printf( __( 'Create New %s' ), $label ); ?>">
+								<button type="button" class="button add-content"><?php _e( 'Add' ); ?></button>
+							</div>
+						<?php endif; ?>
+					</div>
 				</div>
 				<?php
 			}
