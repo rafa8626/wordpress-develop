@@ -154,15 +154,16 @@ jQuery( function() {
 	} );
 
 	QUnit.test( 'Test a mock partial with placements, including methods and properties.' , function( assert ) {
-		var partialId, selector, elementWIthId, options, mockPartial, settingValue, relatedSetting, expectedContainer,
+		var partialId, selector, elementWithId, options, mockPartial, settingValue, relatedSetting, expectedContainer,
 			expectedPlacement, placementNoContainer, placementNoAddedContent, placementNoStringAddedContent,
 			placementContext, placementContainer, placementWithContextAndContainer;
 
 		partialId = 'mock-partial';
 		selector = '#fixture-mock-partial';
 
-		elementWIthId = $( '<div>' ).data( 'customize-partial-id', partialId );
-		$( selector ).append( elementWIthId );
+		elementWithId = document.createElement( 'div' );
+		elementWithId.setAttribute( 'data-customize-partial-id', partialId );
+		document.querySelector( selector ).appendChild( elementWithId );
 
 		options = {
 			params : {
