@@ -100,6 +100,8 @@
 			'click .menu-item-tpl': '_submit',
 			'click #custom-menu-item-submit': '_submitLink',
 			'keypress #custom-menu-item-name': '_submitLink',
+			'click .new-content-item .add-content': '_submitNew',
+			'keypress .create-item-input': '_submitNew',
 			'keydown': 'keyboardAccessible'
 		},
 
@@ -115,6 +117,7 @@
 		pages: {},
 		sectionContent: '',
 		loading: false,
+		addingNew: false,
 
 		initialize: function() {
 			var self = this;
@@ -124,7 +127,7 @@
 			}
 
 			this.$search = $( '#menu-items-search' );
-			this.sectionContent = this.$el.find( '.accordion-section-content' );
+			this.sectionContent = this.$el.find( '.available-menu-items-list' );
 
 			this.debounceSearch = _.debounce( self.search, 500 );
 
@@ -160,7 +163,7 @@
 
 			// Load more items.
 			this.sectionContent.scroll( function() {
-				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop( 'scrollHeight' ),
+				var totalHeight = self.$el.find( '.accordion-section.open .available-menu-items-list' ).prop( 'scrollHeight' ),
 					visibleHeight = self.$el.find( '.accordion-section.open' ).height();
 
 				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
@@ -337,7 +340,7 @@
 				}
 				items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
 				self.collection.add( items.models );
-				typeInner = availableMenuItemContainer.find( '.accordion-section-content' );
+				typeInner = availableMenuItemContainer.find( '.available-menu-items-list' );
 				items.each(function( menuItem ) {
 					typeInner.append( itemTemplate( menuItem.attributes ) );
 				});
@@ -356,14 +359,23 @@
 
 		// Adjust the height of each section of items to fit the screen.
 		itemSectionHeight: function() {
-			var sections, totalHeight, accordionHeight, diff;
+			var sections, lists, totalHeight, accordionHeight, diff, totalWidth, button, buttonWidth;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section:not( #available-menu-items-search ) .accordion-section-content' );
-			accordionHeight =  46 * ( 2 + sections.length ) - 13; // Magic numbers.
+			lists = this.$el.find( '.accordion-section:not( #available-menu-items-search ) .available-menu-items-list:not(":only-child")' );
+			accordionHeight =  46 * ( 1 + sections.length ) + 14; // Magic numbers.
 			diff = totalHeight - accordionHeight;
 			if ( 120 < diff && 290 > diff ) {
 				sections.css( 'max-height', diff );
+				lists.css( 'max-height', ( diff - 60 ) );
 			}
+			// Fit the new-content input and button in the available space.
+			totalWidth = this.$el.width();
+			// Clone button to get width of invisible element.
+			button = this.$el.find( '.accordion-section .new-content-item .add-content' ).first().clone().appendTo( 'body' ).css({ 'display': 'block', 'visibility': 'hidden' });
+			buttonWidth = button.outerWidth();
+			button.remove();
+			this.$el.find( '.accordion-section .new-content-item .create-item-input' ).width( ( totalWidth - buttonWidth - 70 ) ); // 70 = additional margins and padding.
 		},
 
 		// Highlights a menu item.
@@ -454,6 +466,87 @@
 			// Reset the custom link form.
 			itemUrl.val( 'http://' );
 			itemName.val( '' );
+		},
+
+		// Submit handler for keypress (enter) on field and click on button.
+		_submitNew: function( event ) {
+			// Only proceed with keypress if it is Enter.
+			if ( 'keypress' === event.type && 13 !== event.which ) {
+				return;
+			}
+
+			if ( this.addingNew ) {
+				return;
+			}
+
+			var container = $( event.target ).closest( '.accordion-section' );
+			
+			this.submitNew( container );
+		},
+
+		// Creates a new object and adds an associated menu item to the menu.
+		submitNew: function( container ) {
+			var panel = this,
+				itemName = container.find( '.create-item-input' ),
+				title = itemName.val(),
+				dataContainer = container.find( '.available-menu-items-list' ),
+				itemType = dataContainer.data( 'type' ),
+				itemObject = dataContainer.data( 'object' ),
+				itemTypeLabel = dataContainer.data( 'type_label' ),
+				promise;
+
+			if ( ! this.currentMenuControl ) {
+				return;
+			}
+
+			if ( '' === itemName.val() ) {
+				itemName.addClass( 'invalid' );
+				return;
+			} else {
+				container.find( '.accordion-section-title' ).addClass( 'loading' );
+			}
+
+			// Only posts are supported currently.
+			if ( 'post_type' !== itemType ) {
+				return;
+			}
+
+			panel.addingNew = true;
+			itemName.attr( 'disabled', 'disabled' );
+			promise = wp.customize.Posts.insertAutoDraftPost( {
+				post_title: title,
+				post_type: itemObject,
+				post_status: 'publish'
+			} );
+			promise.done( function( data ) {
+				var menuItem = {
+					'title': itemName.val(),
+					'type': itemType,
+					'type_label': itemTypeLabel,
+					'object': itemObject,
+					'object_id': data.postId,
+					'url': data.url
+				}, availableItems, $content, itemTemplate;
+
+				// Add new item to menu.
+				panel.currentMenuControl.addItemToMenu( menuItem );
+
+				// Add the new item to the list of available items.
+				menuItem['id'] = 'post-' + data.postId; // `id` is used for available menu item Backbone models.
+				availableItems = new api.Menus.AvailableItemCollection( [ menuItem ] );
+				api.Menus.availableMenuItemsPanel.collection.add( availableItems.models );
+				$content = container.find( '.available-menu-items-list' ),
+				itemTemplate = wp.template( 'available-menu-item' );
+				$content.prepend( itemTemplate( menuItem ) );
+				$content.scrollTop();
+
+				// Reset the create content form.
+				itemName.val( '' )
+				        .removeAttr( 'disabled' )
+				        .focus();
+				panel.addingNew = false;
+				container.find( '.accordion-section-title' ).removeClass( 'loading' );
+			} );
 		},
 
 		// Opens the panel.
