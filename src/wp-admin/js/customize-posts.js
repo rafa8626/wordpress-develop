@@ -34,7 +34,7 @@
 			if ( response.postId ) {
 				deferred.resolve( response );
 				component.autoDrafts.push( response.postId );
-				api( 'nav_menus_created_posts' ).set( component.autoDrafts );
+				api( 'nav_menus_created_posts' ).set( _.clone( component.autoDrafts ) );
 			}
 		} );
 
