@@ -532,7 +532,7 @@
 				panel.currentMenuControl.addItemToMenu( menuItem );
 
 				// Add the new item to the list of available items.
-				menuItem['id'] = 'post-' + data.postId; // `id` is used for available menu item Backbone models.
+				menuItem.id = 'post-' + data.postId; // `id` is used for available menu item Backbone models.
 				availableItems = new api.Menus.AvailableItemCollection( [ menuItem ] );
 				api.Menus.availableMenuItemsPanel.collection.add( availableItems.models );
 				$content = container.find( '.available-menu-items-list' ),
