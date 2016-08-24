@@ -634,6 +634,7 @@ final class WP_Customize_Nav_Menus {
 		$this->manager->add_setting( new WP_Customize_Filter_Setting( $this->manager, 'nav_menus_created_posts', array(
 			'transport' => 'postMessage',
 			'default'   => array(),
+			'sanitize_callback' => 'wp_parse_id_list',
 		) ) );
 	}
 
@@ -1027,7 +1028,7 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Make the auto-draft status protected so that it can be queried.
+	 * Publish the auto-draft posts that were created for nav menu items.
 	 *
 	 * @since 4.7.0
 	 * @access public
@@ -1037,9 +1038,11 @@ final class WP_Customize_Nav_Menus {
 	public function publish_auto_draft_posts( $setting ) {
 		$value = $setting->post_value();
 		if ( ! empty( $value ) ) {
-			foreach ( $value as $index => $post_id ) {
+			foreach ( array_filter( $value ) as $post_id ) {
 				$post = get_post( $post_id );
-				wp_publish_post( $post );
+				if ( $post && 'auto-draft' === $post->post_status ) {
+					wp_publish_post( $post );
+				}
 			}
 		}
 	}
