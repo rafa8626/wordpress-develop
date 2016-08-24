@@ -356,7 +356,6 @@ final class WP_Customize_Nav_Menus {
 	public function enqueue_scripts() {
 		wp_enqueue_style( 'customize-nav-menus' );
 		wp_enqueue_script( 'customize-nav-menus' );
-		wp_enqueue_script( 'customize-posts' );
 
 		$temp_nav_menu_setting      = new WP_Customize_Nav_Menu_Setting( $this->manager, 'nav_menu[-1]' );
 		$temp_nav_menu_item_setting = new WP_Customize_Nav_Menu_Item_Setting( $this->manager, 'nav_menu_item[-1]' );
@@ -718,7 +717,7 @@ final class WP_Customize_Nav_Menus {
 
 		$post_type_obj = get_post_type_object( $post_type );
 		if ( ! $post_type_obj ) {
-			return new WP_Error( 'unknown_post_type', __( 'Unknown post type', 'customize-posts' ) );
+			return new WP_Error( 'unknown_post_type', __( 'Unknown post type' ) );
 		}
 
 		add_filter( 'wp_insert_post_empty_content', '__return_false' );
@@ -741,7 +740,6 @@ final class WP_Customize_Nav_Menus {
 	/**
 	 * Ajax handler for adding a new auto-draft post.
 	 *
-	 * @action wp_ajax_customize-posts-insert-auto-draft
 	 * @access public
 	 * @since 4.7.0
 	 */
