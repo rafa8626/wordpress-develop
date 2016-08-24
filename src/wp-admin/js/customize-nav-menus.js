@@ -578,8 +578,7 @@
 
 				// Reset the create content form.
 				itemName.val( '' )
-				        .removeAttr( 'disabled' )
-				        .focus();
+				        .removeAttr( 'disabled' );
 				panel.addingNew = false;
 				container.find( '.accordion-section-title' ).removeClass( 'loading' );
 			} );
