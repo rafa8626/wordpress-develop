@@ -936,7 +936,7 @@ final class WP_Customize_Nav_Menus {
 						</button>
 					</h4>
 					<div class="accordion-section-content">
-						<?php if ( 'post_type' === $available_item_type['type'] && ! in_array( $available_item_type['type'] . '_' . $available_item_type['object'], $disallowed_new_content_types ) ) : ?>
+						<?php if ( 'post_type' === $available_item_type['type'] && ! in_array( $available_item_type['type'] . '_' . $available_item_type['object'], $disallowed_new_content_types, true ) ) : ?>
 							<?php $post_type_obj = get_post_type_object( $available_item_type['object'] ); ?>
 							<?php if ( current_user_can( $post_type_obj->cap->create_posts ) && current_user_can( $post_type_obj->cap->publish_posts ) ) : ?>
 								<div class="new-content-item">
@@ -1036,8 +1036,7 @@ final class WP_Customize_Nav_Menus {
 	 */
 	public function publish_auto_draft_posts( $setting ) {
 		$value = $setting->post_value();
-		if ( ! empty ( $value ) ) {
-			global $wpdb;
+		if ( ! empty( $value ) ) {
 			foreach ( $value as $index => $post_id ) {
 				$post = get_post( $post_id );
 				wp_publish_post( $post );
