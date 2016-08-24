@@ -369,8 +369,10 @@
 				sections.css( 'max-height', diff );
 				lists.css( 'max-height', ( diff - 60 ) );
 			}
+
 			// Fit the new-content input and button in the available space.
 			totalWidth = this.$el.width();
+
 			// Clone button to get width of invisible element.
 			button = this.$el.find( '.accordion-section .new-content-item .add-content' ).first().clone().appendTo( 'body' ).css({ 'display': 'block', 'visibility': 'hidden' });
 			buttonWidth = button.outerWidth();
@@ -470,6 +472,8 @@
 
 		// Submit handler for keypress (enter) on field and click on button.
 		_submitNew: function( event ) {
+			var container;
+
 			// Only proceed with keypress if it is Enter.
 			if ( 'keypress' === event.type && 13 !== event.which ) {
 				return;
@@ -479,7 +483,7 @@
 				return;
 			}
 
-			var container = $( event.target ).closest( '.accordion-section' );
+			container = $( event.target ).closest( '.accordion-section' );
 
 			this.submitNew( container );
 		},

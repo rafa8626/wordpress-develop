@@ -55,6 +55,7 @@
 	api.bind( 'ready', function() {
 
 		api.bind( 'saved', function() {
+
 			// Show users links to edit newly-published posts.
 			api.control.each( function( control ) {
 				var id, url, message;
@@ -71,7 +72,7 @@
 								type: 'info',
 								message: message
 							}
-						));
+						) );
 					}
 				}
 			});
