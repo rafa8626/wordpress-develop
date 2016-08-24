@@ -80,6 +80,47 @@
 	});
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
 
+	api.Menus.insertedAutoDrafts = [];
+
+	/**
+	 * Insert a new `auto-draft` post.
+	 *
+	 * @param {object} params - Parameters for the draft post to create.
+	 * @param {string} params.post_type - Post type to add.
+	 * @param {number} params.title - Post title to use.
+	 * @return {jQuery.promise} Promise resolved with the added post.
+	 */
+	api.Menus.insertAutoDraftPost = function insertAutoDraftPost( params ) {
+		var request, deferred = $.Deferred();
+
+		request = wp.ajax.post( 'customize-nav-menus-insert-auto-draft', {
+			'customize-menus-nonce': api.settings.nonce['customize-menus'],
+			'wp_customize': 'on',
+			'params': params
+		} );
+
+		request.done( function( response ) {
+			if ( response.postId ) {
+				deferred.resolve( response );
+				api.Menus.insertedAutoDrafts.push( response.postId );
+				api( 'nav_menus_created_posts' ).set( _.clone( api.Menus.insertedAutoDrafts ) );
+			}
+		} );
+
+		request.fail( function( response ) {
+			var error = response || '';
+
+			if ( 'undefined' !== typeof response.message ) {
+				error = response.message;
+			}
+
+			console.error( error );
+			deferred.rejectWith( error );
+		} );
+
+		return deferred.promise();
+	};
+
 	/**
 	 * wp.customize.Menus.AvailableMenuItemsPanelView
 	 *
@@ -517,7 +558,7 @@
 
 			panel.addingNew = true;
 			itemName.attr( 'disabled', 'disabled' );
-			promise = wp.customize.Posts.insertAutoDraftPost( {
+			promise = api.Menus.insertAutoDraftPost( {
 				post_title: title,
 				post_type: itemObject,
 				post_status: 'publish'
@@ -2642,6 +2683,9 @@
 			if ( data.nav_menu_updates || data.nav_menu_item_updates ) {
 				api.Menus.applySavedData( data );
 			}
+
+			// Reset list of inserted auto draft post IDs.
+			api.Menus.insertedAutoDrafts = [];
 		} );
 
 		// Open and focus menu control.

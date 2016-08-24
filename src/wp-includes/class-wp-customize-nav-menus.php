@@ -56,7 +56,7 @@ final class WP_Customize_Nav_Menus {
 		add_filter( 'customize_refresh_nonces', array( $this, 'filter_nonces' ) );
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'ajax_load_available_items' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'ajax_search_available_items' ) );
-		add_action( 'wp_ajax_customize-posts-insert-auto-draft', array( $this, 'ajax_add_new_auto_draft_post' ) );
+		add_action( 'wp_ajax_customize-nav-menus-insert-auto-draft', array( $this, 'ajax_insert_auto_draft_post' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 );
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
@@ -745,7 +745,7 @@ final class WP_Customize_Nav_Menus {
 	 * @access public
 	 * @since 4.7.0
 	 */
-	public function ajax_add_new_auto_draft_post() {
+	public function ajax_insert_auto_draft_post() {
 		if ( ! check_ajax_referer( 'customize-menus', 'customize-menus-nonce' ) ) {
 			status_header( 400 );
 			wp_send_json_error( 'bad_nonce' );
