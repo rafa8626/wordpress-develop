@@ -565,11 +565,16 @@
 	bottom: 0;
 	z-index: 10;
 	background: #eee;
+	display: flex;
 }
 
+#available-menu-items .new-content-item .create-item-input {
+	flex-grow: 10;
+	margin-left: 5px;
+}
 #available-menu-items .new-content-item .add-content {
-	float: right;
 	padding-left: 6px;
+	flex-grow: 1;
 }
 
 #available-menu-items .new-content-item .add-content:before {

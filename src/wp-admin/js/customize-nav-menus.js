@@ -410,15 +410,6 @@
 				sections.css( 'max-height', diff );
 				lists.css( 'max-height', ( diff - 60 ) );
 			}
-
-			// Fit the new-content input and button in the available space.
-			totalWidth = this.$el.width();
-
-			// Clone button to get width of invisible element.
-			button = this.$el.find( '.accordion-section .new-content-item .add-content' ).first().clone().appendTo( 'body' ).css({ 'display': 'block', 'visibility': 'hidden' });
-			buttonWidth = button.outerWidth();
-			button.remove();
-			this.$el.find( '.accordion-section .new-content-item .create-item-input' ).width( ( totalWidth - buttonWidth - 70 ) ); // 70 = additional margins and padding.
 		},
 
 		// Highlights a menu item.
