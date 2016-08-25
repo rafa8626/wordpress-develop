@@ -594,7 +594,9 @@
 #custom-menu-item-name.invalid,
 #custom-menu-item-url.invalid,
 .menu-name-field.invalid,
-.menu-name-field.invalid:focus {
+.menu-name-field.invalid:focus,
+#available-menu-items .new-content-item .create-item-input.invalid,
+#available-menu-items .new-content-item .create-item-input.invalid:focus {
 	border: 1px solid #f00;
 }
 

@@ -535,16 +535,18 @@
 				return;
 			}
 
-			if ( '' === itemName.val() ) {
-				itemName.addClass( 'invalid' );
-				return;
-			} else {
-				container.find( '.accordion-section-title' ).addClass( 'loading' );
-			}
-
 			// Only posts are supported currently.
 			if ( 'post_type' !== itemType ) {
 				return;
+			}
+
+			if ( '' === $.trim( itemName.val() ) ) {
+				itemName.addClass( 'invalid' );
+				itemName.focus();
+				return;
+			} else {
+				itemName.removeClass( 'invalid' );
+				container.find( '.accordion-section-title' ).addClass( 'loading' );
 			}
 
 			panel.addingNew = true;
@@ -577,8 +579,7 @@
 				$content.scrollTop();
 
 				// Reset the create content form.
-				itemName.val( '' )
-				        .removeAttr( 'disabled' );
+				itemName.val( '' ).removeAttr( 'disabled' );
 				panel.addingNew = false;
 				container.find( '.accordion-section-title' ).removeClass( 'loading' );
 			} );
