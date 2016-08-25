@@ -85,6 +85,21 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 		do_action( 'customize_register', $this->wp_customize );
 		$menus = new WP_Customize_Nav_Menus( $this->wp_customize );
 		$this->assertInstanceOf( 'WP_Customize_Manager', $menus->manager );
+
+		$this->assertEquals( 10, add_filter( 'customize_refresh_nonces', array( $menus, 'filter_nonces' ) ) );
+		$this->assertEquals( 10, add_action( 'wp_ajax_load-available-menu-items-customizer', array( $menus, 'ajax_load_available_items' ) ) );
+		$this->assertEquals( 10, add_action( 'wp_ajax_search-available-menu-items-customizer', array( $menus, 'ajax_search_available_items' ) ) );
+		$this->assertEquals( 10, add_action( 'wp_ajax_customize-nav-menus-insert-auto-draft', array( $menus, 'ajax_insert_auto_draft_post' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_controls_enqueue_scripts', array( $menus, 'enqueue_scripts' ) ) );
+		$this->assertEquals( 11, add_action( 'customize_register', array( $menus, 'customize_register' ) ) );
+		$this->assertEquals( 10, add_filter( 'customize_dynamic_setting_args', array( $menus, 'filter_dynamic_setting_args' ) ) );
+		$this->assertEquals( 10, add_filter( 'customize_dynamic_setting_class', array( $menus, 'filter_dynamic_setting_class' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_controls_print_footer_scripts', array( $menus, 'print_templates' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_controls_print_footer_scripts', array( $menus, 'available_items_template' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_preview_init', array( $menus, 'customize_preview_init' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_preview_init', array( $menus, 'make_auto_draft_status_previewable' ) ) );
+		$this->assertEquals( 10, add_action( 'customize_save_nav_menus_created_posts', array( $menus, 'save_nav_menus_created_posts' ) ) );
+		$this->assertEquals( 10, add_filter( 'customize_dynamic_partial_args', array( $menus, 'customize_dynamic_partial_args' ) ) );
 	}
 
 	/**
