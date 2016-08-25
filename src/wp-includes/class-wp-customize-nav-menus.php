@@ -65,7 +65,7 @@ final class WP_Customize_Nav_Menus {
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
 		add_action( 'customize_preview_init', array( $this, 'make_auto_draft_status_previewable' ) );
-		add_action( 'customize_save_nav_menus_created_posts', array( $this, 'publish_auto_draft_posts' ) );
+		add_action( 'customize_save_nav_menus_created_posts', array( $this, 'save_nav_menus_created_posts' ) );
 
 		// Selective Refresh partials.
 		add_filter( 'customize_dynamic_partial_args', array( $this, 'customize_dynamic_partial_args' ), 10, 2 );
@@ -629,8 +629,8 @@ final class WP_Customize_Nav_Menus {
 
 		$this->manager->add_setting( new WP_Customize_Filter_Setting( $this->manager, 'nav_menus_created_posts', array(
 			'transport' => 'postMessage',
-			'default'   => array(),
-			'sanitize_callback' => 'wp_parse_id_list',
+			'default' => array(),
+			'sanitize_callback' => array( $this, 'sanitize_nav_menus_created_posts' ),
 		) ) );
 	}
 
@@ -1025,21 +1025,54 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Publish the auto-draft posts that were created for nav menu items.
+	 * Sanitize post IDs for auto-draft posts created for nav menu items to be published.
 	 *
 	 * @since 4.7.0
 	 * @access public
 	 *
-	 * @param WP_Customize_Setting $setting Customizer Setting object.
+	 * @param array $value Post IDs.
+	 * @returns array Post IDs.
 	 */
-	public function publish_auto_draft_posts( $setting ) {
-		$value = $setting->post_value();
-		if ( ! empty( $value ) ) {
-			foreach ( array_filter( $value ) as $post_id ) {
-				$post = get_post( $post_id );
-				if ( $post && 'auto-draft' === $post->post_status ) {
-					wp_publish_post( $post );
-				}
+	public function sanitize_nav_menus_created_posts( $value ) {
+		$post_ids = array();
+		foreach ( wp_parse_id_list( $value ) as $post_id ) {
+			if ( empty( $post_id ) ) {
+				continue;
+			}
+			$post = get_post( $post_id );
+			if ( 'auto-draft' !== $post->post_status ) {
+				continue;
+			}
+			$post_type_obj = get_post_type_object( $post->post_type );
+			if ( ! $post_type_obj ) {
+				continue;
+			}
+			if ( ! current_user_can( $post_type_obj->cap->publish_posts ) ) {
+				continue;
+			}
+			$post_ids[] = $post->ID;
+		}
+		return $post_ids;
+	}
+
+	/**
+	 * Publish the auto-draft posts that were created for nav menu items.
+	 *
+	 * The post IDs will have been sanitized by already by
+	 * `WP_Customize_Nav_Menu_Items::sanitize_nav_menus_created_posts()` to
+	 * remove any post IDs for which the user cannot publish or for which the
+	 * post is not an auto-draft.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param WP_Customize_Setting $setting Customizer setting object.
+	 */
+	public function save_nav_menus_created_posts( $setting ) {
+		$post_ids = $setting->post_value();
+		if ( ! empty( $post_ids ) ) {
+			foreach ( $post_ids as $post_id ) {
+				wp_publish_post( $post_id );
 			}
 		}
 	}
