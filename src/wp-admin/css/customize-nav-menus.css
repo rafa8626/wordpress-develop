@@ -573,17 +573,21 @@
 }
 
 #available-menu-items .new-content-item .create-item-input {
+	-webkit-box-flex: 10;
 	-webkit-flex-grow: 10;
 	-moz-box-flex: 10;
+	-ms-flex-positive: 10;
 	-ms-flex: 10;
 	flex-grow: 10;
 	margin-left: 5px;
 }
 #available-menu-items .new-content-item .add-content {
 	padding-left: 6px;
-	-webkit-flex-grow: 1;
-	-moz-box-flex: 1;
-	-ms-flex: 1;
+	-webkit-box-flex: 10;
+	-webkit-flex-grow: 10;
+	-moz-box-flex: 10;
+	-ms-flex-positive: 10;
+	-ms-flex: 10;
 	flex-grow: 1;
 }
 
