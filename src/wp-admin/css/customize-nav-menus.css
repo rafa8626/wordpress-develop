@@ -580,6 +580,7 @@
 	-ms-flex: 10;
 	flex-grow: 10;
 	margin-left: 5px;
+	padding: 4.5px;
 }
 #available-menu-items .new-content-item .add-content {
 	padding-left: 6px;
