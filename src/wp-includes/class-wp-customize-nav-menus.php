@@ -904,18 +904,6 @@ final class WP_Customize_Nav_Menus {
 				</div>
 			</div>
 			<?php
-			/**
-			 * Filter the content types that do not allow new items to be created from nav menus.
-			 *
-			 * Types are formatted as 'post_type'|'taxonomy' _ post_type_name; for example, 'taxonomy_post_format'.
-			 * Taxonomies are not yet supported by this UI but will be in the future. Post types are only available
-			 * here if `show_in_nav_menus` is true.
-			 *
-			 * @since 4.7.0
-			 *
-			 * @param array  $types  Array of disallowed types.
-			 */
-			$disallowed_new_content_types = apply_filters( 'customize_nav_menus_disallow_new_content_types', array( 'taxonomy_post_format' ) );
 
 			// Containers for per-post-type item browsing; items are added with JS.
 			foreach ( $this->available_item_types() as $available_item_type ) {
@@ -934,7 +922,7 @@ final class WP_Customize_Nav_Menus {
 						</button>
 					</h4>
 					<div class="accordion-section-content">
-						<?php if ( 'post_type' === $available_item_type['type'] && ! in_array( $available_item_type['type'] . '_' . $available_item_type['object'], $disallowed_new_content_types, true ) ) : ?>
+						<?php if ( 'post_type' === $available_item_type['type'] ) : ?>
 							<?php $post_type_obj = get_post_type_object( $available_item_type['object'] ); ?>
 							<?php if ( current_user_can( $post_type_obj->cap->create_posts ) && current_user_can( $post_type_obj->cap->publish_posts ) ) : ?>
 								<div class="new-content-item">
