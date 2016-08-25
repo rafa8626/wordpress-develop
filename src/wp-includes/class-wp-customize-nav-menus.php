@@ -654,6 +654,7 @@ final class WP_Customize_Nav_Menus {
 	 * Return an array of all the available item types.
 	 *
 	 * @since 4.3.0
+	 * @since 4.7.0  Each array item now includes a `$type_label` in in addition to `$title`, `$type`, and `$object`.
 	 * @access public
 	 *
 	 * @return array The available menu item types.
@@ -666,8 +667,8 @@ final class WP_Customize_Nav_Menus {
 			foreach ( $post_types as $slug => $post_type ) {
 				$item_types[] = array(
 					'title'  => $post_type->labels->name,
-					'label'  => $post_type->labels->singular_name,
-					'type'   => 'post_type',
+					'type_label' => $post_type->labels->singular_name,
+					'type' => 'post_type',
 					'object' => $post_type->name,
 				);
 			}
@@ -680,9 +681,9 @@ final class WP_Customize_Nav_Menus {
 					continue;
 				}
 				$item_types[] = array(
-					'title'  => $taxonomy->labels->name,
-					'label'  => $taxonomy->labels->singular_name,
-					'type'   => 'taxonomy',
+					'title' => $taxonomy->labels->name,
+					'type_label' => $taxonomy->labels->singular_name,
+					'type' => 'taxonomy',
 					'object' => $taxonomy->name,
 				);
 			}
@@ -692,6 +693,7 @@ final class WP_Customize_Nav_Menus {
 		 * Filters the available menu item types.
 		 *
 		 * @since 4.3.0
+		 * @since 4.7.0  Each array item now includes a `$type_label` in in addition to `$title`, `$type`, and `$object`.
 		 *
 		 * @param array $item_types Custom menu item types.
 		 */
@@ -943,7 +945,7 @@ final class WP_Customize_Nav_Menus {
 								</div>
 							<?php endif; ?>
 						<?php endif; ?>
-						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( $available_item_type['label'] ); ?>"></ul>
+						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( $available_item_type['type_label'] ); ?>"></ul>
 					</div>
 				</div>
 				<?php

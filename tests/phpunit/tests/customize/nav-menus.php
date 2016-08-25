@@ -45,9 +45,10 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 	 */
 	function filter_item_types( $items ) {
 		$items[] = array(
-			'title'  => 'Custom',
-			'type'   => 'custom_type',
+			'title' => 'Custom',
+			'type' => 'custom_type',
 			'object' => 'custom_object',
+			'type_label' => 'Custom Type',
 		);
 
 		return $items;
@@ -479,24 +480,24 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 		$menus = new WP_Customize_Nav_Menus( $this->wp_customize );
 
 		$expected = array(
-			array( 'title' => 'Posts', 'type' => 'post_type', 'object' => 'post' ),
-			array( 'title' => 'Pages', 'type' => 'post_type', 'object' => 'page' ),
-			array( 'title' => 'Categories', 'type' => 'taxonomy', 'object' => 'category' ),
-			array( 'title' => 'Tags', 'type' => 'taxonomy', 'object' => 'post_tag' ),
+			array( 'title' => 'Posts', 'type' => 'post_type', 'object' => 'post', 'type_label' => __( 'Post' ) ),
+			array( 'title' => 'Pages', 'type' => 'post_type', 'object' => 'page', 'type_label' => __( 'Page' ) ),
+			array( 'title' => 'Categories', 'type' => 'taxonomy', 'object' => 'category', 'type_label' => __( 'Category' ) ),
+			array( 'title' => 'Tags', 'type' => 'taxonomy', 'object' => 'post_tag', 'type_label' => __( 'Tag' ) ),
 		);
 
 		if ( current_theme_supports( 'post-formats' ) ) {
-			$expected[] = array( 'title' => 'Format', 'type' => 'taxonomy', 'object' => 'post_format' );
+			$expected[] = array( 'title' => 'Format', 'type' => 'taxonomy', 'object' => 'post_format', 'type_label' => __( 'Format' ) );
 		}
 
 		$this->assertEquals( $expected, $menus->available_item_types() );
 
 		register_taxonomy( 'wptests_tax', array( 'post' ), array( 'labels' => array( 'name' => 'Foo' ) ) );
-		$expected[] = array( 'title' => 'Foo', 'type' => 'taxonomy', 'object' => 'wptests_tax' );
+		$expected[] = array( 'title' => 'Foo', 'type' => 'taxonomy', 'object' => 'wptests_tax', 'type_label' => 'Foo' );
 
 		$this->assertEquals( $expected, $menus->available_item_types() );
 
-		$expected[] = array( 'title' => 'Custom', 'type' => 'custom_type', 'object' => 'custom_object' );
+		$expected[] = array( 'title' => 'Custom', 'type' => 'custom_type', 'object' => 'custom_object', 'type_label' => 'Custom Type' );
 
 		add_filter( 'customize_nav_menu_available_item_types', array( $this, 'filter_item_types' ) );
 		$this->assertEquals( $expected, $menus->available_item_types() );
@@ -553,6 +554,7 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 				$this->assertRegExp( '#<h4 class="accordion-section-title".*>\s*' . esc_html( $type->labels->name ) . '#', $template );
 				$this->assertContains( 'data-type="post_type"', $template );
 				$this->assertContains( 'data-object="' . esc_attr( $type->name ) . '"', $template );
+				$this->assertContains( 'data-type_label="' . esc_attr( $type->labels->singular_name ) . '"', $template );
 			}
 		}
 
@@ -563,6 +565,7 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 				$this->assertRegExp( '#<h4 class="accordion-section-title".*>\s*' . esc_html( $tax->labels->name ) . '#', $template );
 				$this->assertContains( 'data-type="taxonomy"', $template );
 				$this->assertContains( 'data-object="' . esc_attr( $tax->name ) . '"', $template );
+				$this->assertContains( 'data-type_label="' . esc_attr( $tax->labels->singular_name ) . '"', $template );
 			}
 		}
 
@@ -570,6 +573,7 @@ class Test_WP_Customize_Nav_Menus extends WP_UnitTestCase {
 		$this->assertRegExp( '#<h4 class="accordion-section-title".*>\s*Custom#', $template );
 		$this->assertContains( 'data-type="custom_type"', $template );
 		$this->assertContains( 'data-object="custom_object"', $template );
+		$this->assertContains( 'data-type_label="Custom Type"', $template );
 	}
 
 	/**
