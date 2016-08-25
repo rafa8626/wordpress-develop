@@ -392,8 +392,6 @@ final class WP_Customize_Nav_Menus {
 				'reorderModeOff'    => __( 'Reorder mode closed' ),
 				'reorderLabelOn'    => esc_attr__( 'Reorder menu items' ),
 				'reorderLabelOff'   => esc_attr__( 'Close reorder mode' ),
-				/* translators: %1$s: post type, %2$s: post title, %3$s: link to edit post */
-				'newPostPublished'  => __( 'New %1$s %2$s published. Edit it <a href="%3$s" target="_blank">here<span class="screen-reader-text"> (link opens in new tab)</span></a>.' ),
 			),
 			'settingTransport'     => 'postMessage',
 			'phpIntMax'            => PHP_INT_MAX,
@@ -402,7 +400,6 @@ final class WP_Customize_Nav_Menus {
 				'nav_menu_item' => $temp_nav_menu_item_setting->default,
 			),
 			'locationSlugMappedToName' => get_registered_nav_menus(),
-			'editPostURL'          => admin_url( 'post.php?post=%d&action=edit' ),
 		);
 
 		$data = sprintf( 'var _wpCustomizeNavMenusSettings = %s;', wp_json_encode( $settings ) );
