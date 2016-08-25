@@ -551,7 +551,7 @@ function wp_kses_one_attr( $string, $element ) {
 	$allowed_protocols = wp_allowed_protocols();
 	$string = wp_kses_no_null( $string, array( 'slash_zero' => 'keep' ) );
 	$string = wp_kses_js_entities( $string );
-
+	
 	// Preserve leading and trailing whitespace.
 	$matches = array();
 	preg_match('/^\s*/', $string, $matches);
@@ -563,7 +563,7 @@ function wp_kses_one_attr( $string, $element ) {
 	} else {
 		$string = substr( $string, strlen( $lead ), -strlen( $trail ) );
 	}
-
+	
 	// Parse attribute name and value from input.
 	$split = preg_split( '/\s*=\s*/', $string, 2 );
 	$name = $split[0];
@@ -600,7 +600,7 @@ function wp_kses_one_attr( $string, $element ) {
 		$value = '';
 		$vless = 'y';
 	}
-
+	
 	// Sanitize attribute by name.
 	wp_kses_attr_check( $name, $value, $string, $vless, $element, $allowed_html );
 
@@ -1063,7 +1063,7 @@ function wp_kses_attr_parse( $element ) {
 	} else {
 		$xhtml_slash = '';
 	}
-
+	
 	// Split it
 	$attrarr = wp_kses_hair_parse( $attr );
 	if ( false === $attrarr ) {
@@ -1073,7 +1073,7 @@ function wp_kses_attr_parse( $element ) {
 	// Make sure all input is returned by adding front and back matter.
 	array_unshift( $attrarr, $begin . $slash . $elname );
 	array_push( $attrarr, $xhtml_slash . $end );
-
+	
 	return $attrarr;
 }
 
@@ -1714,88 +1714,74 @@ function safecss_filter_attr( $css, $deprecated = '' ) {
 	 * @param array $attr List of allowed CSS attributes.
 	 */
 	$allowed_attr = apply_filters( 'safe_style_css', array(
-		'-moz-box-flex',
-		'-moz-box-ordinal-group',
-		'-ms-flex',
-		'-ms-flex-order',
-		'-webkit-box-flex',
-		'-webkit-box-ordinal-group',
-		'-webkit-flex',
-		'-webkit-order',
-		'align-content',
-		'align-items',
-		'align-self',
 		'background',
 		'background-color',
+
 		'border',
-		'border-bottom',
-		'border-bottom-color',
-		'border-bottom-style',
-		'border-bottom-width',
-		'border-collapse',
+		'border-width',
 		'border-color',
-		'border-left',
-		'border-left-color',
-		'border-left-style',
-		'border-left-width',
+		'border-style',
 		'border-right',
 		'border-right-color',
 		'border-right-style',
 		'border-right-width',
-		'border-spacing',
-		'border-style',
+		'border-bottom',
+		'border-bottom-color',
+		'border-bottom-style',
+		'border-bottom-width',
+		'border-left',
+		'border-left-color',
+		'border-left-style',
+		'border-left-width',
 		'border-top',
 		'border-top-color',
 		'border-top-style',
 		'border-top-width',
-		'border-width',
+
+		'border-spacing',
+		'border-collapse',
 		'caption-side',
-		'clear',
+
 		'color',
-		'cursor',
-		'direction',
-		'display',
-		'flex',
-		'flex',
-		'flex-basis',
-		'flex-direction',
-		'flex-flow',
-		'flex-grow',
-		'flex-shrink',
-		'flex-wrap',
-		'float',
 		'font',
 		'font-family',
 		'font-size',
 		'font-style',
 		'font-variant',
 		'font-weight',
-		'height',
-		'justify-content',
 		'letter-spacing',
 		'line-height',
-		'list-style-type',
-		'margin',
-		'margin-bottom',
-		'margin-left',
-		'margin-right',
-		'margin-top',
-		'max-height',
-		'max-width',
-		'min-height',
-		'min-width',
-		'order',
-		'overflow',
-		'padding',
-		'padding-bottom',
-		'padding-left',
-		'padding-right',
-		'padding-top',
-		'text-align',
 		'text-decoration',
 		'text-indent',
-		'vertical-align',
+		'text-align',
+
+		'height',
+		'min-height',
+		'max-height',
+
 		'width',
+		'min-width',
+		'max-width',
+
+		'margin',
+		'margin-right',
+		'margin-bottom',
+		'margin-left',
+		'margin-top',
+
+		'padding',
+		'padding-right',
+		'padding-bottom',
+		'padding-left',
+		'padding-top',
+
+		'clear',
+		'cursor',
+		'direction',
+		'float',
+		'overflow',
+		'vertical-align',
+		'list-style-type',
 	) );
 
 	if ( empty($allowed_attr) )
