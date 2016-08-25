@@ -400,7 +400,7 @@
 
 		// Adjust the height of each section of items to fit the screen.
 		itemSectionHeight: function() {
-			var sections, lists, totalHeight, accordionHeight, diff, totalWidth, button, buttonWidth;
+			var sections, lists, totalHeight, accordionHeight, diff;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section:not( #available-menu-items-search ) .accordion-section-content' );
 			lists = this.$el.find( '.accordion-section:not( #available-menu-items-search ) .available-menu-items-list:not(":only-child")' );
