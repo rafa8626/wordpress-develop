@@ -766,7 +766,7 @@ final class WP_Customize_Nav_Menus {
 		}
 
 		$post_type_object = get_post_type_object( $params['post_type'] );
-		if ( ! $post_type_object || ! current_user_can( $post_type_object->cap->create_posts ) ) {
+		if ( ! $post_type_object || ! current_user_can( $post_type_object->cap->create_posts ) || ! current_user_can( $post_type_object->cap->publish_posts ) ) {
 			status_header( 403 );
 			wp_send_json_error( 'insufficient_post_permissions' );
 		}
