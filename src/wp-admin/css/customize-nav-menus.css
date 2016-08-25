@@ -587,15 +587,6 @@
 	flex-grow: 1;
 }
 
-#available-menu-items .new-content-item .add-content:before {
-	content: "\f543";
-	font: 20px/16px dashicons;
-	position: relative;
-	display: inline-block;
-	top: 5px;
-	left: -2px;
-}
-
 #available-menu-items .menu-item-tpl {
 	margin: 0;
 }
