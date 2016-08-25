@@ -907,7 +907,7 @@ final class WP_Customize_Nav_Menus {
 			/**
 			 * Filter the content types that do not allow new items to be created from nav menus.
 			 *
-			 * Types are formated as 'post_type'|'taxonomy' _ post_type_name; for example, 'taxonomy_post_format'.
+			 * Types are formatted as 'post_type'|'taxonomy' _ post_type_name; for example, 'taxonomy_post_format'.
 			 * Taxonomies are not yet supported by this UI but will be in the future. Post types are only available
 			 * here if `show_in_nav_menus` is true.
 			 *
@@ -945,7 +945,7 @@ final class WP_Customize_Nav_Menus {
 								</div>
 							<?php endif; ?>
 						<?php endif; ?>
-						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( $available_item_type['type_label'] ); ?>"></ul>
+						<ul class="available-menu-items-list" data-type="<?php echo esc_attr( $available_item_type['type'] ); ?>" data-object="<?php echo esc_attr( $available_item_type['object'] ); ?>" data-type_label="<?php echo esc_attr( isset( $available_item_type['type_label'] ) ? $available_item_type['type_label'] : $available_item_type['type'] ); ?>"></ul>
 					</div>
 				</div>
 				<?php
