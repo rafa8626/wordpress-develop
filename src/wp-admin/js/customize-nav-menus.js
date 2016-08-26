@@ -556,25 +556,25 @@
 				post_type: itemObject
 			} );
 			promise.done( function( data ) {
-				var menuItem = {
+				var availableItem, $content, itemTemplate;
+				availableItem = new api.Menus.AvailableItemModel( {
+					'id': 'post-' + data.post_id, // Used for available menu item Backbone models.
 					'title': itemName.val(),
 					'type': itemType,
 					'type_label': itemTypeLabel,
 					'object': itemObject,
 					'object_id': data.post_id,
 					'url': data.url
-				}, availableItems, $content, itemTemplate;
+				} );
 
 				// Add new item to menu.
-				panel.currentMenuControl.addItemToMenu( menuItem );
+				panel.currentMenuControl.addItemToMenu( availableItem.attributes );
 
 				// Add the new item to the list of available items.
-				menuItem.id = 'post-' + data.postId; // `id` is used for available menu item Backbone models.
-				availableItems = new api.Menus.AvailableItemCollection( [ menuItem ] );
-				api.Menus.availableMenuItemsPanel.collection.add( availableItems.models );
-				$content = container.find( '.available-menu-items-list' ),
+				api.Menus.availableMenuItemsPanel.collection.add( availableItem );
+				$content = container.find( '.available-menu-items-list' );
 				itemTemplate = wp.template( 'available-menu-item' );
-				$content.prepend( itemTemplate( menuItem ) );
+				$content.prepend( itemTemplate( availableItem.attributes ) );
 				$content.scrollTop();
 
 				// Reset the create content form.
