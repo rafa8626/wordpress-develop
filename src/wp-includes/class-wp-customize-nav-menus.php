@@ -1051,7 +1051,7 @@ final class WP_Customize_Nav_Menus {
 			if ( ! $post_type_obj ) {
 				continue;
 			}
-			if ( ! current_user_can( $post_type_obj->cap->publish_posts ) ) {
+			if ( ! current_user_can( $post_type_obj->cap->publish_posts ) || ! current_user_can( $post_type_obj->cap->edit_post, $post_id ) ) {
 				continue;
 			}
 			$post_ids[] = $post->ID;
