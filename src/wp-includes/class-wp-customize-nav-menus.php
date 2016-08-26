@@ -748,7 +748,7 @@ final class WP_Customize_Nav_Menus {
 	 * @since 4.7.0
 	 */
 	public function ajax_insert_auto_draft_post() {
-		if ( ! check_ajax_referer( 'customize-menus', 'customize-menus-nonce' ) ) {
+		if ( ! check_ajax_referer( 'customize-menus', 'customize-menus-nonce', false ) ) {
 			status_header( 400 );
 			wp_send_json_error( 'bad_nonce' );
 		}
@@ -774,13 +774,13 @@ final class WP_Customize_Nav_Menus {
 			array( 'post_type', 'post_title' )
 		);
 
-		if ( empty( $params['post_type'] ) ) {
+		if ( empty( $params['post_type'] ) || ! post_type_exists( $params['post_type'] ) ) {
 			status_header( 400 );
 			wp_send_json_error( 'missing_post_type_param' );
 		}
 
 		$post_type_object = get_post_type_object( $params['post_type'] );
-		if ( ! $post_type_object || ! current_user_can( $post_type_object->cap->create_posts ) || ! current_user_can( $post_type_object->cap->publish_posts ) ) {
+		if ( ! current_user_can( $post_type_object->cap->create_posts ) || ! current_user_can( $post_type_object->cap->publish_posts ) ) {
 			status_header( 403 );
 			wp_send_json_error( 'insufficient_post_permissions' );
 		}
