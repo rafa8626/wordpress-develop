@@ -87,7 +87,7 @@
 	 *
 	 * @param {object} params - Parameters for the draft post to create.
 	 * @param {string} params.post_type - Post type to add.
-	 * @param {number} params.title - Post title to use.
+	 * @param {string} params.post_title - Post title to use.
 	 * @return {jQuery.promise} Promise resolved with the added post.
 	 */
 	api.Menus.insertAutoDraftPost = function insertAutoDraftPost( params ) {
@@ -100,9 +100,9 @@
 		} );
 
 		request.done( function( response ) {
-			if ( response.postId ) {
+			if ( response.post_id ) {
 				deferred.resolve( response );
-				api.Menus.insertedAutoDrafts.push( response.postId );
+				api.Menus.insertedAutoDrafts.push( response.post_id );
 				api( 'nav_menus_created_posts' ).set( _.clone( api.Menus.insertedAutoDrafts ) );
 			}
 		} );
@@ -553,8 +553,7 @@
 			itemName.attr( 'disabled', 'disabled' );
 			promise = api.Menus.insertAutoDraftPost( {
 				post_title: title,
-				post_type: itemObject,
-				post_status: 'publish'
+				post_type: itemObject
 			} );
 			promise.done( function( data ) {
 				var menuItem = {
@@ -562,7 +561,7 @@
 					'type': itemType,
 					'type_label': itemTypeLabel,
 					'object': itemObject,
-					'object_id': data.postId,
+					'object_id': data.post_id,
 					'url': data.url
 				}, availableItems, $content, itemTemplate;
 

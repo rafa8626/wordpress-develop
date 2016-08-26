@@ -708,26 +708,31 @@ final class WP_Customize_Nav_Menus {
 	 * @access public
 	 * @since 4.7.0
 	 *
-	 * @param string $post_type The post type.
-	 * @param string $title     The post title.
-	 * @return WP_Post|WP_Error
+	 * @param array $postarr {
+	 *     Abbreviated post array.
+	 *
+	 *     @var string $post_title Post title.
+	 *     @var string $post_type  Post type.
+	 * }
+	 * @return WP_Post|WP_Error Inserted auto-draft post object or error.
 	 */
-	public function insert_auto_draft_post( $post_type, $title ) {
-
-		$post_type_obj = get_post_type_object( $post_type );
-		if ( ! $post_type_obj ) {
+	public function insert_auto_draft_post( $postarr ) {
+		if ( ! isset( $postarr['post_type'] ) || ! post_type_exists( $postarr['post_type'] )  ) {
 			return new WP_Error( 'unknown_post_type', __( 'Unknown post type' ) );
 		}
+		if ( ! isset( $postarr['post_title'] ) ) {
+			$postarr['post_title'] = '';
+		}
 
-		add_filter( 'wp_insert_post_empty_content', '__return_false' );
+		add_filter( 'wp_insert_post_empty_content', '__return_false', 1000 );
 		$args = array(
 			'post_status' => 'auto-draft',
-			'post_type'   => $post_type,
-			'post_title'  => $title,
-			'post_name'  => sanitize_title( $title ), // Auto-drafts are allowed to have empty post_names, so we need to explicitly set it.
+			'post_type'   => $postarr['post_type'],
+			'post_title'  => $postarr['post_title'],
+			'post_name'   => sanitize_title( $postarr['post_title'] ), // Auto-drafts are allowed to have empty post_names, so we need to explicitly set it.
 		);
 		$r = wp_insert_post( wp_slash( $args ), true );
-		remove_filter( 'wp_insert_post_empty_content', '__return_false' );
+		remove_filter( 'wp_insert_post_empty_content', '__return_false', 1000 );
 
 		if ( is_wp_error( $r ) ) {
 			return $r;
@@ -758,7 +763,16 @@ final class WP_Customize_Nav_Menus {
 			wp_send_json_error( 'missing_params' );
 		}
 
-		$params = wp_unslash( $_POST['params'] );
+		$params = wp_array_slice_assoc(
+			array_merge(
+				array(
+					'post_type' => '',
+					'post_title' => '',
+				),
+				wp_unslash( $_POST['params'] )
+			),
+			array( 'post_type', 'post_title' )
+		);
 
 		if ( empty( $params['post_type'] ) ) {
 			status_header( 400 );
@@ -771,11 +785,13 @@ final class WP_Customize_Nav_Menus {
 			wp_send_json_error( 'insufficient_post_permissions' );
 		}
 
-		if ( ! $params['title'] ) {
-			$params['title'] = '';
+		$params['post_title'] = trim( $params['post_title'] );
+		if ( '' === $params['post_title'] ) {
+			status_header( 400 );
+			wp_send_json_error( 'missing_post_title' );
 		}
 
-		$r = $this->insert_auto_draft_post( $post_type_object->name, $params['post_title'] );
+		$r = $this->insert_auto_draft_post( $params );
 		if ( is_wp_error( $r ) ) {
 			$error = $r;
 			if ( ! empty( $post_type_object->labels->singular_name ) ) {
@@ -792,8 +808,8 @@ final class WP_Customize_Nav_Menus {
 		} else {
 			$post = $r;
 			$data = array(
-				'postId' => $post->ID,
-				'url'    => get_permalink( $post->ID ),
+				'post_id' => $post->ID,
+				'url'     => get_permalink( $post->ID ),
 			);
 			wp_send_json_success( $data );
 		}
