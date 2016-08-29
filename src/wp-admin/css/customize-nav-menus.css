@@ -625,10 +625,10 @@
 
 #available-menu-items-search .clear-results {
 	position: absolute;
-	top: 18px; /* 12 container padding +1 input margin +1 input border +4 ( 4 is ( 28 input height - 20 button height ) / 2 ) */
-	right: 20px;
-	width: 20px;
-	height: 20px;
+	top: 13px; /* 12 container padding +1 input margin +1 input border +4 ( 4 is ( 28 input height - 20 button height ) / 2 ) */
+	right: 15px;
+	width: 30px;
+	height: 30px;
 	padding: 0;
 	border: 0;
 	cursor: pointer;

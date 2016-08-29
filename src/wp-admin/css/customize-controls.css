@@ -1422,8 +1422,40 @@ body.adding-widget .add-new-widget:before,
 
 #available-widgets-filter input,
 #available-menu-items-search input {
-	padding: 6px 10px;
+	padding: 6px 10px 6px 30px;
 	width: 100%;
+}
+
+#available-menu-items-search input {
+	padding-right: 30px;
+}
+
+#available-menu-items-search input::-ms-clear {
+	display: none; /* remove the "x" in IE, which conflicts with the "x" icon on button.clear-results */
+}
+
+#available-menu-items-search .search-icon,
+#available-widgets-filter .search-icon {
+	display: block;
+	position: absolute;
+	top: 18px;
+	left: 20px;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	background: none;
+	text-decoration: none;
+	outline: 0;
+}
+
+#available-menu-items-search .search-icon:after,
+#available-widgets-filter .search-icon:after {
+	content: "\f179";
+	font: normal 20px/1 dashicons;
+	vertical-align: middle;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 #available-widgets .widget-top,
