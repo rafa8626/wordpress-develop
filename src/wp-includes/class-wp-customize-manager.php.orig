@@ -260,7 +260,6 @@ final class WP_Customize_Manager {
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_panel_templates' ), 1 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_section_templates' ), 1 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_control_templates' ), 1 );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_error_notification_templates' ), 1 );
 
 		// Export the settings to JS via the _wpCustomizeSettings variable.
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customize_pane_settings' ), 1000 );
@@ -2277,34 +2276,6 @@ final class WP_Customize_Manager {
 				'type'       => 'dropdown-pages',
 			) );
 		}
-
-		// This is only for demonstration purpose
-		$this->add_section( 'test-errors', array(
-			'title'          => __( 'Test error notification' ),
-			'priority'       => 10,
-		) );
-		$this->add_setting( 'test_errors_trigger', array(
-			'type'          => 'option',
-			'transport'     => 'postMessage',
-		) );
-		$this->add_control( 'test_errors_trigger', array(
-			'label'    => __( 'Enter a message to trigger an error' ),
-			'setting'  => 'test_errors_trigger',
-			'section'  => 'test-errors',
-		) );
-
-		add_filter( 'pre_update_option_test_errors_trigger', array( $this, 'send_test_error' ) );
-	}
-
-	public function send_test_error( $value ){
-		// if an error message has been entered, trigger the test error
-		if( trim($value) != '' ){
-			wp_send_json_error( array(
-				'error_code' => 'test-error-code',
-				'error_message' => $value,
-			) );
-		}
-		return $value;
 	}
 
 	/**
@@ -2359,16 +2330,5 @@ final class WP_Customize_Manager {
 	 */
 	public function _render_custom_logo_partial() {
 		return get_custom_logo();
-	}
-	
-	public function render_error_notification_templates(){
-		?><script type="text/html" id="tmpl-error-notification">
-			<div class="notice is-dismissible error {{ data.error_code }}">
-				<p>{{ data.error_message }}</p>
-				<button type="button" class="notice-dismiss">
-					<span class="screen-reader-text"><?php _e( 'Dismiss this notice' ); ?>.</span>
-				</button>
-			</div>
-		</script><?php
 	}
 }

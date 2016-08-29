@@ -25,12 +25,17 @@ body {
 
 #customize-header-actions .button-primary {
 	float: right;
+	position: relative;
+	top: 0;
 	margin-top: 9px;
+	margin-right: 15px;
 }
 
 #customize-header-actions .spinner {
 	margin-top: 13px;
 	margin-right: 4px;
+	position: relative;
+	top: -45px;
 }
 
 .saving #customize-header-actions .spinner {
@@ -39,6 +44,16 @@ body {
 
 #customize-header-actions {
 	border-bottom: 1px solid #ddd;
+	padding-top: 0;
+}
+
+#customize-header-actions .notice {
+	margin-top: 46px;
+	margin-bottom: 1px;
+}
+
+#customize-header-actions .notice + .notice {
+	margin-top: 0;
 }
 
 #customize-controls .wp-full-overlay-sidebar-content {

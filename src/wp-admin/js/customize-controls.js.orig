@@ -3744,13 +3744,6 @@
 								self.save();
 								self.preview.iframe.show();
 							} );
-						} else if( response && response.error_code != undefined ){
-							// inject the error notification div 
-							var template = wp.template('error-notification');
-							$( '#customize-header-actions' ).append( template( response ) );
-
-							// trigger the event that make notices dismissible
-							$(document).trigger( 'wp-plugin-update-error' );
 						}
 
 						if ( response.setting_validities ) {
