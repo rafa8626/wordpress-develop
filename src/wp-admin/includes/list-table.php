@@ -40,9 +40,6 @@ function _get_list_table( $class, $args = array() ) {
 	);
 
 	if ( isset( $core_classes[ $class ] ) ) {
-		foreach ( (array) $core_classes[ $class ] as $required )
-			require_once( ABSPATH . 'wp-admin/includes/class-wp-' . $required . '-list-table.php' );
-
 		if ( isset( $args['screen'] ) )
 			$args['screen'] = convert_to_screen( $args['screen'] );
 		elseif ( isset( $GLOBALS['hook_suffix'] ) )
@@ -81,49 +78,4 @@ function print_column_headers( $screen, $with_id = true ) {
 	$wp_list_table = new _WP_List_Table_Compat($screen);
 
 	$wp_list_table->print_column_headers( $with_id );
-}
-
-/**
- * Helper class to be used only by back compat functions
- *
- * @since 3.1.0
- */
-class _WP_List_Table_Compat extends WP_List_Table {
-	public $_screen;
-	public $_columns;
-
-	public function __construct( $screen, $columns = array() ) {
-		if ( is_string( $screen ) )
-			$screen = convert_to_screen( $screen );
-
-		$this->_screen = $screen;
-
-		if ( !empty( $columns ) ) {
-			$this->_columns = $columns;
-			add_filter( 'manage_' . $screen->id . '_columns', array( $this, 'get_columns' ), 0 );
-		}
-	}
-
-	/**
-	 * @access protected
-	 *
-	 * @return array
-	 */
-	protected function get_column_info() {
-		$columns = get_column_headers( $this->_screen );
-		$hidden = get_hidden_columns( $this->_screen );
-		$sortable = array();
-		$primary = $this->get_default_primary_column_name();
-
-		return array( $columns, $hidden, $sortable, $primary );
-	}
-
-	/**
-	 * @access public
-	 *
-	 * @return array
-	 */
-	public function get_columns() {
-		return $this->_columns;
-	}
 }

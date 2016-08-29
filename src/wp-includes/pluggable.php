@@ -211,7 +211,6 @@ function wp_mail( $to, $subject, $message, $headers = '', $attachments = array()
 	// (Re)create it, if it's gone missing
 	if ( ! ( $phpmailer instanceof PHPMailer ) ) {
 		require_once ABSPATH . WPINC . '/class-phpmailer.php';
-		require_once ABSPATH . WPINC . '/class-smtp.php';
 		$phpmailer = new PHPMailer( true );
 	}
 
@@ -1081,6 +1080,10 @@ if ( !function_exists('check_ajax_referer') ) :
  *                   0-12 hours ago, 2 if the nonce is valid and generated between 12-24 hours ago.
  */
 function check_ajax_referer( $action = -1, $query_arg = false, $die = true ) {
+	if ( -1 == $action ) {
+		_doing_it_wrong( __FUNCTION__, __( 'You should specify a nonce action to be verified by using the first parameter.' ), '4.7' );
+	}
+
 	$nonce = '';
 
 	if ( $query_arg && isset( $_REQUEST[ $query_arg ] ) )
@@ -1105,7 +1108,7 @@ function check_ajax_referer( $action = -1, $query_arg = false, $die = true ) {
 
 	if ( $die && false === $result ) {
 		if ( wp_doing_ajax() ) {
-			wp_die( -1 );
+			wp_die( -1, 403 );
 		} else {
 			die( '-1' );
 		}
@@ -1128,7 +1131,7 @@ if ( !function_exists('wp_redirect') ) :
  * Exiting can also be selectively manipulated by using wp_redirect() as a conditional
  * in conjunction with the {@see 'wp_redirect'} and {@see 'wp_redirect_location'} hooks:
  *
- *     if ( wp_redirect( $url ) {
+ *     if ( wp_redirect( $url ) ) {
  *         exit;
  *     }
  *
@@ -1739,7 +1742,6 @@ function wp_new_user_notification( $user_id, $deprecated = null, $notify = '' ) 
 
 	// Now insert the key, hashed, into the DB.
 	if ( empty( $wp_hasher ) ) {
-		require_once ABSPATH . WPINC . '/class-phpass.php';
 		$wp_hasher = new PasswordHash( 8, true );
 	}
 	$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
@@ -2014,7 +2016,6 @@ function wp_hash_password($password) {
 	global $wp_hasher;
 
 	if ( empty($wp_hasher) ) {
-		require_once( ABSPATH . WPINC . '/class-phpass.php');
 		// By default, use the portable hash from phpass
 		$wp_hasher = new PasswordHash(8, true);
 	}
@@ -2074,7 +2075,6 @@ function wp_check_password($password, $hash, $user_id = '') {
 	// If the stored hash is longer than an MD5, presume the
 	// new style phpass portable hash.
 	if ( empty($wp_hasher) ) {
-		require_once( ABSPATH . WPINC . '/class-phpass.php');
 		// By default, use the portable hash from phpass
 		$wp_hasher = new PasswordHash(8, true);
 	}

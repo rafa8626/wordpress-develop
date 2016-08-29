@@ -16,17 +16,8 @@
  * @package WordPress
  */
 
-/** WordPress Dependencies Class */
-require( ABSPATH . WPINC . '/class.wp-dependencies.php' );
-
-/** WordPress Scripts Class */
-require( ABSPATH . WPINC . '/class.wp-scripts.php' );
-
 /** WordPress Scripts Functions */
 require( ABSPATH . WPINC . '/functions.wp-scripts.php' );
-
-/** WordPress Styles Class */
-require( ABSPATH . WPINC . '/class.wp-styles.php' );
 
 /** WordPress Styles Functions */
 require( ABSPATH . WPINC . '/functions.wp-styles.php' );
@@ -563,7 +554,7 @@ function wp_default_scripts( &$scripts ) {
 			'suggestedImgAlt' => __( 'Suggested image #%d' ),
 		) );
 
-		$scripts->add( 'editor-expand', "/wp-admin/js/editor-expand$suffix.js", array( 'jquery' ), false, 1 );
+		$scripts->add( 'editor-expand', "/wp-admin/js/editor-expand$suffix.js", array( 'jquery', 'underscore' ), false, 1 );
 
 		$scripts->add( 'link', "/wp-admin/js/link$suffix.js", array( 'wp-lists', 'postbox' ), false, 1 );
 

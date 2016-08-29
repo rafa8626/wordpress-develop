@@ -5,8 +5,6 @@
  * @package WordPress
  */
 
-require( ABSPATH . WPINC . '/option.php' );
-
 /**
  * Convert given date string into a different format.
  *
@@ -563,8 +561,6 @@ function do_enclose( $content, $post_ID ) {
 	global $wpdb;
 
 	//TODO: Tidy this ghetto code up and make the debug code optional
-	include_once( ABSPATH . WPINC . '/class-IXR.php' );
-
 	$post_links = array();
 
 	$pung = get_enclosed( $post_ID );
@@ -2865,9 +2861,19 @@ function _xmlrpc_wp_die_handler( $message, $title = '', $args = array() ) {
  * @since 3.4.0
  * @access private
  *
- * @param string $message Optional. Response to print. Default empty.
- */
-function _ajax_wp_die_handler( $message = '' ) {
+ * @param string       $message Error message. 
+ * @param string       $title   Optional. Error title (unused). Default empty. 
+ * @param string|array $args    Optional. Arguments to control behavior. Default empty array. 
+ */ 
+function _ajax_wp_die_handler( $message, $title = '', $args = array() ) { 
+	$defaults = array( 
+		'response' => 200, 
+	); 
+	$r = wp_parse_args( $args, $defaults ); 
+
+	if ( ! headers_sent() ) { 
+		status_header( $r['response'] ); 
+	}
 	if ( is_scalar( $message ) )
 		die( (string) $message );
 	die( '0' );
@@ -3084,12 +3090,15 @@ function _wp_json_prepare_data( $data ) {
  * Send a JSON response back to an Ajax request.
  *
  * @since 3.5.0
+ * @since 4.7.0 The `$status_code` parameter was added.
  *
- * @param mixed $response Variable (usually an array or object) to encode as JSON,
- *                        then print and die.
+ * @param mixed $response    Variable (usually an array or object) to encode as JSON,
+ *                           then print and die.
+ * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json( $response ) {
+function wp_send_json( $response, $status_code = 200 ) {
 	@header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+	status_header( $status_code );
 	echo wp_json_encode( $response );
 	if ( wp_doing_ajax() )
 		wp_die();
@@ -3101,16 +3110,18 @@ function wp_send_json( $response ) {
  * Send a JSON response back to an Ajax request, indicating success.
  *
  * @since 3.5.0
+ * @since 4.7.0 The `$status_code` parameter was added.
  *
- * @param mixed $data Data to encode as JSON, then print and die.
+ * @param mixed $data        Data to encode as JSON, then print and die.
+ * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json_success( $data = null ) {
+function wp_send_json_success( $data = null, $status_code = 200 ) {
 	$response = array( 'success' => true );
 
 	if ( isset( $data ) )
 		$response['data'] = $data;
 
-	wp_send_json( $response );
+	wp_send_json( $response, $status_code );
 }
 
 /**
@@ -3123,10 +3134,12 @@ function wp_send_json_success( $data = null ) {
  *
  * @since 3.5.0
  * @since 4.1.0 The `$data` parameter is now processed if a WP_Error object is passed in.
+ * @since 4.7.0 The `$status_code` parameter was added.
  *
- * @param mixed $data Data to encode as JSON, then print and die.
+ * @param mixed $data        Data to encode as JSON, then print and die.
+ * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json_error( $data = null ) {
+function wp_send_json_error( $data = null, $status_code = 200 ) {
 	$response = array( 'success' => false );
 
 	if ( isset( $data ) ) {
@@ -3144,7 +3157,7 @@ function wp_send_json_error( $data = null ) {
 		}
 	}
 
-	wp_send_json( $response );
+	wp_send_json( $response, $status_code );
 }
 
 /**
@@ -3220,28 +3233,29 @@ function _config_wp_siteurl( $url = '' ) {
  * Fills in the 'directionality' setting, enables the 'directionality'
  * plugin, and adds the 'ltr' button to 'toolbar1', formerly
  * 'theme_advanced_buttons1' array keys. These keys are then returned
- * in the $input (TinyMCE settings) array.
+ * in the $mce_init (TinyMCE settings) array.
  *
  * @since 2.1.0
  * @access private
  *
- * @param array $input MCE settings array.
+ * @param array $mce_init MCE settings array.
  * @return array Direction set for 'rtl', if needed by locale.
  */
-function _mce_set_direction( $input ) {
+function _mce_set_direction( $mce_init ) {
 	if ( is_rtl() ) {
-		$input['directionality'] = 'rtl';
+		$mce_init['directionality'] = 'rtl';
+		$mce_init['rtl_ui'] = true;
 
-		if ( ! empty( $input['plugins'] ) && strpos( $input['plugins'], 'directionality' ) === false ) {
-			$input['plugins'] .= ',directionality';
+		if ( ! empty( $mce_init['plugins'] ) && strpos( $mce_init['plugins'], 'directionality' ) === false ) {
+			$mce_init['plugins'] .= ',directionality';
 		}
 
-		if ( ! empty( $input['toolbar1'] ) && ! preg_match( '/\bltr\b/', $input['toolbar1'] ) ) {
-			$input['toolbar1'] .= ',ltr';
+		if ( ! empty( $mce_init['toolbar1'] ) && ! preg_match( '/\bltr\b/', $mce_init['toolbar1'] ) ) {
+			$mce_init['toolbar1'] .= ',ltr';
 		}
 	}
 
-	return $input;
+	return $mce_init;
 }
 
 
@@ -4276,23 +4290,19 @@ function wp_suspend_cache_invalidation( $suspend = true ) {
  *
  * @since 3.0.0
  *
- * @global object $current_site
- *
  * @param int $site_id Optional. Site ID to test. Defaults to current site.
  * @return bool True if $site_id is the main site of the network, or if not
  *              running Multisite.
  */
 function is_main_site( $site_id = null ) {
-	// This is the current network's information; 'site' is old terminology.
-	global $current_site;
-
-	if ( ! is_multisite() )
+	if ( ! is_multisite() ) {
 		return true;
+	}
 
-	if ( ! $site_id )
+	if ( ! $site_id ) {
 		$site_id = get_current_blog_id();
-
-	return (int) $site_id === (int) $current_site->blog_id;
+	}
+	return (int) $site_id === (int) get_current_site()->blog_id;
 }
 
 /**

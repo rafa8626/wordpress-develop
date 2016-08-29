@@ -479,7 +479,6 @@ class WP_Press_This {
 			// Embedded Daily Motion videos
 			$src = 'https://www.dailymotion.com/video/' . $src_matches[2];
 		} else {
-			require_once( ABSPATH . WPINC . '/class-oembed.php' );
 			$oembed = _wp_oembed_get_object();
 
 			if ( ! $oembed->get_provider( $src, array( 'discover' => false ) ) ) {
@@ -1517,9 +1516,3 @@ class WP_Press_This {
 		die();
 	}
 }
-
-/**
- *
- * @global WP_Press_This $wp_press_this
- */
-$GLOBALS['wp_press_this'] = new WP_Press_This;

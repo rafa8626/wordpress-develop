@@ -334,7 +334,7 @@ function wp_debug_mode() {
 		error_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );
 	}
 
-	if ( defined( 'XMLRPC_REQUEST' ) || defined( 'REST_REQUEST' ) || wp_doing_ajax() ) {
+	if ( defined( 'XMLRPC_REQUEST' ) || defined( 'REST_REQUEST' ) || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING ) || wp_doing_ajax() ) {
 		@ini_set( 'display_errors', 0 );
 	}
 }
@@ -394,12 +394,12 @@ function wp_set_lang_dir() {
 function require_wp_db() {
 	global $wpdb;
 
-	require_once( ABSPATH . WPINC . '/wp-db.php' );
 	if ( file_exists( WP_CONTENT_DIR . '/db.php' ) )
 		require_once( WP_CONTENT_DIR . '/db.php' );
 
-	if ( isset( $wpdb ) )
+	if ( isset( $wpdb ) ) {
 		return;
+	}
 
 	$wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
 }
@@ -867,7 +867,7 @@ function wp_load_translations_early() {
 	// Translation and localization
 	require_once ABSPATH . WPINC . '/pomo/mo.php';
 	require_once ABSPATH . WPINC . '/l10n.php';
-	require_once ABSPATH . WPINC . '/locale.php';
+	require_once ABSPATH . WPINC . '/class-wp-locale.php';
 
 	// General libraries
 	require_once ABSPATH . WPINC . '/plugin.php';
@@ -1017,11 +1017,20 @@ function wp_is_ini_value_changeable( $setting ) {
 	static $ini_all;
 
 	if ( ! isset( $ini_all ) ) {
-		$ini_all = ini_get_all();
-	}
+		$ini_all = false;
+		// Sometimes `ini_get_all()` is disabled via the `disable_functions` option for "security purposes".
+		if ( function_exists( 'ini_get_all' ) ) {
+			$ini_all = ini_get_all();
+		}
+ 	}
 
 	// Bit operator to workaround https://bugs.php.net/bug.php?id=44936 which changes access level to 63 in PHP 5.2.6 - 5.2.17.
 	if ( isset( $ini_all[ $setting ]['access'] ) && ( INI_ALL === ( $ini_all[ $setting ]['access'] & 7 ) || INI_USER === ( $ini_all[ $setting ]['access'] & 7 ) ) ) {
+		return true;
+	}
+
+	// If we were unable to retrieve the details, fail gracefully to assume it's changeable.
+	if ( ! is_array( $ini_all ) ) {
 		return true;
 	}
 
@@ -1044,4 +1053,37 @@ function wp_doing_ajax() {
 	 * @param bool $wp_doing_ajax Whether the current request is a WordPress Ajax request.
 	 */
 	return apply_filters( 'wp_doing_ajax', defined( 'DOING_AJAX' ) && DOING_AJAX );
+}
+
+/**
+ * Check whether variable is a WordPress Error.
+ *
+ * Returns true if $thing is an object of the WP_Error class.
+ *
+ * @since 2.1.0
+ *
+ * @param mixed $thing Check if unknown variable is a WP_Error object.
+ * @return bool True, if WP_Error. False, if not WP_Error.
+ */
+function is_wp_error( $thing ) {
+	return ( $thing instanceof WP_Error );
+}
+
+/**
+ * Get the current network.
+ *
+ * Returns an object containing the 'id', 'domain', 'path', and 'site_name'
+ * properties of the network being viewed.
+ *
+ * @see wpmu_current_site()
+ *
+ * @since MU
+ *
+ * @global WP_Network $current_site
+ *
+ * @return WP_Network
+ */
+function get_current_site() {
+	global $current_site;
+	return $current_site;
 }

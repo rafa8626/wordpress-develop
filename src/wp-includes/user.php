@@ -1042,12 +1042,12 @@ function wp_dropdown_users( $args = '' ) {
 	$option_none_value = $r['option_none_value'];
 
 	/**
-	 * Filters the query arguments for the user drop-down.
+	 * Filters the query arguments for the list of users in the dropdown.
 	 *
 	 * @since 4.4.0
 	 *
-	 * @param array $query_args The query arguments for wp_dropdown_users().
-	 * @param array $r          The default arguments for wp_dropdown_users().
+	 * @param array $query_args The query arguments for get_users().
+	 * @param array $r          The arguments passed to wp_dropdown_users() combined with the defaults.
 	 */
 	$query_args = apply_filters( 'wp_dropdown_users_args', $query_args, $r );
 
@@ -2095,7 +2095,6 @@ function get_password_reset_key( $user ) {
 
 	// Now insert the key, hashed, into the DB.
 	if ( empty( $wp_hasher ) ) {
-		require_once ABSPATH . WPINC . '/class-phpass.php';
 		$wp_hasher = new PasswordHash( 8, true );
 	}
 	$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
@@ -2140,7 +2139,6 @@ function check_password_reset_key($key, $login) {
 		return new WP_Error('invalid_key', __('Invalid key'));
 
 	if ( empty( $wp_hasher ) ) {
-		require_once ABSPATH . WPINC . '/class-phpass.php';
 		$wp_hasher = new PasswordHash( 8, true );
 	}
 
