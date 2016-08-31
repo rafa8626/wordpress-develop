@@ -446,7 +446,7 @@ class WP_Customize_Control {
 	 *
 	 * Allows the content to be overriden without having to rewrite the wrapper in `$this::render()`.
 	 *
-	 * Supports basic input types `text`, `checkbox`, `textarea`, `radio`, `select` and `dropdown-pages`.
+	 * Supports basic input types `none`, `text`, `checkbox`, `textarea`, `radio`, `select` and `dropdown-pages`.
 	 * Additional input types such as `email`, `url`, `number`, `hidden` and `date` are supported implicitly.
 	 *
 	 * Control content can alternately be rendered in JS. See WP_Customize_Control::print_template().
@@ -455,6 +455,14 @@ class WP_Customize_Control {
 	 */
 	protected function render_content() {
 		switch( $this->type ) {
+			case 'none':
+					if ( ! empty( $this->label ) ) : ?>
+						<span class="customize-control-title"><?php echo esc_html( $this->label ); ?></span>
+					<?php endif;
+					if ( ! empty( $this->description ) ) : ?>
+						<span class="description customize-control-description"><?php echo $this->description; ?></span>
+					<?php endif;
+				break;
 			case 'checkbox':
 				?>
 				<label>

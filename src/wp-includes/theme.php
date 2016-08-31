@@ -1400,6 +1400,33 @@ body.custom-background { <?php echo trim( $style ); ?> }
 <?php
 }
 
+
+/**
+ * Render custom CSS.
+ *
+ * @since 4.7.0
+ */
+function wp_custom_css_cb() {
+	$styles = get_theme_mod( 'wp_custom_css' );
+	if ( $styles ) :
+?>
+	<style type="text/css" id="wp-custom-css">
+		<?php echo $styles; ?>
+	</style>
+<?php
+	endif;
+}
+
+/**
+ * Get custom CSS.
+ *
+ * @return string CSS.
+ * @since 4.7.0
+ */
+function wp_get_custom_css() {
+	return get_theme_mod( 'wp_custom_css', '' );
+}
+
 /**
  * Add callback for custom TinyMCE editor stylesheets.
  *

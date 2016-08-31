@@ -235,6 +235,12 @@
 			$( 'body' ).toggleClass( 'wp-custom-logo', !! setting.get() );
 			setting.bind( function( attachmentId ) {
 				$( 'body' ).toggleClass( 'wp-custom-logo', !! attachmentId );
+			});
+		});
+
+		api( 'wp_custom_css', function( value ) {
+			value.bind( function( to ) {
+				$( '#wp-custom-css' ).html( to );
 			} );
 		} );
 

@@ -534,6 +534,13 @@ p.customize-section-description {
 	margin-bottom: 5px;
 }
 
+.customize-control-description a.external-link:after {
+    font: 16px/11px dashicons;
+    content: "\f310";
+    top: 3px;
+    position: relative;
+}
+
 .customize-control-color .color-picker,
 .customize-control-upload div {
 	line-height: 28px;
