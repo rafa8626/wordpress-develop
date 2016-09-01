@@ -1941,6 +1941,7 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
+		$this->register_control_type( 'WP_Customize_Code_Editor_Control' );
 
 		/* Themes */
 
@@ -2279,20 +2280,32 @@ final class WP_Customize_Manager {
 
 		/* Custom CSS */
 
+
+
 		$this->add_section( 'custom_css', array(
 			'title'    => __( 'Custom CSS' ),
 			'priority' => 140,
 		) );
 
 		$this->add_setting( 'wp_custom_css' , array(
-			'type'              => 'theme_mod',
+			'type'              => 'option',
 			'transport'         => 'postMessage',
 			'sanitize_callback' => array( $this, '_sanitize_css' ),
 			'validate_callback' => array( $this, '_validate_css' ),
 		) );
 
+
+		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'custom_css', array(
+			'section'=> 'custom_css',
+			'settings' => 'wp_custom_css',
+			'type' => 'code_editor',
+			'label' => __( 'Custom CSS - NEW' ),
+			'description' => __( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis. <a href="https://codex.wordpress.org/Know_Your_Sources#CSS" class="external-link" target="_blank">Learn more about CSS <span class="screen-reader-text">(link opens in a new window)</span></a>.' ),
+		) ) );
+
+
 		$this->add_control( 'wp_custom_css', array(
-			'label'       => __( 'Custom CSS' ),
+			'label'       => __( 'Custom CSS - OLD' ),
 			'description' => __( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis. <a href="https://codex.wordpress.org/Know_Your_Sources#CSS" class="external-link" target="_blank">Learn more about CSS <span class="screen-reader-text">(link opens in a new window)</span></a>.' ),
 			'type'        => 'textarea',
 			'section'     => 'custom_css',

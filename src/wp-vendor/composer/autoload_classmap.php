@@ -49,6 +49,7 @@ return array(
     'WP_Customize_Color_Control' => $baseDir . '/wp-includes/customize/class-wp-customize-color-control.php',
     'WP_Customize_Control' => $baseDir . '/wp-includes/class-wp-customize-control.php',
     'WP_Customize_Cropped_Image_Control' => $baseDir . '/wp-includes/customize/class-wp-customize-cropped-image-control.php',
+    'WP_Customize_Code_Editor_Control' => $baseDir . '/wp-includes/customize/class-wp-customize-code-editor-control.php',
     'WP_Customize_Filter_Setting' => $baseDir . '/wp-includes/customize/class-wp-customize-filter-setting.php',
     'WP_Customize_Header_Image_Control' => $baseDir . '/wp-includes/customize/class-wp-customize-header-image-control.php',
     'WP_Customize_Header_Image_Setting' => $baseDir . '/wp-includes/customize/class-wp-customize-header-image-setting.php',

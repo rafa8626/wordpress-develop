@@ -725,6 +725,8 @@ function wp_default_scripts( &$scripts ) {
 		$scripts->add( 'media-gallery', "/wp-admin/js/media-gallery$suffix.js", array('jquery'), false, 1 );
 
 		$scripts->add( 'svg-painter', '/wp-admin/js/svg-painter.js', array( 'jquery' ), false, 1 );
+
+		$scripts->add( 'codemirror', '/wp-includes/js/codemirror.js', array(), '3.19.1' );
 	}
 }
 
