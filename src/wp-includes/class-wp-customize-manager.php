@@ -2280,43 +2280,42 @@ final class WP_Customize_Manager {
 
 		/* Custom CSS */
 
-
-
 		$this->add_section( 'custom_css', array(
 			'title'    => __( 'Custom CSS' ),
 			'priority' => 140,
 		) );
 
 		$this->add_setting( 'wp_custom_css' , array(
-			'type'              => 'option',
+			'type'              => 'theme_mod',
 			'transport'         => 'postMessage',
 			'sanitize_callback' => array( $this, '_sanitize_css' ),
 			'validate_callback' => array( $this, '_validate_css' ),
 		) );
 
-
-		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'custom_css', array(
-			'section'=> 'custom_css',
-			'settings' => 'wp_custom_css',
-			'type' => 'code_editor',
-			'label' => __( 'Custom CSS - NEW' ),
-			'description' => __( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis. <a href="https://codex.wordpress.org/Know_Your_Sources#CSS" class="external-link" target="_blank">Learn more about CSS <span class="screen-reader-text">(link opens in a new window)</span></a>.' ),
-		) ) );
-
-
-		$this->add_control( 'wp_custom_css', array(
-			'label'       => __( 'Custom CSS - OLD' ),
-			'description' => __( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis. <a href="https://codex.wordpress.org/Know_Your_Sources#CSS" class="external-link" target="_blank">Learn more about CSS <span class="screen-reader-text">(link opens in a new window)</span></a>.' ),
-			'type'        => 'textarea',
+		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
+			'type'        => 'code_editor',
 			'section'     => 'custom_css',
-		) );
+			'settings'    => 'wp_custom_css',
+			'label'       => __( 'Custom CSS' ),
+			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">(%s)</span></a>.',
+				__( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis.' ),
+				'https://codex.wordpress.org/Know_Your_Sources#CSS',
+				__( 'Learn more about CSS' ),
+				__( 'link opens in a new window' )
+			),
+		) ) );
 
 		if ( ! is_multisite() ) {
 			$this->add_setting( 'wp_custom_css_more', array() );
 			$this->add_control( 'wp_custom_css_more', array(
-				'type' => 'none',
-				'description' => __( 'Enjoy writing custom CSS? <a href="https://developer.wordpress.org/themes/advanced-topics/child-themes/" class="external-link" target="_blank">Take your customizations to the next level with a child theme <span class="screen-reader-text">(link opens in a new window)</span></a>.' ),
+				'type'        => 'none',
 				'section'     => 'custom_css',
+				'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">(%s)</span></a>.',
+					__( 'Enjoy writing custom CSS?' ),
+					'https://developer.wordpress.org/themes/advanced-topics/child-themes/',
+					__( 'Take your customizations to the next level with a child theme' ),
+					__( 'link opens in a new window' )
+				)
 			) );
 		}
 
