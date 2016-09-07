@@ -26,15 +26,16 @@ if ( ! current_user_can( 'update_core' ) && ! current_user_can( 'update_themes' 
  *
  * @global string $wp_local_package
  * @global wpdb   $wpdb
- * @global string $wp_version
  *
  * @staticvar bool $first_pass
  *
  * @param object $update
  */
 function list_core_update( $update ) {
- 	global $wp_local_package, $wpdb, $wp_version;
+ 	global $wp_local_package, $wpdb;
   	static $first_pass = true;
+
+	$wp_version = get_bloginfo( 'version' );
 
  	if ( 'en_US' == $update->locale && 'en_US' == get_locale() )
  		$version_string = $update->current;
@@ -149,13 +150,13 @@ function dismissed_updates() {
  *
  * @since 2.7.0
  *
- * @global string $wp_version
  * @global string $required_php_version
  * @global string $required_mysql_version
  */
 function core_upgrade_preamble() {
-	global $wp_version, $required_php_version, $required_mysql_version;
+	global $required_php_version, $required_mysql_version;
 
+	$wp_version = get_bloginfo( 'version' );
 	$updates = get_core_updates();
 
 	if ( !isset($updates[0]->response) || 'latest' == $updates[0]->response ) {
@@ -163,6 +164,7 @@ function core_upgrade_preamble() {
 		_e('You have the latest version of WordPress.');
 
 		if ( wp_http_supports( array( 'ssl' ) ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 			$upgrader = new WP_Automatic_Updater;
 			$future_minor_update = (object) array(
 				'current'       => $wp_version . '.1.next.minor',
@@ -186,6 +188,7 @@ function core_upgrade_preamble() {
 	}
 
 	if ( isset( $updates[0] ) && $updates[0]->response == 'development' ) {
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 		$upgrader = new WP_Automatic_Updater;
 		if ( wp_http_supports( 'ssl' ) && $upgrader->should_update( 'core', $updates[0], ABSPATH ) ) {
 			echo '<div class="updated inline"><p>';
@@ -211,14 +214,9 @@ function core_upgrade_preamble() {
 	dismissed_updates();
 }
 
-/**
- *
- * @global string $wp_version
- */
 function list_plugin_updates() {
-	global $wp_version;
-
-	$cur_wp_version = preg_replace('/-.*$/', '', $wp_version);
+	$wp_version = get_bloginfo( 'version' );
+	$cur_wp_version = preg_replace( '/-.*$/', '', $wp_version );
 
 	require_once(ABSPATH . 'wp-admin/includes/plugin-install.php');
 	$plugins = get_plugin_updates();
@@ -435,6 +433,8 @@ function list_translation_updates() {
  */
 function do_core_upgrade( $reinstall = false ) {
 	global $wp_filesystem;
+
+	include_once( ABSPATH . 'wp-admin/includes/class-wp-upgrader.php' );
 
 	if ( $reinstall )
 		$url = 'update-core.php?action=do-core-reinstall';
@@ -706,6 +706,7 @@ if ( 'upgrade-core' == $action ) {
 	check_admin_referer( 'upgrade-translations' );
 
 	require_once( ABSPATH . 'wp-admin/admin-header.php' );
+	include_once( ABSPATH . 'wp-admin/includes/class-wp-upgrader.php' );
 
 	$url = 'update-core.php?action=do-translation-upgrade';
 	$nonce = 'upgrade-translations';

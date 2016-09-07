@@ -383,7 +383,7 @@ function wp_registration_url() {
  *     @type string $redirect       URL to redirect to. Must be absolute, as in "https://example.com/mypage/".
  *                                  Default is to redirect back to the request URI.
  *     @type string $form_id        ID attribute value for the form. Default 'loginform'.
- *     @type string $label_username Label for the username or email address field. Default 'Username or Email'.
+ *     @type string $label_username Label for the username or email address field. Default 'Username or Email Address'.
  *     @type string $label_password Label for the password field. Default 'Password'.
  *     @type string $label_remember Label for the remember field. Default 'Remember Me'.
  *     @type string $label_log_in   Label for the submit button. Default 'Log In'.
@@ -405,7 +405,7 @@ function wp_login_form( $args = array() ) {
 		// Default 'redirect' value takes the user back to the request URI.
 		'redirect' => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
 		'form_id' => 'loginform',
-		'label_username' => __( 'Username or Email' ),
+		'label_username' => __( 'Username or Email Address' ),
 		'label_password' => __( 'Password' ),
 		'label_remember' => __( 'Remember Me' ),
 		'label_log_in' => __( 'Log In' ),
@@ -1505,7 +1505,7 @@ function get_the_archive_title() {
 }
 
 /**
- * Display category, tag, or term description.
+ * Display category, tag, term, or author description.
  *
  * @since 4.1.0
  *
@@ -1522,23 +1522,30 @@ function the_archive_description( $before = '', $after = '' ) {
 }
 
 /**
- * Retrieve category, tag, or term description.
+ * Retrieve category, tag, term, or author description.
  *
  * @since 4.1.0
+ * @since 4.7.0 Added support for author archives.
+ *
+ * @see term_description()
  *
  * @return string Archive description.
  */
 function get_the_archive_description() {
+	if ( is_author() ) {
+		$description = get_the_author_meta( 'description' );
+	} else {
+		$description = term_description();
+	}
+
 	/**
 	 * Filters the archive description.
 	 *
 	 * @since 4.1.0
 	 *
-	 * @see term_description()
-	 *
 	 * @param string $description Archive description to be displayed.
 	 */
-	return apply_filters( 'get_the_archive_description', term_description() );
+	return apply_filters( 'get_the_archive_description', $description );
 }
 
 /**
@@ -2980,6 +2987,8 @@ function wp_default_editor() {
  * @param array  $settings  See _WP_Editors::editor().
  */
 function wp_editor( $content, $editor_id, $settings = array() ) {
+	if ( ! class_exists( '_WP_Editors', false ) )
+		require( ABSPATH . WPINC . '/class-wp-editor.php' );
 	_WP_Editors::editor($content, $editor_id, $settings);
 }
 
@@ -3344,8 +3353,6 @@ function wp_admin_css_color( $key, $name, $url, $colors = array(), $icons = arra
  * Registers the default Admin color schemes
  *
  * @since 3.0.0
- *
- * @global string $wp_version
  */
 function register_admin_color_schemes() {
 	$suffix = is_rtl() ? '-rtl' : '';
@@ -3358,8 +3365,9 @@ function register_admin_color_schemes() {
 	);
 
 	// Other color schemes are not available when running out of src
-	if ( false !== strpos( $GLOBALS['wp_version'], '-src' ) )
+	if ( false !== strpos( get_bloginfo( 'version' ), '-src' ) ) {
 		return;
+	}
 
 	wp_admin_css_color( 'light', _x( 'Light', 'admin color scheme' ),
 		admin_url( "css/colors/light/colors$suffix.css" ),

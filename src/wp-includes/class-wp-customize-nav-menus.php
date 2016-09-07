@@ -749,18 +749,15 @@ final class WP_Customize_Nav_Menus {
 	 */
 	public function ajax_insert_auto_draft_post() {
 		if ( ! check_ajax_referer( 'customize-menus', 'customize-menus-nonce', false ) ) {
-			status_header( 400 );
-			wp_send_json_error( 'bad_nonce' );
+			wp_send_json_error( 'bad_nonce', 400 );
 		}
 
 		if ( ! current_user_can( 'customize' ) ) {
-			status_header( 403 );
-			wp_send_json_error( 'customize_not_allowed' );
+			wp_send_json_error( 'customize_not_allowed', 403 );
 		}
 
 		if ( empty( $_POST['params'] ) || ! is_array( $_POST['params'] ) ) {
-			status_header( 400 );
-			wp_send_json_error( 'missing_params' );
+			wp_send_json_error( 'missing_params', 400 );
 		}
 
 		$params = wp_array_slice_assoc(
@@ -942,9 +939,7 @@ final class WP_Customize_Nav_Menus {
 							<?php $post_type_obj = get_post_type_object( $available_item_type['object'] ); ?>
 							<?php if ( current_user_can( $post_type_obj->cap->create_posts ) && current_user_can( $post_type_obj->cap->publish_posts ) ) : ?>
 								<div class="new-content-item">
-									<input type="text" class="create-item-input" placeholder="<?php
-									/* translators: %s: Singular title of post type or taxonomy */
-									printf( __( 'Create New %s' ), $post_type_obj->labels->singular_name ); ?>">
+									<input type="text" class="create-item-input" placeholder="<?php echo esc_attr( $post_type_obj->labels->add_new_item ); ?>">
 									<button type="button" class="button add-content"><?php _e( 'Add' ); ?></button>
 								</div>
 							<?php endif; ?>

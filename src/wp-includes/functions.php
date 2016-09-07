@@ -5,6 +5,8 @@
  * @package WordPress
  */
 
+require( ABSPATH . WPINC . '/option.php' );
+
 /**
  * Convert given date string into a different format.
  *
@@ -561,6 +563,8 @@ function do_enclose( $content, $post_ID ) {
 	global $wpdb;
 
 	//TODO: Tidy this ghetto code up and make the debug code optional
+	include_once( ABSPATH . WPINC . '/class-IXR.php' ); 
+
 	$post_links = array();
 
 	$pung = get_enclosed( $post_ID );
@@ -2568,7 +2572,8 @@ function wp_nonce_ays( $action ) {
  *              an integer to be used as the response code.
  *
  * @param string|WP_Error  $message Optional. Error message. If this is a WP_Error object,
- *                                  the error's messages are used. Default empty.
+ *                                  and not an Ajax or XML-RPC request, the error's messages are used.
+ *                                  Default empty.
  * @param string|int       $title   Optional. Error title. If `$message` is a `WP_Error` object,
  *                                  error data with the key 'title' may be used to specify the title.
  *                                  If `$title` is an integer, then it is treated as the response
@@ -2634,9 +2639,9 @@ function wp_die( $message = '', $title = '', $args = array() ) {
  * @since 3.0.0
  * @access private
  *
- * @param string       $message Error message.
- * @param string       $title   Optional. Error title. Default empty.
- * @param string|array $args    Optional. Arguments to control behavior. Default empty array.
+ * @param string|WP_Error $message Error message or WP_Error object.
+ * @param string          $title   Optional. Error title. Default empty.
+ * @param string|array    $args    Optional. Arguments to control behavior. Default empty array.
  */
 function _default_wp_die_handler( $message, $title = '', $args = array() ) {
 	$defaults = array( 'response' => 500 );
@@ -2861,18 +2866,18 @@ function _xmlrpc_wp_die_handler( $message, $title = '', $args = array() ) {
  * @since 3.4.0
  * @access private
  *
- * @param string       $message Error message. 
- * @param string       $title   Optional. Error title (unused). Default empty. 
- * @param string|array $args    Optional. Arguments to control behavior. Default empty array. 
- */ 
-function _ajax_wp_die_handler( $message, $title = '', $args = array() ) { 
-	$defaults = array( 
-		'response' => 200, 
-	); 
-	$r = wp_parse_args( $args, $defaults ); 
+ * @param string       $message Error message.
+ * @param string       $title   Optional. Error title (unused). Default empty.
+ * @param string|array $args    Optional. Arguments to control behavior. Default empty array.
+ */
+function _ajax_wp_die_handler( $message, $title = '', $args = array() ) {
+	$defaults = array(
+		'response' => 200,
+	);
+	$r = wp_parse_args( $args, $defaults );
 
-	if ( ! headers_sent() ) { 
-		status_header( $r['response'] ); 
+	if ( ! headers_sent() ) {
+		status_header( $r['response'] );
 	}
 	if ( is_scalar( $message ) )
 		die( (string) $message );
@@ -3337,6 +3342,18 @@ function smilies_init() {
 		      ':?:' => "\xe2\x9d\x93",
 		);
 	}
+
+	/**
+	 * Filter all the smilies.
+	 *
+	 * This filter must be added before `smilies_init` is run, as
+	 * it is normally only run once to setup the smilies regex.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param array $wpsmiliestrans List of the smilies.
+	 */
+	$wpsmiliestrans = apply_filters('smilies', $wpsmiliestrans);
 
 	if (count($wpsmiliestrans) == 0) {
 		return;

@@ -2913,6 +2913,9 @@ function wp_image_editor_supports( $args = array() ) {
  *                     editor claims to support the request.
  */
 function _wp_image_editor_choose( $args = array() ) {
+	require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
+	require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';
+	require_once ABSPATH . WPINC . '/class-wp-image-editor-imagick.php';
 	/**
 	 * Filters the list of image editing library classes.
 	 *
@@ -3810,12 +3813,10 @@ function attachment_url_to_postid( $url ) {
  *
  * @since 4.0.0
  *
- * @global string $wp_version
- *
  * @return array The relevant CSS file URLs.
  */
 function wpview_media_sandbox_styles() {
- 	$version = 'ver=' . $GLOBALS['wp_version'];
+ 	$version = 'ver=' . get_bloginfo( 'version' );
  	$mediaelement = includes_url( "js/mediaelement/mediaelementplayer.min.css?$version" );
  	$wpmediaelement = includes_url( "js/mediaelement/wp-mediaelement.css?$version" );
 
