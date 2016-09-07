@@ -1420,16 +1420,6 @@ function wp_custom_css_cb() {
 }
 
 /**
- * Get custom CSS.
- *
- * @return string CSS.
- * @since 4.7.0
- */
-function wp_get_custom_css() {
-	return get_theme_mod( 'wp_custom_css', '' );
-}
-
-/**
  * Add callback for custom TinyMCE editor stylesheets.
  *
  * The parameter $stylesheet is the name of the stylesheet, relative to
