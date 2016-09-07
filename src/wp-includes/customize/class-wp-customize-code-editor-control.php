@@ -2,13 +2,7 @@
 /**
  * Customize API: WP_Customize_Code_Editor_Control class
  *
- * @todo trigger change in the customizer.
- * @todo make custom css <style> a conditional.
- * @todo create new CodeMirror theme.
- * @todo Implement CSSTidy.
- * @todo Figure out notifications.
- * @todo save it to a post type.
- * @todo customize-manager.php: l18n using sprintf().
+ * Code Editor Control.
  *
  * @package WordPress
  * @subpackage Customize
