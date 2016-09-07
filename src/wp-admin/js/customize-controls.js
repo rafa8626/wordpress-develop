@@ -2877,37 +2877,19 @@
 	 * @augments wp.customize.Class
 	 */
 	api.CodeEditorControl = api.Control.extend({
+		/**
+		 * @inheritdoc
+		 */
 		ready: function() {
 			var control = this,
-				textareas, textarea, element;
+				textareas, textarea;
 
 			textareas = control.container.find( '.code-editor' );
 			textarea = textareas[0];
-			element = new api.Element( $( textarea ) );
-
-			// Fill the textarea.
-			element.set( control.setting() );
-
-			/*
-			 * Two-way Data Binding.
-			 *
-			 * First, when the textarea is updated, update the Setting.
-			 * Then, when the Setting is updated, set the value to the textarea.
-			 */
-			element.bind( function( newValue ) {
-				if ( newValue === control.setting() ) {
-					return;
-				}
-				control.setting.set( newValue );
-			} );
-
-			control.setting.bind( function( newValue ) {
-				if ( newValue !== element.get() ) {
-					element.set( newValue );
-				}
-			} );
+			control._setUpSettingLinks( textarea );
 
 			// Wait to instantiate CodeMirror until this Customizer section is expanded.
+			// @todo check that CodeMirror exists.
 			api.section( control.section() ).container
 				.on( 'expanded', function() {
 					var editor = CodeMirror.fromTextArea( textarea, {
@@ -2920,6 +2902,38 @@
 						$( textarea ).val( editorVal ).trigger( 'change' );
 					});
 				});
+		},
+
+		/**
+		 * Two-way Data Binding.
+		 *
+		 * First, when the textarea is updated, update the Setting.
+		 * Then, when the Setting is updated, set the value to the textarea.
+		 *
+		 * @access private
+		 * @return {void}
+		 */
+		_setUpSettingLinks: function( textarea ) {
+			var control = this,
+				element = new api.Element( $( textarea ) );
+			if ( ! control.setting ) {
+				return;
+			}
+			// Fill the textarea.
+			element.set( control.setting() );
+
+			element.bind( function( newValue ) {
+				if ( newValue === control.setting() ) {
+					return;
+				}
+				control.setting.set( newValue );
+			} );
+
+			control.setting.bind( function( newValue ) {
+				if ( newValue !== element.get() ) {
+					element.set( newValue );
+				}
+			} );
 		}
 	});
 

@@ -1404,10 +1404,12 @@ body.custom-background { <?php echo trim( $style ); ?> }
 /**
  * Render custom CSS.
  *
+ * @todo sanitize this.
+ *
  * @since 4.7.0
  */
 function wp_custom_css_cb() {
-	$styles = get_theme_mod( 'wp_custom_css' );
+	$styles = WP_Custom_CSS::get_styles();
 	if ( $styles ) :
 ?>
 	<style type="text/css" id="wp-custom-css">

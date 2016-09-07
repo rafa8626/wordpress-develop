@@ -1496,7 +1496,7 @@ final class WP_Customize_Manager {
 		<script type="text/html" id="tmpl-customize-control-notifications">
 			<ul>
 				<# _.each( data.notifications, function( notification ) { #>
-					<li class="notice notice-{{ notification.type || 'info' }} {{ data.altNotice ? 'notice-alt' : '' }}" data-code="{{ notification.code }}" data-type="{{ notification.type }}">{{ notification.message || notification.code }}</li>
+					<li class="notice notice-{{ notification.type || 'info' }} {{ data.altNotice ? 'notice-alt' : '' }}" data-code="{{ notification.code }}" data-type="{{ notification.type }}">{{{ notification.message || notification.code }}}</li>
 				<# } ); #>
 			</ul>
 		</script>
@@ -2285,12 +2285,10 @@ final class WP_Customize_Manager {
 			'priority' => 140,
 		) );
 
-		$this->add_setting( 'wp_custom_css' , array(
-			'type'              => 'theme_mod',
-			'transport'         => 'postMessage',
+		$this->add_setting( new WP_Customize_Custom_CSS_Setting( $this, 'wp_custom_css', array(
 			'sanitize_callback' => array( $this, '_sanitize_css' ),
 			'validate_callback' => array( $this, '_validate_css' ),
-		) );
+		) ) );
 
 		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
 			'type'        => 'code_editor',
