@@ -540,6 +540,7 @@ p.customize-section-description {
     content: "\f310";
     top: 3px;
     position: relative;
+    text-decoration: none;
 }
 
 .customize-control-color .color-picker,
