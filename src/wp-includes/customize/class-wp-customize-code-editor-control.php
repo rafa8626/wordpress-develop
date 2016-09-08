@@ -60,7 +60,7 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 				<span class="description customize-control-description">{{{ data.description }}}</span>
 			<# } #>
 			<div class="customize-control-content">
-				<textarea style="width:100%;"  class="code-editor" <?php $this->link(); ?>><?php echo esc_textarea( $this->value() ); ?></textarea>
+				<textarea class="code-editor" <?php $this->link(); ?>><?php echo esc_textarea( $this->value() ); ?></textarea>
 			</div>
 		</label>
 		<?php
