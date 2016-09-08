@@ -2,20 +2,6 @@
 /**
  * Customize API: WP_Customize_Custom_CSS_Setting class
  *
- * @note this needs to be an extension of WP_Customize_Setting
- * so that we can pass the $type and $transport.
- *
- * @todo escape/validate/sanitize.
- * @todo Implement CSSTidy.
- * @todo Figure out notifications.
- * @todo add hooks.
- * @todo create tests.
- * @todo ensure this works on Networks.
- * @todo check new code structure and ensure it makes sense.
- *
- * DONE
- * @todo save it to a post type.
- *
  * @package WordPress
  * @subpackage Customize
  * @since 4.7.0

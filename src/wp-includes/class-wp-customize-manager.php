@@ -210,6 +210,7 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/class-wp-customize-section.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-control.php' );
 
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-code-editor-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-color-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-media-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-upload-control.php' );
@@ -235,6 +236,7 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-section.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-new-menu-section.php' );
 
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-custom-css-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-filter-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-header-image-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-setting.php' );
