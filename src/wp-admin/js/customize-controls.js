@@ -627,6 +627,11 @@
 					section.expand();
 				}
 			});
+
+			// Toggle sticky header on pane scroll.
+			api.bind( 'pane-scrolled', function( args ) {
+				section._repositionStickyHeader( args );
+			} );
 		},
 
 		/**
@@ -712,6 +717,7 @@
 						$( window ).on( 'resize.customizer-section', _.debounce( resizeContentHeight, 100 ) );
 
 						setTimeout( _.bind( section._recalculateTopMargin, section ), 0 );
+						section._repositionStickyHeader();
 					};
 				}
 
@@ -770,6 +776,69 @@
 			offset = ( content.offset().top - headerActionsHeight );
 			if ( 0 < offset ) {
 				content.css( 'margin-top', ( parseInt( content.css( 'margin-top' ), 10 ) - offset ) );
+			}
+		},
+
+
+		/**
+		 * Reposition section header on scroll.
+		 *
+		 * @param {Object} args
+		 * @param {Number} args.scrollTop
+		 * @param {Number} args.lastScrollTop
+		 * @private
+		 */
+		_repositionStickyHeader: function( args ) {
+
+			// Immediately check if the panel is expanded; if not then return;
+			if ( ! this.expanded() ) {
+				return;
+			}
+
+			var header = this.container.find( '.customize-section-title:first' ),
+				scroll = args || {},
+				scrollTop = scroll.scrollTop || 0,
+				lastScrollTop = scroll.lastScrollTop || 0,
+				isScrollingUp = ( scrollTop < lastScrollTop ),
+				isSticky = header.hasClass( 'is-sticky' ),
+				updateTopPosition = false,
+				headerTopPosition, headerHeight;
+
+			// In initial position - reset header and exit.
+			if ( 0 === scrollTop ) {
+				header.removeClass( 'is-sticky maybe-sticky' );
+				header.css( 'top', '' );
+				return;
+			}
+
+			// Get header top position and height.
+			headerTopPosition = parseInt( header.css( 'top' ), 0 ) || 0;
+			headerHeight = header.data( 'header-height' );
+			if ( ! headerHeight ) {
+				headerHeight = header.height();
+				header.data( 'header-height', headerHeight );
+			}
+
+			// Make header potentially sticky when it gets out of the view.
+			if ( scrollTop >= headerHeight ) {
+				header.addClass( 'maybe-sticky' );
+			}
+
+			if ( isScrollingUp ) {
+				if ( ! isSticky || headerTopPosition >= scrollTop ) {
+					isSticky = true;
+					updateTopPosition = true;
+				}
+			} else {
+				if ( isSticky && headerTopPosition + headerHeight <= scrollTop ) {
+					isSticky = false;
+					updateTopPosition = true;
+				}
+			}
+
+			header.toggleClass( 'is-sticky', isSticky );
+			if ( updateTopPosition ) {
+				header.css( 'top', scrollTop + 'px' );
 			}
 		}
 	});
@@ -1306,6 +1375,10 @@
 				}
 			});
 
+			// Toggle sticky header on pane scroll.
+			api.bind( 'pane-scrolled', function( args ) {
+				panel._repositionStickyHeader( args );
+			} );
 		},
 
 		/**
@@ -1369,12 +1442,7 @@
 				backBtn = accordionSection.find( '.customize-panel-back' ),
 				panelTitle = accordionSection.find( '.accordion-section-title' ).first(),
 				content = accordionSection.find( '.control-panel-content' ),
-				headerActionsHeight = $( '#customize-header-actions' ).height(),
-				paneScrolled;
-
-			paneScrolled = function( args ) {
-				panel._repositionStickyHeader( args );
-			};
+				headerActionsHeight = $( '#customize-header-actions' ).height();
 
 			if ( expanded ) {
 
@@ -1406,9 +1474,7 @@
 				backBtn.attr( 'tabindex', '0' );
 				backBtn.focus();
 				panel._recalculateTopMargin();
-
-				// Toggle sticky header on pane scroll.
-				api.bind( 'pane-scrolled', paneScrolled );
+				panel._repositionStickyHeader();
 			} else {
 				siblings.removeClass( 'open' );
 				accordionSection.removeClass( 'current-panel' );
@@ -1423,9 +1489,6 @@
 				backBtn.attr( 'tabindex', '-1' );
 				panelTitle.focus();
 				container.scrollTop( 0 );
-
-				// Toggle sticky header on pane scroll.
-				api.unbind( 'pane-scrolled', paneScrolled );
 			}
 		},
 
@@ -1452,41 +1515,56 @@
 		 * @private
 		 */
 		_repositionStickyHeader: function( args ) {
-			var meta = this.container.find( '.panel-meta:first' ),
-				scrollTop = args.scrollTop || 0,
-				lastScrollTop = args.lastScrollTop || 0,
-				initialTop, metaHeight;
 
-			// Base position - reset.
-			if ( 0 === scrollTop ) {
-				meta.removeClass( 'is-visible is-sticky' );
-				meta.css( 'top', '' );
+			// Immediately check if the panel is expanded; if not then return;
+			if ( ! this.expanded() ) {
 				return;
 			}
 
-			metaHeight = meta.height();
-			initialTop = meta.data( 'initial-top' ) || 0;
+			var header = this.container.find( '.panel-meta:first' ),
+				scroll = args || {},
+				scrollTop = scroll.scrollTop || 0,
+				lastScrollTop = scroll.lastScrollTop || 0,
+				isScrollingUp = ( scrollTop < lastScrollTop ),
+				isSticky = header.hasClass( 'is-sticky' ),
+				updateTopPosition = false,
+				headerTopPosition, headerHeight;
 
-			if ( scrollTop >= metaHeight ) {
-				meta.addClass( 'is-sticky' );
+			// In initial position - reset header and exit.
+			if ( 0 === scrollTop ) {
+				header.removeClass( 'is-sticky maybe-sticky' );
+				header.css( 'top', '' );
+				return;
 			}
 
-			if ( scrollTop > lastScrollTop ) {
-				// Scrolling down.
-				if ( meta.hasClass( 'is-visible' ) && initialTop + metaHeight <= scrollTop ) {
-					meta.removeClass( 'is-visible' );
-					meta.data( 'initial-top', scrollTop );
+			// Get header top position and height.
+			headerTopPosition = parseInt( header.css( 'top' ), 0 ) || 0;
+			headerHeight = header.data( 'header-height' );
+			if ( ! headerHeight ) {
+				headerHeight = header.height();
+				header.data( 'header-height', headerHeight );
+			}
+
+			// Make header potentially sticky when it gets out of the view.
+			if ( scrollTop >= headerHeight ) {
+				header.addClass( 'maybe-sticky' );
+			}
+
+			if ( isScrollingUp ) {
+				if ( ! isSticky || headerTopPosition >= scrollTop ) {
+					isSticky = true;
+					updateTopPosition = true;
 				}
 			} else {
-				// Scrolling up.
-				if ( ! meta.hasClass( 'is-visible' ) || initialTop >= scrollTop ) {
-					meta.css( 'top', scrollTop + 'px' );
-					meta.data( 'initial-top', scrollTop );
+				if ( isSticky && headerTopPosition + headerHeight <= scrollTop ) {
+					isSticky = false;
+					updateTopPosition = true;
 				}
+			}
 
-				if ( ! meta.hasClass( 'is-visible' ) ) {
-					meta.addClass( 'is-visible' );
-				}
+			header.toggleClass( 'is-sticky', isSticky );
+			if ( updateTopPosition ) {
+				header.css( 'top', scrollTop + 'px' );
 			}
 		},
 
@@ -4096,7 +4174,7 @@
 		});
 
 		// Publish `scrollTop` value of the sidebar.
-		$( '.wp-full-overlay-sidebar-content' ).on( 'scroll', _.throttle( function() {
+		$( '.wp-full-overlay-sidebar-content, .accordion-section-content' ).on( 'scroll', _.throttle( function() {
 			var scrollTop = $( this ).scrollTop();
 
 			if ( lastScrollTop !== scrollTop ) {
