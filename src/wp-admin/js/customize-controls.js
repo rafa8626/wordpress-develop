@@ -1369,7 +1369,12 @@
 				backBtn = accordionSection.find( '.customize-panel-back' ),
 				panelTitle = accordionSection.find( '.accordion-section-title' ).first(),
 				content = accordionSection.find( '.control-panel-content' ),
-				headerActionsHeight = $( '#customize-header-actions' ).height();
+				headerActionsHeight = $( '#customize-header-actions' ).height(),
+				paneScrolled;
+
+			paneScrolled = function( args ) {
+				panel._repositionStickyHeader( args );
+			};
 
 			if ( expanded ) {
 
@@ -1401,6 +1406,9 @@
 				backBtn.attr( 'tabindex', '0' );
 				backBtn.focus();
 				panel._recalculateTopMargin();
+
+				// Toggle sticky header on pane scroll.
+				api.bind( 'pane-scrolled', paneScrolled );
 			} else {
 				siblings.removeClass( 'open' );
 				accordionSection.removeClass( 'current-panel' );
@@ -1415,6 +1423,9 @@
 				backBtn.attr( 'tabindex', '-1' );
 				panelTitle.focus();
 				container.scrollTop( 0 );
+
+				// Toggle sticky header on pane scroll.
+				api.unbind( 'pane-scrolled', paneScrolled );
 			}
 		},
 
@@ -1430,6 +1441,53 @@
 			accordionSection = panel.container.closest( '.accordion-section' );
 			content = accordionSection.find( '.control-panel-content' );
 			content.css( 'margin-top', ( parseInt( content.css( 'margin-top' ), 10 ) - ( content.offset().top - headerActionsHeight ) ) );
+		},
+
+		/**
+		 * Reposition panel header on scroll.
+		 *
+		 * @param {Object} args
+		 * @param {Number} args.scrollTop
+		 * @param {Number} args.lastScrollTop
+		 * @private
+		 */
+		_repositionStickyHeader: function( args ) {
+			var meta = this.container.find( '.panel-meta:first' ),
+				scrollTop = args.scrollTop || 0,
+				lastScrollTop = args.lastScrollTop || 0,
+				initialTop, metaHeight;
+
+			// Base position - reset.
+			if ( 0 === scrollTop ) {
+				meta.removeClass( 'is-visible is-sticky' );
+				meta.css( 'top', '' );
+				return;
+			}
+
+			metaHeight = meta.height();
+			initialTop = meta.data( 'initial-top' ) || 0;
+
+			if ( scrollTop >= metaHeight ) {
+				meta.addClass( 'is-sticky' );
+			}
+
+			if ( scrollTop > lastScrollTop ) {
+				// Scrolling down.
+				if ( meta.hasClass( 'is-visible' ) && initialTop + metaHeight <= scrollTop ) {
+					meta.removeClass( 'is-visible' );
+					meta.data( 'initial-top', scrollTop );
+				}
+			} else {
+				// Scrolling up.
+				if ( ! meta.hasClass( 'is-visible' ) || initialTop >= scrollTop ) {
+					meta.css( 'top', scrollTop + 'px' );
+					meta.data( 'initial-top', scrollTop );
+				}
+
+				if ( ! meta.hasClass( 'is-visible' ) ) {
+					meta.addClass( 'is-visible' );
+				}
+			}
 		},
 
 		/**
@@ -3626,7 +3684,8 @@
 			title = $( '#customize-info .panel-title.site-title' ),
 			closeBtn = $( '.customize-controls-close' ),
 			saveBtn = $( '#save' ),
-			footerActions = $( '#customize-footer-actions' );
+			footerActions = $( '#customize-footer-actions' ),
+			lastScrollTop = 0;
 
 		// Prevent the form from saving when enter is pressed on an input or select element.
 		$('#customize-controls').on( 'keydown', function( e ) {
@@ -4035,6 +4094,19 @@
 		$( '.customize-controls-preview-toggle' ).on( 'click', function() {
 			overlay.toggleClass( 'preview-only' );
 		});
+
+		// Publish `scrollTop` value of the sidebar.
+		$( '.wp-full-overlay-sidebar-content' ).on( 'scroll', _.throttle( function() {
+			var scrollTop = $( this ).scrollTop();
+
+			if ( lastScrollTop !== scrollTop ) {
+				api.trigger( 'pane-scrolled', {
+					scrollTop: scrollTop,
+					lastScrollTop: lastScrollTop
+				} );
+				lastScrollTop = scrollTop;
+			}
+		}, 8 ) );
 
 		// Previewed device bindings.
 		api.previewedDevice = new api.Value();
