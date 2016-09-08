@@ -504,7 +504,8 @@ p.customize-section-description {
 	margin: 0;
 }
 
-.customize-control-textarea textarea {
+.customize-control-textarea textarea,
+.customize-control-code_editor textarea {
 	width: 100%;
 	resize: vertical;
 }
