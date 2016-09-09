@@ -56,16 +56,23 @@ body {
 
 #customize-controls .customize-info.maybe-sticky,
 #customize-controls .customize-section-title.maybe-sticky {
-	-webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
 	box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
+	-webkit-transform: translateY(-100%);
+	-ms-transform: translateY(-100%);
 	transform: translateY(-100%);
+	-webkit-transition: -webkit-transform 0.24s ease-out;
+	transition: -webkit-transform 0.24s ease-out;
 	transition: transform 0.24s ease-out;
+	transition: transform 0.24s ease-out, -webkit-transform 0.24s ease-out;
+
 }
 
 #customize-controls .customize-info.maybe-sticky.is-sticky,
 #customize-controls .customize-section-title.maybe-sticky.is-sticky {
 	position: relative;
 	z-index: 9;
+	-webkit-transform: none;
+	-ms-transform: none;
 	transform: none;
 }
 
