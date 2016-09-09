@@ -65,7 +65,7 @@ body {
 #customize-controls .customize-info.maybe-sticky.is-sticky,
 #customize-controls .customize-section-title.maybe-sticky.is-sticky {
 	position: relative;
-	z-index: 2;
+	z-index: 9;
 	transform: none;
 }
 
