@@ -1400,7 +1400,6 @@ body.custom-background { <?php echo trim( $style ); ?> }
 <?php
 }
 
-
 /**
  * Render custom CSS.
  *
@@ -1411,11 +1410,11 @@ body.custom-background { <?php echo trim( $style ); ?> }
 function wp_custom_css_cb() {
 	$styles = WP_Custom_CSS::get_styles();
 	if ( $styles ) :
-?>
+	?>
 	<style type="text/css" id="wp-custom-css">
 		<?php echo $styles; ?>
 	</style>
-<?php
+	<?php
 	endif;
 }
 

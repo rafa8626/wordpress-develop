@@ -2349,11 +2349,6 @@ final class WP_Customize_Manager {
 				)
 			) );
 		}
-
-		$this->selective_refresh->add_partial( 'wp_custom_css', array(
-			'selector' => '#wp-custom-css',
-			'render_callback' => 'wp_get_custom_css',
-		) );
 	}
 
 	/**

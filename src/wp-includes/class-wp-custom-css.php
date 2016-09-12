@@ -2,11 +2,6 @@
 /**
  * WordPress Custom CSS class
  *
- * @todo Load the class in a better way.
- * @todo escape/validate/sanitize.
- * @todo does this need to be in a Class?
- * @todo discuss using the constants.
- *
  * @package WordPress
  * @subpackage Customize
  * @since 4.7.0
@@ -14,6 +9,9 @@
 
 /**
  * Class WP_Custom_CSS
+ *
+ * Note that the Custom Post Type
+ * is called "style."
  */
 class WP_Custom_CSS {
 

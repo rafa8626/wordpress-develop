@@ -2908,7 +2908,7 @@
 		},
 
 		/**
-		 * Two-way Data Binding.
+		 * Bidrectional Data Binding.
 		 *
 		 * First, when the textarea is updated, update the Setting.
 		 * Then, when the Setting is updated, set the value to the textarea.
