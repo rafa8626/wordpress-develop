@@ -2169,9 +2169,13 @@ function wp_customize_support_script() {
 <?php		endif; ?>
 
 			b[c] = b[c].replace( rcs, ' ' );
-			b[c] += ( window.postMessage && request && Array.prototype.indexOf ? ' ' : ' no-' ) + cs;
+			b[c] += ( window.postMessage && request ? ' ' : ' no-' ) + cs;
 		}());
 	</script>
+
+	<!--[if lte IE 8]><script type="text/javascript">
+		document.body.className = document.body.className.replace( 'customize-support', 'no-customize-support' );
+	</script><![endif]-->
 	<?php
 }
 
