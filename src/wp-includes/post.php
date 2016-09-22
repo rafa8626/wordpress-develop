@@ -111,6 +111,22 @@ function create_initial_post_types() {
 		'query_var' => false,
 	) );
 
+	register_post_type( 'customize_changeset', array(
+		'labels' => array(
+			'name' => __( 'Customize Changesets' ),
+			'singular_name' => __( 'Customize Changeset' ),
+		),
+		'public' => false,
+		'_builtin' => true, /* internal use only. don't use this when registering your own post type. */
+		'map_meta_cap' => true,
+		'hierarchical' => false,
+		'rewrite' => false,
+		'query_var' => false,
+		'can_export' => true,
+		'delete_with_user' => false,
+		'supports' => array( 'author' ),
+	) );
+
 	register_post_status( 'publish', array(
 		'label'       => _x( 'Published', 'post status' ),
 		'public'      => true,
