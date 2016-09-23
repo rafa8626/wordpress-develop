@@ -2083,8 +2083,13 @@ function _wp_customize_include() {
 		return;
 	}
 
-	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php'; 
-	$GLOBALS['wp_customize'] = new WP_Customize_Manager();
+	$changeset_uuid = null;
+	if ( ! empty( $_REQUEST['customize_changeset'] ) ) {
+		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset'] ) );
+	}
+
+	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
+	$GLOBALS['wp_customize'] = new WP_Customize_Manager( $changeset_uuid );
 }
 
 /**

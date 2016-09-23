@@ -193,6 +193,15 @@ final class WP_Customize_Manager {
 	protected $autofocus = array();
 
 	/**
+	 * Changeset UUID.
+	 *
+	 * @since 4.7.0
+	 * @access protected
+	 * @var string
+	 */
+	protected $changeset_uuid;
+
+	/**
 	 * Unsanitized values for Customize Settings parsed from $_POST['customized'].
 	 *
 	 * @var array
@@ -203,8 +212,11 @@ final class WP_Customize_Manager {
 	 * Constructor.
 	 *
 	 * @since 3.4.0
+	 * @since 4.7.0 Added $changeset_uuid.
+	 *
+	 * @param string $changeset_uuid Changeset UUID, the post_name for the customize_changeset post containing the customized state.
 	 */
-	public function __construct() {
+	public function __construct( $changeset_uuid = null ) {
 		require_once( ABSPATH . WPINC . '/class-wp-customize-setting.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-panel.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-section.php' );
@@ -240,6 +252,11 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-item-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-setting.php' );
+
+		if ( empty( $changeset_uuid ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $changeset_uuid ) ) {
+			$changeset_uuid = $this->generate_uuid();
+		}
+		$this->changeset_uuid = $changeset_uuid;
 
 		/**
 		 * Filters the core Customizer components to load.
@@ -302,6 +319,24 @@ final class WP_Customize_Manager {
 
 		// Export the settings to JS via the _wpCustomizeSettings variable.
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customize_pane_settings' ), 1000 );
+	}
+
+	/**
+	 * Generate a UUID for a changeset.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @return string UUID.
+	 */
+	public function generate_uuid() {
+		return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
+			mt_rand( 0, 0xffff ),
+			mt_rand( 0, 0x0fff ) | 0x4000,
+			mt_rand( 0, 0x3fff ) | 0x8000,
+			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
+		);
 	}
 
 	/**
@@ -504,6 +539,18 @@ final class WP_Customize_Manager {
 		 * @param WP_Customize_Manager $this WP_Customize_Manager instance.
 		 */
 		do_action( 'stop_previewing_theme', $this );
+	}
+
+	/**
+	 * Get the changeset UUID.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @return string UUID.
+	 */
+	public function changeset_uuid() {
+		return $this->changeset_uuid;
 	}
 
 	/**
@@ -822,6 +869,7 @@ final class WP_Customize_Manager {
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		$settings = array(
+			'changesetUuid' => $this->changeset_uuid,
 			'theme' => array(
 				'stylesheet' => $this->get_stylesheet(),
 				'active'     => $this->is_theme_active(),
@@ -1826,6 +1874,7 @@ final class WP_Customize_Manager {
 
 		// Prepare Customizer settings to pass to JavaScript.
 		$settings = array(
+			'changesetUuid' => $this->changeset_uuid,
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),
 				'active'     => $this->is_theme_active(),
