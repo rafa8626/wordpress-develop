@@ -3744,7 +3744,8 @@
 					wp_customize: 'on',
 					theme:      api.settings.theme.stylesheet,
 					customized: JSON.stringify( dirtyCustomized ),
-					nonce:      this.nonce.preview
+					nonce:      this.nonce.preview,
+					customize_changeset: api.settings.changesetUuid
 				};
 			},
 

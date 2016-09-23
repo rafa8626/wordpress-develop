@@ -486,7 +486,8 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 			wp_customize: 'on',
 			nonce: api.settings.nonce.preview,
 			theme: api.settings.theme.stylesheet,
-			customized: JSON.stringify( dirtyCustomized )
+			customized: JSON.stringify( dirtyCustomized ),
+			customize_changeset: api.settings.changesetUuid
 		};
 	};
 
