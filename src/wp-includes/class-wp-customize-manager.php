@@ -650,8 +650,23 @@ final class WP_Customize_Manager {
 		 */
 		do_action( 'customize_register', $this );
 
-		if ( $this->is_preview() && ! is_admin() )
+		/*
+		 * Note that settings must be previewed here even outside the customizer preview
+		 * and also in the customizer pane itself. This is to enable loading an existing
+		 * changeset into the customizer. Previewing the settings only has to be prevented
+		 * in the case of a customize_save action because then update_option()
+		 * may short-circuit because it will detect that there are no changes to
+		 * make.
+		 */
+		if ( ! $this->doing_ajax( 'customize_save' ) ) {
+			foreach ( $this->settings as $setting ) {
+				$setting->preview();
+			}
+		}
+
+		if ( $this->is_preview() && ! is_admin() ) {
 			$this->customize_preview_init();
+		}
 	}
 
 	/**
@@ -812,10 +827,6 @@ final class WP_Customize_Manager {
 		add_action( 'wp_footer', array( $this, 'customize_preview_settings' ), 20 );
 		add_action( 'shutdown', array( $this, 'customize_preview_signature' ), 1000 );
 		add_filter( 'wp_die_handler', array( $this, 'remove_preview_signature' ) );
-
-		foreach ( $this->settings as $setting ) {
-			$setting->preview();
-		}
 
 		/**
 		 * Fires once the Customizer preview has initialized and JavaScript
