@@ -2158,25 +2158,28 @@ function wp_customize_support_script() {
 	$cross_domain = ( strtolower( $admin_origin[ 'host' ] ) != strtolower( $home_origin[ 'host' ] ) );
 
 	?>
-	<script type="text/javascript">
-		(function() {
-			var request, b = document.body, c = 'className', cs = 'customize-support', rcs = new RegExp('(^|\\s+)(no-)?'+cs+'(\\s+|$)');
+	<!--[if lte IE 8]>
+		<script type="text/javascript">
+			document.body.className = document.body.className.replace( /(^|\s)(no-)?customize-support/, '' ).trim() + ' no-customize-support';
+		</script>
+	<![endif]-->
+	<![if gte IE 9]>
+		<script type="text/javascript">
+			(function() {
+				var request, b = document.body, c = 'className', cs = 'customize-support', rcs = new RegExp('(^|\\s+)(no-)?'+cs+'(\\s+|$)');
 
-<?php		if ( $cross_domain ): ?>
-			request = (function(){ var xhr = new XMLHttpRequest(); return ('withCredentials' in xhr); })();
-<?php		else: ?>
-			request = true;
-<?php		endif; ?>
+		<?php	if ( $cross_domain ) : ?>
+				request = (function(){ var xhr = new XMLHttpRequest(); return ('withCredentials' in xhr); })();
+		<?php	else : ?>
+				request = true;
+		<?php	endif; ?>
 
-			b[c] = b[c].replace( rcs, ' ' );
-			// The customizer requires postMessage and CORS (if the site is cross domain)
-			b[c] += ( window.postMessage && request ? ' ' : ' no-' ) + cs;
-		}());
-	</script>
-
-	<!--[if lte IE 8]><script type="text/javascript">
-		document.body.className = document.body.className.replace( 'customize-support', 'no-customize-support' );
-	</script><![endif]-->
+				b[c] = b[c].replace( rcs, ' ' );
+				// The customizer requires postMessage and CORS (if the site is cross domain)
+				b[c] += ( window.postMessage && request ? ' ' : ' no-' ) + cs;
+			}());
+		</script>
+	<![endif]>
 	<?php
 }
 
