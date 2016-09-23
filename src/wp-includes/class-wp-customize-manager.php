@@ -682,10 +682,31 @@ final class WP_Customize_Manager {
 	 */
 	public function unsanitized_post_values() {
 		if ( ! isset( $this->_post_values ) ) {
-			if ( isset( $_POST['customized'] ) ) {
-				$this->_post_values = json_decode( wp_unslash( $_POST['customized'] ), true );
+			if ( $this->changeset_uuid ) {
+				$changeset_post_query = new WP_Query( array(
+					'post_type' => 'customize_changeset',
+					'post_status' => 'any',
+					'name' => $this->changeset_uuid,
+					'number' => 1,
+					'no_found_rows' => true,
+					'update_post_meta_cache' => false,
+					'update_term_meta_cache' => false,
+				) );
+				if ( ! empty( $changeset_post_query->posts ) ) {
+					$changeset_post = $changeset_post_query->posts[0];
+					$changeset = json_decode( $changeset_post->post_content, true );
+					if ( is_array( $changeset ) ) {
+						$this->_post_values = wp_list_pluck( $changeset, 'value' );
+					}
+				}
 			}
-			if ( empty( $this->_post_values ) ) { // if not isset or if JSON error
+			if ( isset( $_POST['customized'] ) ) {
+				$this->_post_values = array_merge(
+					$this->_post_values,
+					json_decode( wp_unslash( $_POST['customized'] ), true )
+				);
+			}
+			if ( empty( $this->_post_values ) ) { // If not isset or if JSON error.
 				$this->_post_values = array();
 			}
 		}
