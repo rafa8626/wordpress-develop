@@ -2066,9 +2066,9 @@ function check_theme_switched() {
  * Includes and instantiates the WP_Customize_Manager class.
  *
  * Loads the Customizer at plugins_loaded when accessing the customize.php admin
- * page or when any request includes a wp_customize=on param, either as a GET
- * query var or as POST data. This param is a signal for whether to bootstrap
- * the Customizer when WordPress is loading, especially in the Customizer preview
+ * page or when any request includes a wp_customize=on param or a customize_changeset
+ * param (a UUID). This param is a signal for whether to bootstrap the Customizer when
+ * WordPress is loading, especially in the Customizer preview
  * or when making Customizer Ajax requests for widgets or menus.
  *
  * @since 3.4.0
@@ -2077,6 +2077,7 @@ function check_theme_switched() {
  */
 function _wp_customize_include() {
 	if ( ! ( ( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
+		|| ! empty( $_REQUEST['customize_changeset'] )
 		|| ( is_admin() && 'customize.php' == basename( $_SERVER['PHP_SELF'] ) )
 	) ) {
 		return;
