@@ -2160,7 +2160,7 @@ function wp_customize_support_script() {
 	?>
 	<!--[if lte IE 8]>
 		<script type="text/javascript">
-			document.body.className = document.body.className.replace( /(^|\s)(no-)?customize-support/, '' ).trim() + ' no-customize-support';
+			document.body.className = document.body.className.replace( /(^|\s)(no-)?customize-support(?=\s|$)/, '' ) + ' no-customize-support';
 		</script>
 	<![endif]-->
 	<![if gte IE 9]>
