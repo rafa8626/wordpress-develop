@@ -2163,7 +2163,7 @@ function wp_customize_support_script() {
 			document.body.className = document.body.className.replace( /(^|\s)(no-)?customize-support(?=\s|$)/, '' ) + ' no-customize-support';
 		</script>
 	<![endif]-->
-	<![if gte IE 9]>
+	<!--[if gte IE 9]> <!-- -->
 		<script type="text/javascript">
 			(function() {
 				var request, b = document.body, c = 'className', cs = 'customize-support', rcs = new RegExp('(^|\\s+)(no-)?'+cs+'(\\s+|$)');
@@ -2179,7 +2179,7 @@ function wp_customize_support_script() {
 				b[c] += ( window.postMessage && request ? ' ' : ' no-' ) + cs;
 			}());
 		</script>
-	<![endif]>
+	<!-- <![endif]-->
 	<?php
 }
 
