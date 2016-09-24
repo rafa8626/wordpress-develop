@@ -2151,6 +2151,7 @@ function wp_customize_url( $stylesheet = null ) {
  * to the body tag by default.
  *
  * @since 3.4.0
+ * @since 4.7.0 Support for IE8 and below is explicitly removed via conditional comments.
  */
 function wp_customize_support_script() {
 	$admin_origin = parse_url( admin_url() );
@@ -2163,7 +2164,7 @@ function wp_customize_support_script() {
 			document.body.className = document.body.className.replace( /(^|\s)(no-)?customize-support(?=\s|$)/, '' ) + ' no-customize-support';
 		</script>
 	<![endif]-->
-	<!--[if gte IE 9]> <!-- -->
+	<!--[if gte IE 9]><!-->
 		<script type="text/javascript">
 			(function() {
 				var request, b = document.body, c = 'className', cs = 'customize-support', rcs = new RegExp('(^|\\s+)(no-)?'+cs+'(\\s+|$)');
@@ -2179,7 +2180,7 @@ function wp_customize_support_script() {
 				b[c] += ( window.postMessage && request ? ' ' : ' no-' ) + cs;
 			}());
 		</script>
-	<!-- <![endif]-->
+	<!--<![endif]-->
 	<?php
 }
 
