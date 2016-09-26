@@ -152,7 +152,7 @@
 				wp_customize: 'on',
 				theme: api.settings.theme.stylesheet,
 				nonce: api.settings.nonce.save,
-				customize_changeset: api.settings.changeset.uuid, // @todo customize_changeset_uuid? Just uuid?
+				customize_changeset_uuid: api.settings.changeset.uuid,
 				// @todo customize_changeset_updates: JSON.stringify( pendingChanges ), // @todo Not being read.
 				customized: JSON.stringify( customized )
 			} );
@@ -3860,7 +3860,7 @@
 					theme: api.settings.theme.stylesheet,
 					customized: JSON.stringify( dirtyCustomized ),
 					nonce: this.nonce.preview,
-					customize_changeset: api.settings.changeset.uuid
+					customize_changeset_uuid: api.settings.changeset.uuid
 				};
 			},
 

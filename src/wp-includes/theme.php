@@ -2080,7 +2080,7 @@ function _wp_customize_include() {
 	$should_include = (
 		( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
 		||
-		! empty( $_REQUEST['customize_changeset'] )
+		! empty( $_REQUEST['customize_changeset_uuid'] )
 		||
 		( is_admin() && 'customize.php' == basename( $_SERVER['PHP_SELF'] ) )
 	);
@@ -2090,8 +2090,8 @@ function _wp_customize_include() {
 	}
 
 	$changeset_uuid = null;
-	if ( ! empty( $_REQUEST['customize_changeset'] ) ) {
-		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset'] ) );
+	if ( ! empty( $_REQUEST['customize_changeset_uuid'] ) ) {
+		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset_uuid'] ) );
 	}
 
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
