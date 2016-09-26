@@ -102,6 +102,12 @@
 		} else {
 			deferred = new $.Deferred();
 			pendingChangesetUpdateRequestDeferred = deferred;
+
+			// Make sure that publishing a changeset waits for all changeset update requests to complete.
+			api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+			deferred.always( function() {
+				api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+			} );
 		}
 
 		if ( updateChangesetTimeoutId ) {
