@@ -3101,9 +3101,11 @@ function _wp_json_prepare_data( $data ) {
  *                           then print and die.
  * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json( $response, $status_code = 200 ) {
+function wp_send_json( $response, $status_code = null ) {
 	@header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
-	status_header( $status_code );
+	if ( null !== $status_code ) {
+		status_header( $status_code );
+	}
 	echo wp_json_encode( $response );
 	if ( wp_doing_ajax() )
 		wp_die();
@@ -3120,7 +3122,7 @@ function wp_send_json( $response, $status_code = 200 ) {
  * @param mixed $data        Data to encode as JSON, then print and die.
  * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json_success( $data = null, $status_code = 200 ) {
+function wp_send_json_success( $data = null, $status_code = null ) {
 	$response = array( 'success' => true );
 
 	if ( isset( $data ) )
@@ -3144,7 +3146,7 @@ function wp_send_json_success( $data = null, $status_code = 200 ) {
  * @param mixed $data        Data to encode as JSON, then print and die.
  * @param int   $status_code The HTTP status code to output.
  */
-function wp_send_json_error( $data = null, $status_code = 200 ) {
+function wp_send_json_error( $data = null, $status_code = null ) {
 	$response = array( 'success' => false );
 
 	if ( isset( $data ) ) {
@@ -3344,7 +3346,7 @@ function smilies_init() {
 	}
 
 	/**
-	 * Filter all the smilies.
+	 * Filters all the smilies.
 	 *
 	 * This filter must be added before `smilies_init` is run, as
 	 * it is normally only run once to setup the smilies regex.
@@ -4307,19 +4309,23 @@ function wp_suspend_cache_invalidation( $suspend = true ) {
  *
  * @since 3.0.0
  *
+ * @global object $current_site
+ *
  * @param int $site_id Optional. Site ID to test. Defaults to current site.
  * @return bool True if $site_id is the main site of the network, or if not
  *              running Multisite.
  */
 function is_main_site( $site_id = null ) {
-	if ( ! is_multisite() ) {
-		return true;
-	}
+	// This is the current network's information; 'site' is old terminology.
+	global $current_site;
 
-	if ( ! $site_id ) {
+	if ( ! is_multisite() )
+		return true;
+
+	if ( ! $site_id )
 		$site_id = get_current_blog_id();
-	}
-	return (int) $site_id === (int) get_current_site()->blog_id;
+
+	return (int) $site_id === (int) $current_site->blog_id;
 }
 
 /**
@@ -4351,13 +4357,9 @@ function is_main_network( $network_id = null ) {
  *
  * @since 4.3.0
  *
- * @global wpdb $wpdb WordPress database abstraction object.
- *
  * @return int The ID of the main network.
  */
 function get_main_network_id() {
-	global $wpdb;
-
 	if ( ! is_multisite() ) {
 		return 1;
 	}
@@ -4370,12 +4372,8 @@ function get_main_network_id() {
 		// If the current network has an ID of 1, assume it is the main network.
 		$main_network_id = 1;
 	} else {
-		$main_network_id = wp_cache_get( 'primary_network_id', 'site-options' );
-
-		if ( false === $main_network_id ) {
-			$main_network_id = (int) $wpdb->get_var( "SELECT id FROM {$wpdb->site} ORDER BY id LIMIT 1" );
-			wp_cache_add( 'primary_network_id', $main_network_id, 'site-options' );
-		}
+		$_networks = get_networks( array( 'fields' => 'ids', 'number' => 1 ) );
+		$main_network_id = array_shift( $_networks );
 	}
 
 	/**
