@@ -603,16 +603,25 @@ var wpNavMenu;
 			// hide fields
 			api.menuList.hideAdvancedMenuItemFields();
 
-			$('.hide-postbox-tog').click(function () {
-				var hidden = $( '.accordion-container li.accordion-section' ).filter(':hidden').map(function() { return this.id; }).get().join(',');
-				$.post(ajaxurl, {
-					action: 'closed-postboxes',
-					hidden: hidden,
-					closedpostboxesnonce: jQuery('#closedpostboxesnonce').val(),
-					page: 'nav-menus'
-				});
-			});
+			$( '.hide-postbox-tog' ).click( api.handleMenuScreenOptionClick );
 		},
+
+		handleMenuScreenOptionClick : _.debounce( function() {
+			var optionBox = this;
+			optionBox.hidden = $( '.accordion-container li.accordion-section' ).filter( ':hidden' ).map(function() { return this.id; }).get().join( ',' );
+
+			if ( optionBox._updateBasedOnScreenOptions ) {
+				optionBox._updateBasedOnScreenOptions.abort();
+			}
+			optionBox._updateBasedOnScreenOptions = wp.ajax.post( 'closed-postboxes', {
+				hidden: optionBox.hidden,
+				closedpostboxesnonce: jQuery( '#closedpostboxesnonce' ).val(),
+				page: 'nav-menus'
+			} );
+			optionBox._updateBasedOnScreenOptions.always( function() {
+				optionBox._updateBasedOnScreenOptions = null;
+			} );
+		} ),
 
 		initSortables : function() {
 			var currentDepth = 0, originalDepth, minDepth, maxDepth,
