@@ -2107,6 +2107,7 @@ function _wp_customize_include() {
 function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) {
 	global $wp_customize;
 	if ( empty( $wp_customize ) ) {
+		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
 		$wp_customize = new WP_Customize_Manager( $changeset_post->post_name );
 	}
 	if ( ! did_action( 'customize_register' ) ) {
