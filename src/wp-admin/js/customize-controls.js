@@ -1,6 +1,6 @@
 /* global _wpCustomizeHeader, _wpCustomizeBackground, _wpMediaViewsL10n, MediaElementPlayer */
 (function( exports, $ ){
-	var Container, focus, normalizedTransitionendEventName, api = wp.customize;
+	var Container, focus, normalizedTransitionendEventName, api = wp.customize, updateChangesetTimeoutId, pendingChangesetUpdateRequestDeferred;
 
 	/**
 	 * A Customizer Setting.
@@ -29,8 +29,25 @@
 			this._dirty = options.dirty || false;
 			this.notifications = new api.Values({ defaultConstructor: api.Notification });
 
+			this.bind( this.updateChangeset );
+
 			// Whenever the setting's value changes, refresh the preview.
 			this.bind( this.preview );
+		},
+
+		/**
+		 * Update the current changeset whenever a setting is updated.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @returns {jQuery.Promise} Promise for requesting the changeset update.
+		 */
+		updateChangeset: function( value ) {
+			var setting = this, changes = {};
+			changes[ setting.id ] = {
+				value: value
+			};
+			return api.requestChangesetUpdate( changes );
 		},
 
 		/**
@@ -39,8 +56,10 @@
 		preview: function() {
 			switch ( this.transport ) {
 				case 'refresh':
+					// @todo The refresh logic needs to wait until any transactions writes are finished.
 					return this.previewer.refresh();
 				case 'postMessage':
+					// @todo Selective refresh in the preview should wait until a "changeset updated" message is received.
 					return this.previewer.send( 'setting', [ this.id, this() ] );
 			}
 		},
@@ -63,6 +82,87 @@
 			return controls;
 		}
 	});
+
+	api.pendingUpdateChanges = {};
+
+	/**
+	 * Request updates to the changeset.
+	 *
+	 * This is implemented in the same way as wp.customize.selectiveRefresh.requestPartial()
+	 * in that it will combine multiple calls (debounce) into a single request.
+	 *
+	 * @param {object} changes Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+	 * @returns {jQuery.Promise}
+	 */
+	api.requestChangesetUpdate = function requestChangesetUpdate( changes ) {
+		var deferred, bufferDelay = 250; // @todo Can refreshBuffer then be eliminated?
+
+		if ( pendingChangesetUpdateRequestDeferred ) {
+			deferred = pendingChangesetUpdateRequestDeferred;
+		} else {
+			deferred = new $.Deferred();
+			pendingChangesetUpdateRequestDeferred = deferred;
+		}
+
+		if ( updateChangesetTimeoutId ) {
+			clearTimeout( updateChangesetTimeoutId );
+		}
+
+		_.each( changes, function( change, settingId ) {
+			if ( null === change ) {
+
+				// When null is passed as the change, the result will be the removal of the setting from the changeset. So like a revert.
+				api.pendingUpdateChanges[ settingId ] = null;
+			} else if ( _.isObject( change ) ) {
+				if ( _.isUndefined( api.pendingUpdateChanges[ settingId ] ) ) {
+					api.pendingUpdateChanges[ settingId ] = {};
+				}
+				_.extend( api.pendingUpdateChanges[ settingId ], change );
+			} else {
+				throw new Error( 'Unexpected change for ' + settingId );
+			}
+
+			if ( _.isUndefined(  ) ) {
+
+			}
+		} );
+
+		updateChangesetTimeoutId = setTimeout( function requestAjaxChangesetUpdate() {
+			var pendingChanges = _.clone( api.pendingUpdateChanges ), requestDeferred, request, customized = {};
+			api.pendingUpdateChanges = {};
+			requestDeferred = pendingChangesetUpdateRequestDeferred;
+			pendingChangesetUpdateRequestDeferred = null;
+
+			_.each( pendingChanges, function( change, settingId ) {
+				if ( ! _.isUndefined( change.value ) ) {
+					customized[ settingId ] = change.value;
+				}
+			} );
+
+			// @todo For now we can just use the previewer.query() and skip passing additional changes.
+
+			// @todo Note that when publishing, this request also needs to include the changeset status as publish.
+			request = wp.ajax.post( 'customize_save', {
+				wp_customize: 'on',
+				theme: api.settings.theme.stylesheet,
+				nonce: api.settings.nonce.save,
+				customize_changeset: api.settings.changeset.uuid, // @todo customize_changeset_uuid? Just uuid?
+				// @todo customize_changeset_updates: JSON.stringify( pendingChanges ), // @todo Not being read.
+				customized: JSON.stringify( customized )
+			} );
+
+			request.done( function requestChangesetUpdateDone( data ) {
+				requestDeferred.resolve( data );
+
+				api.state( 'changesetExists' ).set( true ); // @todo Make sure that the customize_changeset UUID is added to the URL.
+			} );
+			request.fail( function requestChangesetUpdateFail( data ) {
+				requestDeferred.reject( data );
+			} );
+		}, bufferDelay );
+
+		return deferred.promise();
+	};
 
 	/**
 	 * Utility function namespace
@@ -3241,10 +3341,19 @@
 			 *    self.refreshBuffer milliseconds.
 			 */
 			this.refresh = (function( self ) {
+
+				// @todo This also needs to wait for any pending changeset update requests.
 				var refresh  = self.refresh,
 					callback = function() {
 						timeout = null;
-						refresh.call( self );
+
+						if ( pendingChangesetUpdateRequestDeferred ) {
+							pendingChangesetUpdateRequestDeferred.done( function() {
+								refresh.call( self );
+							} );
+						} else {
+							refresh.call( self );
+						}
 					},
 					timeout;
 
@@ -3742,10 +3851,10 @@
 
 				return {
 					wp_customize: 'on',
-					theme:      api.settings.theme.stylesheet,
+					theme: api.settings.theme.stylesheet,
 					customized: JSON.stringify( dirtyCustomized ),
-					nonce:      this.nonce.preview,
-					customize_changeset: api.settings.changesetUuid
+					nonce: this.nonce.preview,
+					customize_changeset: api.settings.changeset.uuid
 				};
 			},
 
@@ -3788,8 +3897,10 @@
 						return;
 					}
 
+					// @todo customized can be reduced to only what has been modified since the last changeset update.
 					query = $.extend( self.query(), {
-						nonce:  self.nonce.save
+						nonce: self.nonce.save,
+						changeset_status: 'publish'
 					} );
 					request = wp.ajax.post( 'customize_save', query );
 
@@ -3842,6 +3953,9 @@
 						} );
 
 						api.previewer.send( 'saved', response );
+
+						api.state( 'changesetExists' ).set( false ); // @todo Make sure that the customize_changeset UUID is removed from the URL.
+						api.state( 'changesetUuid' ).set( response.next_changeset_uuid );
 
 						if ( response.setting_validities ) {
 							api._handleSettingValidities( {
@@ -3976,7 +4090,9 @@
 				saved = state.create( 'saved' ),
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
-				paneVisible = state.create( 'paneVisible' );
+				paneVisible = state.create( 'paneVisible' ),
+				changesetExists = state.create( 'changesetExists' ),
+				changesetUuid = state.create( 'changesetUuid' );
 
 			state.bind( 'change', function() {
 				if ( ! activated() ) {
@@ -3998,6 +4114,8 @@
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
+			changesetExists( api.settings.changeset.exists );
+			changesetUuid( api.settings.changeset.uuid );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );

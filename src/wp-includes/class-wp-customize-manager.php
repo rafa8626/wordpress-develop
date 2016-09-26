@@ -209,6 +209,20 @@ final class WP_Customize_Manager {
 	private $_post_values;
 
 	/**
+	 * Changeset post ID.
+	 *
+	 * @var int|false
+	 */
+	private $_changeset_post_id;
+
+	/**
+	 * Changeset data loaded from a customize_changeset post.
+	 *
+	 * @var array
+	 */
+	private $_changeset_data;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 3.4.0
@@ -688,48 +702,103 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Get the changeset post.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return int|null
+	 */
+	public function changeset_post_id() {
+		if ( isset( $this->_changeset_post_id ) ) {
+			return $this->_changeset_post_id;
+		}
+		$changeset_post_query = new WP_Query( array(
+			'post_type' => 'customize_changeset',
+			'post_status' => get_post_stati(),
+			'name' => $this->changeset_uuid,
+			'number' => 1,
+			'no_found_rows' => true,
+			'update_post_meta_cache' => false,
+			'update_term_meta_cache' => false,
+		) );
+		if ( ! empty( $changeset_post_query->posts ) ) {
+			$this->_changeset_post_id = $changeset_post_query->posts[0]->ID;
+		} else {
+			$this->_changeset_post_id = false;
+		}
+		return $this->_changeset_post_id ? $this->_changeset_post_id : null;
+	}
+
+	/**
+	 * Get changeset data.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return array Changeset data.
+	 */
+	public function changeset_data() {
+		if ( isset( $this->_changeset_data ) ) {
+			return $this->_changeset_data;
+		}
+		$changeset_post_id = $this->changeset_post_id();
+		if ( ! $changeset_post_id ) {
+			$this->_changeset_data = array();
+		} else {
+			$changeset_post = get_post( $changeset_post_id );
+			if ( $changeset_post ) {
+				$changeset = json_decode( $changeset_post->post_content, true );
+				if ( is_array( $changeset ) ) {
+					$this->_changeset_data = $changeset;
+				} else {
+					$this->_changeset_data = array();
+				}
+			}
+		}
+		return $this->_changeset_data;
+	}
+
+	/**
 	 * Parse the incoming $_POST['customized'] JSON data and store the unsanitized
 	 * settings for subsequent post_value() lookups.
 	 *
 	 * @since 4.1.1
+	 * @since 4.7.0 Added $args param.
 	 *
+	 * @param array $args {
+	 *     Args.
+	 *
+	 *     @type bool $exclude_changeset Whether or not the changeset values should also be included.
+	 * }
 	 * @return array
 	 */
-	public function unsanitized_post_values() {
+	public function unsanitized_post_values( $args = array() ) {
+		$args = array_merge(
+			array(
+				'exclude_changeset' => false,
+			),
+			$args
+		);
+
+		$values = array();
+
+		if ( ! $args['exclude_changeset'] ) {
+			$values = array_merge( $values, wp_list_pluck( $this->changeset_data(), 'value' ) );
+		}
+
 		if ( ! isset( $this->_post_values ) ) {
-			if ( $this->changeset_uuid ) {
-				$changeset_post_query = new WP_Query( array(
-					'post_type' => 'customize_changeset',
-					'post_status' => 'any',
-					'name' => $this->changeset_uuid,
-					'number' => 1,
-					'no_found_rows' => true,
-					'update_post_meta_cache' => false,
-					'update_term_meta_cache' => false,
-				) );
-				if ( ! empty( $changeset_post_query->posts ) ) {
-					$changeset_post = $changeset_post_query->posts[0];
-					$changeset = json_decode( $changeset_post->post_content, true );
-					if ( is_array( $changeset ) ) {
-						$this->_post_values = wp_list_pluck( $changeset, 'value' );
-					}
-				}
-			}
 			if ( isset( $_POST['customized'] ) ) {
-				$this->_post_values = array_merge(
-					$this->_post_values,
-					json_decode( wp_unslash( $_POST['customized'] ), true )
-				);
+				$post_values = json_decode( wp_unslash( $_POST['customized'] ), true );
+			} else {
+				$post_values = array();
 			}
-			if ( empty( $this->_post_values ) ) { // If not isset or if JSON error.
+			if ( is_array( $post_values ) ) {
+				$this->_post_values = $post_values;
+			} else {
 				$this->_post_values = array();
 			}
 		}
-		if ( empty( $this->_post_values ) ) {
-			return array();
-		} else {
-			return $this->_post_values;
-		}
+		$values = array_merge( $values, $this->_post_values );
+		return $values;
 	}
 
 	/**
@@ -901,7 +970,9 @@ final class WP_Customize_Manager {
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		$settings = array(
-			'changesetUuid' => $this->changeset_uuid,
+			'changeset' => array(
+				'uuid' => $this->changeset_uuid,
+			),
 			'theme' => array(
 				'stylesheet' => $this->get_stylesheet(),
 				'active'     => $this->is_theme_active(),
@@ -1129,9 +1200,10 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Switch the theme and trigger the save() method on each setting.
+	 * Save (update) changeset.
 	 *
 	 * @since 3.4.0
+	 * @since 4.7.0 The semantics of this method have changed to update a changeset, optionally to also change the status.
 	 */
 	public function save() {
 		if ( ! $this->is_preview() ) {
@@ -1141,6 +1213,19 @@ final class WP_Customize_Manager {
 		$action = 'save-customize_' . $this->get_stylesheet();
 		if ( ! check_ajax_referer( $action, 'nonce', false ) ) {
 			wp_send_json_error( 'invalid_nonce' );
+		}
+
+		$changeset_post_id = $this->changeset_post_id();
+		if ( $changeset_post_id && 'publish' === get_post_status( $changeset_post_id ) ) {
+			wp_send_json_error( 'changeset_already_published' );
+		}
+
+		$changeset_status = null;
+		if ( isset( $_POST['changeset_status'] ) ) {
+			$changeset_status = wp_unslash( $_POST['changeset_status'] );
+			if ( ! get_post_status_object( $changeset_status ) ) {
+				wp_send_json_error( 'bad_status' );
+			}
 		}
 
 		/**
@@ -1157,7 +1242,8 @@ final class WP_Customize_Manager {
 		do_action( 'customize_save_validation_before', $this );
 
 		// Validate settings.
-		$setting_validities = $this->validate_setting_values( $this->unsanitized_post_values() );
+		$post_values = $this->unsanitized_post_values( array( 'exclude_changeset' => true ) );
+		$setting_validities = $this->validate_setting_values( $post_values );
 		$invalid_setting_count = count( array_filter( $setting_validities, 'is_wp_error' ) );
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 		if ( $invalid_setting_count > 0 ) {
@@ -1171,42 +1257,85 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		// Do we have to switch themes?
-		if ( ! $this->is_theme_active() ) {
-			// Temporarily stop previewing the theme to allow switch_themes()
-			// to operate properly.
-			$this->stop_previewing_theme();
-			switch_theme( $this->get_stylesheet() );
-			update_option( 'theme_switched_via_customizer', true );
-			$this->start_previewing_theme();
+		$updated_changeset_data = $this->changeset_data();
+		foreach ( $post_values as $setting_id => $unsanitized_value ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( ! $setting || is_null( $unsanitized_value ) ) {
+				continue;
+			}
+			if ( ! isset( $updated_changeset_data[ $setting_id ] ) ) {
+				$updated_changeset_data[ $setting_id ] = array();
+			}
+			$updated_changeset_data[ $setting_id ]['value'] = $unsanitized_value;
 		}
 
-		/**
-		 * Fires once the theme has switched in the Customizer, but before settings
-		 * have been saved.
-		 *
-		 * @since 3.4.0
-		 *
-		 * @param WP_Customize_Manager $this WP_Customize_Manager instance.
-		 */
-		do_action( 'customize_save', $this );
-
-		foreach ( $this->settings as $setting ) {
-			$setting->save();
-		}
-
-		/**
-		 * Fires after Customize settings have been saved.
-		 *
-		 * @since 3.6.0
-		 *
-		 * @param WP_Customize_Manager $this WP_Customize_Manager instance.
-		 */
-		do_action( 'customize_save_after', $this );
-
-		$data = array(
+		$response = array(
 			'setting_validities' => $exported_setting_validities,
 		);
+
+		$has_kses = ( false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' ) );
+		if ( $has_kses ) {
+			kses_remove_filters(); // Prevent KSES from corrupting JSON in post_content.
+		}
+
+		$post_array = array(
+			'post_content' => wp_json_encode( $updated_changeset_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ),
+		);
+
+		if ( $changeset_post_id ) {
+			$post_array['ID'] = $changeset_post_id;
+			$r = wp_update_post( wp_slash( $post_array ), true );
+		} else {
+			$post_array['post_type'] = 'customize_changeset';
+			$post_array['post_name'] = $this->changeset_uuid();
+			$post_array['post_status'] = 'auto-draft';
+			$r = wp_insert_post( wp_slash( $post_array ), true );
+			if ( ! is_wp_error( $changeset_post_id ) ) {
+				$changeset_post_id = $r;
+			}
+		}
+		if ( $has_kses ) {
+			kses_init_filters();
+		}
+
+		if ( is_wp_error( $r ) ) {
+			$response['snapshot_save_failure'] = $r->get_error_code();
+
+			/** This filter is documented in wp-includes/class-wp-customize-manager.php */
+			$response = apply_filters( 'customize_save_response', $response, $this );
+			wp_send_json_error( $response );
+		}
+
+		// Handle status transitions for changeset, including publishing.
+		// @todo Check current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $post_id )
+		// @todo Check current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts, $post_id )
+		if ( $changeset_status ) {
+			if ( 'publish' === $changeset_status && false === has_action( 'publish_customize_changeset', '_wp_customize_publish_changeset' ) ) {
+				wp_send_json_error( 'missing_publish_callback', 500 );
+			}
+
+			// Do we have to switch themes?
+			if ( ! $this->is_theme_active() ) {
+				// Temporarily stop previewing the theme to allow switch_themes()
+				// to operate properly.
+				$this->stop_previewing_theme();
+				switch_theme( $this->get_stylesheet() );
+				update_option( 'theme_switched_via_customizer', true );
+				$this->start_previewing_theme();
+			}
+
+			// The publish_customize_changeset action will cause the settings in the changeset to be saved.
+			$r = wp_update_post( array(
+				'ID' => $changeset_post_id,
+				'post_status' => $changeset_status,
+			), true );
+
+			if ( is_wp_error( $r ) ) {
+				wp_send_json_error( $r->get_error_code(), 500 );
+			}
+
+			$response['next_changeset_uuid'] = $this->generate_uuid();
+		}
 
 		/**
 		 * Filters response data for a successful customize_save Ajax request.
@@ -1215,12 +1344,92 @@ final class WP_Customize_Manager {
 		 *
 		 * @since 4.2.0
 		 *
-		 * @param array                $data Additional information passed back to the 'saved'
-		 *                                   event on `wp.customize`.
-		 * @param WP_Customize_Manager $this WP_Customize_Manager instance.
+		 * @param array                $response Additional information passed back to the 'saved'
+		 *                                       event on `wp.customize`.
+		 * @param WP_Customize_Manager $this     WP_Customize_Manager instance.
 		 */
-		$response = apply_filters( 'customize_save_response', $data, $this );
+		$response = apply_filters( 'customize_save_response', $response, $this );
 		wp_send_json_success( $response );
+	}
+
+	/**
+	 * Publish changeset values.
+	 *
+	 * This will the values contained in a changeset, even changesets that do not
+	 * correspond to current manager instance. This is called by
+	 * `_wp_customize_publish_changeset()` when a customize_changeset post is
+	 * transitioned to the `publish` status.
+	 *
+	 * @since 4.7.0
+	 * @see _wp_customize_publish_changeset()
+	 *
+	 * @todo How will the theme be provided? It won't. Theme switch will remain outside of transaction for now.
+	 *
+	 * @param int $changeset_post_id ID for customize_changeset post. Defaults to the changeset for the current manager instance.
+	 */
+	public function publish_changeset_values( $changeset_post_id = null ) {
+
+		if ( empty( $changeset_post_id ) ) {
+			$changeset_post = $this->changeset_post_id();
+		}
+		if ( empty( $changeset_post ) ) {
+			return;
+		}
+		$changeset_post = get_post( $changeset_post_id );
+		if ( ! $changeset_post ) {
+			return;
+		}
+
+		$changeset_data = json_decode( $changeset_post->post_content, true );
+		if ( ! is_array( $changeset_data ) ) {
+			return;
+		}
+		$this->add_dynamic_settings( array_keys( $changeset_data ) );
+
+		/**
+		 * Fires once the theme has switched in the Customizer, but before settings
+		 * have been saved.
+		 *
+		 * @since 3.4.0
+		 *
+		 * @param WP_Customize_Manager $manager WP_Customize_Manager instance.
+		 */
+		do_action( 'customize_save', $this );
+
+		/*
+		 * Ensure that all settings will allow themselves to be saved. Note that
+		 * this is safe because the setting would have checked the capability
+		 * when the setting value was written into the changeset. So this is why
+		 * an additional check is not required here.
+		 */
+		$original_setting_capabilities = array();
+		foreach ( $this->settings() as $setting ) {
+			$original_setting_capabilities[ $setting->id ] = $setting->capability;
+			$setting->capability = 'exist';
+		}
+
+		foreach ( $changeset_data as $setting_id => $setting_params ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting && isset( $setting_params['value'] ) ) {
+				$this->set_post_value( $setting_id, $setting_params['value'] );
+				$setting->save();
+			}
+		}
+
+		/**
+		 * Fires after Customize settings have been saved.
+		 *
+		 * @since 3.6.0
+		 *
+		 * @param WP_Customize_Manager $manager WP_Customize_Manager instance.
+		 */
+		do_action( 'customize_save_after', $this );
+
+		foreach ( $this->settings() as $setting ) {
+			if ( isset( $original_setting_capabilities[ $setting->id ] ) ) {
+				$setting->capability = $original_setting_capabilities[ $setting->id ];
+			}
+		}
 	}
 
 	/**
@@ -1906,7 +2115,10 @@ final class WP_Customize_Manager {
 
 		// Prepare Customizer settings to pass to JavaScript.
 		$settings = array(
-			'changesetUuid' => $this->changeset_uuid,
+			'changeset' => array(
+				'uuid' => $this->changeset_uuid,
+				'exists' => null !== $this->changeset_post_id(),
+			),
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),
 				'active'     => $this->is_theme_active(),

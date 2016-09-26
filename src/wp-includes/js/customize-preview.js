@@ -175,6 +175,10 @@
 
 		api.preview.bind( 'saved', function( response ) {
 			api.trigger( 'saved', response );
+
+			if ( response.next_changeset_uuid ) {
+				api.settings.changeset.uuid = response.next_changeset_uuid;
+			}
 		} );
 
 		api.bind( 'saved', function() {

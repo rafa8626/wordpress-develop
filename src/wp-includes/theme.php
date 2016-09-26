@@ -2076,10 +2076,16 @@ function check_theme_switched() {
  * @global WP_Customize_Manager $wp_customize
  */
 function _wp_customize_include() {
-	if ( ! ( ( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
-		|| ! empty( $_REQUEST['customize_changeset'] )
-		|| ( is_admin() && 'customize.php' == basename( $_SERVER['PHP_SELF'] ) )
-	) ) {
+
+	$should_include = (
+		( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
+		||
+		! empty( $_REQUEST['customize_changeset'] )
+		||
+		( is_admin() && 'customize.php' == basename( $_SERVER['PHP_SELF'] ) )
+	);
+
+	if ( ! $should_include ) {
 		return;
 	}
 
@@ -2090,6 +2096,23 @@ function _wp_customize_include() {
 
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
 	$GLOBALS['wp_customize'] = new WP_Customize_Manager( $changeset_uuid );
+}
+
+/**
+ * Publish a snapshot's changes.
+ *
+ * @param int     $changeset_post_id Changeset post ID.
+ * @param WP_Post $changeset_post    Changeset post object.
+ */
+function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) {
+	global $wp_customize;
+	if ( empty( $wp_customize ) ) {
+		$wp_customize = new WP_Customize_Manager( $changeset_post->post_name );
+	}
+	if ( ! did_action( 'customize_register' ) ) {
+		do_action( 'customize_register', $wp_customize );
+	}
+	$wp_customize->publish_changeset_values( $changeset_post_id ) ;
 }
 
 /**
