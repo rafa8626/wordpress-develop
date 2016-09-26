@@ -1144,16 +1144,38 @@ final class WP_Customize_Manager {
 	 * @see WP_Customize_Setting::validate()
 	 *
 	 * @param array $setting_values Mapping of setting IDs to values to validate and sanitize.
+	 * @param array $options {
+	 *     Options.
+	 *
+	 *     @var bool $validate_existence    Whether a setting's existence will be checked.
+	 *     @var bool $validate_capability Whether the setting capability will be checked.
+	 * }
 	 * @return array Mapping of setting IDs to return value of validate method calls, either `true` or `WP_Error`.
 	 */
-	public function validate_setting_values( $setting_values ) {
+	public function validate_setting_values( $setting_values, $options ) {
+		$options = wp_parse_args( $options, array(
+			'validate_capability' => false,
+			'validate_existence' => false,
+		) );
+
 		$validities = array();
 		foreach ( $setting_values as $setting_id => $unsanitized_value ) {
 			$setting = $this->get_setting( $setting_id );
-			if ( ! $setting || is_null( $unsanitized_value ) ) {
+			if ( ! $setting ) {
+				if ( $options['validate_existence'] ) {
+					$validities[ $setting_id ] = new WP_Error( 'unrecognized_setting', __( 'Setting does not exist or is unrecognized.' ) );
+				}
 				continue;
 			}
-			$validity = $setting->validate( $unsanitized_value );
+			if ( is_null( $unsanitized_value ) ) {
+				// @todo Should this be skipped or be invalid?
+				continue;
+			}
+			if ( $options['validate_capability'] && ! current_user_can( $setting->capability ) ) {
+				$validity = new WP_Error( 'unauthorized', __( 'Unauthorized.' ) );
+			} else {
+				$validity = $setting->validate( $unsanitized_value );
+			}
 			if ( ! is_wp_error( $validity ) ) {
 				$value = $setting->sanitize( $unsanitized_value );
 				if ( is_null( $value ) ) {
@@ -1243,7 +1265,10 @@ final class WP_Customize_Manager {
 
 		// Validate settings.
 		$post_values = $this->unsanitized_post_values( array( 'exclude_changeset' => true ) );
-		$setting_validities = $this->validate_setting_values( $post_values );
+		$setting_validities = $this->validate_setting_values( $post_values, array(
+			'validate_capability' => true,
+			'validate_existence' => true,
+		) );
 		$invalid_setting_count = count( array_filter( $setting_validities, 'is_wp_error' ) );
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 		if ( $invalid_setting_count > 0 ) {
