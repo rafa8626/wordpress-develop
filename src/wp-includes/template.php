@@ -388,13 +388,14 @@ function get_page_template() {
  * The template path is filterable via the {@see 'paged_template'} hook.
  *
  * @since 1.5.0
+ * @deprecated 4.7.0 The paged.php template is no longer part of the heirarchy.
  *
  * @see get_query_template()
  *
- * @return string Full path to paged template file.
+ * @return void
  */
 function get_paged_template() {
-	return get_query_template('paged');
+	_deprecated_function( __FUNCTION__, '4.7.0' );
 }
 
 /**
