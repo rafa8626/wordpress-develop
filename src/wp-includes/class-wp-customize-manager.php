@@ -706,7 +706,7 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.7.0
 	 *
-	 * @return int|null
+	 * @return int|false
 	 */
 	public function changeset_post_id() {
 		if ( isset( $this->_changeset_post_id ) ) {
@@ -726,7 +726,7 @@ final class WP_Customize_Manager {
 		} else {
 			$this->_changeset_post_id = false;
 		}
-		return $this->_changeset_post_id ? $this->_changeset_post_id : null;
+		return $this->_changeset_post_id;
 	}
 
 	/**
@@ -1370,9 +1370,9 @@ final class WP_Customize_Manager {
 	public function publish_changeset_values( $changeset_post_id = null ) {
 
 		if ( empty( $changeset_post_id ) ) {
-			$changeset_post = $this->changeset_post_id();
+			$changeset_post_id = $this->changeset_post_id();
 		}
-		if ( empty( $changeset_post ) ) {
+		if ( empty( $changeset_post_id ) ) {
 			return;
 		}
 		$changeset_post = get_post( $changeset_post_id );
@@ -2117,7 +2117,7 @@ final class WP_Customize_Manager {
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
-				'exists' => null !== $this->changeset_post_id(),
+				'exists' => false !== $this->changeset_post_id(),
 			),
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),
