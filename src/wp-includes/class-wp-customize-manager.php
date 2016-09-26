@@ -2118,6 +2118,7 @@ final class WP_Customize_Manager {
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
 				'exists' => false !== $this->changeset_post_id(),
+				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : 'auto-draft',
 			),
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),

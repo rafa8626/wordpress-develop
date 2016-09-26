@@ -3872,6 +3872,7 @@
 					invalidSettings = [],
 					invalidControls;
 
+				api.state( 'changesetStatus' ).set( 'publish' );
 				body.addClass( 'saving' );
 
 				function captureSettingModifiedDuringSave( setting ) {
@@ -3905,7 +3906,7 @@
 					// @todo customized can be reduced to only what has been modified since the last changeset update.
 					query = $.extend( self.query(), {
 						nonce: self.nonce.save,
-						changeset_status: 'publish'
+						changeset_status: api.state( 'changesetStatus' ).get()
 					} );
 					request = wp.ajax.post( 'customize_save', query );
 
@@ -4097,6 +4098,7 @@
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
 				changesetExists = state.create( 'changesetExists' ), // @todo Eliminate in favor of changesetStatus of false?
+				changesetStatus = state.create( 'changesetStatus' );
 
 			state.bind( 'change', function() {
 				if ( ! activated() ) {
@@ -4119,6 +4121,7 @@
 			processing( 0 );
 			paneVisible( true );
 			changesetExists( api.settings.changeset.exists );
+			changesetStatus( api.settings.changeset.status );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );
