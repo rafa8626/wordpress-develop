@@ -158,9 +158,8 @@
 			} );
 
 			request.done( function requestChangesetUpdateDone( data ) {
+				api.state( 'changesetExists' ).set( true );
 				requestDeferred.resolve( data );
-
-				api.state( 'changesetExists' ).set( true ); // @todo Make sure that the customize_changeset UUID is added to the URL.
 			} );
 			request.fail( function requestChangesetUpdateFail( data ) {
 				requestDeferred.reject( data );
@@ -3960,8 +3959,8 @@
 
 						api.previewer.send( 'saved', response );
 
-						api.state( 'changesetExists' ).set( false ); // @todo Make sure that the customize_changeset UUID is removed from the URL.
-						api.state( 'changesetUuid' ).set( response.next_changeset_uuid );
+						api.state( 'changesetExists' ).set( false );
+						api.settings.changeset.uuid = response.next_changeset_uuid;
 
 						if ( response.setting_validities ) {
 							api._handleSettingValidities( {
@@ -4097,8 +4096,7 @@
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
-				changesetExists = state.create( 'changesetExists' ),
-				changesetUuid = state.create( 'changesetUuid' );
+				changesetExists = state.create( 'changesetExists' ), // @todo Eliminate in favor of changesetStatus of false?
 
 			state.bind( 'change', function() {
 				if ( ! activated() ) {
@@ -4116,12 +4114,11 @@
 			});
 
 			// Set default states.
-			saved( true );
+			saved( ! api.settings.changeset.exists );
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
 			changesetExists( api.settings.changeset.exists );
-			changesetUuid( api.settings.changeset.uuid );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );
@@ -4137,6 +4134,20 @@
 					api.trigger( 'activated' );
 				}
 			});
+
+			changesetExists.bind( function( exists ) {
+				var urlParser = document.createElement( 'a' );
+				urlParser.href = location.href;
+				urlParser.search = urlParser.search.replace( /(&|\?)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
+				urlParser.search = urlParser.search.replace( /&+$/, '' );
+				if ( exists ) {
+					if ( urlParser.search.length > 1 ) {
+						urlParser.search += '&';
+					}
+					urlParser.search += 'customize_changeset_uuid=' + api.settings.changeset.uuid;
+				}
+				history.replaceState( {}, document.title, urlParser.href );
+			} );
 
 			// Expose states to the API.
 			api.state = state;
