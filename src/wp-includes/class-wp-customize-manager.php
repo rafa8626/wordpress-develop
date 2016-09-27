@@ -133,10 +133,11 @@ final class WP_Customize_Manager {
 	 * Return value of check_ajax_referer() in customize_preview_init() method.
 	 *
 	 * @since 3.5.0
+	 * @since 4.7.0 Renamed from $nonce_tick to $preview_nonce_tick.
 	 * @access protected
 	 * @var false|int
 	 */
-	protected $nonce_tick;
+	protected $preview_nonce_tick = false;
 
 	/**
 	 * Panel types that may be rendered from JS templates.
@@ -200,6 +201,15 @@ final class WP_Customize_Manager {
 	 * @var string
 	 */
 	protected $changeset_uuid;
+
+	/**
+	 * Messenger channel.
+	 *
+	 * @since 4.7.0
+	 * @access protected
+	 * @var string
+	 */
+	protected $messenger_channel;
 
 	/**
 	 * Unsanitized values for Customize Settings parsed from $_POST['customized'].
@@ -271,6 +281,11 @@ final class WP_Customize_Manager {
 			$changeset_uuid = $this->generate_uuid();
 		}
 		$this->changeset_uuid = $changeset_uuid;
+
+		// @todo Let this be passed in via constructor args instead?
+		if ( isset( $_REQUEST['customize_messenger_channel'] ) ) {
+			$this->messenger_channel = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
+		}
 
 		/**
 		 * Filters the core Customizer components to load.
@@ -389,12 +404,37 @@ final class WP_Customize_Manager {
 	 * @param mixed $message UI message
 	 */
 	protected function wp_die( $ajax_message, $message = null ) {
-		if ( $this->doing_ajax() || isset( $_POST['customized'] ) ) {
+		if ( $this->doing_ajax() ) {
 			wp_die( $ajax_message );
 		}
 
 		if ( ! $message ) {
 			$message = __( 'Cheatin&#8217; uh?' );
+		}
+
+		if ( $this->messenger_channel ) {
+			header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
+			echo '<!DOCTYPE html><html>';
+			wp_print_scripts( array( 'customize-base' ) );
+
+			$settings = array(
+				'messengerArgs' => array(
+					'channel' => $this->messenger_channel,
+					'url' => wp_customize_url(),
+				),
+				'error' => $ajax_message,
+			);
+			?>
+			<script>
+			( function( api, settings ) {
+				var preview = new api.Messenger( settings.messengerArgs );
+				preview.send( 'iframe-loading-error', settings.error );
+			} )( wp.customize, <?php echo wp_json_encode( $settings ) ?> );
+			</script>
+			<?php
+			echo "<p>$message</p>";
+			echo '</html>';
+			die(); // @todo Not testable.
 		}
 
 		wp_die( $message );
@@ -885,7 +925,22 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_init() {
-		$this->nonce_tick = check_ajax_referer( 'preview-customize_' . $this->get_stylesheet(), 'nonce' );
+
+		/*
+		 * Prevent printing any customize preview data if lacking valid preview nonce.
+		 * Note the lack of a valid nonce is only cause to die when the preview is
+		 * is being loaded in the preview iframe. In this case, it is necessary
+		 * for the user to re-login to get new nonces so that the preview will
+		 * load with all of the scripts and settings that are needed to preview
+		 * changes.
+		 */
+		$this->preview_nonce_tick = check_ajax_referer( 'preview-customize_' . $this->get_stylesheet(), 'nonce', false );
+		if ( false === $this->preview_nonce_tick ) {
+			if ( $this->messenger_channel ) {
+				$this->wp_die( -1, __( 'Bad nonce. Remove customize_messenger_channel param to preview as frontend.' ) );
+			}
+			return;
+		}
 
 		$this->prepare_controls();
 
@@ -980,7 +1035,7 @@ final class WP_Customize_Manager {
 			'url' => array(
 				'self' => empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
 			),
-			'channel' => wp_unslash( $_POST['customize_messenger_channel'] ),
+			'channel' => $this->messenger_channel,
 			'activePanels' => array(),
 			'activeSections' => array(),
 			'activeControls' => array(),
