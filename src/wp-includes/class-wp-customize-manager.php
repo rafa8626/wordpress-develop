@@ -466,17 +466,9 @@ final class WP_Customize_Manager {
 	public function setup_theme() {
 		send_origin_headers();
 
-		$doing_ajax_or_is_customized = ( $this->doing_ajax() || isset( $_POST['customized'] ) );
-		if ( is_admin() && ! $doing_ajax_or_is_customized ) {
-			auth_redirect();
-		} elseif ( $doing_ajax_or_is_customized && ! is_user_logged_in() ) {
-			$this->wp_die( 0, __( 'You must be logged in to complete this action.' ) );
-		}
-
-		show_admin_bar( false );
-
-		if ( ! current_user_can( 'customize' ) ) {
-			$this->wp_die( -1, __( 'Sorry, you are not allowed to customize this site.' ) );
+		// Hide the admin bar if we're embedded in the customizer iframe.
+		if ( $this->messenger_channel ) {
+			show_admin_bar( false );
 		}
 
 		$this->original_stylesheet = get_stylesheet();
@@ -1282,6 +1274,10 @@ final class WP_Customize_Manager {
 	 * @since 4.7.0 The semantics of this method have changed to update a changeset, optionally to also change the status.
 	 */
 	public function save() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'unauthenticated' );
+		}
+
 		if ( ! $this->is_preview() ) {
 			wp_send_json_error( 'not_preview' );
 		}
