@@ -621,7 +621,7 @@ var wpNavMenu;
 			optionBox._updateBasedOnScreenOptions.always( function() {
 				optionBox._updateBasedOnScreenOptions = null;
 			} );
-		} ),
+		}, 2000 ),
 
 		initSortables : function() {
 			var currentDepth = 0, originalDepth, minDepth, maxDepth,
