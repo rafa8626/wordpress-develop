@@ -473,7 +473,7 @@ final class WP_Customize_Manager {
 
 		$this->original_stylesheet = get_stylesheet();
 
-		$this->theme = wp_get_theme( isset( $_REQUEST['theme'] ) ? $_REQUEST['theme'] : null );
+		$this->theme = wp_get_theme( isset( $_REQUEST['theme'] ) ? $_REQUEST['theme'] : null ); // @todo Let this be param to WP_Customize_Manager constructor.
 
 		if ( $this->is_theme_active() ) {
 			// Once the theme is loaded, we'll validate it.
@@ -918,6 +918,18 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_init() {
+
+		/*
+		 * Now that Customizer previews are loaded into iframes via GET requests
+		 * and natural URLs with transaction UUIDs added, we need to ensure that
+		 * the responses are never cached by proxies. In practice, this will not
+		 * be needed if the user is logged-in anyway. But if anonymous access is
+		 * allowed then the auth cookies would not be sent and WordPress would
+		 * not send no-cache headers by default.
+		 */
+		nocache_headers();
+		header( 'X-Robots: noindex, nofollow, noarchive' );
+		add_action( 'wp_head', 'wp_no_robots' );
 
 		/*
 		 * Prevent printing any customize preview data if lacking valid preview nonce.
