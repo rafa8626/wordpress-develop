@@ -137,7 +137,7 @@ final class WP_Customize_Manager {
 	 * @access protected
 	 * @var false|int
 	 */
-	protected $preview_nonce_tick = false;
+	protected $preview_nonce_tick;
 
 	/**
 	 * Panel types that may be rendered from JS templates.
@@ -814,7 +814,8 @@ final class WP_Customize_Manager {
 	 * @param array $args {
 	 *     Args.
 	 *
-	 *     @type bool $exclude_changeset Whether or not the changeset values should also be included.
+	 *     @type bool $exclude_changeset Whether or not the changeset values should also be included. This is excluded obtaining values for updating a snapshot.
+	 *     @type bool $exclude_post_data Whether or not the post input values should also be included. When lacking a valid nonce, this should be excluded.
 	 * }
 	 * @return array
 	 */
@@ -822,6 +823,7 @@ final class WP_Customize_Manager {
 		$args = array_merge(
 			array(
 				'exclude_changeset' => false,
+				'exclude_post_data' => ( false === $this->check_preview_nonce() ),
 			),
 			$args
 		);
@@ -832,19 +834,21 @@ final class WP_Customize_Manager {
 			$values = array_merge( $values, wp_list_pluck( $this->changeset_data(), 'value' ) );
 		}
 
-		if ( ! isset( $this->_post_values ) ) {
-			if ( isset( $_POST['customized'] ) ) {
-				$post_values = json_decode( wp_unslash( $_POST['customized'] ), true );
-			} else {
-				$post_values = array();
+		if ( ! $args['exclude_post_data'] ) {
+			if ( ! isset( $this->_post_values ) ) {
+				if ( isset( $_POST['customized'] ) ) {
+					$post_values = json_decode( wp_unslash( $_POST['customized'] ), true );
+				} else {
+					$post_values = array();
+				}
+				if ( is_array( $post_values ) ) {
+					$this->_post_values = $post_values;
+				} else {
+					$this->_post_values = array();
+				}
 			}
-			if ( is_array( $post_values ) ) {
-				$this->_post_values = $post_values;
-			} else {
-				$this->_post_values = array();
-			}
+			$values = array_merge( $values, $this->_post_values );
 		}
-		$values = array_merge( $values, $this->_post_values );
 		return $values;
 	}
 
@@ -1035,7 +1039,8 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_settings() {
-		$setting_validities = $this->validate_setting_values( $this->unsanitized_post_values() ); // @todo This is now unnecessary?
+		$setting_values = $this->unsanitized_post_values();
+		$setting_validities = $this->validate_setting_values( $setting_values ); // @todo This is now unnecessary?
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
@@ -1069,7 +1074,7 @@ final class WP_Customize_Manager {
 			'l10n' => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
 			),
-			'_dirty' => array_keys( $this->unsanitized_post_values() ),
+			'_dirty' => array_keys( $setting_values ),
 		);
 
 		foreach ( $this->panels as $panel_id => $panel ) {
@@ -1350,7 +1355,10 @@ final class WP_Customize_Manager {
 		do_action( 'customize_save_validation_before', $this );
 
 		// Validate settings.
-		$post_values = $this->unsanitized_post_values( array( 'exclude_changeset' => true ) );
+		$post_values = $this->unsanitized_post_values( array(
+			'exclude_changeset' => true,
+			'exclude_post_data' => false,
+		) );
 		$setting_validities = $this->validate_setting_values( $post_values, array(
 			'validate_capability' => true,
 			'validate_existence' => true,
@@ -2735,7 +2743,8 @@ final class WP_Customize_Manager {
 	 * @see add_dynamic_settings()
 	 */
 	public function register_dynamic_settings() {
-		$this->add_dynamic_settings( array_keys( $this->unsanitized_post_values() ) );
+		$setting_ids = array_keys( $this->unsanitized_post_values() );
+		$this->add_dynamic_settings( $setting_ids );
 	}
 
 	/**
