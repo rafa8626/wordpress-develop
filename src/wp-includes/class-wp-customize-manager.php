@@ -1022,8 +1022,19 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_settings() {
-		$setting_validities = $this->validate_setting_values( $this->unsanitized_post_values() );
+		$setting_validities = $this->validate_setting_values( $this->unsanitized_post_values() ); // @todo This is now unnecessary?
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
+
+		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		$customize_query_params = array(
+			'wp_customize',
+			'theme',
+			'customized',
+			'nonce',
+			'customize_changeset_uuid',
+			'customize_messenger_channel',
+		);
+		$self_url = remove_query_arg( $customize_query_params, $self_url );
 
 		$settings = array(
 			'changeset' => array(
@@ -1034,7 +1045,7 @@ final class WP_Customize_Manager {
 				'active'     => $this->is_theme_active(),
 			),
 			'url' => array(
-				'self' => empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
+				'self' => $self_url,
 			),
 			'channel' => $this->messenger_channel,
 			'activePanels' => array(),
@@ -1210,7 +1221,7 @@ final class WP_Customize_Manager {
 	 * }
 	 * @return array Mapping of setting IDs to return value of validate method calls, either `true` or `WP_Error`.
 	 */
-	public function validate_setting_values( $setting_values, $options ) {
+	public function validate_setting_values( $setting_values, $options = array() ) {
 		$options = wp_parse_args( $options, array(
 			'validate_capability' => false,
 			'validate_existence' => false,
