@@ -317,8 +317,6 @@ final class WP_Customize_Manager {
 			$this->nav_menus = new WP_Customize_Nav_Menus( $this );
 		}
 
-		add_filter( 'wp_die_handler', array( $this, 'wp_die_handler' ) );
-
 		add_action( 'setup_theme', array( $this, 'setup_theme' ) );
 		add_action( 'wp_loaded',   array( $this, 'wp_loaded' ) );
 
@@ -444,10 +442,13 @@ final class WP_Customize_Manager {
 	 * Return the Ajax wp_die() handler if it's a customized request.
 	 *
 	 * @since 3.4.0
+	 * @deprecated 4.7.0
 	 *
-	 * @return string
+	 * @return callable Die handler.
 	 */
 	public function wp_die_handler() {
+		_deprecated_function( __METHOD__, '4.7.0' );
+
 		if ( $this->doing_ajax() || isset( $_POST['customized'] ) ) {
 			return '_ajax_wp_die_handler';
 		}
@@ -945,12 +946,8 @@ final class WP_Customize_Manager {
 		$this->prepare_controls();
 
 		wp_enqueue_script( 'customize-preview' );
-		add_action( 'wp', array( $this, 'customize_preview_override_404_status' ) );
-		add_action( 'wp_head', array( $this, 'customize_preview_base' ) );
 		add_action( 'wp_head', array( $this, 'customize_preview_loading_style' ) );
 		add_action( 'wp_footer', array( $this, 'customize_preview_settings' ), 20 );
-		add_action( 'shutdown', array( $this, 'customize_preview_signature' ), 1000 );
-		add_filter( 'wp_die_handler', array( $this, 'remove_preview_signature' ) );
 
 		/**
 		 * Fires once the Customizer preview has initialized and JavaScript
@@ -968,21 +965,21 @@ final class WP_Customize_Manager {
 	 * preview, since it causes the jQuery Ajax to fail. Send 200 instead.
 	 *
 	 * @since 4.0.0
+	 * @deprecated 4.7.0
 	 * @access public
 	 */
 	public function customize_preview_override_404_status() {
-		if ( is_404() ) {
-			status_header( 200 );
-		}
+		_deprecated_function( __METHOD__, '4.7.0' );
 	}
 
 	/**
 	 * Print base element for preview frame.
 	 *
 	 * @since 3.4.0
+	 * @deprecated 4.7.0
 	 */
 	public function customize_preview_base() {
-		?><base href="<?php echo home_url( '/' ); ?>" /><?php
+		_deprecated_function( __METHOD__, '4.7.0' );
 	}
 
 	/**
@@ -1098,21 +1095,23 @@ final class WP_Customize_Manager {
 	 * Prints a signature so we can ensure the Customizer was properly executed.
 	 *
 	 * @since 3.4.0
+	 * @deprecated 4.7.0
 	 */
 	public function customize_preview_signature() {
-		echo 'WP_CUSTOMIZER_SIGNATURE';
+		_deprecated_function( __METHOD__, '4.7.0' );
 	}
 
 	/**
 	 * Removes the signature in case we experience a case where the Customizer was not properly executed.
 	 *
 	 * @since 3.4.0
+	 * @deprecated 4.7.0
 	 *
 	 * @param mixed $return Value passed through for {@see 'wp_die_handler'} filter.
 	 * @return mixed Value passed through for {@see 'wp_die_handler'} filter.
 	 */
 	public function remove_preview_signature( $return = null ) {
-		remove_action( 'shutdown', array( $this, 'customize_preview_signature' ), 1000 );
+		_deprecated_function( __METHOD__, '4.7.0' );
 
 		return $return;
 	}
