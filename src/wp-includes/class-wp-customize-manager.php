@@ -352,6 +352,21 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Check preview nonce.
+	 *
+	 * @since 4.7.0
+	 * @access private
+	 *
+	 * @return int|false Result of `wp_verify_nonce()`.
+	 */
+	protected function check_preview_nonce() {
+		if ( ! isset( $this->preview_nonce_tick ) ) {
+			$this->preview_nonce_tick = check_ajax_referer( 'preview-customize_' . $this->get_stylesheet(), 'nonce', false );
+		}
+		return $this->preview_nonce_tick;
+	}
+
+	/**
 	 * Generate a UUID for a changeset.
 	 *
 	 * @since 4.7.0
@@ -938,8 +953,7 @@ final class WP_Customize_Manager {
 		 * load with all of the scripts and settings that are needed to preview
 		 * changes.
 		 */
-		$this->preview_nonce_tick = check_ajax_referer( 'preview-customize_' . $this->get_stylesheet(), 'nonce', false );
-		if ( false === $this->preview_nonce_tick ) {
+		if ( false === $this->check_preview_nonce() ) {
 			if ( $this->messenger_channel ) {
 				$this->wp_die( -1, __( 'Bad nonce. Remove customize_messenger_channel param to preview as frontend.' ) );
 			}
