@@ -3094,25 +3094,26 @@
 		 *                          the request.
 		 */
 		run: function( deferred ) {
-			var self   = this,
+			var previewFrame = this,
 				loaded = false,
-				ready  = false;
+				ready = false,
+				urlParser;
 
-			if ( this._ready ) {
-				this.unbind( 'ready', this._ready );
+			if ( previewFrame._ready ) {
+				previewFrame.unbind( 'ready', previewFrame._ready );
 			}
 
-			this._ready = function() {
+			previewFrame._ready = function() {
 				ready = true;
 
 				if ( loaded ) {
-					deferred.resolveWith( self );
+					deferred.resolveWith( previewFrame );
 				}
 			};
 
-			this.bind( 'ready', this._ready );
+			previewFrame.bind( 'ready', previewFrame._ready );
 
-			this.bind( 'ready', function ( data ) {
+			previewFrame.bind( 'ready', function ( data ) {
 
 				this.container.addClass( 'iframe-ready' );
 
@@ -3162,74 +3163,54 @@
 				}
 			} );
 
-			this.request = $.ajax( this.previewUrl(), {
-				type: 'POST',
-				data: this.query,
-				xhrFields: {
-					withCredentials: true
-				}
+			// @todo Wait until 0 === processing?
+			urlParser = document.createElement( 'a' );
+			urlParser.href = this.previewUrl();
+			if ( urlParser.search.length > 1 ) {
+				urlParser.search += '&';
+			}
+			urlParser.search += $.param( _.extend(
+				{},
+				this.query,
+				{ customized: null }
+			) );
+
+			previewFrame.iframe = $( '<iframe />', {
+				title: api.l10n.previewIframeTitle,
+				src: urlParser.href
 			} );
+			previewFrame.iframe.appendTo( previewFrame.container );
+			previewFrame.targetWindow( previewFrame.iframe[0].contentWindow );
 
-			this.request.fail( function() {
-				deferred.rejectWith( self, [ 'request failure' ] );
-			});
-
-			this.request.done( function( response ) {
-				var location = self.request.getResponseHeader('Location'),
-					signature = self.signature,
-					index;
-
-				// Check if the location response header differs from the current URL.
-				// If so, the request was redirected; try loading the requested page.
-				if ( location && location !== self.previewUrl() ) {
-					deferred.rejectWith( self, [ 'redirect', location ] );
-					return;
-				}
+			previewFrame.bind( 'iframe-loading-error', function( error ) {
+				previewFrame.iframe.remove();
 
 				// Check if the user is not logged in.
-				if ( '0' === response ) {
-					self.login( deferred );
+				if ( 0 === error ) {
+					previewFrame.login( deferred );
 					return;
 				}
 
 				// Check for cheaters.
-				if ( '-1' === response ) {
-					deferred.rejectWith( self, [ 'cheatin' ] );
+				if ( -1 === error ) {
+					deferred.rejectWith( previewFrame, [ 'cheatin' ] );
 					return;
 				}
 
-				// Check for a signature in the request.
-				index = response.lastIndexOf( signature );
-				if ( -1 === index || index < response.lastIndexOf('</html>') ) {
-					deferred.rejectWith( self, [ 'unsigned' ] );
-					return;
+				deferred.rejectWith( previewFrame, [ 'request failure' ] );
+			} );
+
+			// @todo Handle case where resulting preview URL is not the same as previewFrame.previewUrl(), indicating redirect. Same problem as navigating around preview naturally.
+			previewFrame.iframe.one( 'load', function() {
+				loaded = true;
+
+				if ( ready ) {
+					deferred.resolveWith( previewFrame );
+				} else {
+					setTimeout( function() {
+						deferred.rejectWith( previewFrame, [ 'ready timeout' ] );
+					}, previewFrame.sensitivity );
 				}
-
-				// Strip the signature from the request.
-				response = response.slice( 0, index ) + response.slice( index + signature.length );
-
-				// Create the iframe and inject the html content.
-				self.iframe = $( '<iframe />', { 'title': api.l10n.previewIframeTitle } ).appendTo( self.container );
-
-				// Bind load event after the iframe has been added to the page;
-				// otherwise it will fire when injected into the DOM.
-				self.iframe.one( 'load', function() {
-					loaded = true;
-
-					if ( ready ) {
-						deferred.resolveWith( self );
-					} else {
-						setTimeout( function() {
-							deferred.rejectWith( self, [ 'ready timeout' ] );
-						}, self.sensitivity );
-					}
-				});
-
-				self.targetWindow( self.iframe[0].contentWindow );
-
-				self.targetWindow().document.open();
-				self.targetWindow().document.write( response );
-				self.targetWindow().document.close();
 			});
 		},
 
@@ -3268,7 +3249,7 @@
 
 		destroy: function() {
 			api.Messenger.prototype.destroy.call( this );
-			this.request.abort();
+			// @todo this.request.abort();
 
 			if ( this.iframe )
 				this.iframe.remove();
@@ -3502,6 +3483,8 @@
 
 			this.loading.fail( function( reason, location ) {
 				self.send( 'loading-failed' );
+
+				// @todo This should no longer be relevant. Nevertheless, the preview will need to send to the pane the resulting URL, but setting this should not cause a navigation event.
 				if ( 'redirect' === reason && location ) {
 					self.previewUrl( location );
 				}
