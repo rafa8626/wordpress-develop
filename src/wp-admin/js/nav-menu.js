@@ -615,7 +615,7 @@ var wpNavMenu;
 			}
 			optionBox._updateBasedOnScreenOptions = wp.ajax.post( 'closed-postboxes', {
 				hidden: optionBox.hidden,
-				closedpostboxesnonce: jQuery( '#closedpostboxesnonce' ).val(),
+				closedpostboxesnonce: $( '#closedpostboxesnonce' ).val(),
 				page: 'nav-menus'
 			} );
 			optionBox._updateBasedOnScreenOptions.always( function() {
