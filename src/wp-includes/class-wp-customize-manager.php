@@ -287,6 +287,9 @@ final class WP_Customize_Manager {
 			$this->messenger_channel = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
 		}
 
+		$this->original_stylesheet = get_stylesheet();
+		$this->theme = wp_get_theme( isset( $_REQUEST['theme'] ) ? $_REQUEST['theme'] : null ); // @todo Let this be param to WP_Customize_Manager constructor.
+
 		/**
 		 * Filters the core Customizer components to load.
 		 *
@@ -470,10 +473,6 @@ final class WP_Customize_Manager {
 		if ( $this->messenger_channel ) {
 			show_admin_bar( false );
 		}
-
-		$this->original_stylesheet = get_stylesheet();
-
-		$this->theme = wp_get_theme( isset( $_REQUEST['theme'] ) ? $_REQUEST['theme'] : null ); // @todo Let this be param to WP_Customize_Manager constructor.
 
 		if ( $this->is_theme_active() ) {
 			// Once the theme is loaded, we'll validate it.
