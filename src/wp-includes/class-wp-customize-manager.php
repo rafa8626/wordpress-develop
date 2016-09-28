@@ -954,14 +954,15 @@ final class WP_Customize_Manager {
 		add_action( 'wp_head', 'wp_no_robots' );
 
 		/*
-		 * Prevent printing any customize preview data if lacking valid preview nonce.
-		 * Note the lack of a valid nonce is only cause to die when the preview is
-		 * is being loaded in the preview iframe. In this case, it is necessary
-		 * for the user to re-login to get new nonces so that the preview will
-		 * load with all of the scripts and settings that are needed to preview
-		 * changes.
+		 * Prevent printing any customize preview data if user cannot customize.
+		 * When the preview is loaded through the customizer preview iframe, the
+		 * common scenario here is that user's session expired and so if in an
+		 * iframe they should be prompted to re-login. Otherwise, if the user is
+		 * not inside of an iframe (where the customize_messenger_channel param
+		 * is absent) then the user is likely previewing on the frontend where
+		 * unauthenticated access is permitted.
 		 */
-		if ( false === $this->check_preview_nonce() ) {
+		if ( ! current_user_can( 'customize' ) ) {
 			if ( $this->messenger_channel ) {
 				$this->wp_die( -1, __( 'Bad nonce. Remove customize_messenger_channel param to preview as frontend.' ) );
 			}
