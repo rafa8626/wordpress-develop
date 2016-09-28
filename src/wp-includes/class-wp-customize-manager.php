@@ -323,9 +323,6 @@ final class WP_Customize_Manager {
 		add_action( 'setup_theme', array( $this, 'setup_theme' ) );
 		add_action( 'wp_loaded',   array( $this, 'wp_loaded' ) );
 
-		// Run wp_redirect_status late to make sure we override the status last.
-		add_action( 'wp_redirect_status', array( $this, 'wp_redirect_status' ), 1000 );
-
 		// Do not spawn cron (especially the alternate cron) while running the Customizer.
 		remove_action( 'init', 'wp_cron' );
 
@@ -737,13 +734,17 @@ final class WP_Customize_Manager {
 	 * Instead, the JS will sniff out the location header.
 	 *
 	 * @since 3.4.0
+	 * @deprecated 4.7.0
 	 *
-	 * @param $status
+	 * @param int $status Status.
 	 * @return int
 	 */
 	public function wp_redirect_status( $status ) {
-		if ( $this->is_preview() && ! is_admin() )
+		_deprecated_function( __FUNCTION__, '4.7.0' );
+
+		if ( $this->is_preview() && ! is_admin() ) {
 			return 200;
+		}
 
 		return $status;
 	}
@@ -751,7 +752,10 @@ final class WP_Customize_Manager {
 	/**
 	 * Get the changeset post.
 	 *
+	 * @todo Add persistent object caching for query.
+	 *
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @return int|false
 	 */
