@@ -606,6 +606,14 @@ var wpNavMenu;
 			$( '.hide-postbox-tog' ).click( api.handleMenuScreenOptionClick );
 		},
 
+		/**
+		 * Handle click on menu screen option checkbox.
+		 *
+		 * On click, create a debounced wp.ajax call, based on which box is clicked.
+		 * This toggles the displayed state of the the menu item field.
+		 *
+		 * @return void
+		 */
 		handleMenuScreenOptionClick : _.debounce( function() {
 			var hidden = $( '.accordion-container li.accordion-section' ).filter( ':hidden' ).map(function() { return this.id; }).get().join( ',' );
 
