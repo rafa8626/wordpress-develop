@@ -128,9 +128,7 @@
 				throw new Error( 'Unexpected change for ' + settingId );
 			}
 
-			if ( _.isUndefined(  ) ) {
-
-			}
+			// @todo What if undefined value?
 		} );
 
 		updateChangesetTimeoutId = setTimeout( function requestAjaxChangesetUpdate() {
@@ -163,6 +161,13 @@
 			} );
 			request.fail( function requestChangesetUpdateFail( data ) {
 				requestDeferred.reject( data );
+			} );
+			request.always( function( data ) {
+				if ( data.setting_validities ) {
+					api._handleSettingValidities( {
+						settingValidities: data.setting_validities
+					} );
+				}
 			} );
 		}, bufferDelay );
 
