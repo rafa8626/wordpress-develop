@@ -2238,6 +2238,14 @@ final class WP_Customize_Manager {
 			'customize-login' => 1,
 		), wp_login_url() );
 
+		// Ensure dirty flags are set.
+		foreach ( array_keys( $this->unsanitized_post_values() ) as $setting_id ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting ) {
+				$setting->dirty = true;
+			}
+		}
+
 		// Prepare Customizer settings to pass to JavaScript.
 		$settings = array(
 			'changeset' => array(
