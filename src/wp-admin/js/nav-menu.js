@@ -607,19 +607,18 @@ var wpNavMenu;
 		},
 
 		handleMenuScreenOptionClick : _.debounce( function() {
-			var optionBox = this;
-			optionBox.hidden = $( '.accordion-container li.accordion-section' ).filter( ':hidden' ).map(function() { return this.id; }).get().join( ',' );
+			var hidden = $( '.accordion-container li.accordion-section' ).filter( ':hidden' ).map(function() { return this.id; }).get().join( ',' );
 
-			if ( optionBox._updateBasedOnScreenOptions ) {
-				optionBox._updateBasedOnScreenOptions.abort();
+			if ( api.menuList._updateBasedOnScreenOptions ) {
+				api.menuList._updateBasedOnScreenOptions.abort();
 			}
-			optionBox._updateBasedOnScreenOptions = wp.ajax.post( 'closed-postboxes', {
-				hidden: optionBox.hidden,
+			api.menuList._updateBasedOnScreenOptions = wp.ajax.post( 'closed-postboxes', {
+				hidden: hidden,
 				closedpostboxesnonce: $( '#closedpostboxesnonce' ).val(),
 				page: 'nav-menus'
 			} );
-			optionBox._updateBasedOnScreenOptions.always( function() {
-				optionBox._updateBasedOnScreenOptions = null;
+			api.menuList._updateBasedOnScreenOptions.always( function() {
+				api.menuList._updateBasedOnScreenOptions = null;
 			} );
 		}, 2000 ),
 
