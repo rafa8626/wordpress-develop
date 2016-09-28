@@ -55,24 +55,41 @@ body {
 
 #customize-controls .customize-info.maybe-sticky,
 #customize-controls .customize-section-title.maybe-sticky {
+	position: fixed;
+	z-index: 9;
+	top: 46px;
 	box-shadow: 0 1px 0 rgba(0, 0, 0, .1);
-	-webkit-transform: translateY(-100%);
-	-ms-transform: translateY(-100%);
-	transform: translateY(-100%);
-	-webkit-transition: -webkit-transform 0.24s ease-out;
-	transition: -webkit-transform 0.24s ease-out;
-	transition: transform 0.24s ease-out;
-	transition: transform 0.24s ease-out, -webkit-transform 0.24s ease-out;
+	-webkit-transform: translateY(-102%);
+	-ms-transform: translateY(-102%);
+	transform: translateY(-102%);
+}
 
+#customize-controls .customize-section-title.maybe-sticky {
+	margin-top: 0;
 }
 
 #customize-controls .customize-info.maybe-sticky.is-sticky,
 #customize-controls .customize-section-title.maybe-sticky.is-sticky {
-	position: relative;
-	z-index: 9;
 	-webkit-transform: none;
 	-ms-transform: none;
 	transform: none;
+	-webkit-transition: -webkit-transform 0.18s ease-out;
+	transition: -webkit-transform 0.18s ease-out;
+	transition: transform 0.18s ease-out;
+	transition: transform 0.18s ease-out, -webkit-transform 0.18s ease-out;
+}
+
+#customize-controls .customize-info.maybe-sticky.was-sticky,
+#customize-controls .customize-section-title.maybe-sticky.was-sticky {
+	position: absolute;
+	-webkit-transform: none;
+	-ms-transform: none;
+	transform: none;
+}
+
+#customize-controls .maybe-sticky .current-panel,
+#customize-controls .maybe-sticky .open {
+	padding-top: 72px;
 }
 
 #customize-controls .customize-info .accordion-section-title {
@@ -503,6 +520,7 @@ h3.customize-section-title {
 }
 
 .wp-full-overlay-sidebar .wp-full-overlay-header {
+	background-color: #eee;
 	-webkit-transition: padding ease-in-out .18s;
 	transition: padding ease-in-out .18s;
 }
