@@ -2089,13 +2089,21 @@ function _wp_customize_include() {
 		return;
 	}
 
+	$theme = null;
 	$changeset_uuid = null;
+	$messenger_channel = null;
 	if ( ! empty( $_REQUEST['customize_changeset_uuid'] ) ) {
 		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset_uuid'] ) );
 	}
+	if ( isset( $_REQUEST['customize_theme'] ) ) {
+		$theme = wp_unslash( $_REQUEST['customize_theme'] );
+	}
+	if ( isset( $_REQUEST['customize_messenger_channel'] ) ) {
+		$messenger_channel = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
+	}
 
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
-	$GLOBALS['wp_customize'] = new WP_Customize_Manager( $changeset_uuid );
+	$GLOBALS['wp_customize'] = new WP_Customize_Manager( compact( 'changeset_uuid', 'theme', 'messenger_channel' ) );
 }
 
 /**

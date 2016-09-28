@@ -236,11 +236,45 @@ final class WP_Customize_Manager {
 	 * Constructor.
 	 *
 	 * @since 3.4.0
-	 * @since 4.7.0 Added $changeset_uuid.
+	 * @since 4.7.0 Added $args param.
 	 *
-	 * @param string $changeset_uuid Changeset UUID, the post_name for the customize_changeset post containing the customized state.
+	 * @param array $args {
+	 *     Args.
+	 *
+	 *     @type string $changeset_uuid    Changeset UUID, the post_name for the customize_changeset post containing the customized state. Defaults to new UUID.
+	 *     @type string $theme             Theme to be previewed (for theme switch). Defaults to customize_theme or theme query params.
+	 *     @type string $messenger_channel Messenger channel. Defaults to customize_messenger_channel query param.
+	 * }
 	 */
-	public function __construct( $changeset_uuid = null ) {
+	public function __construct( $args = array() ) {
+
+		$args = array_merge(
+			array_fill_keys( array( 'changeset_uuid', 'theme', 'messenger_channel' ), null ),
+			$args
+		);
+
+		if ( ! isset( $args['changeset_uuid'] ) ) {
+			$args['changeset_uuid'] = $this->generate_uuid();
+		}
+
+		// The theme and messenger_channel should be supplied via $args, but they are also looked at in the $_REQUEST global here for back-compat.
+		if ( ! isset( $args['theme'] ) ) {
+			if ( isset( $_REQUEST['customize_theme'] ) ) {
+				$args['theme'] = wp_unslash( $_REQUEST['customize_theme'] );
+			} elseif ( isset( $_REQUEST['theme'] ) ) { // Deprecated.
+				$args['theme'] = wp_unslash( $_REQUEST['theme'] );
+			}
+		}
+		if ( ! isset( $args['messenger_channel'] ) && isset( $_REQUEST['customize_messenger_channel'] ) ) {
+			$args['messenger_channel'] = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
+		}
+
+		$this->original_stylesheet = get_stylesheet();
+		$this->theme = wp_get_theme( $args['theme'] );
+		foreach ( array( 'changeset_uuid', 'messenger_channel' ) as $key ) {
+			$this->$key = $args[ $key ];
+		}
+
 		require_once( ABSPATH . WPINC . '/class-wp-customize-setting.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-panel.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-section.php' );
@@ -276,19 +310,6 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-item-setting.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-setting.php' );
-
-		if ( empty( $changeset_uuid ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $changeset_uuid ) ) {
-			$changeset_uuid = $this->generate_uuid();
-		}
-		$this->changeset_uuid = $changeset_uuid;
-
-		// @todo Let this be passed in via constructor args instead?
-		if ( isset( $_REQUEST['customize_messenger_channel'] ) ) {
-			$this->messenger_channel = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
-		}
-
-		$this->original_stylesheet = get_stylesheet();
-		$this->theme = wp_get_theme( isset( $_REQUEST['theme'] ) ? $_REQUEST['theme'] : null ); // @todo Let this be param to WP_Customize_Manager constructor.
 
 		/**
 		 * Filters the core Customizer components to load.
@@ -479,6 +500,11 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function setup_theme() {
+
+		if ( ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $this->changeset_uuid ) ) {
+			$this->wp_die( -1, __( 'Invalid changeset UUID' ) );
+		}
+
 		send_origin_headers();
 
 		// Hide the admin bar if we're embedded in the customizer iframe.
@@ -961,10 +987,12 @@ final class WP_Customize_Manager {
 		 * not inside of an iframe (where the customize_messenger_channel param
 		 * is absent) then the user is likely previewing on the frontend where
 		 * unauthenticated access is permitted.
+		 *
+		 * @todo The settings should still be output for sake of unauthenticated users doing preview.
 		 */
 		if ( ! current_user_can( 'customize' ) ) {
 			if ( $this->messenger_channel ) {
-				$this->wp_die( -1, __( 'Bad nonce. Remove customize_messenger_channel param to preview as frontend.' ) );
+				$this->wp_die( -1, __( 'Unauthorized. You may remove the customize_messenger_channel param to preview as frontend.' ) );
 			}
 			return;
 		}
@@ -1050,10 +1078,7 @@ final class WP_Customize_Manager {
 
 		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 		$customize_query_params = array(
-			'wp_customize',
-			'theme',
-			'customized',
-			'nonce',
+			'customize_theme',
 			'customize_changeset_uuid',
 			'customize_messenger_channel',
 		);

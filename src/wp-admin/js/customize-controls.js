@@ -145,7 +145,7 @@
 
 			request = wp.ajax.post( 'customize_save', {
 				wp_customize: 'on',
-				theme: api.settings.theme.stylesheet,
+				customize_theme: api.settings.theme.stylesheet,
 				nonce: api.settings.nonce.save,
 				customize_changeset_uuid: api.settings.changeset.uuid,
 				customized: JSON.stringify( customized )
@@ -2333,7 +2333,7 @@
 			wp.ajax.post( 'custom-background-add', {
 				nonce: _wpCustomizeBackground.nonces.add,
 				wp_customize: 'on',
-				theme: api.settings.theme.stylesheet,
+				customize_theme: api.settings.theme.stylesheet,
 				attachment_id: this.params.attachment.id
 			} );
 		}
@@ -3546,7 +3546,7 @@
 
 			request = wp.ajax.post( 'customize_refresh_nonces', {
 				wp_customize: 'on',
-				theme: api.settings.theme.stylesheet
+				customize_theme: api.settings.theme.stylesheet
 			});
 
 			request.done( function( response ) {
@@ -3826,7 +3826,7 @@
 
 				return {
 					wp_customize: 'on',
-					theme: api.settings.theme.stylesheet,
+					customize_theme: api.settings.theme.stylesheet,
 					customized: JSON.stringify( dirtyCustomized ),
 					nonce: this.nonce.preview,
 					customize_changeset_uuid: api.settings.changeset.uuid
