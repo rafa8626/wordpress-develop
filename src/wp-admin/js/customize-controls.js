@@ -22,32 +22,32 @@
 	 */
 	api.Setting = api.Value.extend({
 		initialize: function( id, value, options ) {
-			api.Value.prototype.initialize.call( this, value, options );
+			var setting = this;
+			api.Value.prototype.initialize.call( setting, value, options );
 
-			this.id = id;
-			this.transport = this.transport || 'refresh';
-			this._dirty = options.dirty || false;
-			this.notifications = new api.Values({ defaultConstructor: api.Notification });
+			setting.id = id;
+			setting.transport = setting.transport || 'refresh';
+			setting._dirty = options.dirty || false;
+			setting.notifications = new api.Values({ defaultConstructor: api.Notification });
 
-			this.bind( this.updateChangeset );
-
-			// Whenever the setting's value changes, refresh the preview.
-			this.bind( this.preview );
+			setting.bind( setting.handleChange );
 		},
 
 		/**
-		 * Update the current changeset whenever a setting is updated.
+		 * Handle setting change.
 		 *
 		 * @since 4.7.0
 		 *
-		 * @returns {jQuery.Promise} Promise for requesting the changeset update.
+		 * @param {mixed} value Value.
 		 */
-		updateChangeset: function( value ) {
-			var setting = this, changes = {};
+		handleChange: function( value ) {
+			var setting = this, promise, changes = {};
 			changes[ setting.id ] = {
 				value: value
 			};
-			return api.requestChangesetUpdate( changes );
+			promise = api.requestChangesetUpdate( changes );
+			setting.previewer.addPendingChangesetUpdateRequest( promise ); // @todo Why not have requestChangesetUpdate do this?
+			setting.preview();
 		},
 
 		/**
@@ -56,10 +56,8 @@
 		preview: function() {
 			switch ( this.transport ) {
 				case 'refresh':
-					// @todo The refresh logic needs to wait until any transactions writes are finished.
 					return this.previewer.refresh();
 				case 'postMessage':
-					// @todo Selective refresh in the preview should wait until a "changeset updated" message is received.
 					return this.previewer.send( 'setting', [ this.id, this() ] );
 			}
 		},
@@ -95,7 +93,7 @@
 	 * @returns {jQuery.Promise}
 	 */
 	api.requestChangesetUpdate = function requestChangesetUpdate( changes ) {
-		var deferred, bufferDelay = 250; // @todo Can refreshBuffer then be eliminated?
+		var deferred;
 
 		if ( pendingChangesetUpdateRequestDeferred ) {
 			deferred = pendingChangesetUpdateRequestDeferred;
@@ -145,13 +143,11 @@
 
 			// @todo For now we can just use the previewer.query() and skip passing additional changes.
 
-			// @todo Note that when publishing, this request also needs to include the changeset status as publish.
 			request = wp.ajax.post( 'customize_save', {
 				wp_customize: 'on',
 				theme: api.settings.theme.stylesheet,
 				nonce: api.settings.nonce.save,
 				customize_changeset_uuid: api.settings.changeset.uuid,
-				// @todo customize_changeset_updates: JSON.stringify( pendingChanges ), // @todo Not being read.
 				customized: JSON.stringify( customized )
 			} );
 
@@ -169,7 +165,7 @@
 					} );
 				}
 			} );
-		}, bufferDelay );
+		}, api.previewer.refreshBuffer ); // Let this come from api.settings.updateChangesetBuffer.
 
 		return deferred.promise();
 	};
@@ -3318,49 +3314,19 @@
 			this.deferred = {
 				active: $.Deferred()
 			};
+			this.pendingChangesetUpdateRequests = [];
 
-			/*
-			 * Wrap this.refresh to prevent it from hammering the servers:
-			 *
-			 * If refresh is called once and no other refresh requests are
-			 * loading, trigger the request immediately.
-			 *
-			 * If refresh is called while another refresh request is loading,
-			 * debounce the refresh requests:
-			 * 1. Stop the loading request (as it is instantly outdated).
-			 * 2. Trigger the new request once refresh hasn't been called for
-			 *    self.refreshBuffer milliseconds.
-			 */
-			this.refresh = (function( self ) {
-
-				// @todo This also needs to wait for any pending changeset update requests.
-				var refresh  = self.refresh,
-					callback = function() {
-						timeout = null;
-
-						if ( pendingChangesetUpdateRequestDeferred ) {
-							pendingChangesetUpdateRequestDeferred.done( function() {
-								refresh.call( self );
-							} );
-						} else {
-							refresh.call( self );
-						}
-					},
-					timeout;
-
-				return function() {
-					if ( typeof timeout !== 'number' ) {
-						if ( self.loading ) {
-							self.abort();
-						} else {
-							return callback();
-						}
-					}
-
-					clearTimeout( timeout );
-					timeout = setTimeout( callback, self.refreshBuffer );
-				};
-			})( this );
+			// Debouce to prevent hammering server and then wait for any pending update requests.
+			this.refresh = _.debounce(
+				( function( originalRefresh ) {
+					return function() {
+						$.when.apply( $, self.pendingChangesetUpdateRequests ).then( function() {
+							originalRefresh.call( self );
+						} );
+					};
+				}( this.refresh ) ),
+				self.refreshBuffer
+			);
 
 			this.container   = api.ensure( params.container );
 			this.allowedUrls = params.allowedUrls;
@@ -3429,6 +3395,22 @@
 			// Update the document title when the preview changes.
 			this.bind( 'documentTitle', function ( title ) {
 				api.setDocumentTitle( title );
+			} );
+		},
+
+		/**
+		 * Add pending changeset update request promise.
+		 *
+		 * @param {jQuery.Promise} promise Promise.
+		 */
+		addPendingChangesetUpdateRequest: function( promise ) {
+			var previewer = this;
+			previewer.pendingChangesetUpdateRequests.push( promise );
+			promise.always( function() {
+				var i = _.indexOf( previewer.pendingChangesetUpdateRequests, promise );
+				if ( -1 !== i ) {
+					previewer.pendingChangesetUpdateRequests.splice( i, 1 );
+				}
 			} );
 		},
 
