@@ -1363,6 +1363,7 @@ final class WP_Customize_Manager {
 			'exclude_changeset' => true,
 			'exclude_post_data' => false,
 		) );
+		$this->add_dynamic_settings( array_keys( $post_values ) );
 		$setting_validities = $this->validate_setting_values( $post_values, array(
 			'validate_capability' => true,
 			'validate_existence' => true,
