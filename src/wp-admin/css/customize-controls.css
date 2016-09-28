@@ -1244,7 +1244,7 @@ body.cheatin p {
  * Widgets and Menus common styles
  */
 
-/* higher specificity than .wp-core-ui .button-secondary */
+/* higher specificity than .wp-core-ui .button */
 #customize-theme-controls .add-new-widget,
 #customize-theme-controls .add-new-menu-item {
 	cursor: pointer;
