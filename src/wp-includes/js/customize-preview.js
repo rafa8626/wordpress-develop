@@ -242,6 +242,11 @@
 			queryParams.customize_messenger_channel = api.settings.channel;
 		}
 		element.search = $.param( queryParams );
+
+		// Prevent links from breaking out of preview iframe.
+		if ( api.settings.channel ) {
+			element.target = '_self';
+		}
 	};
 
 	/**
@@ -286,31 +291,26 @@
 	 * @returns {void}
 	 */
 	api.injectStateIntoForms = function injectStateIntoForms() {
-		if ( ! api.settings.changeset.uuid ) {
-			return;
-		}
-		$( function() {
 
-			// Inject inputs for forms in initial document.
-			$( document.body ).find( 'form' ).each( function() {
-				api.injectStateFormInputs( this );
-			} );
+		// Inject inputs for forms in initial document.
+		$( document.body ).find( 'form' ).each( function() {
+			api.injectStateFormInputs( this );
+		} );
 
-			// Inject inputs for new forms added to the page.
-			if ( 'undefined' !== typeof MutationObserver ) {
-				api.mutationObserver = new MutationObserver( function( mutations ) {
-					_.each( mutations, function( mutation ) {
-						$( mutation.target ).find( 'form' ).each( function() {
-							api.injectStateFormInputs( this );
-						} );
+		// Inject inputs for new forms added to the page.
+		if ( 'undefined' !== typeof MutationObserver ) {
+			api.mutationObserver = new MutationObserver( function( mutations ) {
+				_.each( mutations, function( mutation ) {
+					$( mutation.target ).find( 'form' ).each( function() {
+						api.injectStateFormInputs( this );
 					} );
 				} );
-				api.mutationObserver.observe( document.documentElement, {
-					childList: true,
-					subtree: true
-				} );
-			}
-		} );
+			} );
+			api.mutationObserver.observe( document.documentElement, {
+				childList: true,
+				subtree: true
+			} );
+		}
 	};
 
 	/**
@@ -349,12 +349,9 @@
 			}
 		} );
 
-		inputs = $( form ).find( 'input[name=customize_changeset_uuid]' );
-
-		// Update existing UUID inputs with potentially new UUID.
-		if ( inputs.length > 0 ) {
-			inputs.val( api.settings.changeset.uuid );
-			return;
+		// Prevent links from breaking out of preview iframe.
+		if ( api.settings.channel ) {
+			form.target = '_self';
 		}
 	};
 
