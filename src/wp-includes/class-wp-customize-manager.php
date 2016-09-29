@@ -981,7 +981,9 @@ final class WP_Customize_Manager {
 		 * not send no-cache headers by default.
 		 */
 		nocache_headers();
-		header( 'X-Robots: noindex, nofollow, noarchive' );
+		if ( ! headers_sent() ) {
+			header( 'X-Robots: noindex, nofollow, noarchive' );
+		}
 		add_action( 'wp_head', 'wp_no_robots' );
 
 		/*
