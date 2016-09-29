@@ -172,7 +172,7 @@
 	};
 
 	/**
-	 * Should the supplied link have a changeset UUID added (or does it have one already)?
+	 * Should the supplied link have the state params added.
 	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
 	 * @param {string} element.search Query string.
@@ -180,7 +180,7 @@
 	 * @param {string} element.hostname Hostname.
 	 * @returns {boolean} Is appropriate for changeset link.
 	 */
-	api.shouldLinkHaveChangesetUuidParam = function shouldLinkHaveChangesetUuidParam( element ) {
+	api.shouldLinkHaveStateParams = function shouldLinkHaveStateParams( element ) {
 		if ( ! api.isMatchingBaseUrl( element ) ) {
 			return false;
 		}
@@ -209,17 +209,6 @@
 	};
 
 	/**
-	 * Return whether the supplied link element has the changeset query param.
-	 *
-	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
-	 * @param {object} element.search Query string.
-	 * @returns {boolean} Whether query param is present.
-	 */
-	api.doesLinkHaveChangesetUuidQueryParam = function( element ) {
-		return /(^|&)customize_changeset_uuid=/.test( element.search.substr( 1 ) );
-	};
-
-	/**
 	 * Inject the customize_changeset_uuid query param into links on the frontend.
 	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
@@ -229,7 +218,7 @@
 	api.injectStateLinkParams = function injectStateLinkParams( element ) {
 		var queryParams;
 
-		if ( ! api.shouldLinkHaveChangesetUuidParam( element ) ) {
+		if ( ! api.shouldLinkHaveStateParams( element ) ) {
 			return;
 		}
 
