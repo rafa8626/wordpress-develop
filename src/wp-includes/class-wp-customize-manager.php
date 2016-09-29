@@ -1077,16 +1077,17 @@ final class WP_Customize_Manager {
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
-		$customize_query_params = array(
+		$state_query_params = array(
 			'customize_theme',
 			'customize_changeset_uuid',
 			'customize_messenger_channel',
 		);
-		$self_url = remove_query_arg( $customize_query_params, $self_url );
+		$self_url = remove_query_arg( $state_query_params, $self_url );
 
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
+				'stateQueryParams' => $state_query_params,
 			),
 			'theme' => array(
 				'stylesheet' => $this->get_stylesheet(),

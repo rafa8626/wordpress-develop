@@ -111,12 +111,12 @@
 	 *
 	 * @returns {void}
 	 */
-	api.injectChangesetUuidIntoLinks = function injectChangesetUuidIntoLinks() {
+	api.injectStateIntoLinks = function injectStateIntoLinks() {
 		var linkSelectors = 'a, area';
 
 		// Inject links into initial document.
 		$( document.body ).find( linkSelectors ).each( function() {
-			api.injectChangesetUuidLinkParam( this );
+			api.injectStateLinkParams( this );
 		} );
 
 		// Inject links for new elements added to the page.
@@ -124,7 +124,7 @@
 			api.mutationObserver = new MutationObserver( function( mutations ) {
 				_.each( mutations, function( mutation ) {
 					$( mutation.target ).find( linkSelectors ).each( function() {
-						api.injectChangesetUuidLinkParam( this );
+						api.injectStateLinkParams( this );
 					} );
 				} );
 			} );
@@ -136,7 +136,7 @@
 
 			// If mutation observers aren't available, fallback to just-in-time injection.
 			$( document.documentElement ).on( 'click focus mouseover', linkSelectors, function() {
-				api.injectChangesetUuidLinkParam( this );
+				api.injectStateLinkParams( this );
 			} );
 		}
 	};
@@ -152,6 +152,23 @@
 	api.isMatchingBaseUrl = function isMatchingBaseUrl( parsedUrl ) {
 		// @todo return parsedUrl.hostname === api.data.home_url.host && 0 === parsedUrl.pathname.indexOf( api.data.home_url.path );
 		return true;
+	};
+
+	/**
+	 * Parse query string.
+	 *
+	 * @param {string} queryString Query string.
+	 * @returns {object} Parsed query string.
+	 */
+	api.parseQueryString = function parseQueryString( queryString ) {
+		var queryParams = {};
+		_.each( queryString.split( '&' ), function( pair ) {
+			var parts = pair.split( '=', 2 );
+			if ( parts[0] ) {
+				queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
+			}
+		} );
+		return queryParams;
 	};
 
 	/**
@@ -209,22 +226,22 @@
 	 * @param {object} element.search Query string.
 	 * @returns {void}
 	 */
-	api.injectChangesetUuidLinkParam = function injectChangesetUuidLinkParam( element ) {
-		var queryParam;
+	api.injectStateLinkParams = function injectStateLinkParams( element ) {
+		var queryParams;
 
 		if ( ! api.shouldLinkHaveChangesetUuidParam( element ) ) {
 			return;
 		}
 
-		queryParam = 'customize_changeset_uuid=' + encodeURIComponent( api.settings.changeset.uuid );
-		if ( api.doesLinkHaveChangesetUuidQueryParam( element ) ) {
-			element.search = element.search.replace( /(\?|&)customize_changeset_uuid=[^&]+]/, '$1' + queryParam );
-		} else {
-			if ( element.search.length > 1 ) {
-				element.search += '&';
-			}
-			element.search += queryParam;
+		queryParams = api.parseQueryString( element.search.substring( 1 ) );
+		queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
+		if ( ! api.settings.theme.active ) {
+			queryParams.customize_theme = api.settings.theme.stylesheet;
 		}
+		if ( api.settings.channel ) {
+			queryParams.customize_messenger_channel = api.settings.channel;
+		}
+		element.search = $.param( queryParams );
 	};
 
 	/**
@@ -233,9 +250,9 @@
 	 * @access private
 	 * @return {void}
 	 */
-	api.injectChangesetUuidIntoAjaxRequests = function injectChangesetUuidIntoAjaxRequests() {
+	api.injectStateIntoRequests = function injectStateIntoRequests() {
 		$.ajaxPrefilter( function prefilterAjax( options ) {
-			var urlParser;
+			var urlParser, queryParams;
 			if ( ! api.settings.changeset.uuid ) {
 				return;
 			}
@@ -248,15 +265,16 @@
 				return;
 			}
 
-			// Skip if changeset UUID already in URL.
-			if ( -1 !== urlParser.search.indexOf( 'customize_changeset_uuid=' + api.settings.changeset.uuid ) ) {
-				return;
+			queryParams = api.parseQueryString( urlParser.search.substring( 1 ) );
+			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
+			if ( ! api.settings.theme.active ) {
+				queryParams.customize_theme = api.settings.theme.stylesheet;
 			}
+			if ( api.settings.channel ) {
+				queryParams.customize_messenger_channel = api.settings.channel;
+			}
+			urlParser.search = $.param( queryParams );
 
-			if ( urlParser.search.substr( 1 ).length > 0 ) {
-				urlParser.search += '&';
-			}
-			urlParser.search += 'customize_changeset_uuid=' + api.settings.changeset.uuid;
 			options.url = urlParser.href;
 		} );
 	};
@@ -267,7 +285,7 @@
 	 * @access private
 	 * @returns {void}
 	 */
-	api.injectChangesetUuidIntoForms = function injectChangesetUuidIntoForms() {
+	api.injectStateIntoForms = function injectStateIntoForms() {
 		if ( ! api.settings.changeset.uuid ) {
 			return;
 		}
@@ -275,7 +293,7 @@
 
 			// Inject inputs for forms in initial document.
 			$( document.body ).find( 'form' ).each( function() {
-				api.injectChangesetUuidFormInput( this );
+				api.injectStateFormInputs( this );
 			} );
 
 			// Inject inputs for new forms added to the page.
@@ -283,7 +301,7 @@
 				api.mutationObserver = new MutationObserver( function( mutations ) {
 					_.each( mutations, function( mutation ) {
 						$( mutation.target ).find( 'form' ).each( function() {
-							api.injectChangesetUuidFormInput( this );
+							api.injectStateFormInputs( this );
 						} );
 					} );
 				} );
@@ -301,15 +319,8 @@
 	 * @param {HTMLFormElement} form Form.
 	 * @returns {void}
 	 */
-	api.injectChangesetUuidFormInput = function injectChangesetUuidFormInput( form ) {
-		var urlParser, inputs;
-		inputs = $( form ).find( 'input[name=customize_changeset_uuid]' );
-
-		// Update existing UUID inputs with potentially new UUID.
-		if ( inputs.length > 0 ) {
-			inputs.val( api.settings.changeset.uuid );
-			return;
-		}
+	api.injectStateFormInputs = function injectStateFormInputs( form ) {
+		var urlParser, inputs, stateParams = {};
 
 		urlParser = document.createElement( 'a' );
 		urlParser.href = form.action;
@@ -317,11 +328,34 @@
 			return;
 		}
 
-		$( form ).prepend( $( '<input>', {
-			type: 'hidden',
-			name: 'customize_changeset_uuid',
-			value: api.settings.changeset.uuid
-		} ) );
+		stateParams.customize_changeset_uuid = api.settings.changeset.uuid;
+		if ( ! api.settings.theme.active ) {
+			stateParams.customize_theme = api.settings.theme.stylesheet;
+		}
+		if ( api.settings.channel ) {
+			stateParams.customize_messenger_channel = api.settings.channel;
+		}
+
+		_.each( stateParams, function( value, name ) {
+			var input = $( form ).find( 'input[name="' + name + '"]' );
+			if ( input.length ) {
+				input.val( value );
+			} else {
+				$( form ).prepend( $( '<input>', {
+					type: 'hidden',
+					name: name,
+					value: value
+				} ) );
+			}
+		} );
+
+		inputs = $( form ).find( 'input[name=customize_changeset_uuid]' );
+
+		// Update existing UUID inputs with potentially new UUID.
+		if ( inputs.length > 0 ) {
+			inputs.val( api.settings.changeset.uuid );
+			return;
+		}
 	};
 
 	$( function() {
@@ -332,9 +366,10 @@
 			return;
 		}
 
-		api.injectChangesetUuidIntoLinks();
-		api.injectChangesetUuidIntoAjaxRequests();
-		api.injectChangesetUuidIntoForms();
+		// @todo These need to be called even on unauthenticated requests. In other words, _wpCustomizeSettings should be output regardless.
+		api.injectStateIntoLinks();
+		api.injectStateIntoRequests();
+		api.injectStateIntoForms();
 
 		api.preview = new api.Preview({
 			url: window.location.href,
@@ -404,10 +439,10 @@
 
 				// Update UUIDs in links and forms.
 				$( document.body ).find( 'a, area' ).each( function() {
-					api.injectChangesetUuidLinkParam( this );
+					api.injectStateLinkParams( this );
 				} );
 				$( document.body ).find( 'form' ).each( function() {
-					api.injectChangesetUuidFormInput( this );
+					api.injectStateFormInputs( this );
 				} );
 			}
 		} );
