@@ -3264,7 +3264,8 @@
 		 */
 		initialize: function( params, options ) {
 			var self = this,
-				rscheme = /^https?/;
+				rscheme = /^https?/,
+				parseQueryParams;
 
 			$.extend( this, options || {} );
 			this.deferred = {
@@ -3337,8 +3338,33 @@
 				return result ? result : null;
 			});
 
-			// Refresh the preview when the URL is changed (but not yet).
-			this.previewUrl.bind( this.refresh );
+			parseQueryParams = function( queryString ) {
+				var queryParams = {};
+				_.each( queryString.split( '&' ), function( pair ) {
+					var parts = pair.split( '=', 2 );
+					if ( parts[0] ) {
+						queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
+					}
+				} );
+				return queryParams;
+			};
+
+			// Change preview iframe URL when the previewUrl changes.
+			this.previewUrl.bind( function( newUrl ) {
+				var urlParser = document.createElement( 'a' ), oldParams = {}, newParams;
+
+				params = self.query();
+				delete params.customized;
+				params.customize_messenger_channel = self.channel();
+
+				urlParser.href = newUrl;
+				oldParams = parseQueryParams( urlParser.search.substring( 1 ) );
+				newParams = _.extend( {}, oldParams, params );
+
+				// @todo We may need to add a new param for customize_persistant_query_params as _.keys( newParams ).
+				urlParser.search = $.param( newParams );
+				self.preview.iframe.prop( 'src', urlParser.href );
+			} );
 
 			this.bind( 'ready', function() {
 				var data = {};
@@ -3443,7 +3469,7 @@
 		},
 
 		/**
-		 * Refresh the preview.
+		 * Refresh the preview seamlessly.
 		 */
 		refresh: function() {
 			var previewer = this;
