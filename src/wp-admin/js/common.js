@@ -1,4 +1,4 @@
-/* global setUserSetting, ajaxurl, commonL10n, alert, confirm, pagenow */
+/* global setUserSetting, commonL10n, alert, confirm, pagenow */
 var showNotice, adminMenu, columns, validateForm, screenMeta;
 ( function( $, window, undefined ) {
 	var $document = $( document ),
