@@ -30,15 +30,22 @@ columns = {
 		});
 	},
 
-	saveManageColumnsState : function() {
+	saveManageColumnsState : _.debounce( function() {
 		var hidden = this.hidden();
-		$.post(ajaxurl, {
+
+		if ( columns.ajaxRequst ) {
+			columns.ajaxRequst.abort();
+		}
+		columns.ajaxRequst = wp.ajax.post( {
 			action: 'hidden-columns',
 			hidden: hidden,
-			screenoptionnonce: $('#screenoptionnonce').val(),
+			screenoptionnonce: $( '#screenoptionnonce' ).val(),
 			page: pagenow
 		});
-	},
+		columns.ajaxRequst.always( function() {
+			columns.ajaxRequst = null;
+		} );
+	}, 2000 ),
 
 	checked : function(column) {
 		$('.column-' + column).removeClass( 'hidden' );

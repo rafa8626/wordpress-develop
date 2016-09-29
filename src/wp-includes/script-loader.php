@@ -75,7 +75,7 @@ function wp_default_scripts( &$scripts ) {
 		'secure' => (string) ( 'https' === parse_url( site_url(), PHP_URL_SCHEME ) ),
 	) );
 
-	$scripts->add( 'common', "/wp-admin/js/common$suffix.js", array('jquery', 'hoverIntent', 'utils'), false, 1 );
+	$scripts->add( 'common', "/wp-admin/js/common$suffix.js", array( 'jquery', 'hoverIntent', 'utils', 'underscore' ), false, 1 );
 	did_action( 'init' ) && $scripts->localize( 'common', 'commonL10n', array(
 		'warnDelete' => __( "You are about to permanently delete these items.\n  'Cancel' to stop, 'OK' to delete." ),
 		'dismiss'    => __( 'Dismiss this notice.' ),
