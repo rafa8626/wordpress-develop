@@ -429,6 +429,9 @@
 			api.preview.send( 'nonce', api.settings.nonce );
 
 			api.preview.send( 'documentTitle', document.title );
+
+			// Send scroll in case of loading via non-refresh.
+			api.preview.send( 'scroll', $( window ).scrollTop() );
 		});
 
 		api.preview.bind( 'saved', function( response ) {

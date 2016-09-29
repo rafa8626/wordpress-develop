@@ -3341,10 +3341,13 @@
 			this.previewUrl.bind( this.refresh );
 
 			this.bind( 'ready', function() {
-				this.send( 'sync', {
-					scroll: this.scroll,
-					settings: api.get()
-				});
+				var data = {};
+				data.settings = api.get();
+
+				if ( 'resolved' !== this.deferred.active.state() || this.loading ) {
+					data.scroll = this.scroll;
+				}
+				this.send( 'sync', data );
 			} );
 
 			this.bind( 'ready', function( data ) {
@@ -3463,7 +3466,6 @@
 
 				previousPreview = previewer.preview;
 				previewer.preview = loadingFrame;
-				delete previewer.loading;
 				previewer.targetWindow( loadingFrame.targetWindow() );
 				previewer.channel( loadingFrame.channel() );
 
@@ -3473,6 +3475,7 @@
 						previousPreview.destroy();
 					}
 					previewer.deferred.active.resolve();
+					delete previewer.loading;
 				};
 				loadingFrame.bind( 'synced', onceSynced );
 
