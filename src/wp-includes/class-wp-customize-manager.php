@@ -505,6 +505,11 @@ final class WP_Customize_Manager {
 			$this->wp_die( -1, __( 'Invalid changeset UUID' ) );
 		}
 
+		// If unauthenticated then require a valid changeset UUID to load the preview. In this way, the UUID serves as a secret key.
+		if ( ! current_user_can( 'customize' ) && ! $this->changeset_post_id() ) {
+			$this->wp_die( -1, __( 'Non-existent changeset UUID' ) );
+		}
+
 		send_origin_headers();
 
 		// Hide the admin bar if we're embedded in the customizer iframe.
@@ -980,24 +985,18 @@ final class WP_Customize_Manager {
 		add_action( 'wp_head', 'wp_no_robots' );
 
 		/*
-		 * Prevent printing any customize preview data if user cannot customize.
-		 * When the preview is loaded through the customizer preview iframe, the
-		 * common scenario here is that user's session expired and so if in an
-		 * iframe they should be prompted to re-login. Otherwise, if the user is
-		 * not inside of an iframe (where the customize_messenger_channel param
-		 * is absent) then the user is likely previewing on the frontend where
-		 * unauthenticated access is permitted.
-		 *
-		 * @todo The settings should still be output for sake of unauthenticated users doing preview.
+		 * If preview is being served inside the customizer preview iframe, and
+		 * if the user doesn't have customize capability, then it is assumed
+		 * that the user's session has expired and they need to re-authenticate.
 		 */
-		if ( ! current_user_can( 'customize' ) ) {
-			if ( $this->messenger_channel ) {
-				$this->wp_die( -1, __( 'Unauthorized. You may remove the customize_messenger_channel param to preview as frontend.' ) );
-			}
+		if ( $this->messenger_channel && ! current_user_can( 'customize' ) ) {
+			$this->wp_die( -1, __( 'Unauthorized. You may remove the customize_messenger_channel param to preview as frontend.' ) );
 			return;
 		}
 
-		$this->prepare_controls();
+		if ( current_user_can( 'customize' ) ) {
+			$this->prepare_controls();
+		}
 
 		wp_enqueue_script( 'customize-preview' );
 		add_action( 'wp_head', array( $this, 'customize_preview_loading_style' ) );
@@ -1101,7 +1100,7 @@ final class WP_Customize_Manager {
 			'activeSections' => array(),
 			'activeControls' => array(),
 			'settingValidities' => $exported_setting_validities,
-			'nonce' => $this->get_nonces(),
+			'nonce' => current_user_can( 'customize' ) ? $this->get_nonces() : array(),
 			'l10n' => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
 			),
