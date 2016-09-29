@@ -3098,71 +3098,27 @@
 			var previewFrame = this,
 				loaded = false,
 				ready = false,
+				readyData = null,
 				urlParser;
 
 			if ( previewFrame._ready ) {
 				previewFrame.unbind( 'ready', previewFrame._ready );
 			}
 
-			previewFrame._ready = function() {
+			previewFrame._ready = function( data ) {
 				ready = true;
-
-				if ( loaded ) {
-					deferred.resolveWith( previewFrame );
-				}
-			};
-
-			previewFrame.bind( 'ready', previewFrame._ready );
-
-			previewFrame.bind( 'ready', function ( data ) {
-
-				this.container.addClass( 'iframe-ready' );
-
+				readyData = data;
+				previewFrame.container.addClass( 'iframe-ready' );
 				if ( ! data ) {
 					return;
 				}
 
-				/*
-				 * Walk over all panels, sections, and controls and set their
-				 * respective active states to true if the preview explicitly
-				 * indicates as such.
-				 */
-				var constructs = {
-					panel: data.activePanels,
-					section: data.activeSections,
-					control: data.activeControls
-				};
-				_( constructs ).each( function ( activeConstructs, type ) {
-					api[ type ].each( function ( construct, id ) {
-						var isDynamicallyCreated = _.isUndefined( api.settings[ type + 's' ][ id ] );
-
-						/*
-						 * If the construct was created statically in PHP (not dynamically in JS)
-						 * then consider a missing (undefined) value in the activeConstructs to
-						 * mean it should be deactivated (since it is gone). But if it is
-						 * dynamically created then only toggle activation if the value is defined,
-						 * as this means that the construct was also then correspondingly
-						 * created statically in PHP and the active callback is available.
-						 * Otherwise, dynamically-created constructs should normally have
-						 * their active states toggled in JS rather than from PHP.
-						 */
-						if ( ! isDynamicallyCreated || ! _.isUndefined( activeConstructs[ id ] ) ) {
-							if ( activeConstructs[ id ] ) {
-								construct.activate();
-							} else {
-								construct.deactivate();
-							}
-						}
-					} );
-				} );
-
-				if ( data.settingValidities ) {
-					api._handleSettingValidities( {
-						settingValidities: data.settingValidities,
-						focusInvalidControl: false
-					} );
+				if ( loaded ) {
+					deferred.resolveWith( previewFrame, [ data ] );
 				}
-			} );
+			};
+
+			previewFrame.bind( 'ready', previewFrame._ready );
 
 			// @todo Wait until 0 === processing?
 			urlParser = document.createElement( 'a' );
@@ -3206,7 +3162,7 @@
 				loaded = true;
 
 				if ( ready ) {
-					deferred.resolveWith( previewFrame );
+					deferred.resolveWith( previewFrame, [ readyData ] );
 				} else {
 					setTimeout( function() {
 						deferred.rejectWith( previewFrame, [ 'ready timeout' ] );
@@ -3384,6 +3340,61 @@
 			// Refresh the preview when the URL is changed (but not yet).
 			this.previewUrl.bind( this.refresh );
 
+			this.bind( 'ready', function() {
+				this.send( 'sync', {
+					scroll: this.scroll,
+					settings: api.get()
+				});
+			} );
+
+			this.bind( 'ready', function( data ) {
+
+				/*
+				 * Walk over all panels, sections, and controls and set their
+				 * respective active states to true if the preview explicitly
+				 * indicates as such.
+				 */
+				var constructs = {
+					panel: data.activePanels,
+					section: data.activeSections,
+					control: data.activeControls
+				};
+				_( constructs ).each( function ( activeConstructs, type ) {
+					api[ type ].each( function ( construct, id ) {
+						var isDynamicallyCreated = _.isUndefined( api.settings[ type + 's' ][ id ] );
+
+						/*
+						 * If the construct was created statically in PHP (not dynamically in JS)
+						 * then consider a missing (undefined) value in the activeConstructs to
+						 * mean it should be deactivated (since it is gone). But if it is
+						 * dynamically created then only toggle activation if the value is defined,
+						 * as this means that the construct was also then correspondingly
+						 * created statically in PHP and the active callback is available.
+						 * Otherwise, dynamically-created constructs should normally have
+						 * their active states toggled in JS rather than from PHP.
+						 */
+						if ( ! isDynamicallyCreated || ! _.isUndefined( activeConstructs[ id ] ) ) {
+							if ( activeConstructs[ id ] ) {
+								construct.activate();
+							} else {
+								construct.deactivate();
+							}
+						}
+					} );
+				} );
+
+				if ( data.settingValidities ) {
+					api._handleSettingValidities( {
+						settingValidities: data.settingValidities,
+						focusInvalidControl: false
+					} );
+				}
+			} );
+
+			this.bind( 'synced', function() {
+				this.send( 'active' );
+			} );
+
 			this.scroll = 0;
 			this.bind( 'scroll', function( distance ) {
 				this.scroll = distance;
@@ -3432,61 +3443,62 @@
 		 * Refresh the preview.
 		 */
 		refresh: function() {
-			var self = this;
+			var previewer = this;
 
 			// Display loading indicator
-			this.send( 'loading-initiated' );
+			previewer.send( 'loading-initiated' );
 
-			this.abort();
+			previewer.abort();
 
-			this.loading = new api.PreviewFrame({
-				url:        this.url(),
-				previewUrl: this.previewUrl(),
-				query:      this.query() || {},
-				container:  this.container,
-				signature:  this.signature
+			previewer.loading = new api.PreviewFrame({
+				url:        previewer.url(),
+				previewUrl: previewer.previewUrl(),
+				query:      previewer.query() || {},
+				container:  previewer.container,
+				signature:  previewer.signature
 			});
 
-			this.loading.done( function() {
-				// 'this' is the loading frame
-				this.bind( 'synced', function() {
-					if ( self.preview )
-						self.preview.destroy();
-					self.preview = this;
-					delete self.loading;
+			previewer.loading.done( function( readyData ) {
+				var loadingFrame = this, previousPreview, onceSynced;
 
-					self.targetWindow( this.targetWindow() );
-					self.channel( this.channel() );
+				previousPreview = previewer.preview;
+				previewer.preview = loadingFrame;
+				delete previewer.loading;
+				previewer.targetWindow( loadingFrame.targetWindow() );
+				previewer.channel( loadingFrame.channel() );
 
-					self.deferred.active.resolve();
-					self.send( 'active' );
-				});
+				onceSynced = function() {
+					loadingFrame.unbind( 'synced', onceSynced );
+					if ( previousPreview ) {
+						previousPreview.destroy();
+					}
+					previewer.deferred.active.resolve();
+				};
+				loadingFrame.bind( 'synced', onceSynced );
 
-				this.send( 'sync', {
-					scroll:   self.scroll,
-					settings: api.get()
-				});
+				// This event will be received directly by the previewer in normal navigation; this is only needed for seamless refresh.
+				previewer.trigger( 'ready', readyData );
 			});
 
-			this.loading.fail( function( reason, location ) {
-				self.send( 'loading-failed' );
+			previewer.loading.fail( function( reason, location ) {
+				previewer.send( 'loading-failed' );
 
 				// @todo This should no longer be relevant. Nevertheless, the preview will need to send to the pane the resulting URL, but setting this should not cause a navigation event.
 				if ( 'redirect' === reason && location ) {
-					self.previewUrl( location );
+					previewer.previewUrl( location );
 				}
 
 				if ( 'logged out' === reason ) {
-					if ( self.preview ) {
-						self.preview.destroy();
-						delete self.preview;
+					if ( previewer.preview ) {
+						previewer.preview.destroy();
+						delete previewer.preview;
 					}
 
-					self.login().done( self.refresh );
+					previewer.login().done( previewer.refresh );
 				}
 
 				if ( 'cheatin' === reason ) {
-					self.cheatin();
+					previewer.cheatin();
 				}
 			});
 		},
