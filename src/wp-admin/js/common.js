@@ -36,8 +36,7 @@ columns = {
 		if ( columns.ajaxRequst ) {
 			columns.ajaxRequst.abort();
 		}
-		columns.ajaxRequst = wp.ajax.post( {
-			action: 'hidden-columns',
+		columns.ajaxRequst = wp.ajax.post( 'hidden-columns', {
 			hidden: hidden,
 			screenoptionnonce: $( '#screenoptionnonce' ).val(),
 			page: pagenow
