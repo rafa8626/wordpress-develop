@@ -123,7 +123,11 @@ do_action( 'customize_controls_print_scripts' );
 		<div id="customize-header-actions" class="wp-full-overlay-header">
 			<?php
 			$save_text = $wp_customize->is_theme_active() ? __( 'Save &amp; Publish' ) : __( 'Save &amp; Activate' );
-			submit_button( $save_text, 'primary save', 'save', false );
+			$save_attrs = array();
+			if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
+				$save_attrs['style'] = 'display: none';
+			}
+			submit_button( $save_text, 'primary save', 'save', false, $save_attrs );
 			?>
 			<span class="spinner"></span>
 			<button type="button" class="customize-controls-preview-toggle">
