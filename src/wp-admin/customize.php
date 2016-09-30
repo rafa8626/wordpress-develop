@@ -20,6 +20,20 @@ if ( ! current_user_can( 'customize' ) ) {
 	);
 }
 
+/**
+ * @global WP_Scripts           $wp_scripts
+ * @global WP_Customize_Manager $wp_customize
+ */
+global $wp_scripts, $wp_customize;
+
+if ( $wp_customize->changeset_post_id() && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $wp_customize->changeset_post_id() ) ) {
+	wp_die(
+		'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
+		'<p>' . __( 'Sorry, you are not allowed to edit this changeset.' ) . '</p>',
+		403
+	);
+}
+
 wp_reset_vars( array( 'url', 'return', 'autofocus' ) );
 if ( ! empty( $url ) ) {
 	$wp_customize->set_preview_url( wp_unslash( $url ) );
@@ -30,12 +44,6 @@ if ( ! empty( $return ) ) {
 if ( ! empty( $autofocus ) && is_array( $autofocus ) ) {
 	$wp_customize->set_autofocus( wp_unslash( $autofocus ) );
 }
-
-/**
- * @global WP_Scripts           $wp_scripts
- * @global WP_Customize_Manager $wp_customize
- */
-global $wp_scripts, $wp_customize;
 
 $registered = $wp_scripts->registered;
 $wp_scripts = new WP_Scripts;
