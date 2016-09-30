@@ -48,7 +48,12 @@ final class WP_Customize_Nav_Menus {
 		$this->previewed_menus = array();
 		$this->manager         = $manager;
 
-		// Skip useless hooks when the user can't manage nav menus anyway.
+		// See https://github.com/xwp/wp-customize-snapshots/blob/962586659688a5b1fd9ae93618b7ce2d4e7a421c/php/class-customize-snapshot-manager.php#L469-L499
+		add_action( 'customize_register', array( $this, 'customize_register' ), 11 );
+		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
+		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
+
+		// Skip remaining hooks when the user can't manage nav menus anyway.
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			return;
 		}
@@ -58,9 +63,6 @@ final class WP_Customize_Nav_Menus {
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'ajax_search_available_items' ) );
 		add_action( 'wp_ajax_customize-nav-menus-insert-auto-draft', array( $this, 'ajax_insert_auto_draft_post' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'customize_register', array( $this, 'customize_register' ), 11 );
-		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
-		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );

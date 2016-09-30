@@ -93,16 +93,18 @@ final class WP_Customize_Widgets {
 	public function __construct( $manager ) {
 		$this->manager = $manager;
 
-		// Skip useless hooks when the user can't manage widgets anyway.
+		// See https://github.com/xwp/wp-customize-snapshots/blob/962586659688a5b1fd9ae93618b7ce2d4e7a421c/php/class-customize-snapshot-manager.php#L420-L449
+		add_filter( 'customize_dynamic_setting_args',          array( $this, 'filter_customize_dynamic_setting_args' ), 10, 2 );
+		add_action( 'widgets_init',                            array( $this, 'register_settings' ), 95 );
+		add_action( 'customize_register',                      array( $this, 'schedule_customize_register' ), 1 );
+
+		// Skip remaining hooks when the user can't manage widgets anyway.
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			return;
 		}
 
-		add_filter( 'customize_dynamic_setting_args',          array( $this, 'filter_customize_dynamic_setting_args' ), 10, 2 );
-		add_action( 'widgets_init',                            array( $this, 'register_settings' ), 95 );
 		add_action( 'wp_loaded',                               array( $this, 'override_sidebars_widgets_for_theme_switch' ) );
 		add_action( 'customize_controls_init',                 array( $this, 'customize_controls_init' ) );
-		add_action( 'customize_register',                      array( $this, 'schedule_customize_register' ), 1 );
 		add_action( 'customize_controls_enqueue_scripts',      array( $this, 'enqueue_scripts' ) );
 		add_action( 'customize_controls_print_styles',         array( $this, 'print_styles' ) );
 		add_action( 'customize_controls_print_scripts',        array( $this, 'print_scripts' ) );
