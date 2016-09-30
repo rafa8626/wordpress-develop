@@ -115,7 +115,7 @@
 		_.each( changes, function( change, settingId ) {
 			if ( null === change ) {
 
-				// When null is passed as the change, the result will be the removal of the setting from the changeset. So like a revert.
+				// When null is passed as the change, the result will be the removal of the setting from the changeset. A revert.
 				api.pendingUpdateChanges[ settingId ] = null;
 			} else if ( _.isObject( change ) ) {
 				if ( _.isUndefined( api.pendingUpdateChanges[ settingId ] ) ) {
@@ -125,35 +125,32 @@
 			} else {
 				throw new Error( 'Unexpected change for ' + settingId );
 			}
-
-			// @todo What if undefined value?
 		} );
 
 		updateChangesetTimeoutId = setTimeout( function requestAjaxChangesetUpdate() {
-			var pendingChanges = _.clone( api.pendingUpdateChanges ), requestDeferred, request, customized = {};
+			var pendingChanges = _.clone( api.pendingUpdateChanges ), requestDeferred, request;
+
+			// Allow plugins to attach additional params to the settings.
+			api.trigger( 'changesetSave', pendingChanges );
+
 			api.pendingUpdateChanges = {};
 			requestDeferred = pendingChangesetUpdateRequestDeferred;
 			pendingChangesetUpdateRequestDeferred = null;
-
-			_.each( pendingChanges, function( change, settingId ) {
-				if ( ! _.isUndefined( change.value ) ) {
-					customized[ settingId ] = change.value;
-				}
-			} );
-
-			// @todo For now we can just use the previewer.query() and skip passing additional changes.
 
 			request = wp.ajax.post( 'customize_save', {
 				wp_customize: 'on',
 				customize_theme: api.settings.theme.stylesheet,
 				nonce: api.settings.nonce.save,
 				customize_changeset_uuid: api.settings.changeset.uuid,
-				customized: JSON.stringify( customized )
+				customize_changeset_data: JSON.stringify( pendingChanges )
 			} );
 
 			request.done( function requestChangesetUpdateDone( data ) {
 				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
+
+				// @todo Trigger an event which can then be sent into the preview to green-light that REST API calls with changeset will include the state in the response.
+				api.trigger( 'changesetSaved', data );
 			} );
 			request.fail( function requestChangesetUpdateFail( data ) {
 				requestDeferred.reject( data );
@@ -3906,8 +3903,7 @@
 					submit,
 					modifiedWhileSaving = {},
 					invalidSettings = [],
-					invalidControls,
-					previousChangesetStatus = api.state( 'changesetStatus' ).get();
+					invalidControls;
 
 				if ( args && args.status ) {
 					changesetStatus = args.status;
@@ -3954,7 +3950,7 @@
 					if ( args && args.title ) {
 						query.customize_changeset_title = args.title;
 					}
-					// @todo Delete query.customized? It should have already been set by the changeset update request. Or it can be reduced to what has been changed.
+					// Note that query.customized cannot be deleted from this request due to setting validation.
 					request = wp.ajax.post( 'customize_save', query );
 
 					// Disable save button during the save request.

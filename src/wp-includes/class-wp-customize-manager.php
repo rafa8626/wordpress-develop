@@ -1350,6 +1350,23 @@ final class WP_Customize_Manager {
 			}
 		}
 
+		if ( ! empty( $_POST['customize_changeset_data'] ) ) {
+			$input_changeset_data = json_decode( wp_unslash( $_POST['customize_changeset_data'] ), true );
+			if ( ! is_array( $input_changeset_data ) ) {
+				wp_send_json_error( 'invalid_customize_changeset_data' );
+			}
+			foreach ( $input_changeset_data as $setting_id => $setting_params ) {
+				if ( null === $setting_params ) {
+					$this->set_post_value( $setting_id, null ); // Explicit revert value.
+				} elseif ( array_key_exists( 'value', $setting_params ) ) {
+					$this->set_post_value( $setting_id, $setting_params['value'] );
+				}
+			}
+		} else {
+			$input_changeset_data = array();
+		}
+
+		// Validate title.
 		$changeset_title = null;
 		if ( isset( $_POST['customize_changeset_title'] ) ) {
 			$changeset_title = sanitize_text_field( wp_unslash( $_POST['customize_changeset_title'] ) );
@@ -1431,18 +1448,35 @@ final class WP_Customize_Manager {
 			'setting_validities' => $exported_setting_validities,
 		);
 
-		// Obtain data for changeset.
+		// Obtain/merge data for changeset.
 		$original_changeset_data = $this->changeset_data();
 		$data = $original_changeset_data;
 		foreach ( $post_values as $setting_id => $unsanitized_value ) {
 			$setting = $this->get_setting( $setting_id );
-			if ( ! $setting || is_null( $unsanitized_value ) ) {
+			if ( ! $setting ) {
 				continue;
 			}
 			if ( ! isset( $data[ $setting_id ] ) ) {
 				$data[ $setting_id ] = array();
 			}
 			$data[ $setting_id ]['value'] = $unsanitized_value;
+
+			if ( isset( $input_changeset_data[ $setting_id ] ) && is_array( $input_changeset_data[ $setting_id ] ) ) {
+				$setting_params = $input_changeset_data[ $setting_id ];
+				unset( $setting_params['value'] );
+				$data[ $setting_id ] = array_merge( $input_changeset_data[ $setting_id ], $setting_params );
+			}
+		}
+
+		// Handle removal of settings from changeset.
+		foreach ( $input_changeset_data as $setting_id => $setting_data ) {
+			if ( ! is_null( $setting_data ) ) {
+				continue;
+			}
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting && $setting->check_capabilities() ) {
+				unset( $data[ $setting_id ] );
+			}
 		}
 
 		$filter_context = array(
