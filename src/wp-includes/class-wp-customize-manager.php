@@ -1530,7 +1530,8 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		if ( 'publish' === get_post_status( $changeset_post_id ) ) {
+		$response['changeset_status'] = get_post_status( $changeset_post_id );
+		if ( 'publish' === $response['changeset_status'] ) {
 			$response['next_changeset_uuid'] = $this->generate_uuid();
 		}
 
@@ -2322,8 +2323,7 @@ final class WP_Customize_Manager {
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
-				'exists' => false !== $this->changeset_post_id(),
-				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : 'auto-draft',
+				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : '',
 				'currentUserCapabilities' => get_post_type_object( 'customize_changeset' )->cap,
 			),
 			'theme'    => array(

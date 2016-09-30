@@ -152,7 +152,7 @@
 			} );
 
 			request.done( function requestChangesetUpdateDone( data ) {
-				api.state( 'changesetExists' ).set( true );
+				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
 			} );
 			request.fail( function requestChangesetUpdateFail( data ) {
@@ -3969,7 +3969,6 @@
 					} );
 
 					request.fail( function ( response ) {
-						api.state( 'changesetStatus' ).set( previousChangesetStatus );
 
 						if ( '0' === response ) {
 							response = 'not_logged_in';
@@ -4009,8 +4008,9 @@
 
 						api.previewer.send( 'saved', response );
 
-						if ( response.next_changeset_uuid ) {
-							api.state( 'changesetExists' ).set( false );
+						api.state( 'changesetStatus' ).set( response.changeset_status );
+						if ( 'publish' === response.changeset_status ) {
+							api.state( 'changesetStatus' ).set( '' );
 							api.settings.changeset.uuid = response.next_changeset_uuid;
 						}
 
@@ -4148,7 +4148,6 @@
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
-				changesetExists = state.create( 'changesetExists' ), // @todo Eliminate in favor of changesetStatus of false?
 				changesetStatus = state.create( 'changesetStatus' );
 
 			state.bind( 'change', function() {
@@ -4156,7 +4155,7 @@
 					saveBtn.val( api.l10n.activate ).prop( 'disabled', false );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
 
-				} else if ( saved() ) {
+				} else if ( '' === changesetStatus.get() ) {
 					saveBtn.val( api.l10n.saved ).prop( 'disabled', true );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
 
@@ -4167,20 +4166,21 @@
 			});
 
 			// Set default states.
-			saved( ! api.settings.changeset.exists );
+			saved( true );
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
-			changesetExists( api.settings.changeset.exists );
 			changesetStatus( api.settings.changeset.status );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );
 			});
 
-			api.bind( 'saved', function() {
+			api.bind( 'saved', function( response ) {
 				state('saved').set( true );
-				state('activated').set( true );
+				if ( 'publish' === response.changeset_status ) {
+					state( 'activated' ).set( true );
+				}
 			});
 
 			activated.bind( function( to ) {
@@ -4189,12 +4189,19 @@
 				}
 			});
 
-			changesetExists.bind( function( exists ) {
-				var urlParser = document.createElement( 'a' );
+			changesetStatus.bind( function( newStatus, oldStatus ) {
+				var urlParser;
+
+				// Abort if not a transition between existing and non-existing.
+				if ( newStatus && oldStatus ) {
+					return;
+				}
+
+				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
 				urlParser.search = urlParser.search.replace( /(&|\?)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
 				urlParser.search = urlParser.search.replace( /&+$/, '' );
-				if ( exists ) {
+				if ( '' !== newStatus ) {
 					if ( urlParser.search.length > 1 ) {
 						urlParser.search += '&';
 					}
