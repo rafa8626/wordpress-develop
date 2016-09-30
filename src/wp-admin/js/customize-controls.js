@@ -816,6 +816,7 @@
 
 						content.addClass( 'open' );
 						overlay.addClass( 'section-open' );
+						api.state( 'expandedSection' ).set( section );
 					}, this );
 				}
 
@@ -854,6 +855,9 @@
 
 				content.removeClass( 'open' );
 				overlay.removeClass( 'section-open' );
+				if ( section === api.state( 'expandedSection' ).get() ) {
+					api.state( 'expandedSection' ).set( false );
+				}
 
 			} else {
 				if ( args.completeCallback ) {
@@ -1470,6 +1474,7 @@
 
 				overlay.addClass( 'in-sub-panel' );
 				accordionSection.addClass( 'current-panel' );
+				api.state( 'expandedPanel' ).set( panel );
 
 			} else if ( ! expanded && accordionSection.hasClass( 'current-panel' ) ) {
 				panel._animateChangeExpanded( function() {
@@ -1486,6 +1491,9 @@
 
 				overlay.removeClass( 'in-sub-panel' );
 				accordionSection.removeClass( 'current-panel' );
+				if ( panel === api.state( 'expandedPanel' ).get() ) {
+					api.state( 'expandedPanel' ).set( false );
+				}
 			}
 		},
 
@@ -3974,7 +3982,9 @@
 				saved = state.create( 'saved' ),
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
-				paneVisible = state.create( 'paneVisible' );
+				paneVisible = state.create( 'paneVisible' ),
+				expandedPanel = state.create( 'expandedPanel' ),
+				expandedSection = state.create( 'expandedSection' );
 
 			state.bind( 'change', function() {
 				if ( ! activated() ) {
@@ -3996,6 +4006,8 @@
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
+			expandedPanel( false );
+			expandedSection( false );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );
@@ -4097,48 +4109,87 @@
 		// Sticky header functionality.
 		(function() {
 			var parentContainer = $( '.wp-full-overlay-sidebar-content' ),
-				lastScrollTop = 0,
-				container, positionStickyHeader, _scroll, resetStickyHeader;
+				headerr = {}, positionStickyHeader, getHeaderDimensions, releaseStickyHeader, lastScrollTop, scrollTop, isScrollingUp, changeContainer;
 
-			parentContainer.on( 'expanded collapsed', '.customize-pane-child', _.debounce( function() {
-				var previousContainer = container || false;
+			// Determine which panel or section is currently expanded.
+			changeContainer = function( newContainer ) {
+				var expandedSection = api.state( 'expandedSection' ).get(),
+					expandedPanel = api.state( 'expandedPanel' ).get(),
+					headerElement, headerDimensions;
 
-				container = false;
-				api.section.each( function( section ) {
-					if ( ! container && section.expanded() ) {
-						container = section;
-					}
-				} );
-				if ( ! container ) {
-					api.panel.each( function( panel ) {
-						if ( ! container && panel.expanded() ) {
-							container = panel;
-						}
-					} );
+				if ( ! _.isEmpty( headerr ) ) {
+					releaseStickyHeader( headerr );
 				}
-				if ( previousContainer ) {
-					resetStickyHeader( previousContainer );
-				}
-				if ( container ) {
-					parentContainer.on( 'scroll', _scroll );
+
+				if ( newContainer ) {
+					headerr.instance = newContainer;
 				} else {
-					parentContainer.off( 'scroll', _scroll );
+					if ( ! expandedSection && expandedPanel ) {
+						headerr.instance = expandedPanel;
+					} else if ( expandedSection && ! expandedPanel ) {
+						headerr.instance = expandedSection;
+					} else {
+						headerr = {};
+						return;
+					}
 				}
-			}, 20 ) );
 
-			/**
-			 * Throttled scroll event handler.
-			 */
-			_scroll = _.throttle( function() {
-				var scrollTop = parentContainer.scrollTop(),
-					isScrollingUp;
+				if ( headerr.instance.contentContainer ) {
+					headerElement = headerr.instance.contentContainer.find( '.customize-section-title, .panel-meta' ).first();
+				}
+				if ( headerElement && 1 === headerElement.length ) {
+					headerr.element = headerElement;
+					headerr.parent = headerr.element.closest( '.customize-pane-child' );
+					headerDimensions = getHeaderDimensions( headerr.element );
+					_.extend( headerr, headerDimensions );
+				} else {
+					headerr = {};
+					return;
+				}
+			};
 
-				if ( lastScrollTop !== scrollTop ) {
+			api.state( 'expandedSection' ).bind( changeContainer );
+			api.state( 'expandedPanel' ).bind( changeContainer );
+
+			// Throttled scroll event handler.
+			parentContainer.on( 'scroll', _.throttle( function() {
+				if ( ! _.isEmpty( headerr ) ) {
+					scrollTop = parentContainer.scrollTop();
 					isScrollingUp = ( scrollTop < lastScrollTop );
 					lastScrollTop = scrollTop;
 					positionStickyHeader( scrollTop, isScrollingUp );
 				}
-			}, 8 );
+			}, 8 ) );
+
+			// Get header top position and height.
+			getHeaderDimensions = function( header ) {
+				var width, height, top;
+
+				top = parseInt( header.css( 'top' ), 0 ) || 0;
+				height = header.data( 'headerHeight' );
+				width = header.data( 'headerWidth' );
+				if ( ! height || ! width ) {
+					height = header.height();
+					width = header.width();
+					header.data( {
+						headerHeight: height,
+						headerWidth: width
+					} );
+				}
+
+				return {
+					height: height,
+					width: width,
+					top: top
+				};
+			};
+
+			releaseStickyHeader = function( headerr ) {
+				if ( headerr.element && headerr.element.hasClass( 'is-sticky' ) ) {
+					headerr.element.removeClass( 'is-sticky' ).addClass( 'was-sticky' );
+					headerr.element.css( 'top', parentContainer.scrollTop() + 'px' );
+				}
+			};
 
 			/**
 			 * Reposition header on scroll event.
@@ -4148,70 +4199,47 @@
 			 * @private
 			 */
 			positionStickyHeader = function( scrollTop, isScrollingUp ) {
-				var header = container.container.find( '.customize-section-title, .panel-meta' ).first(),
-					headerParent = header.closest( '.customize-pane-child' ),
-					headerTopPosition, headerHeight, headerWidth, maybeSticky, isSticky, wasSticky;
+				var maybeSticky, isSticky, wasSticky;
 
 				// Base position.
 				if ( 0 === scrollTop ) {
-					header.removeClass( 'maybe-sticky was-sticky is-sticky' );
-					header.css( 'width', '' );
-					headerParent.css( 'padding-top', '' );
+					headerr.element.removeClass( 'maybe-sticky was-sticky is-sticky' );
+					headerr.element.css( 'width', '' );
+					headerr.parent.css( 'padding-top', '' );
+					return;
 				}
 
-				// Get header top position and height.
-				headerTopPosition = parseInt( header.css( 'top' ), 0 ) || 0;
-				headerHeight = header.data( 'headerHeight' );
-				headerWidth = header.data( 'headerWidth' );
-				if ( ! headerHeight || ! headerWidth ) {
-					headerHeight = header.height();
-					headerWidth = header.width();
-					header.data( {
-						headerHeight: headerHeight,
-						headerWidth: headerWidth
-					} );
-				}
-
-				maybeSticky = header.hasClass( 'maybe-sticky' );
-				isSticky = header.hasClass( 'is-sticky' );
-				wasSticky = header.hasClass( 'was-sticky' );
+				maybeSticky = headerr.element.hasClass( 'maybe-sticky' );
+				isSticky = headerr.element.hasClass( 'is-sticky' );
+				wasSticky = headerr.element.hasClass( 'was-sticky' );
 
 				// Scrolled past the header height - it may become sticky now.
-				if ( ! maybeSticky && scrollTop >= headerHeight ) {
-					headerParent.css( 'padding-top', headerParent.find( '> :nth-child(2)' ).position().top + 'px' );
-					header.addClass( 'maybe-sticky' );
-					header.css( 'width', headerWidth + 'px' );
+				if ( ! maybeSticky && scrollTop >= headerr.height ) {
+					headerr.parent.css( 'padding-top', headerr.parent.find( '> :nth-child(2)' ).position().top + 'px' );
+					headerr.element.addClass( 'maybe-sticky' );
+					headerr.element.css( 'width', headerr.width + 'px' );
 				}
 
 				if ( isScrollingUp ) {
 					// Scrolling up.
 					if ( ! wasSticky ) {
-						header.addClass( 'is-sticky' );
-					} else if ( wasSticky && headerTopPosition >= scrollTop ) {
-						header.addClass( 'is-sticky' ).removeClass( 'was-sticky' );
-						header.css( 'top', '' );
-				}
+						headerr.element.addClass( 'is-sticky' );
+					} else if ( wasSticky && headerr.top >= scrollTop ) {
+						headerr.element.addClass( 'is-sticky' ).removeClass( 'was-sticky' );
+						headerr.element.css( 'top', '' );
+					}
 				} else {
 					// Scrolling down.
 					if ( wasSticky ) {
-						if ( scrollTop >= headerHeight + headerTopPosition ) {
-							header.removeClass( 'was-sticky' );
-							header.css( 'top', '' );
+						if ( scrollTop >= headerr.height + headerr.top ) {
+							headerr.element.removeClass( 'was-sticky' );
+							headerr.element.css( 'top', '' );
 						}
 					} else if ( isSticky ) {
-						header.removeClass( 'is-sticky' ).addClass( 'was-sticky' );
-						header.css( 'top', scrollTop + 'px' );
+						headerr.element.removeClass( 'is-sticky' ).addClass( 'was-sticky' );
+						headerr.element.css( 'top', scrollTop + 'px' );
 					}
 				}
-			};
-
-			resetStickyHeader = function( container ) {
-				var header = container.container.find( '.customize-section-title, .panel-meta' ).first(),
-					headerParent = header.closest( '.customize-pane-child' );
-
-				header.removeClass( 'was-sticky is-sticky' );
-				header.css( 'width', '' );
-				headerParent.css( 'padding-top', '' );
 			};
 		}());
 
