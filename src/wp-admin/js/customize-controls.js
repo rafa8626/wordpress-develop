@@ -3099,7 +3099,8 @@
 				loaded = false,
 				ready = false,
 				readyData = null,
-				urlParser;
+				urlParser,
+				queryParams;
 
 			if ( previewFrame._ready ) {
 				previewFrame.unbind( 'ready', previewFrame._ready );
@@ -3126,12 +3127,14 @@
 			if ( urlParser.search.length > 1 ) {
 				urlParser.search += '&';
 			}
-			urlParser.search += $.param( _.extend(
-				{},
-				this.query,
-				{ customized: null }
-			) );
 
+			// @todo Logic duplicated.
+			params = _.clone( this.query );
+			delete params.customized;
+			delete params.wp_customize;
+			delete params.nonce;
+
+			urlParser.search += $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
 				title: api.l10n.previewIframeTitle,
 				src: urlParser.href
@@ -3157,7 +3160,6 @@
 				deferred.rejectWith( previewFrame, [ 'request failure' ] );
 			} );
 
-			// @todo Handle case where resulting preview URL is not the same as previewFrame.previewUrl(), indicating redirect. Same problem as navigating around preview naturally.
 			previewFrame.iframe.one( 'load', function() {
 				loaded = true;
 
@@ -3265,7 +3267,8 @@
 		initialize: function( params, options ) {
 			var self = this,
 				rscheme = /^https?/,
-				parseQueryParams;
+				parseQueryParams,
+				suspendPreviewUrlWatching = false;
 
 			$.extend( this, options || {} );
 			this.deferred = {
@@ -3351,10 +3354,20 @@
 
 			// Change preview iframe URL when the previewUrl changes.
 			this.previewUrl.bind( function( newUrl ) {
-				var urlParser = document.createElement( 'a' ), oldParams = {}, newParams;
+				var urlParser, oldParams = {}, newParams;
 
+				// @todo short-circuit if `ready` event is being triggered.
+				if ( suspendPreviewUrlWatching ) {
+					return;
+				}
+
+				urlParser = document.createElement( 'a' );
+
+				// @todo Duplication.
 				params = self.query();
 				delete params.customized;
+				delete params.wp_customize;
+				delete params.nonce;
 				params.customize_messenger_channel = self.channel();
 
 				urlParser.href = newUrl;
@@ -3377,6 +3390,12 @@
 			} );
 
 			this.bind( 'ready', function( data ) {
+
+				if ( data.currentUrl ) {
+					suspendPreviewUrlWatching = true;
+					api.previewer.previewUrl.set( data.currentUrl );
+					suspendPreviewUrlWatching = false;
+				}
 
 				/*
 				 * Walk over all panels, sections, and controls and set their
@@ -3511,11 +3530,6 @@
 
 			previewer.loading.fail( function( reason, location ) {
 				previewer.send( 'loading-failed' );
-
-				// @todo This should no longer be relevant. Nevertheless, the preview will need to send to the pane the resulting URL, but setting this should not cause a navigation event.
-				if ( 'redirect' === reason && location ) {
-					previewer.previewUrl( location );
-				}
 
 				if ( 'logged out' === reason ) {
 					if ( previewer.preview ) {

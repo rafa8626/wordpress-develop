@@ -1077,7 +1077,7 @@ final class WP_Customize_Manager {
 		$setting_validities = $this->validate_setting_values( $setting_values ); // @todo This is now unnecessary?
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
-		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		$self_url = home_url( empty( $_SERVER['REQUEST_URI'] ) ? '/' : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 		$state_query_params = array(
 			'customize_theme',
 			'customize_changeset_uuid',
@@ -1088,7 +1088,7 @@ final class WP_Customize_Manager {
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
-				'stateQueryParams' => $state_query_params,
+				'stateQueryParams' => $state_query_params, // @todo Additional persisted query vars may need to be indiated via a customized_persisted_query_vars param.
 			),
 			'theme' => array(
 				'stylesheet' => $this->get_stylesheet(),
