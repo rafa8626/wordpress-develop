@@ -3931,8 +3931,9 @@
 					// @todo customized can be reduced to only what has been modified since the last changeset update.
 					query = $.extend( self.query(), {
 						nonce: self.nonce.save,
-						changeset_status: api.state( 'changesetStatus' ).get()
+						customize_changeset_status: api.state( 'changesetStatus' ).get()
 					} );
+					// @todo Delete query.customized? It should have already been set by the changeset update request.
 					request = wp.ajax.post( 'customize_save', query );
 
 					// Disable save button during the save request.

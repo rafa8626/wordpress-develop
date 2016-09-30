@@ -125,6 +125,15 @@ function create_initial_post_types() {
 		'can_export' => true,
 		'delete_with_user' => false,
 		'supports' => array( 'author' ),
+		'capabilities' => array(
+			'read_post' => 'customize',
+			'edit_posts' => 'customize',
+			'edit_post' => 'customize',
+			'edit_others_posts' => 'customize',
+			'create_posts' => 'customize',
+			'publish_posts' => 'customize',
+			'edit_published_posts' => 'do_not_allow',
+		),
 	) );
 
 	register_post_status( 'publish', array(

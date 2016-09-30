@@ -1365,11 +1365,49 @@ final class WP_Customize_Manager {
 			wp_send_json_error( 'changeset_already_published' );
 		}
 
+		if ( empty( $changeset_post_id ) ) {
+			if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->create_posts ) ) {
+				wp_send_json_error( 'cannot_create_changeset_post' );
+			}
+		} else {
+			if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $changeset_post_id ) ) {
+				wp_send_json_error( 'cannot_edit_changeset_post' );
+			}
+		}
+
+		// Validate changeset status param.
 		$changeset_status = null;
-		if ( isset( $_POST['changeset_status'] ) ) {
-			$changeset_status = wp_unslash( $_POST['changeset_status'] );
-			if ( ! get_post_status_object( $changeset_status ) ) {
-				wp_send_json_error( 'bad_status' );
+		if ( isset( $_POST['customize_changeset_status'] ) ) {
+			$changeset_status = wp_unslash( $_POST['customize_changeset_status'] );
+			if ( ! get_post_status_object( $changeset_status ) || ! in_array( $changeset_status, array( 'draft', 'pending', 'publish', 'future' ), true ) ) {
+				wp_send_json_error( 'bad_customize_changeset_status', 400 );
+			}
+			$is_publish = ( 'publish' === $changeset_status || 'future' === $changeset_status );
+			if ( $is_publish ) {
+				if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
+					wp_send_json_error( 'changeset_publish_unauthorized', 403 );
+				}
+				if ( false === has_action( 'publish_customize_changeset', '_wp_customize_publish_changeset' ) ) {
+					wp_send_json_error( 'missing_publish_callback', 500 );
+				}
+			}
+		}
+
+		// Validate changeset date param. Date is assumed to be in local time for the WP.
+		$changeset_date = null;
+		if ( isset( $_POST['customize_changeset_date'] ) ) {
+			$changeset_date = wp_unslash( $_POST['customize_changeset_date'] );
+			if ( ! preg_match( '/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/', $changeset_date ) ) {
+				wp_send_json_error( 'bad_customize_changeset_date', 400 );
+			}
+			if ( ( 'publish' === $changeset_status || 'future' === $changeset_status ) && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
+				wp_send_json_error( 'changeset_publish_unauthorized', 403 );
+			}
+			$changeset_date_gmt = get_gmt_from_date( $changeset_date );
+			$now = gmdate( 'Y-m-d H:i:59' );
+			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
+			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
+				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // @todo This should be allowed in the future, when theme is a regular setting.
 			}
 		}
 
@@ -1409,41 +1447,91 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		$updated_changeset_data = $this->changeset_data();
+		$response = array(
+			'setting_validities' => $exported_setting_validities,
+		);
+
+		// Obtain data for changeset.
+		$original_changeset_data = $this->changeset_data();
+		$data = $original_changeset_data;
 		foreach ( $post_values as $setting_id => $unsanitized_value ) {
 			$setting = $this->get_setting( $setting_id );
 			if ( ! $setting || is_null( $unsanitized_value ) ) {
 				continue;
 			}
-			if ( ! isset( $updated_changeset_data[ $setting_id ] ) ) {
-				$updated_changeset_data[ $setting_id ] = array();
+			if ( ! isset( $data[ $setting_id ] ) ) {
+				$data[ $setting_id ] = array();
 			}
-			$updated_changeset_data[ $setting_id ]['value'] = $unsanitized_value;
+			$data[ $setting_id ]['value'] = $unsanitized_value;
 		}
 
-		$response = array(
-			'setting_validities' => $exported_setting_validities,
+		$filter_context = array(
+			'uuid' => $this->changeset_uuid(),
+			'status' => $changeset_status,
+			'date' => $changeset_date,
+			'post_id' => $this->changeset_post_id(),
+			'previous_data' => $original_changeset_data,
+			'manager' => $this,
 		);
 
-		$has_kses = ( false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' ) );
-		if ( $has_kses ) {
-			kses_remove_filters(); // Prevent KSES from corrupting JSON in post_content.
+		/**
+		 * Filters the settings' data that will be persisted into the changeset.
+		 *
+		 * Plugins may amend additional data (such as additional meta for settings) into the changeset with this filter.
+		 *
+		 * @param array $data Updated changeset data, mapping setting IDs to arrays containing a $value item and optionally other metadata.
+		 * @param array $context {
+		 *     Filter context.
+		 *
+		 *     @type string               $uuid          Changeset UUID.
+		 *     @type string               $status        Requested status for the changeset post.
+		 *     @type string               $date          Requested date for the changeset post.
+		 *     @type int|false            $post_id       Post ID for the changeset, or false if it doesn't exist yet.
+		 *     @type array                $previous_data Previous data contained in the changeset.
+		 *     @type WP_Customize_Manager $manager       Manager instance.
+		 * }
+		 */
+		$data = apply_filters( 'customize_changeset_save', $data, $filter_context );
+
+		// Switch theme if publishing changes now.
+		if ( 'publish' === $changeset_status && ! $this->is_theme_active() ) {
+			// Temporarily stop previewing the theme to allow switch_themes() to operate properly.
+			$this->stop_previewing_theme();
+			switch_theme( $this->get_stylesheet() );
+			update_option( 'theme_switched_via_customizer', true );
+			$this->start_previewing_theme();
 		}
 
+		// Gather the data for wp_insert_post()/wp_update_post().
 		$post_array = array(
-			'post_content' => wp_json_encode( $updated_changeset_data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ),
+			'post_content' => wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ),
 		);
-
 		if ( $changeset_post_id ) {
 			$post_array['ID'] = $changeset_post_id;
-			$r = wp_update_post( wp_slash( $post_array ), true );
 		} else {
 			$post_array['post_type'] = 'customize_changeset';
 			$post_array['post_name'] = $this->changeset_uuid();
 			$post_array['post_status'] = 'auto-draft';
+		}
+		if ( $changeset_status ) {
+			$post_array['post_status'] = $changeset_status;
+		}
+		if ( $changeset_date ) {
+			$post_array['post_date'] = $changeset_date;
+		}
+
+		// Update the changeset post. The publish_customize_changeset action will cause the settings in the changeset to be saved via WP_Customize_Setting::save().
+		$has_kses = ( false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' ) );
+		if ( $has_kses ) {
+			kses_remove_filters(); // Prevent KSES from corrupting JSON in post_content.
+		}
+		if ( $changeset_post_id ) {
+			$r = wp_update_post( wp_slash( $post_array ), true );
+		} else {
 			$r = wp_insert_post( wp_slash( $post_array ), true );
 			if ( ! is_wp_error( $changeset_post_id ) ) {
 				$changeset_post_id = $r;
+				$this->_changeset_post_id = $changeset_post_id;
 			}
 		}
 		if ( $has_kses ) {
@@ -1458,34 +1546,7 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		// Handle status transitions for changeset, including publishing.
-		// @todo Check current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $post_id )
-		// @todo Check current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts, $post_id )
-		if ( $changeset_status ) {
-			if ( 'publish' === $changeset_status && false === has_action( 'publish_customize_changeset', '_wp_customize_publish_changeset' ) ) {
-				wp_send_json_error( 'missing_publish_callback', 500 );
-			}
-
-			// Do we have to switch themes?
-			if ( ! $this->is_theme_active() ) {
-				// Temporarily stop previewing the theme to allow switch_themes()
-				// to operate properly.
-				$this->stop_previewing_theme();
-				switch_theme( $this->get_stylesheet() );
-				update_option( 'theme_switched_via_customizer', true );
-				$this->start_previewing_theme();
-			}
-
-			// The publish_customize_changeset action will cause the settings in the changeset to be saved.
-			$r = wp_update_post( array(
-				'ID' => $changeset_post_id,
-				'post_status' => $changeset_status,
-			), true );
-
-			if ( is_wp_error( $r ) ) {
-				wp_send_json_error( $r->get_error_code(), 500 );
-			}
-
+		if ( 'publish' === get_post_status( $changeset_post_id ) ) {
 			$response['next_changeset_uuid'] = $this->generate_uuid();
 		}
 
