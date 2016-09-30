@@ -1350,6 +1350,11 @@ final class WP_Customize_Manager {
 			}
 		}
 
+		$changeset_title = null;
+		if ( isset( $_POST['customize_changeset_title'] ) ) {
+			$changeset_title = sanitize_text_field( wp_unslash( $_POST['customize_changeset_title'] ) );
+		}
+
 		// Validate changeset status param.
 		$changeset_status = null;
 		if ( isset( $_POST['customize_changeset_status'] ) ) {
@@ -1459,6 +1464,7 @@ final class WP_Customize_Manager {
 		 *     Filter context.
 		 *
 		 *     @type string               $uuid          Changeset UUID.
+		 *     @type string               $title         Requested title for the changeset post.
 		 *     @type string               $status        Requested status for the changeset post.
 		 *     @type string               $date          Requested date for the changeset post.
 		 *     @type int|false            $post_id       Post ID for the changeset, or false if it doesn't exist yet.
@@ -1481,6 +1487,9 @@ final class WP_Customize_Manager {
 		$post_array = array(
 			'post_content' => wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ),
 		);
+		if ( $changeset_title ) {
+			$post_array['post_title'] = $changeset_title;
+		}
 		if ( $changeset_post_id ) {
 			$post_array['ID'] = $changeset_post_id;
 		} else {

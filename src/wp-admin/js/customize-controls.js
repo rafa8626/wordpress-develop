@@ -3888,16 +3888,32 @@
 				};
 			},
 
-			save: function() {
+			/**
+			 * Save (and publish) the customizer changeset.
+			 *
+			 * @param {object} [args] Args.
+			 * @param {string} [args.status=publish] Status.
+			 * @param {string} [args.date] Date, in local time.
+			 * @param {string} [args.title] Title
+			 *
+			 * @returns {void}
+			 */
+			save: function( args ) {
 				var self = this,
+					changesetStatus = 'publish',
 					processing = api.state( 'processing' ),
 					submitWhenDoneProcessing,
 					submit,
 					modifiedWhileSaving = {},
 					invalidSettings = [],
-					invalidControls;
+					invalidControls,
+					previousChangesetStatus = api.state( 'changesetStatus' ).get();
 
-				api.state( 'changesetStatus' ).set( 'publish' );
+				if ( args && args.status ) {
+					changesetStatus = args.status;
+				}
+
+				api.state( 'changesetStatus' ).set( changesetStatus );
 				body.addClass( 'saving' );
 
 				function captureSettingModifiedDuringSave( setting ) {
@@ -3928,12 +3944,17 @@
 						return;
 					}
 
-					// @todo customized can be reduced to only what has been modified since the last changeset update.
 					query = $.extend( self.query(), {
 						nonce: self.nonce.save,
 						customize_changeset_status: api.state( 'changesetStatus' ).get()
 					} );
-					// @todo Delete query.customized? It should have already been set by the changeset update request.
+					if ( args && args.date ) {
+						query.customize_changeset_date = args.date;
+					}
+					if ( args && args.title ) {
+						query.customize_changeset_title = args.title;
+					}
+					// @todo Delete query.customized? It should have already been set by the changeset update request. Or it can be reduced to what has been changed.
 					request = wp.ajax.post( 'customize_save', query );
 
 					// Disable save button during the save request.
@@ -3948,6 +3969,8 @@
 					} );
 
 					request.fail( function ( response ) {
+						api.state( 'changesetStatus' ).set( previousChangesetStatus );
+
 						if ( '0' === response ) {
 							response = 'not_logged_in';
 						} else if ( '-1' === response ) {
@@ -3986,8 +4009,10 @@
 
 						api.previewer.send( 'saved', response );
 
-						api.state( 'changesetExists' ).set( false );
-						api.settings.changeset.uuid = response.next_changeset_uuid;
+						if ( response.next_changeset_uuid ) {
+							api.state( 'changesetExists' ).set( false );
+							api.settings.changeset.uuid = response.next_changeset_uuid;
+						}
 
 						if ( response.setting_validities ) {
 							api._handleSettingValidities( {

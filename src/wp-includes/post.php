@@ -124,7 +124,7 @@ function create_initial_post_types() {
 		'query_var' => false,
 		'can_export' => true,
 		'delete_with_user' => false,
-		'supports' => array( 'author' ),
+		'supports' => array( 'title', 'author' ),
 		'capabilities' => array(
 			'read_post' => 'customize',
 			'edit_posts' => 'customize',
