@@ -130,16 +130,6 @@ final class WP_Customize_Manager {
 	protected $controls = array();
 
 	/**
-	 * Return value of check_ajax_referer() in customize_preview_init() method.
-	 *
-	 * @since 3.5.0
-	 * @since 4.7.0 Renamed from $nonce_tick to $preview_nonce_tick.
-	 * @access protected
-	 * @var false|int
-	 */
-	protected $preview_nonce_tick;
-
-	/**
 	 * Panel types that may be rendered from JS templates.
 	 *
 	 * @since 4.3.0
@@ -367,21 +357,6 @@ final class WP_Customize_Manager {
 
 		// Export the settings to JS via the _wpCustomizeSettings variable.
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customize_pane_settings' ), 1000 );
-	}
-
-	/**
-	 * Check preview nonce.
-	 *
-	 * @since 4.7.0
-	 * @access private
-	 *
-	 * @return int|false Result of `wp_verify_nonce()`.
-	 */
-	protected function check_preview_nonce() {
-		if ( ! isset( $this->preview_nonce_tick ) ) {
-			$this->preview_nonce_tick = check_ajax_referer( 'preview-customize_' . $this->get_stylesheet(), 'nonce', false );
-		}
-		return $this->preview_nonce_tick;
 	}
 
 	/**
@@ -858,7 +833,7 @@ final class WP_Customize_Manager {
 		$args = array_merge(
 			array(
 				'exclude_changeset' => false,
-				'exclude_post_data' => ( false === $this->check_preview_nonce() ),
+				'exclude_post_data' => ! current_user_can( 'customize' ),
 			),
 			$args
 		);
