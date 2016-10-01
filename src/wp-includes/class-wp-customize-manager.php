@@ -1583,7 +1583,13 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		$response['changeset_status'] = get_post_status( $changeset_post_id );
+		// Note that if the changeset status was publish, then it will get get set to trash if revisions are not supported.
+		if ( 'publish' === $changeset_status ) {
+			$response['changeset_status'] = $changeset_status;
+		} else {
+			$response['changeset_status'] = get_post_status( $changeset_post_id );
+		}
+
 		if ( 'publish' === $response['changeset_status'] ) {
 			$response['next_changeset_uuid'] = $this->generate_uuid();
 		}
