@@ -1403,6 +1403,10 @@ final class WP_Customize_Manager {
 			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
 				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // @todo This should be allowed in the future, when theme is a regular setting.
 			}
+			$will_remain_auto_draft = ( ! $changeset_status && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
+			if ( $changeset_date && $will_remain_auto_draft ) {
+				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
+			}
 		}
 
 		/**
