@@ -131,7 +131,7 @@
 			var pendingChanges = _.clone( api.pendingUpdateChanges ), requestDeferred, request;
 
 			// Allow plugins to attach additional params to the settings.
-			api.trigger( 'changesetSave', pendingChanges );
+			api.trigger( 'changeset-save', pendingChanges );
 
 			api.pendingUpdateChanges = {};
 			requestDeferred = pendingChangesetUpdateRequestDeferred;
@@ -149,8 +149,8 @@
 				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
 
-				// @todo Trigger an event which can then be sent into the preview to green-light that REST API calls with changeset will include the state in the response.
-				api.trigger( 'changesetSaved', data );
+				api.trigger( 'changeset-saved', data );
+				api.previewer.send( 'changeset-saved', data );
 			} );
 			request.fail( function requestChangesetUpdateFail( data ) {
 				requestDeferred.reject( data );
