@@ -1049,8 +1049,6 @@ final class WP_Customize_Manager {
 	 */
 	public function customize_preview_settings() {
 		$setting_values = $this->unsanitized_post_values();
-		$setting_validities = $this->validate_setting_values( $setting_values ); // @todo This is now unnecessary?
-		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		$self_url = home_url( empty( $_SERVER['REQUEST_URI'] ) ? '/' : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 		$state_query_params = array(
@@ -1076,7 +1074,6 @@ final class WP_Customize_Manager {
 			'activePanels' => array(),
 			'activeSections' => array(),
 			'activeControls' => array(),
-			'settingValidities' => $exported_setting_validities,
 			'nonce' => current_user_can( 'customize' ) ? $this->get_nonces() : array(),
 			'l10n' => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
@@ -1433,7 +1430,16 @@ final class WP_Customize_Manager {
 		) );
 		$invalid_setting_count = count( array_filter( $setting_validities, 'is_wp_error' ) );
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
-		if ( $invalid_setting_count > 0 ) {
+
+		/*
+		 * Short-circuit if there are invalid settings and attempting to transition
+		 * the changeset to a new status (i.e. publish). When the changeset_status
+		 * is set then the request is considered transactional, where if any of the
+		 * setting are invalid then none of them will be saved.
+		 *
+		 * @todo Consider a separate 'transactional' argument which defaults to true if the $changeset_status is set.
+		 */
+		if ( $changeset_status && $invalid_setting_count > 0 ) {
 			$response = array(
 				'setting_validities' => $exported_setting_validities,
 				'message' => sprintf( _n( 'There is %s invalid setting.', 'There are %s invalid settings.', $invalid_setting_count ), number_format_i18n( $invalid_setting_count ) ),
@@ -1456,6 +1462,12 @@ final class WP_Customize_Manager {
 			if ( ! $setting ) {
 				continue;
 			}
+
+			// Skip updating changeset with invalid values.
+			if ( isset( $setting_validities[ $setting_id ] ) && is_wp_error( $setting_validities[ $setting_id ] ) ) {
+				continue;
+			}
+
 			if ( ! isset( $data[ $setting_id ] ) ) {
 				$data[ $setting_id ] = array();
 			}

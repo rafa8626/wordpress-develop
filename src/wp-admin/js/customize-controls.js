@@ -3927,7 +3927,7 @@
 					 */
 					api.each( function( setting ) {
 						setting.notifications.each( function( notification ) {
-							if ( 'error' === notification.type && ! notification.fromServer ) {
+							if ( 'error' === notification.type && ! notification.fromServer ) { // @todo Eliminate the fromServer now that changeset is updated with each change?
 								invalidSettings.push( setting.id );
 							}
 						} );
@@ -3950,7 +3950,18 @@
 					if ( args && args.title ) {
 						query.customize_changeset_title = args.title;
 					}
-					// Note that query.customized cannot be deleted from this request due to setting validation.
+
+					/*
+					 * Note that the dirty customized values will have already been set in the
+					 * changeset and so technically query.customized could be deleted. However,
+					 * it is remaining here to make sure that any settings that got updated
+					 * quietly which may have not triggered an update request will also get
+					 * included in the values that get saved to the changeset. This will ensure
+					 * that values that get injected via the saved event will be included in
+					 * the changeset. This also ensures that setting values that were invalid
+					 * will get re-validated, perhaps in the case of settings that are invalid
+					 * due to dependencies on other settings.
+					 */
 					request = wp.ajax.post( 'customize_save', query );
 
 					// Disable save button during the save request.
