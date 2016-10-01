@@ -1455,6 +1455,7 @@ final class WP_Customize_Manager {
 		);
 
 		// Obtain/merge data for changeset.
+		$updated_setting_ids = array();
 		$original_changeset_data = $this->changeset_data();
 		$data = $original_changeset_data;
 		foreach ( $post_values as $setting_id => $unsanitized_value ) {
@@ -1467,6 +1468,8 @@ final class WP_Customize_Manager {
 			if ( isset( $setting_validities[ $setting_id ] ) && is_wp_error( $setting_validities[ $setting_id ] ) ) {
 				continue;
 			}
+
+			$updated_setting_ids[] = $setting_id;
 
 			if ( ! isset( $data[ $setting_id ] ) ) {
 				$data[ $setting_id ] = array();
@@ -1593,6 +1596,8 @@ final class WP_Customize_Manager {
 		if ( 'publish' === $response['changeset_status'] ) {
 			$response['next_changeset_uuid'] = $this->generate_uuid();
 		}
+
+		$response['changeset_updated_settings'] = $updated_setting_ids;
 
 		/**
 		 * Filters response data for a successful customize_save Ajax request.
