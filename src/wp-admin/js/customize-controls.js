@@ -3893,10 +3893,11 @@
 			 * @param {string} [args.date] Date, in local time.
 			 * @param {string} [args.title] Title
 			 *
-			 * @returns {void}
+			 * @returns {jQuery.promise}
 			 */
 			save: function( args ) {
 				var self = this,
+					deferred = $.Deferred(),
 					changesetStatus = 'publish',
 					processing = api.state( 'processing' ),
 					submitWhenDoneProcessing,
@@ -3918,7 +3919,7 @@
 				api.bind( 'change', captureSettingModifiedDuringSave );
 
 				submit = function () {
-					var request, query;
+					var request, query, settingInvalidities = {};
 
 					/*
 					 * Block saving if there are any settings that are marked as
@@ -3929,6 +3930,10 @@
 						setting.notifications.each( function( notification ) {
 							if ( 'error' === notification.type && ! notification.fromServer ) { // @todo Eliminate the fromServer now that changeset is updated with each change?
 								invalidSettings.push( setting.id );
+								if ( ! settingInvalidities[ setting.id ] ) {
+									settingInvalidities[ setting.id ] = {};
+								}
+								settingInvalidities[ setting.id ][ notification.code ] = notification;
 							}
 						} );
 					} );
@@ -3937,7 +3942,10 @@
 						_.values( invalidControls )[0][0].focus();
 						body.removeClass( 'saving' );
 						api.unbind( 'change', captureSettingModifiedDuringSave );
-						return;
+						deferred.rejectWith( self, [
+							{ setting_invalidities: settingInvalidities }
+						] );
+						return deferred.promise();
 					}
 
 					query = $.extend( self.query(), {
@@ -4001,6 +4009,7 @@
 							} );
 						}
 
+						deferred.rejectWith( self, [ response ] );
 						api.trigger( 'error', response );
 					} );
 
@@ -4028,6 +4037,7 @@
 							} );
 						}
 
+						deferred.resolveWith( self, [ response ] );
 						api.trigger( 'saved', response );
 
 						// Restore the global dirty state if any settings were modified during save.
@@ -4049,6 +4059,7 @@
 					api.state.bind( 'change', submitWhenDoneProcessing );
 				}
 
+				return deferred.promise();
 			}
 		});
 
