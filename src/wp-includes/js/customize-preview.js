@@ -421,7 +421,7 @@
 		});
 
 		api.preview.bind( 'saved', function( response ) {
-			api.trigger( 'saved', response );
+			var urlParser;
 
 			if ( response.next_changeset_uuid ) {
 				api.settings.changeset.uuid = response.next_changeset_uuid;
@@ -433,7 +433,15 @@
 				$( document.body ).find( 'form' ).each( function() {
 					api.injectStateFormInputs( this );
 				} );
+
+				// Replace the UUID in the URL.
+				urlParser = document.createElement( 'a' );
+				urlParser.href = location.href;
+				urlParser.search = urlParser.search.replace( /((\?|&)customize_changeset_uuid=)[^&]+/, '$1' + response.next_changeset_uuid );
+				history.replaceState( {}, document.title, urlParser.href );
 			}
+
+			api.trigger( 'saved', response );
 		} );
 
 		api.bind( 'saved', function() {
