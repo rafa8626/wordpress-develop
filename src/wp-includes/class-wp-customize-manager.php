@@ -1550,6 +1550,11 @@ final class WP_Customize_Manager {
 			$post_array['post_date'] = $changeset_date;
 		}
 
+		// @todo Consider a separate 'revision' param which makes this explicit, versus looking at whether the status is provided.
+		$this->store_changeset_revision = ! empty( $changeset_status );
+		add_filter( 'wp_save_post_revision_post_has_changed', array( $this, '_filter_revision_post_has_changed' ), 5, 3 );
+
+		// @todo Add create revision arg for wp.customize.previewer.save() which defaults to true if status is provided.
 		// Update the changeset post. The publish_customize_changeset action will cause the settings in the changeset to be saved via WP_Customize_Setting::save().
 		$has_kses = ( false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' ) );
 		if ( $has_kses ) {
@@ -1567,6 +1572,8 @@ final class WP_Customize_Manager {
 		if ( $has_kses ) {
 			kses_init_filters();
 		}
+
+		remove_filter( 'wp_save_post_revision_post_has_changed', array( $this, '_filter_revision_post_has_changed' ) );
 
 		if ( is_wp_error( $r ) ) {
 			$response['snapshot_save_failure'] = $r->get_error_code();
@@ -1597,6 +1604,37 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Whether a changeset revision should be made.
+	 *
+	 * @since 4.7.0
+	 * @access private
+	 * @var bool
+	 */
+	protected $store_changeset_revision;
+
+	/**
+	 * Filters whether a changeset has changed to create a new revision.
+	 *
+	 * Note that this will not be called while a changeset post remains in auto-draft status.
+	 *
+	 * @since 4.7.0
+	 * @access private
+	 *
+	 * @param bool    $post_has_changed Whether the post has changed.
+	 * @param WP_Post $last_revision    The last revision post object.
+	 * @param WP_Post $post             The post object.
+	 *
+	 * @return bool Whether a revision should be made.
+	 */
+	public function _filter_revision_post_has_changed( $post_has_changed, $last_revision, $post ) {
+		unset( $last_revision );
+		if ( 'customize_changeset' === $post->post_type ) {
+			$post_has_changed = $this->store_changeset_revision;
+		}
+		return $post_has_changed;
+	}
+
+	/**
 	 * Publish changeset values.
 	 *
 	 * This will the values contained in a changeset, even changesets that do not
@@ -1604,10 +1642,12 @@ final class WP_Customize_Manager {
 	 * `_wp_customize_publish_changeset()` when a customize_changeset post is
 	 * transitioned to the `publish` status.
 	 *
+	 * Please note that if the settings in the changeset are for a non-activated
+	 * theme, the theme must first be switched to (via `switch_theme()`) before
+	 * invoking this method.
+	 *
 	 * @since 4.7.0
 	 * @see _wp_customize_publish_changeset()
-	 *
-	 * @todo How will the theme be provided? It won't. Theme switch will remain outside of transaction for now.
 	 *
 	 * @param int $changeset_post_id ID for customize_changeset post. Defaults to the changeset for the current manager instance.
 	 */
