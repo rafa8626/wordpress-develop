@@ -113,8 +113,19 @@ function create_initial_post_types() {
 
 	register_post_type( 'customize_changeset', array(
 		'labels' => array(
-			'name' => __( 'Customize Changesets' ),
-			'singular_name' => __( 'Customize Changeset' ),
+			'name'               => _x( 'Changesets', 'post type general name' ),
+			'singular_name'      => _x( 'Changeset', 'post type singular name' ),
+			'menu_name'          => _x( 'Changesets', 'admin menu' ),
+			'name_admin_bar'     => _x( 'Changeset', 'add new on admin bar' ),
+			'add_new'            => _x( 'Add New', 'Customize Changeset' ),
+			'add_new_item'       => __( 'Add New Changeset' ),
+			'new_item'           => __( 'New Changeset' ),
+			'edit_item'          => __( 'Edit Changeset' ),
+			'view_item'          => __( 'View Changeset' ),
+			'all_items'          => __( 'All Changesets' ),
+			'search_items'       => __( 'Search Changesets' ),
+			'not_found'          => __( 'No changesets found.' ),
+			'not_found_in_trash' => __( 'No changesets found in Trash.' ),
 		),
 		'public' => false,
 		'_builtin' => true, /* internal use only. don't use this when registering your own post type. */
