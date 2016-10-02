@@ -3287,36 +3287,36 @@
 		 * @param {object} options
 		 */
 		initialize: function( params, options ) {
-			var self = this,
+			var previewer = this,
 				rscheme = /^https?/;
 
-			$.extend( this, options || {} );
-			this.deferred = {
+			$.extend( previewer, options || {} );
+			previewer.deferred = {
 				active: $.Deferred()
 			};
-			this.pendingChangesetUpdateRequests = [];
+			previewer.pendingChangesetUpdateRequests = [];
 
 			// Debounce to prevent hammering server and then wait for any pending update requests.
-			this.refresh = _.debounce(
+			previewer.refresh = _.debounce(
 				( function( originalRefresh ) {
 					return function() {
-						$.when.apply( $, self.pendingChangesetUpdateRequests ).then( function() {
-							originalRefresh.call( self );
+						$.when.apply( $, previewer.pendingChangesetUpdateRequests ).then( function() {
+							originalRefresh.call( previewer );
 						} );
 					};
-				}( this.refresh ) ),
-				self.refreshBuffer
+				}( previewer.refresh ) ),
+				previewer.refreshBuffer
 			);
 
-			this.container   = api.ensure( params.container );
-			this.allowedUrls = params.allowedUrls;
-			this.signature   = params.signature;
+			previewer.container   = api.ensure( params.container );
+			previewer.allowedUrls = params.allowedUrls;
+			previewer.signature   = params.signature;
 
 			params.url = window.location.href;
 
-			api.Messenger.prototype.initialize.call( this, params );
+			api.Messenger.prototype.initialize.call( previewer, params );
 
-			this.add( 'scheme', this.origin() ).link( this.origin ).setter( function( to ) {
+			previewer.add( 'scheme', previewer.origin() ).link( previewer.origin ).setter( function( to ) {
 				var match = to.match( rscheme );
 				return match ? match[0] : '';
 			});
@@ -3329,7 +3329,7 @@
 			// are on different domains to avoid the case where the front end doesn't have
 			// ssl certs.
 
-			this.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
+			previewer.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
 				var result, urlParser;
 				urlParser = document.createElement( 'a' );
 				urlParser.href = to;
@@ -3341,8 +3341,8 @@
 
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
-				$.each([ to.replace( rscheme, self.scheme() ), to ], function( i, url ) {
-					$.each( self.allowedUrls, function( i, allowed ) {
+				$.each([ to.replace( rscheme, previewer.scheme() ), to ], function( i, url ) {
+					$.each( previewer.allowedUrls, function( i, allowed ) {
 						var path;
 
 						allowed = allowed.replace( /\/+$/, '' );
@@ -3362,28 +3362,28 @@
 			});
 
 			// Change preview iframe URL when the previewUrl changes.
-			this.setIframeSrc = _.bind( this.setIframeSrc, this );
-			this.previewUrl.bind( this.setIframeSrc );
+			previewer.setIframeSrc = _.bind( previewer.setIframeSrc, previewer );
+			previewer.previewUrl.bind( previewer.setIframeSrc );
 
-			this.bind( 'ready', this.ready );
+			previewer.bind( 'ready', previewer.ready );
 
 			// Start listening for keep-alive messages when iframe first loads.
-			this.deferred.active.done( _.bind( this.keepPreviewAlive, this ) );
+			previewer.deferred.active.done( _.bind( previewer.keepPreviewAlive, previewer ) );
 
-			this.bind( 'synced', function() {
-				this.send( 'active' );
+			previewer.bind( 'synced', function() {
+				previewer.send( 'active' );
 			} );
 
-			this.scroll = 0;
-			this.bind( 'scroll', function( distance ) {
-				this.scroll = distance;
+			previewer.scroll = 0;
+			previewer.bind( 'scroll', function( distance ) {
+				previewer.scroll = distance;
 			});
 
 			// Update the URL when the iframe sends a URL message.
-			this.bind( 'url', this.previewUrl );
+			previewer.bind( 'url', previewer.previewUrl );
 
 			// Update the document title when the preview changes.
-			this.bind( 'documentTitle', function ( title ) {
+			previewer.bind( 'documentTitle', function ( title ) {
 				api.setDocumentTitle( title );
 			} );
 		},
@@ -3984,7 +3984,7 @@
 			 * @returns {jQuery.promise}
 			 */
 			save: function( args ) {
-				var self = this,
+				var previewer = this,
 					deferred = $.Deferred(),
 					changesetStatus = 'publish',
 					processing = api.state( 'processing' ),
@@ -4030,14 +4030,14 @@
 						_.values( invalidControls )[0][0].focus();
 						body.removeClass( 'saving' );
 						api.unbind( 'change', captureSettingModifiedDuringSave );
-						deferred.rejectWith( self, [
+						deferred.rejectWith( previewer, [
 							{ setting_invalidities: settingInvalidities }
 						] );
 						return deferred.promise();
 					}
 
-					query = $.extend( self.query(), {
-						nonce: self.nonce.save,
+					query = $.extend( previewer.query(), {
+						nonce: previewer.nonce.save,
 						customize_changeset_status: api.state( 'changesetStatus' ).get()
 					} );
 					if ( args && args.date ) {
@@ -4081,12 +4081,12 @@
 						}
 
 						if ( 'invalid_nonce' === response ) {
-							self.cheatin();
+							previewer.cheatin();
 						} else if ( 'not_logged_in' === response ) {
-							self.preview.iframe.hide();
-							self.login().done( function() {
-								self.save();
-								self.preview.iframe.show();
+							previewer.preview.iframe.hide();
+							previewer.login().done( function() {
+								previewer.save();
+								previewer.preview.iframe.show();
 							} );
 						}
 
@@ -4097,7 +4097,7 @@
 							} );
 						}
 
-						deferred.rejectWith( self, [ response ] );
+						deferred.rejectWith( previewer, [ response ] );
 						api.trigger( 'error', response );
 					} );
 
@@ -4110,7 +4110,7 @@
 							}
 						} );
 
-						self.send( 'saved', response );
+						previewer.send( 'saved', response );
 
 						api.state( 'changesetStatus' ).set( response.changeset_status );
 						if ( 'publish' === response.changeset_status ) {
@@ -4126,7 +4126,7 @@
 							} );
 						}
 
-						deferred.resolveWith( self, [ response ] );
+						deferred.resolveWith( previewer, [ response ] );
 						api.trigger( 'saved', response );
 
 						// Restore the global dirty state if any settings were modified during save.
