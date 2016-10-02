@@ -4211,6 +4211,10 @@
 			changesetStatus.bind( function( newStatus, oldStatus ) {
 				var urlParser;
 
+				if ( ! history.replaceState ) {
+					return;
+				}
+
 				// Abort if not a transition between existing and non-existing.
 				if ( newStatus && oldStatus ) {
 					return;
@@ -4218,7 +4222,7 @@
 
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(?=&|$)/, '$1' );
+				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
 				urlParser.search = urlParser.search.replace( /&+$/, '' );
 				if ( '' !== newStatus ) {
 					if ( urlParser.search.length > 1 ) {

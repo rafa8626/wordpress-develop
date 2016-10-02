@@ -309,7 +309,7 @@
 	 * @returns {void}
 	 */
 	api.injectStateFormInputs = function injectStateFormInputs( form ) {
-		var urlParser, inputs, stateParams = {};
+		var urlParser, stateParams = {};
 
 		urlParser = document.createElement( 'a' );
 		urlParser.href = form.action;
@@ -344,6 +344,66 @@
 		}
 	};
 
+	/**
+	 * Watch current URL and send keep-alive (heartbeat) messages to the parent.
+	 *
+	 * Keep the customizer pane notified that the preview is still alive
+	 * and that the user hasn't navigated to a non-customized URL.
+	 * These messages also keep the customizer updated on the current URL
+	 * for JS-driven sites that use history.pushState()/history.replaceState().
+	 *
+	 * @returns {void}
+	 */
+	api.keepAliveCurrentUrl = function keepAliveCurrentUrl() {
+		var currentUrl, urlParser, queryParams, needsParamRestoration = false;
+
+		urlParser = document.createElement( 'a' );
+		urlParser.href = location.href;
+		queryParams = api.parseQueryString( urlParser.search.substr( 1 ) );
+
+		if ( history.replaceState ) {
+			needsParamRestoration = ! queryParams.customize_changeset_uuid || ( api.settings.theme.active && ! queryParams.customize_theme ) || ( api.settings.channel && ! queryParams.customize_messenger_channel );
+		}
+
+		// Scrub the URL of any customized state query params.
+		_.each( api.settings.changeset.stateQueryParams, function( name ) {
+			delete queryParams[ name ];
+		} );
+		if ( _.isEmpty( queryParams ) ) {
+			urlParser.search = '';
+		} else {
+			urlParser.search = '?' + $.param( queryParams );
+		}
+		urlParser.hash = '';
+		currentUrl = urlParser.href;
+
+		// Ensure that the customized state params remain in the URL.
+		if ( needsParamRestoration ) {
+			urlParser.href = location.href;
+			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
+			if ( ! api.settings.theme.active ) {
+				queryParams.customize_changeset_uuid = api.settings.theme.stylesheet;
+			}
+			if ( api.settings.theme.channel ) {
+				queryParams.customize_messenger_channel = api.settings.channel;
+			}
+			urlParser.search = $.param( queryParams );
+			history.replaceState( {}, '', urlParser.href ); // @todo This is going to clobber any state in any JS app. The state needs to be captured.
+		}
+
+		if ( api.settings.url.self !== currentUrl ) {
+			api.settings.url.self = currentUrl;
+			api.preview.send( 'ready', {
+				currentUrl: api.settings.url.self,
+				activePanels: api.settings.activePanels,
+				activeSections: api.settings.activeSections,
+				activeControls: api.settings.activeControls
+			} );
+		} else {
+			api.preview.send( 'keep-alive' );
+		}
+	};
+
 	$( function() {
 		var bg, setValue;
 
@@ -352,7 +412,6 @@
 			return;
 		}
 
-		// @todo These need to be called even on unauthenticated requests. In other words, _wpCustomizeSettings should be output regardless.
 		api.injectStateIntoLinks();
 		api.injectStateIntoRequests();
 		api.injectStateIntoForms();
@@ -437,8 +496,15 @@
 				// Replace the UUID in the URL.
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /((\?|&)customize_changeset_uuid=)[^&]+/, '$1' + response.next_changeset_uuid );
-				history.replaceState( {}, document.title, urlParser.href );
+				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
+				if ( urlParser.search.length > 1 ) {
+					urlParser.search += '&';
+				}
+				urlParser.search += 'customize_changeset_uuid=' + response.next_changeset_uuid;
+
+				if ( history.replaceState ) {
+					history.replaceState( {}, document.title, urlParser.href ); // @todo This is going to clobber any state in any JS app. The state needs to be captured.
+				}
 			}
 
 			api.trigger( 'saved', response );
@@ -465,6 +531,9 @@
 			activeSections: api.settings.activeSections,
 			activeControls: api.settings.activeControls
 		} );
+
+		// Send ready when URL changes via JS.
+		setInterval( api.keepAliveCurrentUrl, 1000 );
 
 		// Display a loading indicator when preview is reloading, and remove on failure.
 		api.preview.bind( 'loading-initiated', function () {
