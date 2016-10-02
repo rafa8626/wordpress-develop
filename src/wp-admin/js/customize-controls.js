@@ -4028,6 +4028,7 @@
 						if ( 'publish' === response.changeset_status ) {
 							api.state( 'changesetStatus' ).set( '' );
 							api.settings.changeset.uuid = response.next_changeset_uuid;
+							parent.send( 'changeset-uuid', api.settings.changeset.uuid );
 						}
 
 						if ( response.setting_validities ) {
@@ -4217,7 +4218,7 @@
 
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /(&|\?)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
+				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(?=&|$)/, '$1' );
 				urlParser.search = urlParser.search.replace( /&+$/, '' );
 				if ( '' !== newStatus ) {
 					if ( urlParser.search.length > 1 ) {
@@ -4403,6 +4404,8 @@
 		api.bind( 'title', function( newTitle ) {
 			parent.send( 'title', newTitle );
 		});
+
+		parent.send( 'changeset-uuid', api.settings.changeset.uuid );
 
 		// Initialize the connection with the parent frame.
 		parent.send( 'ready' );

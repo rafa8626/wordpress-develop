@@ -132,6 +132,21 @@ window.wp = window.wp || {};
 				targetWindow: this.iframe[0].contentWindow
 			});
 
+			// Expose the changeset UUID on the parent window's URL so that the customized state can survive a refresh.
+			if ( history.replaceState ) {
+				this.messenger.bind( 'changeset-uuid', function( changesetUuid ) {
+					var urlParser;
+					urlParser = document.createElement( 'a' );
+					urlParser.href = location.href;
+					urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(?=$|&)/, '$1' );
+					if ( urlParser.search.length > 1 ) {
+						urlParser.search += '&';
+					}
+					urlParser.search += 'customize_changeset_uuid=' + changesetUuid;
+					history.replaceState( { customize: urlParser.href }, '', urlParser.href );
+				} );
+			}
+
 			// Wait for the connection from the iframe before sending any postMessage events.
 			this.messenger.bind( 'ready', function() {
 				Loader.messenger.send( 'back' );

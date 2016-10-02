@@ -459,7 +459,6 @@
 		 * containers and controls are active.
 		 */
 
-		// @todo Include currentUrl.
 		api.preview.send( 'ready', {
 			currentUrl: api.settings.url.self,
 			activePanels: api.settings.activePanels,
