@@ -1101,6 +1101,8 @@ final class WP_Customize_Manager {
 			),
 			'url' => array(
 				'self' => $self_url,
+				'allowed' => array_map( 'esc_url_raw', $this->get_allowed_urls() ),
+				'isCrossDomain' => $this->is_cross_domain(),
 			),
 			'channel' => $this->messenger_channel,
 			'activePanels' => array(),
@@ -2304,6 +2306,55 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Determines whether the admin and the frontend are on different domains.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @return bool Whether cross-domain.
+	 */
+	public function is_cross_domain() {
+		$admin_origin = parse_url( admin_url() );
+		$home_origin = parse_url( home_url() );
+		$cross_domain = ( strtolower( $admin_origin['host'] ) !== strtolower( $home_origin['host'] ) );
+		return $cross_domain;
+	}
+
+	/**
+	 * Get URLs allowed to be previewed.
+	 *
+	 * If the front end and the admin are served from the same domain, load the
+	 * preview over ssl if the Customizer is being loaded over ssl. This avoids
+	 * insecure content warnings. This is not attempted if the admin and front end
+	 * are on different domains to avoid the case where the front end doesn't have
+	 * ssl certs. Domain mapping plugins can allow other urls in these conditions
+	 * using the customize_allowed_urls filter.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @returns array Allowed URLs.
+	 */
+	public function get_allowed_urls() {
+		$allowed_urls = array( home_url( '/' ) );
+
+		if ( is_ssl() && ! $this->is_cross_domain() ) {
+			$allowed_urls[] = home_url( '/', 'https' );
+		}
+
+		/**
+		 * Filters the list of URLs allowed to be clicked and followed in the Customizer preview.
+		 *
+		 * @since 3.4.0
+		 *
+		 * @param array $allowed_urls An array of allowed URLs.
+		 */
+		$allowed_urls = array_unique( apply_filters( 'customize_allowed_urls', $allowed_urls ) );
+
+		return $allowed_urls;
+	}
+
+	/**
 	 * Set URL to link the user to when closing the Customizer.
 	 *
 	 * URL is validated.
@@ -2412,32 +2463,6 @@ final class WP_Customize_Manager {
 	 * @since 4.4.0
 	 */
 	public function customize_pane_settings() {
-		/*
-		 * If the front end and the admin are served from the same domain, load the
-		 * preview over ssl if the Customizer is being loaded over ssl. This avoids
-		 * insecure content warnings. This is not attempted if the admin and front end
-		 * are on different domains to avoid the case where the front end doesn't have
-		 * ssl certs. Domain mapping plugins can allow other urls in these conditions
-		 * using the customize_allowed_urls filter.
-		 */
-
-		$allowed_urls = array( home_url( '/' ) );
-		$admin_origin = parse_url( admin_url() );
-		$home_origin  = parse_url( home_url() );
-		$cross_domain = ( strtolower( $admin_origin['host'] ) !== strtolower( $home_origin['host'] ) );
-
-		if ( is_ssl() && ! $cross_domain ) {
-			$allowed_urls[] = home_url( '/', 'https' );
-		}
-
-		/**
-		 * Filters the list of URLs allowed to be clicked and followed in the Customizer preview.
-		 *
-		 * @since 3.4.0
-		 *
-		 * @param array $allowed_urls An array of allowed URLs.
-		 */
-		$allowed_urls = array_unique( apply_filters( 'customize_allowed_urls', $allowed_urls ) );
 
 		$login_url = add_query_arg( array(
 			'interim-login' => 1,
@@ -2468,8 +2493,8 @@ final class WP_Customize_Manager {
 				'parent'        => esc_url_raw( admin_url() ),
 				'activated'     => esc_url_raw( home_url( '/' ) ),
 				'ajax'          => esc_url_raw( admin_url( 'admin-ajax.php', 'relative' ) ),
-				'allowed'       => array_map( 'esc_url_raw', $allowed_urls ),
-				'isCrossDomain' => $cross_domain,
+				'allowed'       => array_map( 'esc_url_raw', $this->get_allowed_urls() ),
+				'isCrossDomain' => $this->is_cross_domain(),
 				'home'          => esc_url_raw( home_url( '/' ) ),
 				'login'         => esc_url_raw( $login_url ),
 			),
