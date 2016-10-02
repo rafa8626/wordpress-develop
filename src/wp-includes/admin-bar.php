@@ -388,7 +388,7 @@ function wp_admin_bar_customize_menu( $wp_admin_bar ) {
 
 	$customize_url = add_query_arg( 'url', urlencode( $current_url ), wp_customize_url() );
 	if ( is_customize_preview() ) {
-		$customize_url = add_query_arg( array( 'customize_changeset_uuid' => $wp_customize->changeset_uuid() ), $customize_url );
+		$customize_url = add_query_arg( array( 'changeset_uuid' => $wp_customize->changeset_uuid() ), $customize_url );
 	}
 
 	$wp_admin_bar->add_menu( array(

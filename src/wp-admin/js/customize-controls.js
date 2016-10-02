@@ -4247,13 +4247,13 @@
 
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
+				urlParser.search = urlParser.search.replace( /(\?|&)changeset_uuid=[^&]+(&|$)/, '$1' );
 				urlParser.search = urlParser.search.replace( /&+$/, '' );
 				if ( '' !== newStatus ) {
 					if ( urlParser.search.length > 1 ) {
 						urlParser.search += '&';
 					}
-					urlParser.search += 'customize_changeset_uuid=' + api.settings.changeset.uuid;
+					urlParser.search += 'changeset_uuid=' + api.settings.changeset.uuid;
 				}
 				history.replaceState( {}, document.title, urlParser.href );
 			} );

@@ -138,11 +138,11 @@ window.wp = window.wp || {};
 					var urlParser;
 					urlParser = document.createElement( 'a' );
 					urlParser.href = location.href;
-					urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(?=$|&)/, '$1' );
+					urlParser.search = urlParser.search.replace( /(\?|&)changeset_uuid=[^&]+(?=$|&)/, '$1' );
 					if ( urlParser.search.length > 1 ) {
 						urlParser.search += '&';
 					}
-					urlParser.search += 'customize_changeset_uuid=' + changesetUuid;
+					urlParser.search += 'changeset_uuid=' + changesetUuid;
 					history.replaceState( { customize: urlParser.href }, '', urlParser.href );
 				} );
 			}

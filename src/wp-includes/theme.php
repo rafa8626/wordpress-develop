@@ -2079,11 +2079,11 @@ function _wp_customize_include() {
 
 	$is_customize_admin_page = ( is_admin() && 'customize.php' == basename( $_SERVER['PHP_SELF'] ) );
 	$should_include = (
+		$is_customize_admin_page
+		||
 		( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
 		||
 		! empty( $_REQUEST['customize_changeset_uuid'] )
-		||
-		$is_customize_admin_page
 	);
 
 	if ( ! $should_include ) {
@@ -2094,8 +2094,9 @@ function _wp_customize_include() {
 	$changeset_uuid = null;
 	$messenger_channel = null;
 
-	// @todo Also allow just changeset_uuid on customize.php admin page.
-	if ( ! empty( $_REQUEST['customize_changeset_uuid'] ) ) {
+	if ( $is_customize_admin_page && isset( $_REQUEST['changeset_uuid'] ) ) {
+		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['changeset_uuid'] ) );
+	} elseif ( ! empty( $_REQUEST['customize_changeset_uuid'] ) ) {
 		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset_uuid'] ) );
 	}
 
