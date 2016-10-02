@@ -91,6 +91,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30988
 	 */
 	function test_unsanitized_post_values() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$manager = $this->manager;
 
 		$customized = array(
@@ -108,6 +109,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30988
 	 */
 	function test_post_value() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$posted_settings = array(
 			'foo' => 'OOF',
 		);
@@ -131,6 +133,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 34893
 	 */
 	function test_invalid_post_value() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$default_value = 'foo_default';
 		$setting = $this->manager->add_setting( 'foo', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_foo' ),
@@ -196,6 +199,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 37247
 	 */
 	function test_post_value_validation_sanitization_order() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$default_value = '0';
 		$setting = $this->manager->add_setting( 'numeric', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_numeric' ),
@@ -240,6 +244,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::validate_setting_values()
 	 */
 	function test_validate_setting_values() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$setting = $this->manager->add_setting( 'foo', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_foo' ),
 			'sanitize_callback' => array( $this, 'filter_customize_sanitize_foo' ),
@@ -284,6 +289,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 37247
 	 */
 	function test_validate_setting_values_validation_sanitization_order() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$setting = $this->manager->add_setting( 'numeric', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_numeric' ),
 			'sanitize_callback' => array( $this, 'filter_customize_sanitize_numeric' ),
@@ -325,6 +331,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::set_post_value()
 	 */
 	function test_set_post_value() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$this->manager->add_setting( 'foo', array(
 			'sanitize_callback' => array( $this, 'sanitize_foo_for_test_set_post_value' ),
 		) );
@@ -429,7 +436,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		}
 		$this->assertFalse( $this->manager->has_published_pages() );
 
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'editor' ) ) );
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$this->manager->nav_menus->customize_register();
 		$setting_id = 'nav_menus_created_posts';
 		$setting = $this->manager->get_setting( $setting_id );
@@ -448,6 +455,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30936
 	 */
 	function test_register_dynamic_settings() {
+		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$posted_settings = array(
 			'foo' => 'OOF',
 			'bar' => 'RAB',
@@ -662,7 +670,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$data = json_decode( $json, true );
 		$this->assertNotEmpty( $data );
 
-		$this->assertEqualSets( array( 'theme', 'url', 'browser', 'panels', 'sections', 'nonce', 'autofocus', 'documentTitleTmpl', 'previewableDevices' ), array_keys( $data ) );
+		$this->assertEqualSets( array( 'theme', 'url', 'browser', 'panels', 'sections', 'nonce', 'autofocus', 'documentTitleTmpl', 'previewableDevices', 'changeset' ), array_keys( $data ) );
 		$this->assertEquals( $autofocus, $data['autofocus'] );
 		$this->assertArrayHasKey( 'save', $data['nonce'] );
 		$this->assertArrayHasKey( 'preview', $data['nonce'] );
@@ -693,7 +701,6 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'activePanels', $settings );
 		$this->assertArrayHasKey( 'activeSections', $settings );
 		$this->assertArrayHasKey( 'activeControls', $settings );
-		$this->assertArrayHasKey( 'settingValidities', $settings );
 		$this->assertArrayHasKey( 'nonce', $settings );
 		$this->assertArrayHasKey( '_dirty', $settings );
 
