@@ -37,11 +37,14 @@
 		 * @param {object} options - Extend any instance parameter or method with this object.
 		 */
 		initialize: function( params, options ) {
-			var self = this;
+			var preview = this, urlParser = document.createElement( 'a' );
 
-			api.Messenger.prototype.initialize.call( this, params, options );
+			api.Messenger.prototype.initialize.call( preview, params, options );
 
-			this.body = $( document.body );
+			urlParser.href = preview.origin();
+			preview.add( 'scheme', urlParser.protocol.replace( /:$/, '' ) );
+
+			preview.body = $( document.body );
 			// this.body.on( 'click.preview', 'a', function( event ) {
 			// 	var link, isInternalJumpLink;
 			// 	link = $( this );
@@ -94,13 +97,13 @@
 			// 	event.preventDefault();
 			// });
 
-			this.window = $( window );
-			this.window.on( 'scroll.preview', debounce( function() {
-				self.send( 'scroll', self.window.scrollTop() );
+			preview.window = $( window );
+			preview.window.on( 'scroll.preview', debounce( function() {
+				preview.send( 'scroll', preview.window.scrollTop() );
 			}, 200 ));
 
-			this.bind( 'scroll', function( distance ) {
-				self.window.scrollTop( distance );
+			preview.bind( 'scroll', function( distance ) {
+				preview.window.scrollTop( distance );
 			});
 		}
 	});
@@ -220,6 +223,11 @@
 
 		if ( ! api.shouldLinkHaveStateParams( element ) ) {
 			return;
+		}
+
+		// Make sure links in preview use HTTPS if parent frame uses HTTPS.
+		if ( 'https' === api.preview.scheme.get() ) {
+			element.protocol = 'https:';
 		}
 
 		queryParams = api.parseQueryString( element.search.substring( 1 ) );
@@ -412,14 +420,14 @@
 			return;
 		}
 
-		api.injectStateIntoLinks();
-		api.injectStateIntoRequests();
-		api.injectStateIntoForms();
-
 		api.preview = new api.Preview({
 			url: window.location.href,
 			channel: api.settings.channel
 		});
+
+		api.injectStateIntoLinks();
+		api.injectStateIntoRequests();
+		api.injectStateIntoForms();
 
 		/**
 		 * Create/update a setting value.
