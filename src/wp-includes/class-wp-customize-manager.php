@@ -1071,6 +1071,14 @@ final class WP_Customize_Manager {
 			body.wp-customizer-unloading * {
 				pointer-events: none !important;
 			}
+			form.customize-unpreviewable,
+			form.customize-unpreviewable input,
+			form.customize-unpreviewable select,
+			form.customize-unpreviewable button,
+			a.customize-unpreviewable,
+			area.customize-unpreviewable {
+				cursor: not-allowed !important;
+			}
 		</style><?php
 	}
 
@@ -1090,6 +1098,19 @@ final class WP_Customize_Manager {
 		);
 		$self_url = remove_query_arg( $state_query_params, $self_url );
 
+		$allowed_urls = $this->get_allowed_urls();
+		$allowed_hosts = array();
+		foreach ( $allowed_urls as $allowed_url ) {
+			$parsed = wp_parse_url( $allowed_url );
+			if ( empty( $parsed['host'] ) ) {
+				continue;
+			}
+			$host = $parsed['host'];
+			if ( ! empty( $parsed['port'] ) ) {
+				$host .= ':' . $parsed['port'];
+			}
+			$allowed_hosts[] = $host;
+		}
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
@@ -1102,6 +1123,7 @@ final class WP_Customize_Manager {
 			'url' => array(
 				'self' => $self_url,
 				'allowed' => array_map( 'esc_url_raw', $this->get_allowed_urls() ),
+				'allowedHosts' => array_unique( $allowed_hosts ),
 				'isCrossDomain' => $this->is_cross_domain(),
 			),
 			'channel' => $this->messenger_channel,
@@ -1111,6 +1133,8 @@ final class WP_Customize_Manager {
 			'nonce' => current_user_can( 'customize' ) ? $this->get_nonces() : array(),
 			'l10n' => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
+				'linkUnpreviewable' => __( 'This link is not live-previewable.' ),
+				'formUnpreviewable' => __( 'This form is not live-previewable.' ),
 			),
 			'_dirty' => array_keys( $setting_values ),
 		);
@@ -2314,8 +2338,8 @@ final class WP_Customize_Manager {
 	 * @return bool Whether cross-domain.
 	 */
 	public function is_cross_domain() {
-		$admin_origin = parse_url( admin_url() );
-		$home_origin = parse_url( home_url() );
+		$admin_origin = wp_parse_url( admin_url() );
+		$home_origin = wp_parse_url( home_url() );
 		$cross_domain = ( strtolower( $admin_origin['host'] ) !== strtolower( $home_origin['host'] ) );
 		return $cross_domain;
 	}

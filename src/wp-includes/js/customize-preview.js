@@ -45,58 +45,6 @@
 			preview.add( 'scheme', urlParser.protocol.replace( /:$/, '' ) );
 
 			preview.body = $( document.body );
-			// this.body.on( 'click.preview', 'a', function( event ) {
-			// 	var link, isInternalJumpLink;
-			// 	link = $( this );
-			// 	isInternalJumpLink = ( link.attr( 'href' ) && '#' === link.attr( 'href' ).substr( 0, 1 ) );
-			// 	event.preventDefault();
-			//
-			// 	if ( isInternalJumpLink && '#' !== link.attr( 'href' ) ) {
-			// 		$( link.attr( 'href' ) ).each( function() {
-			// 			this.scrollIntoView();
-			// 		} );
-			// 	}
-			//
-			// 	/*
-			// 	 * Note the shift key is checked so shift+click on widgets or
-			// 	 * nav menu items can just result on focusing on the corresponding
-			// 	 * control instead of also navigating to the URL linked to.
-			// 	 */
-			// 	if ( event.shiftKey || isInternalJumpLink ) {
-			// 		return;
-			// 	}
-			// 	self.send( 'scroll', 0 );
-			// 	self.send( 'url', link.prop( 'href' ) );
-			// });
-
-			// // You cannot submit forms.
-			// this.body.on( 'submit.preview', 'form', function( event ) {
-			// 	var urlParser;
-			//
-			// 	/*
-			// 	 * If the default wasn't prevented already (in which case the form
-			// 	 * submission is already being handled by JS), and if it has a GET
-			// 	 * request method, then take the serialized form data and add it as
-			// 	 * a query string to the action URL and send this in a url message
-			// 	 * to the customizer pane so that it will be loaded. If the form's
-			// 	 * action points to a non-previewable URL, the customizer pane's
-			// 	 * previewUrl setter will reject it so that the form submission is
-			// 	 * a no-op, which is the same behavior as when clicking a link to an
-			// 	 * external site in the preview.
-			// 	 */
-			// 	if ( ! event.isDefaultPrevented() && 'GET' === this.method.toUpperCase() ) {
-			// 		urlParser = document.createElement( 'a' );
-			// 		urlParser.href = this.action;
-			// 		if ( urlParser.search.substr( 1 ).length > 1 ) {
-			// 			urlParser.search += '&';
-			// 		}
-			// 		urlParser.search += $( this ).serialize();
-			// 		api.preview.send( 'url', urlParser.href );
-			// 	}
-			//
-			// 	event.preventDefault();
-			// });
-
 			preview.window = $( window );
 			preview.window.on( 'scroll.preview', debounce( function() {
 				preview.send( 'scroll', preview.window.scrollTop() );
@@ -114,12 +62,12 @@
 	 *
 	 * @returns {void}
 	 */
-	api.injectStateIntoLinks = function injectStateIntoLinks() {
-		var linkSelectors = 'a, area';
+	api.addLinkPreviewing = function addLinkPreviewing() {
+		var linkSelectors = 'a[href], area';
 
 		// Inject links into initial document.
 		$( document.body ).find( linkSelectors ).each( function() {
-			api.injectStateLinkParams( this );
+			api.prepareLinkPreview( this );
 		} );
 
 		// Inject links for new elements added to the page.
@@ -127,7 +75,7 @@
 			api.mutationObserver = new MutationObserver( function( mutations ) {
 				_.each( mutations, function( mutation ) {
 					$( mutation.target ).find( linkSelectors ).each( function() {
-						api.injectStateLinkParams( this );
+						api.prepareLinkPreview( this );
 					} );
 				} );
 			} );
@@ -139,22 +87,9 @@
 
 			// If mutation observers aren't available, fallback to just-in-time injection.
 			$( document.documentElement ).on( 'click focus mouseover', linkSelectors, function() {
-				api.injectStateLinkParams( this );
+				api.prepareLinkPreview( this );
 			} );
 		}
-	};
-
-	/**
-	 * Is matching base URL (host and path)?
-	 *
-	 * @param {HTMLAnchorElement} parsedUrl Parsed URL.
-	 * @param {string} parsedUrl.hostname Host.
-	 * @param {string} parsedUrl.pathname Path.
-	 * @returns {boolean} Whether matched.
-	 */
-	api.isMatchingBaseUrl = function isMatchingBaseUrl( parsedUrl ) {
-		// @todo return parsedUrl.hostname === api.data.home_url.host && 0 === parsedUrl.pathname.indexOf( api.data.home_url.path );
-		return true;
 	};
 
 	/**
@@ -175,7 +110,7 @@
 	};
 
 	/**
-	 * Should the supplied link have the state params added.
+	 * Should the supplied link is previewable.
 	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
 	 * @param {string} element.search Query string.
@@ -183,8 +118,27 @@
 	 * @param {string} element.hostname Hostname.
 	 * @returns {boolean} Is appropriate for changeset link.
 	 */
-	api.shouldLinkHaveStateParams = function shouldLinkHaveStateParams( element ) {
-		if ( ! api.isMatchingBaseUrl( element ) ) {
+	api.isLinkPreviewable = function isLinkPreviewable( element ) {
+		var hasMatchingHost, urlParser;
+
+		if ( 'javascript:' === element.protocol ) { // jshint ignore:line
+			return true;
+		}
+
+		// Only web URLs can be previewed.
+		if ( 'https:' !== element.protocol && 'http:' !== element.protocol ) {
+			return false;
+		}
+
+		urlParser = document.createElement( 'a' );
+		hasMatchingHost = ! _.isUndefined( _.find( api.settings.url.allowed, function( allowedUrl ) {
+			urlParser.href = allowedUrl;
+			if ( urlParser.host === element.host && urlParser.protocol === element.protocol ) {
+				return true;
+			}
+			return false;
+		} ) );
+		if ( ! hasMatchingHost ) {
 			return false;
 		}
 
@@ -198,13 +152,8 @@
 			return true;
 		}
 
-		// Disallow links to admin.
-		if ( /\/wp-admin(\/|$)/.test( element.pathname ) ) {
-			return false;
-		}
-
-		// Skip links in admin bar.
-		if ( $( element ).closest( '#wpadminbar' ).length ) {
+		// Disallow links to admin, includes, and content.
+		if ( /\/wp-(admin|includes|content)(\/|$)/.test( element.pathname ) ) {
 			return false;
 		}
 
@@ -218,17 +167,24 @@
 	 * @param {object} element.search Query string.
 	 * @returns {void}
 	 */
-	api.injectStateLinkParams = function injectStateLinkParams( element ) {
+	api.prepareLinkPreview = function prepareLinkPreview( element ) {
 		var queryParams;
 
-		if ( ! api.shouldLinkHaveStateParams( element ) ) {
+		// Skip links in admin bar.
+		if ( $( element ).closest( '#wpadminbar' ).length ) {
 			return;
 		}
 
 		// Make sure links in preview use HTTPS if parent frame uses HTTPS.
-		if ( 'https' === api.preview.scheme.get() ) {
+		if ( 'https' === api.preview.scheme.get() && 'http:' === element.protocol && -1 !== api.settings.url.allowedHosts.indexOf( element.host ) ) {
 			element.protocol = 'https:';
 		}
+
+		if ( ! api.isLinkPreviewable( element ) ) {
+			$( element ).addClass( 'customize-unpreviewable' );
+			return;
+		}
+		$( element ).removeClass( 'customize-unpreviewable' );
 
 		queryParams = api.parseQueryString( element.search.substring( 1 ) );
 		queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
@@ -252,7 +208,7 @@
 	 * @access private
 	 * @return {void}
 	 */
-	api.injectStateIntoRequests = function injectStateIntoRequests() {
+	api.addRequestPreviewing = function addRequestPreviewing() {
 		$.ajaxPrefilter( function prefilterAjax( options ) {
 			var urlParser, queryParams;
 			if ( ! api.settings.changeset.uuid ) {
@@ -263,7 +219,7 @@
 			urlParser.href = options.url;
 
 			// Abort if the request is not for this site.
-			if ( ! api.isMatchingBaseUrl( urlParser ) ) {
+			if ( ! api.isLinkPreviewable( urlParser ) ) {
 				return;
 			}
 
@@ -287,11 +243,11 @@
 	 * @access private
 	 * @returns {void}
 	 */
-	api.injectStateIntoForms = function injectStateIntoForms() {
+	api.addFormPreviewing = function addFormPreviewing() {
 
 		// Inject inputs for forms in initial document.
 		$( document.body ).find( 'form' ).each( function() {
-			api.injectStateFormInputs( this );
+			api.prepareFormPreview( this );
 		} );
 
 		// Inject inputs for new forms added to the page.
@@ -299,7 +255,7 @@
 			api.mutationObserver = new MutationObserver( function( mutations ) {
 				_.each( mutations, function( mutation ) {
 					$( mutation.target ).find( 'form' ).each( function() {
-						api.injectStateFormInputs( this );
+						api.prepareFormPreview( this );
 					} );
 				} );
 			} );
@@ -316,14 +272,27 @@
 	 * @param {HTMLFormElement} form Form.
 	 * @returns {void}
 	 */
-	api.injectStateFormInputs = function injectStateFormInputs( form ) {
+	api.prepareFormPreview = function prepareFormPreview( form ) {
 		var urlParser, stateParams = {};
+
+		if ( ! form.action ) {
+			form.action = location.href;
+		}
 
 		urlParser = document.createElement( 'a' );
 		urlParser.href = form.action;
-		if ( ! api.isMatchingBaseUrl( urlParser ) ) {
+
+		// Make sure forms in preview use HTTPS if parent frame uses HTTPS.
+		if ( 'https' === api.preview.scheme.get() && 'http:' === urlParser.protocol && -1 !== api.settings.url.allowedHosts.indexOf( urlParser.host ) ) {
+			urlParser.protocol = 'https:';
+			form.action = urlParser.href;
+		}
+
+		if ( ! api.isLinkPreviewable( urlParser ) ) {
+			$( form ).addClass( 'customize-unpreviewable' );
 			return;
 		}
+		$( form ).removeClass( 'customize-unpreviewable' );
 
 		stateParams.customize_changeset_uuid = api.settings.changeset.uuid;
 		if ( ! api.settings.theme.active ) {
@@ -425,9 +394,17 @@
 			channel: api.settings.channel
 		});
 
-		api.injectStateIntoLinks();
-		api.injectStateIntoRequests();
-		api.injectStateIntoForms();
+		api.addLinkPreviewing();
+		api.addRequestPreviewing();
+		api.addFormPreviewing();
+		$( document.body ).on( 'click.customize-unpreviewable', 'a.customize-unpreviewable', function( event ) {
+			event.preventDefault();
+			wp.a11y.speak( api.settings.l10n.linkUnpreviewable );
+		} );
+		$( document.body ).on( 'submit.customize-unpreviewable', 'form.customize-unpreviewable', function( event ) {
+			event.preventDefault();
+			wp.a11y.speak( api.settings.l10n.formUnpreviewable );
+		} );
 
 		/**
 		 * Create/update a setting value.
@@ -494,11 +471,11 @@
 				api.settings.changeset.uuid = response.next_changeset_uuid;
 
 				// Update UUIDs in links and forms.
-				$( document.body ).find( 'a, area' ).each( function() {
-					api.injectStateLinkParams( this );
+				$( document.body ).find( 'a[href], area' ).each( function() {
+					api.prepareLinkPreview( this );
 				} );
 				$( document.body ).find( 'form' ).each( function() {
-					api.injectStateFormInputs( this );
+					api.prepareFormPreview( this );
 				} );
 
 				// Replace the UUID in the URL.
