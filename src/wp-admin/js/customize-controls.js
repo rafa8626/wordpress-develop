@@ -3288,9 +3288,7 @@
 		 */
 		initialize: function( params, options ) {
 			var self = this,
-				rscheme = /^https?/,
-				parseQueryParams,
-				suspendPreviewUrlWatching = false;
+				rscheme = /^https?/;
 
 			$.extend( this, options || {} );
 			this.deferred = {
@@ -3298,7 +3296,7 @@
 			};
 			this.pendingChangesetUpdateRequests = [];
 
-			// Debouce to prevent hammering server and then wait for any pending update requests.
+			// Debounce to prevent hammering server and then wait for any pending update requests.
 			this.refresh = _.debounce(
 				( function( originalRefresh ) {
 					return function() {
@@ -3363,43 +3361,9 @@
 				return result ? result : null;
 			});
 
-			parseQueryParams = function( queryString ) {
-				var queryParams = {};
-				_.each( queryString.split( '&' ), function( pair ) {
-					var parts = pair.split( '=', 2 );
-					if ( parts[0] ) {
-						queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
-					}
-				} );
-				return queryParams;
-			};
-
 			// Change preview iframe URL when the previewUrl changes.
-			this.previewUrl.bind( function( newUrl ) {
-				var urlParser, oldParams = {}, newParams;
-
-				// @todo short-circuit if `ready` event is being triggered.
-				if ( suspendPreviewUrlWatching ) {
-					return;
-				}
-
-				urlParser = document.createElement( 'a' );
-
-				// @todo Duplication.
-				params = self.query();
-				delete params.customized;
-				delete params.wp_customize;
-				delete params.nonce;
-				params.customize_messenger_channel = self.channel();
-
-				urlParser.href = newUrl;
-				oldParams = parseQueryParams( urlParser.search.substring( 1 ) );
-				newParams = _.extend( {}, oldParams, params );
-
-				// @todo We may need to add a new param for customize_persistant_query_params as _.keys( newParams ).
-				urlParser.search = $.param( newParams );
-				self.preview.iframe.prop( 'src', urlParser.href );
-			} );
+			this.setIframeSrc = _.bind( this.setIframeSrc, this );
+			this.previewUrl.bind( this.setIframeSrc );
 
 			this.bind( 'ready', function() {
 				var data = {};
@@ -3413,10 +3377,11 @@
 
 			this.bind( 'ready', function( data ) {
 
+				// Set the previewUrl without causing the url to set the iframe.
 				if ( data.currentUrl ) {
-					suspendPreviewUrlWatching = true;
+					api.previewer.previewUrl.unbind( api.previewer.setIframeSrc );
 					api.previewer.previewUrl.set( data.currentUrl );
-					suspendPreviewUrlWatching = false;
+					api.previewer.previewUrl.bind( api.previewer.setIframeSrc );
 				}
 
 				/*
@@ -3461,6 +3426,9 @@
 				}
 			} );
 
+			// Start listening for keep-alive messages when iframe first loads.
+			this.deferred.active.done( _.bind( this.keepPreviewAlive, this ) );
+
 			this.bind( 'synced', function() {
 				this.send( 'active' );
 			} );
@@ -3477,6 +3445,90 @@
 			this.bind( 'documentTitle', function ( title ) {
 				api.setDocumentTitle( title );
 			} );
+		},
+
+		/**
+		 * Keep the preview alive by listening for ready and keep-alive messages.
+		 *
+		 * If a message is not received in the allotted time then the iframe will be set back to the last known valid URL.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @returns {void}
+		 */
+		keepPreviewAlive: function keepPreviewAlive() {
+			var previewer = this, heartbeatTick, timeoutId, handleMissingHeartbeat, scheduleHeartbeatCheck, lastKnownUrl;
+
+			lastKnownUrl = previewer.previewUrl.get();
+			previewer.previewUrl.bind( function( url ) {
+				lastKnownUrl = url;
+			} );
+
+			// @todo What if a page load takes more than 3 seconds?
+			scheduleHeartbeatCheck = function() {
+				timeoutId = setTimeout( handleMissingHeartbeat, 3000 ); // @todo Let interval be a parameter.
+			};
+			heartbeatTick = function() {
+				clearTimeout( timeoutId );
+				scheduleHeartbeatCheck();
+			};
+			handleMissingHeartbeat = function() {
+
+				// @todo Instead of changing the URL if the iframe, there should be a notification to prompt the user to return to a customize preview.
+				previewer.setIframeSrc( lastKnownUrl );
+			};
+			scheduleHeartbeatCheck();
+
+			previewer.bind( 'ready', heartbeatTick );
+			previewer.bind( 'keep-alive', heartbeatTick );
+		},
+
+		/**
+		 * Parse query string.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param {string} queryString Query string.
+		 * @returns {object} Params.
+		 */
+		parseQueryParams: function parseQueryParams( queryString ) {
+			var queryParams = {};
+			_.each( queryString.split( '&' ), function( pair ) {
+				var parts = pair.split( '=', 2 );
+				if ( parts[0] ) {
+					queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
+				}
+			} );
+			return queryParams;
+		},
+
+		/**
+		 * Set the iframe's src URL.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param {string} url URL.
+		 * @returns {void}
+		 */
+		setIframeSrc: function( url ) {
+			var previewer = this, urlParser, params, oldParams, newParams;
+
+			urlParser = document.createElement( 'a' );
+
+			// @todo Duplication.
+			params = previewer.query();
+			delete params.customized;
+			delete params.wp_customize;
+			delete params.nonce;
+			params.customize_messenger_channel = previewer.channel();
+
+			urlParser.href = url;
+			oldParams = previewer.parseQueryParams( urlParser.search.substring( 1 ) );
+			newParams = _.extend( {}, oldParams, params );
+
+			// @todo We may need to add a new param for customize_persistent_query_params as _.keys( newParams ).
+			urlParser.search = $.param( newParams );
+			previewer.preview.iframe.prop( 'src', urlParser.href );
 		},
 
 		/**
@@ -3550,7 +3602,7 @@
 				previewer.trigger( 'ready', readyData );
 			});
 
-			previewer.loading.fail( function( reason, location ) {
+			previewer.loading.fail( function( reason ) {
 				previewer.send( 'loading-failed' );
 
 				if ( 'logged out' === reason ) {

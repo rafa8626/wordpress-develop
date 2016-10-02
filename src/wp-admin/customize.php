@@ -26,21 +26,23 @@ if ( ! current_user_can( 'customize' ) ) {
  */
 global $wp_scripts, $wp_customize;
 
-if ( $wp_customize->changeset_post_id() && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $wp_customize->changeset_post_id() ) ) {
-	wp_die(
-		'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
-		'<p>' . __( 'Sorry, you are not allowed to edit this changeset.' ) . '</p>',
-		403
-	);
+if ( $wp_customize->changeset_post_id() ) {
+	if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->edit_post, $wp_customize->changeset_post_id() ) ) {
+		wp_die(
+			'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
+			'<p>' . __( 'Sorry, you are not allowed to edit this changeset.' ) . '</p>',
+			403
+		);
+	}
+	if ( in_array( get_post_status( $wp_customize->changeset_post_id() ), array( 'publish', 'trash' ), true ) ) {
+		wp_die(
+			'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
+			'<p>' . __( 'This changeset has already been published and cannot be further modified.' ) . '</p>',
+			403
+		);
+	}
 }
 
-if ( $wp_customize->changeset_post_id() && in_array( get_post_status( $wp_customize->changeset_post_id() ), array( 'publish', 'trash' ), true ) ) {
-	wp_die(
-		'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
-		'<p>' . __( 'This changeset has already been published and cannot be further modified.' ) . '</p>',
-		403
-	);
-}
 
 wp_reset_vars( array( 'url', 'return', 'autofocus' ) );
 if ( ! empty( $url ) ) {
