@@ -960,6 +960,7 @@ final class WP_Customize_Manager {
 			header( 'X-Robots: noindex, nofollow, noarchive' );
 		}
 		add_action( 'wp_head', 'wp_no_robots' );
+		add_filter( 'wp_headers', array( $this, 'filter_iframe_security_headers' ) );
 
 		/*
 		 * If preview is being served inside the customizer preview iframe, and
@@ -988,6 +989,22 @@ final class WP_Customize_Manager {
 		 * @param WP_Customize_Manager $this WP_Customize_Manager instance.
 		 */
 		do_action( 'customize_preview_init', $this );
+	}
+
+	/**
+	 * Filter the X-Frame-Options and Content-Security-Policy headers to ensure frontend can load in customizer.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param array $headers Headers.
+	 * @return array Headers.
+	 */
+	public function filter_iframe_security_headers( $headers ) {
+		$customize_url = admin_url( 'customize.php' );
+		$headers['X-Frame-Options'] = 'ALLOW-FROM ' . $customize_url;
+		$headers['Content-Security-Policy'] = 'frame-ancestors ' . preg_replace( '#^(\w+://[^/]+).+?$#', '$1', $customize_url );
+		return $headers;
 	}
 
 	/**
