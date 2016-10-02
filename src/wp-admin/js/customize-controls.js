@@ -1319,6 +1319,23 @@
 		},
 
 		/**
+		 * Get the url to preview a given theme switch.
+		 *
+		 * @param {string} themeId Theme ID.
+		 * @returns {string} Customize URL.
+		 */
+		getThemePreviewUrl: function( themeId ) {
+			var urlParser = document.createElement( 'a' );
+			urlParser.href = location.href;
+			urlParser.search = urlParser.search.replace( /(\?|&)theme=[^&]+(&|$)/, '$1' );
+			if ( urlParser.search.length > 1 ) {
+				urlParser.search += '&';
+			}
+			urlParser.search += 'theme=' + themeId;
+			return urlParser.href;
+		},
+
+		/**
 		 * Render & show the theme details for a given theme model.
 		 *
 		 * @since 4.2.0
@@ -1335,6 +1352,7 @@
 			$( 'body' ).addClass( 'modal-open' );
 			section.containFocus( section.overlay );
 			section.updateLimits();
+			section.overlay.find( '.inactive-theme > a' ).prop( 'href', section.getThemePreviewUrl( theme.id ) );
 			callback();
 		},
 
@@ -2972,6 +2990,8 @@
 
 			// Bind details view trigger.
 			control.container.on( 'click keydown touchend', '.theme', function( event ) {
+				var previewUrl;
+
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -2986,9 +3006,14 @@
 					return;
 				}
 
-				var previewUrl = $( this ).data( 'previewUrl' );
+				previewUrl = api.ThemesSection.prototype.getThemePreviewUrl( control.params.theme.id );
 
 				$( '.wp-full-overlay' ).addClass( 'customize-loading' );
+
+				// Remove AYS if the changes can persist via the changeset UUID in the URL.
+				if ( history.replaceState && 0 === api.state( 'processing' ).get() ) {
+					$( window ).off( 'beforeunload.customize-confirm' );
+				}
 
 				window.parent.location = previewUrl;
 			});
@@ -4388,7 +4413,7 @@
 		});
 
 		// Prompt user with AYS dialog if leaving the Customizer with unsaved changes
-		$( window ).on( 'beforeunload', function () {
+		$( window ).on( 'beforeunload.customize-confirm', function () {
 			if ( ! api.state( 'saved' )() ) {
 				setTimeout( function() {
 					overlay.removeClass( 'customize-loading' );
