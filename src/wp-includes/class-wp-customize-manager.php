@@ -475,6 +475,21 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function setup_theme() {
+		global $pagenow;
+
+		// Check permissions for customize.php access since this method is called before customize.php can run any code,
+		if ( 'customize.php' === $pagenow && ! current_user_can( 'customize' ) ) {
+			if ( ! is_user_logged_in() ) {
+				auth_redirect();
+			} else {
+				wp_die(
+					'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
+					'<p>' . __( 'Sorry, you are not allowed to customize this site.' ) . '</p>',
+					403
+				);
+			}
+			return;
+		}
 
 		if ( ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $this->changeset_uuid ) ) {
 			$this->wp_die( -1, __( 'Invalid changeset UUID' ) );
@@ -482,7 +497,7 @@ final class WP_Customize_Manager {
 
 		// If unauthenticated then require a valid changeset UUID to load the preview. In this way, the UUID serves as a secret key.
 		if ( ! current_user_can( 'customize' ) && ! $this->changeset_post_id() ) {
-			$this->wp_die( -1, __( 'Non-existent changeset UUID' ) );
+			$this->wp_die( -1, __( 'Non-existent changeset UUID.' ) );
 		}
 
 		send_origin_headers();
