@@ -3365,66 +3365,7 @@
 			this.setIframeSrc = _.bind( this.setIframeSrc, this );
 			this.previewUrl.bind( this.setIframeSrc );
 
-			this.bind( 'ready', function() {
-				var data = {};
-				data.settings = api.get();
-
-				if ( 'resolved' !== this.deferred.active.state() || this.loading ) {
-					data.scroll = this.scroll;
-				}
-				this.send( 'sync', data );
-			} );
-
-			this.bind( 'ready', function( data ) {
-
-				// Set the previewUrl without causing the url to set the iframe.
-				if ( data.currentUrl ) {
-					api.previewer.previewUrl.unbind( api.previewer.setIframeSrc );
-					api.previewer.previewUrl.set( data.currentUrl );
-					api.previewer.previewUrl.bind( api.previewer.setIframeSrc );
-				}
-
-				/*
-				 * Walk over all panels, sections, and controls and set their
-				 * respective active states to true if the preview explicitly
-				 * indicates as such.
-				 */
-				var constructs = {
-					panel: data.activePanels,
-					section: data.activeSections,
-					control: data.activeControls
-				};
-				_( constructs ).each( function ( activeConstructs, type ) {
-					api[ type ].each( function ( construct, id ) {
-						var isDynamicallyCreated = _.isUndefined( api.settings[ type + 's' ][ id ] );
-
-						/*
-						 * If the construct was created statically in PHP (not dynamically in JS)
-						 * then consider a missing (undefined) value in the activeConstructs to
-						 * mean it should be deactivated (since it is gone). But if it is
-						 * dynamically created then only toggle activation if the value is defined,
-						 * as this means that the construct was also then correspondingly
-						 * created statically in PHP and the active callback is available.
-						 * Otherwise, dynamically-created constructs should normally have
-						 * their active states toggled in JS rather than from PHP.
-						 */
-						if ( ! isDynamicallyCreated || ! _.isUndefined( activeConstructs[ id ] ) ) {
-							if ( activeConstructs[ id ] ) {
-								construct.activate();
-							} else {
-								construct.deactivate();
-							}
-						}
-					} );
-				} );
-
-				if ( data.settingValidities ) {
-					api._handleSettingValidities( {
-						settingValidities: data.settingValidities,
-						focusInvalidControl: false
-					} );
-				}
-			} );
+			this.bind( 'ready', this.ready );
 
 			// Start listening for keep-alive messages when iframe first loads.
 			this.deferred.active.done( _.bind( this.keepPreviewAlive, this ) );
@@ -3445,6 +3386,76 @@
 			this.bind( 'documentTitle', function ( title ) {
 				api.setDocumentTitle( title );
 			} );
+		},
+
+		/**
+		 * Handle the preview receiving the ready message.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param {object} data - Data from preview.
+		 * @param {string} data.currentUrl - Current URL.
+		 * @param {object} data.activePanels - Active panels.
+		 * @param {object} data.activeSections Active sections.
+		 * @param {object} data.activeControls Active controls.
+		 * @returns {void}
+		 */
+		ready: function( data ) {
+			var previewer = this, synced = {}, constructs;
+
+			synced.settings = api.get();
+			if ( 'resolved' !== previewer.deferred.active.state() || previewer.loading ) {
+				synced.scroll = previewer.scroll;
+			}
+			previewer.send( 'sync', synced );
+
+			// Set the previewUrl without causing the url to set the iframe.
+			if ( data.currentUrl ) {
+				previewer.previewUrl.unbind( previewer.setIframeSrc );
+				previewer.previewUrl.set( data.currentUrl );
+				previewer.previewUrl.bind( previewer.setIframeSrc );
+			}
+
+			/*
+			 * Walk over all panels, sections, and controls and set their
+			 * respective active states to true if the preview explicitly
+			 * indicates as such.
+			 */
+			constructs = {
+				panel: data.activePanels,
+				section: data.activeSections,
+				control: data.activeControls
+			};
+			_( constructs ).each( function ( activeConstructs, type ) {
+				api[ type ].each( function ( construct, id ) {
+					var isDynamicallyCreated = _.isUndefined( api.settings[ type + 's' ][ id ] );
+
+					/*
+					 * If the construct was created statically in PHP (not dynamically in JS)
+					 * then consider a missing (undefined) value in the activeConstructs to
+					 * mean it should be deactivated (since it is gone). But if it is
+					 * dynamically created then only toggle activation if the value is defined,
+					 * as this means that the construct was also then correspondingly
+					 * created statically in PHP and the active callback is available.
+					 * Otherwise, dynamically-created constructs should normally have
+					 * their active states toggled in JS rather than from PHP.
+					 */
+					if ( ! isDynamicallyCreated || ! _.isUndefined( activeConstructs[ id ] ) ) {
+						if ( activeConstructs[ id ] ) {
+							construct.activate();
+						} else {
+							construct.deactivate();
+						}
+					}
+				} );
+			} );
+
+			if ( data.settingValidities ) {
+				api._handleSettingValidities( {
+					settingValidities: data.settingValidities,
+					focusInvalidControl: false
+				} );
+			}
 		},
 
 		/**
@@ -4099,7 +4110,7 @@
 							}
 						} );
 
-						api.previewer.send( 'saved', response );
+						self.send( 'saved', response );
 
 						api.state( 'changesetStatus' ).set( response.changeset_status );
 						if ( 'publish' === response.changeset_status ) {
