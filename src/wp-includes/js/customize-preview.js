@@ -362,7 +362,7 @@
 		queryParams = api.parseQueryString( urlParser.search.substr( 1 ) );
 
 		if ( history.replaceState ) {
-			needsParamRestoration = ! queryParams.customize_changeset_uuid || ( api.settings.theme.active && ! queryParams.customize_theme ) || ( api.settings.channel && ! queryParams.customize_messenger_channel );
+			needsParamRestoration = ! queryParams.customize_changeset_uuid || ( ! api.settings.theme.active && ! queryParams.customize_theme ) || ( api.settings.channel && ! queryParams.customize_messenger_channel );
 		}
 
 		// Scrub the URL of any customized state query params.
