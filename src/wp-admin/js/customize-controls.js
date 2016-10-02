@@ -3288,7 +3288,7 @@
 		 */
 		initialize: function( params, options ) {
 			var previewer = this,
-				rscheme = /^https?/;
+				urlParser = document.createElement( 'a' );
 
 			$.extend( previewer, options || {} );
 			previewer.deferred = {
@@ -3316,10 +3316,8 @@
 
 			api.Messenger.prototype.initialize.call( previewer, params );
 
-			previewer.add( 'scheme', previewer.origin() ).link( previewer.origin ).setter( function( to ) {
-				var match = to.match( rscheme );
-				return match ? match[0] : '';
-			});
+			urlParser.href = previewer.origin();
+			previewer.add( 'scheme', urlParser.protocol.replace( /:$/, '' ) );
 
 			// Limit the URL to internal, front-end links.
 			//
@@ -3329,10 +3327,12 @@
 			// are on different domains to avoid the case where the front end doesn't have
 			// ssl certs.
 
-			previewer.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
-				var result, urlParser;
+			previewer.add( 'previewUrl', params.previewUrl ).setter( function( newPreviewUrl ) {
+				var result, urlParser, schemeMatchingPreviewUrl;
 				urlParser = document.createElement( 'a' );
-				urlParser.href = to;
+				urlParser.href = newPreviewUrl;
+				urlParser.protocol = previewer.scheme.get() + ':';
+				schemeMatchingPreviewUrl = urlParser.href;
 
 				// Abort if URL is for admin or (static) files in wp-includes or wp-content.
 				if ( /\/wp-(admin|includes|content)(\/|$)/.test( urlParser.pathname ) ) {
@@ -3341,7 +3341,7 @@
 
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
-				$.each([ to.replace( rscheme, previewer.scheme() ), to ], function( i, url ) {
+				$.each( [ schemeMatchingPreviewUrl, newPreviewUrl ], function( i, url ) {
 					$.each( previewer.allowedUrls, function( i, allowed ) {
 						var path;
 
@@ -3353,8 +3353,9 @@
 							return false;
 						}
 					});
-					if ( result )
+					if ( result ) {
 						return false;
+					}
 				});
 
 				// If we found a matching result, return it. If not, bail.

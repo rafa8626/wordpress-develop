@@ -637,22 +637,26 @@ window.wp = window.wp || {};
 		/**
 		 * Initialize Messenger.
 		 *
-		 * @param  {object} params        Parameters to configure the messenger.
-		 *         {string} .url          The URL to communicate with.
-		 *         {window} .targetWindow The window instance to communicate with. Default window.parent.
-		 *         {string} .channel      If provided, will send the channel with each message and only accept messages a matching channel.
-		 * @param  {object} options       Extend any instance parameter or method with this object.
+		 * @param  {object} params - Parameters to configure the messenger.
+		 *         {string} params.url - The URL to communicate with.
+		 *         {window} params.targetWindow - The window instance to communicate with. Default window.parent.
+		 *         {string} params.channel - If provided, will send the channel with each message and only accept messages a matching channel.
+		 * @param  {object} options - Extend any instance parameter or method with this object.
 		 */
 		initialize: function( params, options ) {
+			var defaultTarget;
+
 			// Target the parent frame by default, but only if a parent frame exists.
-			var defaultTarget = window.parent == window ? null : window.parent;
+			defaultTarget = window.parent == window ? null : window.parent;
 
 			$.extend( this, options || {} );
 
 			this.add( 'channel', params.channel );
 			this.add( 'url', params.url || '' );
 			this.add( 'origin', this.url() ).link( this.url ).setter( function( to ) {
-				return to.replace( /([^:]+:\/\/[^\/]+).*/, '$1' );
+				var urlParser = document.createElement( 'a' );
+				urlParser.href = to;
+				return urlParser.protocol + '//' + urlParser.host;
 			});
 
 			// first add with no value
