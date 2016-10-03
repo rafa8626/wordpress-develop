@@ -48,14 +48,13 @@
 			preview.window = $( window );
 			preview.window.on( 'scroll.preview', debounce( function() {
 				preview.send( 'scroll', preview.window.scrollTop() );
-			}, 200 ));
+			}, 200 ) );
 
 			preview.bind( 'scroll', function( distance ) {
 				preview.window.scrollTop( distance );
 			});
 		}
 	});
-
 
 	/**
 	 * Inject the changeset UUID into links in the document.

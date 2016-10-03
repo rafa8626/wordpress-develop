@@ -3122,7 +3122,7 @@
 				ready = false,
 				readyData = null,
 				urlParser,
-				queryParams;
+				params;
 
 			if ( previewFrame._ready ) {
 				previewFrame.unbind( 'ready', previewFrame._ready );

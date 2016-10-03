@@ -647,7 +647,7 @@ window.wp = window.wp || {};
 			var defaultTarget;
 
 			// Target the parent frame by default, but only if a parent frame exists.
-			defaultTarget = window.parent == window ? null : window.parent;
+			defaultTarget = window.parent === window ? null : window.parent;
 
 			$.extend( this, options || {} );
 
