@@ -147,6 +147,27 @@ window._wpCustomizeSettings = {
 		'mobile': {
 			'label': 'Enter mobile preview mode'
 		}
+	},
+	'changeset': {
+		'currentUserCapabilities': {
+		'create_posts': 'customize',
+			'delete_others_posts': 'customize',
+			'delete_post': 'customize',
+			'delete_posts': 'customize',
+			'delete_private_posts': 'customize',
+			'delete_published_posts': 'customize',
+			'edit_others_posts': 'customize',
+			'edit_post': 'customize',
+			'edit_posts': 'customize',
+			'edit_private_posts': 'customize',
+			'edit_published_posts': 'do_not_allow',
+			'publish_posts': 'customize',
+			'read': 'read',
+			'read_post': 'customize',
+			'read_private_posts': 'customize'
+	},
+		'status': '',
+		'uuid': '0c674ff4-c159-4e7a-beb4-cb830ae73979'
 	}
 };
 window._wpCustomizeControlsL10n = {};
