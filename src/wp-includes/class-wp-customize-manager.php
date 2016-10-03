@@ -2488,7 +2488,6 @@ final class WP_Customize_Manager {
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
 				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : '',
-				'currentUserCapabilities' => get_post_type_object( 'customize_changeset' )->cap,
 			),
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),
