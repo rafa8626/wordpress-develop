@@ -244,7 +244,7 @@ final class WP_Customize_Manager {
 		);
 
 		if ( ! isset( $args['changeset_uuid'] ) ) {
-			$args['changeset_uuid'] = $this->generate_uuid();
+			$args['changeset_uuid'] = wp_generate_uuid4();
 		}
 
 		// The theme and messenger_channel should be supplied via $args, but they are also looked at in the $_REQUEST global here for back-compat.
@@ -357,24 +357,6 @@ final class WP_Customize_Manager {
 
 		// Export the settings to JS via the _wpCustomizeSettings variable.
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'customize_pane_settings' ), 1000 );
-	}
-
-	/**
-	 * Generate a UUID for a changeset.
-	 *
-	 * @since 4.7.0
-	 * @access public
-	 *
-	 * @return string UUID.
-	 */
-	public function generate_uuid() {
-		return sprintf( '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0xffff ),
-			mt_rand( 0, 0x0fff ) | 0x4000,
-			mt_rand( 0, 0x3fff ) | 0x8000,
-			mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
-		);
 	}
 
 	/**
@@ -1656,7 +1638,7 @@ final class WP_Customize_Manager {
 		}
 
 		if ( 'publish' === $response['changeset_status'] ) {
-			$response['next_changeset_uuid'] = $this->generate_uuid();
+			$response['next_changeset_uuid'] = wp_generate_uuid4();
 		}
 
 		$response['changeset_updated_settings'] = $updated_setting_ids;
