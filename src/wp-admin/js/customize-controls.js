@@ -4242,13 +4242,6 @@
 			values.bind( 'remove', debouncedReflowPaneContents );
 		} );
 
-		// Check if preview url is valid and load the preview frame.
-		if ( api.previewer.previewUrl() ) {
-			api.previewer.refresh();
-		} else {
-			api.previewer.previewUrl( api.settings.url.home );
-		}
-
 		// Save and activated states
 		(function() {
 			var state = new api.Values(),
@@ -4325,6 +4318,13 @@
 			// Expose states to the API.
 			api.state = state;
 		}());
+
+		// Check if preview url is valid and load the preview frame.
+		if ( api.previewer.previewUrl() ) {
+			api.previewer.refresh();
+		} else {
+			api.previewer.previewUrl( api.settings.url.home );
+		}
 
 		// Button bindings.
 		saveBtn.click( function( event ) {
