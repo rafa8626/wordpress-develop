@@ -1386,6 +1386,7 @@
 					$( this ).attr( 'aria-expanded', true );
 				}
 			});
+
 		},
 
 		/**
@@ -4101,7 +4102,6 @@
 			}
 		});
 
-
 		$( '.customize-controls-preview-toggle' ).on( 'click', function() {
 			overlay.toggleClass( 'preview-only' );
 		});
@@ -4109,7 +4109,7 @@
 		// Sticky header functionality.
 		(function() {
 			var parentContainer = $( '.wp-full-overlay-sidebar-content' ),
-				changeContainer, getHeaderDimensions, releaseStickyHeader, positionStickyHeader,
+				changeContainer, getHeaderDimensions, releaseStickyHeader, resetStickyHeader, positionStickyHeader,
 				activeHeader, lastScrollTop;
 
 			// Determine which panel or section is currently expanded.
@@ -4146,6 +4146,9 @@
 						width: headerDimensions.width,
 						height: headerDimensions.height
 					};
+					if ( expandedSection ) {
+						resetStickyHeader( activeHeader.element, activeHeader.parent );
+					}
 				} else {
 					activeHeader = false;
 				}
@@ -4160,7 +4163,7 @@
 				}
 
 				var scrollTop = parentContainer.scrollTop(),
-					isScrollingUp = ( scrollTop < lastScrollTop );
+					isScrollingUp = ( lastScrollTop ) ? scrollTop <= lastScrollTop : true;
 
 				lastScrollTop = scrollTop;
 				positionStickyHeader( activeHeader, scrollTop, isScrollingUp );
@@ -4175,6 +4178,17 @@
 					.removeClass( 'is-sticky' )
 					.addClass( 'was-sticky' )
 					.css( 'top', parentContainer.scrollTop() + 'px' );
+			};
+
+			// Reset position of the sticky header.
+			resetStickyHeader = function( headerElement, headerParent ) {
+				headerElement
+					.removeClass( 'maybe-sticky was-sticky is-sticky' )
+					.css( {
+						width: '',
+						top: ''
+					} );
+				headerParent.css( 'padding-top', '' );
 			};
 
 			// Get header top position and height.
@@ -4205,13 +4219,7 @@
 
 				// If in base position, then reset.
 				if ( 0 === scrollTop ) {
-					headerElement
-						.removeClass( 'maybe-sticky was-sticky is-sticky' )
-						.css( {
-							width: '',
-							top: ''
-						} );
-					headerParent.css( 'padding-top', '' );
+					resetStickyHeader( headerElement, headerParent );
 					return;
 				}
 
