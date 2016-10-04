@@ -3143,7 +3143,6 @@
 
 			previewFrame.bind( 'ready', previewFrame._ready );
 
-			// @todo Wait until 0 === processing?
 			urlParser = document.createElement( 'a' );
 			urlParser.href = this.previewUrl();
 			if ( urlParser.search.length > 1 ) {
@@ -3364,8 +3363,7 @@
 
 			// Change preview iframe URL when the previewUrl changes.
 			previewer.setIframeSrc = _.bind( previewer.setIframeSrc, previewer );
-			previewer.previewUrl.bind( previewer.setIframeSrc );
-
+			previewer.setIframeSrcToPreviewUrl = _.bind( previewer.setIframeSrcToPreviewUrl, previewer );
 			previewer.bind( 'ready', previewer.ready );
 
 			// Start listening for keep-alive messages when iframe first loads.
@@ -3390,6 +3388,48 @@
 		},
 
 		/**
+		 * Handle changes to previewUrl to updating the iframe url once any pending processing has completed.
+		 *
+		 * This will call setIframeSrc once the the customizer processing state has turned to 0,
+		 * or if it is 0 upon invocation. This ensures that the changeset will have been written
+		 * before the iframe attempts to load so that the changes will be available when the
+		 * request is made. Also, if there is already such a deferred setting of the iframe src
+		 * queued up, the function will short-circuit and let the existing pending call handle
+		 * the updating of the iframe src.
+		 *
+		 * @since 4.7.0
+		 * @access private
+		 *
+		 * @returns {void}
+		 */
+		setIframeSrcToPreviewUrl: ( function() {
+			var onceProcessed;
+
+			return function setIframeSrcToPreviewUrl() {
+				var previewer = this, processing;
+
+				// Short-circuit if we're still waiting for processing to complete.
+				if ( onceProcessed ) {
+					return;
+				}
+
+				processing = api.state( 'processing' );
+				if ( 0 === processing.get() ) {
+					previewer.setIframeSrc( previewer.previewUrl.get() );
+				} else {
+					onceProcessed = function( processingCount ) {
+						if ( 0 === processingCount ) {
+							processing.unbind( onceProcessed );
+							onceProcessed = null;
+							previewer.setIframeSrc( previewer.previewUrl.get() );
+						}
+					};
+					processing.bind( onceProcessed );
+				}
+			};
+		} )(),
+
+		/**
 		 * Handle the preview receiving the ready message.
 		 *
 		 * @since 4.7.0
@@ -3412,9 +3452,9 @@
 
 			// Set the previewUrl without causing the url to set the iframe.
 			if ( data.currentUrl ) {
-				previewer.previewUrl.unbind( previewer.setIframeSrc );
+				previewer.previewUrl.unbind( previewer.setIframeSrcToPreviewUrl );
 				previewer.previewUrl.set( data.currentUrl );
-				previewer.previewUrl.bind( previewer.setIframeSrc );
+				previewer.previewUrl.bind( previewer.setIframeSrcToPreviewUrl );
 			}
 
 			/*
