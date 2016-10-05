@@ -106,6 +106,16 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$validity->add( 'unbalanced_braces', __( 'Your brackets <code>[]</code> are unbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
 		}
 
+		// Ensure single quotes are equal.
+		if ( ! self::validate_equal_characters( '\'', $css ) ) {
+			$validity->add( 'unequal_single_quotes', __( 'Your single quotes <code>\'</code> are uneven. Make sure there is a closing <code>\'</code> for every opening <code>\'</code>.' ) );
+		}
+
+		// Ensure single quotes are equal.
+		if ( ! self::validate_equal_characters( '"', $css ) ) {
+			$validity->add( 'unequal_double_quotes', __( 'Your double quotes <code>"</code> are uneven. Make sure there is a closing <code>"</code> for every opening <code>"</code>.' ) );
+		}
+
 		/*
 		 * Make sure any code comments are closed properly.
 		 *
@@ -149,8 +159,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * customizer setting.
 	 *
 	 * This setting does not use "option" or "theme_mod," but
-	 * rather "wp_custom_css" to trigger saving the value to
-	 * the custom post type.
+	 * rather "wp_custom_css" to trigger saving.  The value is
+	 * then saved to a Custom Post Type.
 	 *
 	 * This is already sanitized in the sanitize() method.
 	 *
@@ -193,7 +203,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Ensure there are a balanced number of paired characters.
 	 *
-	 * This is used to ensure the number of opening and closing
+	 * This is used to check that the number of opening and closing
 	 * characters is equal.
 	 *
 	 * For instance, there should be an equal number of braces ("{", "}")
@@ -209,6 +219,27 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 */
 	public static function validate_balanced_characters( $opening_char, $closing_char, $css ) {
 		return substr_count( $css, $opening_char ) === substr_count( $css, $closing_char );
+	}
+
+	/**
+	 * Ensure there are an even number of paired characters.
+	 *
+	 * This is used to check that the number of a specific
+	 * character is even.
+	 *
+	 * For instance, there should be an even number of double quotes
+	 * in the CSS.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $char A character.
+	 * @param string $css The CSS input string.
+	 *
+	 * @return bool
+	 */
+	public static function validate_equal_characters( $char, $css ) {
+		$char_count = substr_count( $css, $char );
+		return ( 0 === $char_count % 2 );
 	}
 
 	/**
