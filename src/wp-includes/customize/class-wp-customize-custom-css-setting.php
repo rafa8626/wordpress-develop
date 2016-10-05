@@ -44,6 +44,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		parent::__construct( $manager, $id, $args = array() );
 		add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) );
 		add_action( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
+		add_filter( "customize_validate_{$this->id}", array( $this, 'validiate_css' ), 10, 2 );
+		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
 	}
 
 	/**
@@ -71,6 +73,9 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * Checks for unbalanced braces and unclosed comments.
 	 *
+	 * Notifications are rendered when the Preview
+	 * is saved.
+	 *
 	 * @todo Needs Expansion.
 	 *
 	 * @since 4.7.0
@@ -79,17 +84,18 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return mixed
 	 */
-	public function validate( $css ) {
+	public function validiate_css( $validity, $css ) {
 		// Make sure that there is a closing brace for each opening brace.
-		if ( ! self::validate_balanced_brackets( $css ) ) {
-			return new WP_Error( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
+		if ( ! self::validate_balanced_braces( $css ) ) {
+			$validity->add( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
 		}
 
 		// Make sure that any code comments are closed properly.
 		$unclosed_comment_count = self::validate_count_unclosed_comments( $css );
 		if ( 0 < $unclosed_comment_count ) {
-			return new WP_Error( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
+			$validity->add( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
 		}
+		return $validity;
 	}
 
 	/**
@@ -105,7 +111,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return mixed
 	 */
-	public function sanitize( $css ) {
+	public function sanitize_css( $css ) {
 		return wp_kses( $css, array( '\'', '\"', '>', '<', '+' ) );
 	}
 
@@ -154,7 +160,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Ensure there are a balanced number of brackets.
+	 * Ensure there are a balanced number of braces.
 	 *
 	 * @since 4.7.0
 	 *
@@ -162,7 +168,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return bool
 	 */
-	public static function validate_balanced_brackets( $css ) {
+	public static function validate_balanced_braces( $css ) {
 		return substr_count( $css, '{' ) === substr_count( $css, '}' );
 	}
 

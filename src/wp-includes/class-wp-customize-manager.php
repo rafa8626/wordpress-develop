@@ -2313,7 +2313,7 @@ final class WP_Customize_Manager {
 			'type'        => 'code_editor',
 			'section'     => 'wp_custom_css',
 			'settings'    => 'wp_custom_css',
-			'label'       => __( 'Custom CSS' ),
+			'label'       => __( 'Additional CSS' ),
 			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',
 				__( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis.' ),
 				'https://codex.wordpress.org/Know_Your_Sources#CSS',
@@ -2335,11 +2335,6 @@ final class WP_Customize_Manager {
 				),
 			) );
 		}
-
-		$this->selective_refresh->add_partial( 'wp_custom_css', array(
-			'selector'        => '#wp-custom-css',
-			'render_callback' => 'wp_get_custom_css',
-		) );
 	}
 
 	/**
