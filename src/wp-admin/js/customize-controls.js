@@ -39,6 +39,7 @@
 		 * @since 4.7.0
 		 *
 		 * @param {mixed} value Value.
+		 * @returns {void}
 		 */
 		handleChange: function( value ) {
 			var setting = this, promise, changes = {};
@@ -46,7 +47,7 @@
 				value: value
 			};
 			promise = api.requestChangesetUpdate( changes );
-			setting.previewer.addPendingChangesetUpdateRequest( promise ); // @todo Why not have requestChangesetUpdate do this?
+			setting.previewer.addPendingChangesetUpdateRequest( promise );
 			setting.preview();
 		},
 
@@ -81,7 +82,14 @@
 		}
 	});
 
-	api.pendingUpdateChanges = {};
+	/**
+	 * Staging for changeset changes added by requestChangesetUpdate.
+	 *
+	 * @since 4.7.0
+	 * @type {object}
+	 * @private
+	 */
+	api._pendingUpdateChanges = {};
 
 	/**
 	 * Request updates to the changeset.
@@ -116,24 +124,24 @@
 			if ( null === change ) {
 
 				// When null is passed as the change, the result will be the removal of the setting from the changeset. A revert.
-				api.pendingUpdateChanges[ settingId ] = null;
+				api._pendingUpdateChanges[ settingId ] = null;
 			} else if ( _.isObject( change ) ) {
-				if ( _.isUndefined( api.pendingUpdateChanges[ settingId ] ) ) {
-					api.pendingUpdateChanges[ settingId ] = {};
+				if ( _.isUndefined( api._pendingUpdateChanges[ settingId ] ) ) {
+					api._pendingUpdateChanges[ settingId ] = {};
 				}
-				_.extend( api.pendingUpdateChanges[ settingId ], change );
+				_.extend( api._pendingUpdateChanges[ settingId ], change );
 			} else {
 				throw new Error( 'Unexpected change for ' + settingId );
 			}
 		} );
 
 		updateChangesetTimeoutId = setTimeout( function requestAjaxChangesetUpdate() {
-			var pendingChanges = _.clone( api.pendingUpdateChanges ), requestDeferred, request;
+			var pendingChanges = _.clone( api._pendingUpdateChanges ), requestDeferred, request;
 
 			// Allow plugins to attach additional params to the settings.
 			api.trigger( 'changeset-save', pendingChanges );
 
-			api.pendingUpdateChanges = {};
+			api._pendingUpdateChanges = {};
 			requestDeferred = pendingChangesetUpdateRequestDeferred;
 			pendingChangesetUpdateRequestDeferred = null;
 
@@ -3586,7 +3594,10 @@
 		/**
 		 * Add pending changeset update request promise.
 		 *
+		 * @since 4.7.0
+		 *
 		 * @param {jQuery.Promise} promise Promise.
+		 * @returns {void}
 		 */
 		addPendingChangesetUpdateRequest: function( promise ) {
 			var previewer = this;
