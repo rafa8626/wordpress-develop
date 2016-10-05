@@ -8,9 +8,7 @@
  */
 
 /**
- * A setting that is used to filter a value, but will not save the results.
- *
- * Results should be properly handled using another setting or callback.
+ * Custom Setting to handle WP Custom CSS.
  *
  * @since 4.7.0
  *
@@ -31,20 +29,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @var string
 	 */
 	public $transport = 'postMessage';
-
-	/**
-	 * Setting Validation Callback
-	 *
-	 * @var string
-	 */
-	public $validate_callback = '';
-
-	/**
-	 * Setting Sanitization Callback
-	 *
-	 * @var string
-	 */
-	public $sanitize_callback = '';
 
 	/**
 	 * WP_Customize_Custom_CSS_Setting constructor.
@@ -83,11 +67,11 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Bypass the process of saving the value of the "Custom CSS"
+	 * Bypass the process of saving the value of the "Additional CSS"
 	 * customizer setting.
 	 *
 	 * This setting does not use "option" or "theme_mod," but
-	 * rather "custom_css" to trigger saving the value to
+	 * rather "wp_custom_css" to trigger saving the value to
 	 * the custom post type.
 	 *
 	 * @see WP_Customize_Setting::update()

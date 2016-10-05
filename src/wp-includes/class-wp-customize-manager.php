@@ -2319,7 +2319,8 @@ final class WP_Customize_Manager {
 		) );
 
 		$this->add_setting( new WP_Customize_Custom_CSS_Setting( $this, 'wp_custom_css', array(
-			'capability' => 'unfiltered_css',
+			'capability'        => 'unfiltered_css',
+			'transport'         => 'postMessage',
 			'sanitize_callback' => array( $this, '_sanitize_css' ),
 			'validate_callback' => array( $this, '_validate_css' ),
 		) ) );
@@ -2341,7 +2342,7 @@ final class WP_Customize_Manager {
 			$this->add_setting( 'wp_custom_css_more', array() );
 			$this->add_control( 'wp_custom_css_more', array(
 				'type'        => 'none',
-				'section'     => 'custom_css',
+				'section'     => 'wp_custom_css',
 				'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',
 					__( 'Enjoy writing custom CSS?' ),
 					'https://developer.wordpress.org/themes/advanced-topics/child-themes/',
@@ -2350,6 +2351,11 @@ final class WP_Customize_Manager {
 				)
 			) );
 		}
+
+		$this->selective_refresh->add_partial( 'wp_custom_css', array(
+			'selector' => '#wp-custom-css',
+			'render_callback' => 'wp_get_custom_css',
+		) );
 	}
 
 	/**

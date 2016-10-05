@@ -1408,14 +1408,16 @@ body.custom-background { <?php echo trim( $style ); ?> }
  * @since 4.7.0
  */
 function wp_custom_css_cb() {
-	$styles = WP_Custom_CSS::get_styles();
-	if ( $styles ) :
-	?>
-	<style type="text/css" id="wp-custom-css">
-		<?php echo $styles; ?>
-	</style>
-	<?php
-	endif;
+	$styles = wp_get_custom_css();
+	if ( $styles ) : ?>
+		<style type="text/css" id="wp-custom-css">
+			<?php echo $styles; ?>
+		</style>
+	<?php endif;
+}
+
+function wp_get_custom_css() {
+	return WP_Custom_CSS::get_styles();
 }
 
 /**
