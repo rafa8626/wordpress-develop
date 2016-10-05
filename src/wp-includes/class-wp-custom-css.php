@@ -18,26 +18,6 @@
  */
 
 /**
- * Fetch the saved WP Custom CSS content.
- *
- * Wrapper for WP_Custom_CSS::get_styles().
- *
- * The optional param can be used to fetch the CSS from
- * a specific theme.
- *
- * @see WP_Custom_CSS::get_style_post_id() for more information on theme names.
- *
- * @since 4.7.0
- *
- * @param string $theme_name Optional. A Theme stylesheet name.  Defaults to the current theme.
- *
- * @return string
- */
-function wp_get_custom_css( $theme_name = '' ) {
-	return WP_Custom_CSS::get_styles( $theme_name );
-}
-
-/**
  * Class WP_Custom_CSS
  *
  * Note that the Custom Post Type is called "wp_custom_css."

@@ -1417,6 +1417,19 @@ function wp_custom_css_cb() {
 }
 
 /**
+ * Fetch the saved WP Custom CSS content.
+ *
+ * Wrapper for WP_Custom_CSS::get_styles().
+ *
+ * @since 4.7.0
+ *
+ * @return string
+ */
+function wp_get_custom_css() {
+	return WP_Custom_CSS::get_styles();
+}
+
+/**
  * Add callback for custom TinyMCE editor stylesheets.
  *
  * The parameter $stylesheet is the name of the stylesheet, relative to

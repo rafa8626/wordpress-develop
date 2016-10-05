@@ -90,8 +90,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		if ( 0 < $unclosed_comment_count ) {
 			return new WP_Error( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
 		}
-
-		return true;
 	}
 
 	/**
@@ -108,9 +106,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return mixed
 	 */
 	public function sanitize( $css ) {
-		$allowed_html = array( '\'', '\"', '>', '<', '+' );
-		$css = wp_kses( $css, $allowed_html );
-		return $css;
+		return wp_kses( $css, array( '\'', '\"', '>', '<', '+' ) );
 	}
 
 	/**
@@ -152,7 +148,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Ensure there are a blanced number of brackets.
+	 * Ensure there are a balanced number of brackets.
 	 *
 	 * @since 4.7.0
 	 *
