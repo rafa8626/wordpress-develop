@@ -50,8 +50,8 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 			<# if ( data.description ) { #>
 				<span class="description customize-control-description">{{{ data.description }}}</span>
 			<# } #>
-			<div class="customize-control-content"><!-- @todo set the height in CSS -->
-				<textarea class="code-editor" style="height: 200px;"></textarea>
+			<div class="customize-control-content">
+				<textarea class="code-editor"></textarea>
 			</div>
 		</label>
 		<?php
