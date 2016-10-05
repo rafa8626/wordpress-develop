@@ -2885,11 +2885,10 @@
 		 */
 		ready: function() {
 			var control = this,
-				textareas, textarea;
+				textareas;
 
 			textareas = control.container.find( '.code-editor' );
-			textarea = textareas[0];
-			control._setUpSettingLinks( textarea );
+			control._setUpSettingLinks( textareas[0] );
 		},
 
 		/**
