@@ -133,7 +133,13 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		);
 		$current_theme_post_id = WP_Custom_CSS::get_style_post_id();
 		// If there is no post id, or the post object itself is empty return false.
-		if ( ! is_numeric( $current_theme_post_id ) || empty( get_post( $current_theme_post_id ) ) ) {
+		if ( ! is_numeric( $current_theme_post_id ) ) {
+			return false;
+		}
+
+		$style_post = get_post( $current_theme_post_id );
+
+		if ( empty( $style_post ) ) {
 			return false;
 		}
 
