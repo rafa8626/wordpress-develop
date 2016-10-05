@@ -45,6 +45,77 @@
 			preview.add( 'scheme', urlParser.protocol.replace( /:$/, '' ) );
 
 			preview.body = $( document.body );
+			preview.body.on( 'click.preview', 'a', function( event ) {
+				var link, isInternalJumpLink;
+				link = $( this );
+
+				// No-op if the anchor is not a link.
+				if ( _.isUndefined( link.attr( 'href' ) ) ) {
+					return;
+				}
+
+				isInternalJumpLink = ( '#' === link.attr( 'href' ).substr( 0, 1 ) );
+
+				// Allow internal jump links to behave normally without preventing default.
+				if ( isInternalJumpLink ) {
+					return;
+				}
+
+				// Prevent initiating navigating from click and instead rely on sending url message to pane below.
+				event.preventDefault();
+
+				// If the link is not previewable, prevent the browser from navigating to it.
+				if ( ! api.isLinkPreviewable( link[0] ) ) {
+					wp.a11y.speak( api.settings.l10n.linkUnpreviewable );
+					return;
+				}
+
+				/*
+				 * Note the shift key is checked so shift+click on widgets or
+				 * nav menu items can just result on focusing on the corresponding
+				 * control instead of also navigating to the URL linked to.
+				 */
+				if ( event.shiftKey ) {
+					return;
+				}
+
+				// Note: It's not relevant to send scroll because sending url message will cause iframe src change instead of refresh.
+				preview.send( 'url', link.prop( 'href' ) );
+			} );
+
+			preview.body.on( 'submit.preview', 'form', function( event ) {
+				var urlParser = document.createElement( 'a' );
+				urlParser.href = this.action;
+
+				// If the link is not previewable, prevent the browser from navigating to it.
+				if ( ! api.isLinkPreviewable( urlParser ) ) {
+					wp.a11y.speak( api.settings.l10n.formUnpreviewable );
+					return;
+				}
+
+				/*
+				 * If the default wasn't prevented already (in which case the form
+				 * submission is already being handled by JS), and if it has a GET
+				 * request method, then take the serialized form data and add it as
+				 * a query string to the action URL and send this in a url message
+				 * to the customizer pane so that it will be loaded. If the form's
+				 * action points to a non-previewable URL, the customizer pane's
+				 * previewUrl setter will reject it so that the form submission is
+				 * a no-op, which is the same behavior as when clicking a link to an
+				 * external site in the preview.
+				 */
+				if ( ! event.isDefaultPrevented() && 'GET' === this.method.toUpperCase() ) {
+					if ( urlParser.search.length > 1 ) {
+						urlParser.search += '&';
+					}
+					urlParser.search += $( this ).serialize();
+					api.preview.send( 'url', urlParser.href );
+				}
+
+				// Prevent default since navigation should be done via sending url message or via JS submit handler.
+				event.preventDefault();
+			});
+
 			preview.window = $( window );
 			preview.window.on( 'scroll.preview', debounce( function() {
 				preview.send( 'scroll', preview.window.scrollTop() );
@@ -115,10 +186,14 @@
 	 * @param {string} element.search Query string.
 	 * @param {string} element.pathname Path.
 	 * @param {string} element.hostname Hostname.
+	 * @param {object} [options]
+	 * @param {object} [options.allowAdminAjax=false] Allow admin-ajax.php requests.
 	 * @returns {boolean} Is appropriate for changeset link.
 	 */
-	api.isLinkPreviewable = function isLinkPreviewable( element ) {
-		var hasMatchingHost, urlParser;
+	api.isLinkPreviewable = function isLinkPreviewable( element, options ) {
+		var hasMatchingHost, urlParser, args;
+
+		args = _.extend( {}, { allowAdminAjax: false }, options || {} );
 
 		if ( 'javascript:' === element.protocol ) { // jshint ignore:line
 			return true;
@@ -148,7 +223,7 @@
 
 		// Allow links to admin ajax as faux frontend URLs.
 		if ( /\/wp-admin\/admin-ajax\.php$/.test( element.pathname ) ) {
-			return true;
+			return args.allowAdminAjax;
 		}
 
 		// Disallow links to admin, includes, and content.
@@ -210,15 +285,11 @@
 	api.addRequestPreviewing = function addRequestPreviewing() {
 		$.ajaxPrefilter( function prefilterAjax( options ) {
 			var urlParser, queryParams;
-			if ( ! api.settings.changeset.uuid ) {
-				return;
-			}
-
 			urlParser = document.createElement( 'a' );
 			urlParser.href = options.url;
 
 			// Abort if the request is not for this site.
-			if ( ! api.isLinkPreviewable( urlParser ) ) {
+			if ( ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
 				return;
 			}
 
@@ -396,14 +467,6 @@
 		api.addLinkPreviewing();
 		api.addRequestPreviewing();
 		api.addFormPreviewing();
-		$( document.body ).on( 'click.customize-unpreviewable', 'a.customize-unpreviewable', function( event ) {
-			event.preventDefault();
-			wp.a11y.speak( api.settings.l10n.linkUnpreviewable );
-		} );
-		$( document.body ).on( 'submit.customize-unpreviewable', 'form.customize-unpreviewable', function( event ) {
-			event.preventDefault();
-			wp.a11y.speak( api.settings.l10n.formUnpreviewable );
-		} );
 
 		/**
 		 * Create/update a setting value.

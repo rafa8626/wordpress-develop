@@ -3334,17 +3334,32 @@
 			// are on different domains to avoid the case where the front end doesn't have
 			// ssl certs.
 
-			previewer.add( 'previewUrl', params.previewUrl ).setter( function( newPreviewUrl ) {
-				var result, urlParser, schemeMatchingPreviewUrl;
+			previewer.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
+				var result, urlParser, newPreviewUrl, schemeMatchingPreviewUrl, queryParams;
 				urlParser = document.createElement( 'a' );
-				urlParser.href = newPreviewUrl;
-				urlParser.protocol = previewer.scheme.get() + ':';
-				schemeMatchingPreviewUrl = urlParser.href;
+				urlParser.href = to;
 
 				// Abort if URL is for admin or (static) files in wp-includes or wp-content.
 				if ( /\/wp-(admin|includes|content)(\/|$)/.test( urlParser.pathname ) ) {
 					return null;
 				}
+
+				// Remove state query params.
+				if ( urlParser.search.length > 1 ) {
+					queryParams = previewer.parseQueryParams( urlParser.search.substr( 1 ) );
+					delete queryParams.customize_changeset_uuid;
+					delete queryParams.customize_theme;
+					delete queryParams.customize_messenger_channel;
+					if ( _.isEmpty( queryParams ) ) {
+						urlParser.search = '';
+					} else {
+						urlParser.search = $.param( queryParams );
+					}
+				}
+
+				newPreviewUrl = urlParser.href;
+				urlParser.protocol = previewer.scheme.get() + ':';
+				schemeMatchingPreviewUrl = urlParser.href;
 
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
