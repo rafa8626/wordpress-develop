@@ -23,7 +23,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @var string
 	 */
-	public $type = 'custom_css';
+	public $type = 'wp_custom_css';
 
 	/**
 	 * Setting Transport
@@ -34,8 +34,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 	/**
 	 * Setting Validation Callback
-	 *
-	 * @todo ensure we have easily-accessible (public) sanitization/validation functions.
 	 *
 	 * @var string
 	 */
@@ -102,7 +100,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 */
 	public function update_setting( $value ) {
 
-		// @todo sanitize this somehow.
+		// @todo jr3 - sanitize this here.
 		$new_value = $value;
 
 		$args = array(

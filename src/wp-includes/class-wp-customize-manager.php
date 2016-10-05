@@ -2313,7 +2313,7 @@ final class WP_Customize_Manager {
 
 		/* Custom CSS */
 
-		$this->add_section( 'custom_css', array(
+		$this->add_section( 'wp_custom_css', array(
 			'title'    => __( 'Additional CSS' ),
 			'priority' => 140,
 		) );
@@ -2326,7 +2326,7 @@ final class WP_Customize_Manager {
 
 		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
 			'type'        => 'code_editor',
-			'section'     => 'custom_css',
+			'section'     => 'wp_custom_css',
 			'settings'    => 'wp_custom_css',
 			'label'       => __( 'Custom CSS' ),
 			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',

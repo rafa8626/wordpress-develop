@@ -20,7 +20,7 @@ class WP_Custom_CSS {
 	 *
 	 * Used as a constant here to avoid duplicating code.
 	 */
-	const POST_TYPE_SLUG = 'style';
+	const POST_TYPE_SLUG = 'wp_custom_css';
 
 	/**
 	 * The Style posts query transient label.
@@ -60,27 +60,27 @@ class WP_Custom_CSS {
 				'edit_item' => __( 'Edit Style' ),
 				'add_new_item' => __( 'Add New Style' ),
 			),
-			'public'  => true,
-			'show_ui' => true,
-			'hierarchical' => false,
-			'rewrite' => false,
-			'menu_position' => 50,
-			'query_var' => false,
+			'public'           => true,
+			'show_ui'          => true,
+			'hierarchical'     => false,
+			'rewrite'          => false,
+			'menu_position'    => 50,
+			'query_var'        => false,
 			'delete_with_user' => true,
-			'_builtin'    => true, /* internal use only. don't use this when registering your own post type. */
+			'_builtin'         => true, /* internal use only. don't use this when registering your own post type. */
 
 			// @todo only "title" and "revisions" after testing.
-			'supports' => array( 'title', 'editor', 'author', 'revisions' ),
-			'capabilities' => array(
+			'supports'         => array( 'title', 'editor', 'author', 'revisions' ),
+			'capabilities'     => array(
 				'delete_posts'           => 'edit_theme_options',
 				'delete_post'            => 'edit_theme_options',
 				'delete_published_posts' => 'edit_theme_options',
 				'delete_private_posts'   => 'edit_theme_options',
 				'delete_others_posts'    => 'edit_theme_options',
-				'edit_post'              => 'unfiltered_css',
-				'edit_posts'             => 'unfiltered_css',
-				'edit_others_posts'      => 'unfiltered_css',
-				'edit_published_posts'   => 'unfiltered_css',
+				'edit_post'              => 'edit_theme_options',
+				'edit_posts'             => 'edit_theme_options',
+				'edit_others_posts'      => 'edit_theme_options',
+				'edit_published_posts'   => 'edit_theme_options',
 				'read_post'              => 'read',
 				'read_private_posts'     => 'read',
 				'publish_posts'          => 'edit_theme_options',
