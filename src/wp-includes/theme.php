@@ -1416,10 +1416,6 @@ function wp_custom_css_cb() {
 	<?php endif;
 }
 
-function wp_get_custom_css() {
-	return WP_Custom_CSS::get_styles();
-}
-
 /**
  * Add callback for custom TinyMCE editor stylesheets.
  *

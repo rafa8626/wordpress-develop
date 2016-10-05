@@ -1,17 +1,49 @@
 <?php
 /**
- * WordPress Custom CSS class
+ * WordPress Custom CSS class and associated functions
+ *
+ * This handles the WP Custom CSS CPT,
+ * including registering the Post Type
+ * as well as creating "posts" for each theme
+ * and fetching the actual styles.
+ *
+ * To directly get the output of the styles,
+ * use wp_get_custom_css().
+ *
+ * @todo instantiate this appropriately.
+ * @todo allow developers to fetch custom css by theme.
  *
  * @package WordPress
- * @subpackage Customize
  * @since 4.7.0
  */
 
 /**
+ * Fetch the saved WP Custom CSS content.
+ *
+ * Wrapper for WP_Custom_CSS::get_styles().
+ *
+ * The optional param can be used to fetch the CSS from
+ * a specific theme.
+ *
+ * @see WP_Custom_CSS::get_style_post_id() for more information on theme names.
+ *
+ * @since 4.7.0
+ *
+ * @param string $theme_name Optional. A Theme stylesheet name.  Defaults to the current theme.
+ *
+ * @return string
+ */
+function wp_get_custom_css( $theme_name = '' ) {
+	return WP_Custom_CSS::get_styles( $theme_name );
+}
+
+/**
  * Class WP_Custom_CSS
  *
- * Note that the Custom Post Type
- * is called "style."
+ * Note that the Custom Post Type is called "wp_custom_css."
+ *
+ * @package WordPress
+ * @since 4.7.0
  */
 class WP_Custom_CSS {
 
@@ -41,36 +73,30 @@ class WP_Custom_CSS {
 	}
 
 	/**
-	 * Register the "custom_css" post type
+	 * Register the "WP Custom CSS" post type
 	 *
 	 * This post type is used to store
 	 * the Custom CSS.
-	 *
-	 * Note that the post type slug is "style."
-	 *
-	 * @todo clean this up.
 	 *
 	 * @since 4.7.0
 	 */
 	public function register_post_type() {
 		register_post_type( self::POST_TYPE_SLUG, array(
 			'labels' => array(
-				'name' => __( 'Styles' ),
-				'singular_name' => __( 'Style' ),
-				'edit_item' => __( 'Edit Style' ),
-				'add_new_item' => __( 'Add New Style' ),
+				'name' => __( 'WP Custom CSS' ),
+				'singular_name' => __( 'WP Custom CSS' ),
+				'edit_item' => __( 'Edit WP Custom CSS' ),
+				'add_new_item' => __( 'Add New WP Custom CSS' ),
 			),
 			'public'           => true,
-			'show_ui'          => true,
+			'show_ui'          => false,
 			'hierarchical'     => false,
 			'rewrite'          => false,
 			'menu_position'    => 50,
 			'query_var'        => false,
 			'delete_with_user' => true,
 			'_builtin'         => true, /* internal use only. don't use this when registering your own post type. */
-
-			// @todo only "title" and "revisions" after testing.
-			'supports'         => array( 'title', 'editor', 'author', 'revisions' ),
+			'supports'         => array( 'title', 'revisions' ),
 			'capabilities'     => array(
 				'delete_posts'           => 'edit_theme_options',
 				'delete_post'            => 'edit_theme_options',
@@ -127,7 +153,7 @@ class WP_Custom_CSS {
 	}
 
 	/**
-	 * Get all posts in the "style" CPT.
+	 * Get all posts in the "wp_custom_css" CPT.
 	 *
 	 * This uses a transient to store values for 12 hours.
 	 *
@@ -261,24 +287,18 @@ class WP_Custom_CSS {
 	 *
 	 * @since 4.7.0
 	 *
+	 * @param string $theme_name Optional. A Theme stylesheet name.  Defaults to the current theme.
+	 *
 	 * @return string The Style Post content.
 	 */
-	public static function get_styles() {
-		$post_id = self::get_style_post_id();
+	public static function get_styles( $theme_name = '' ) {
+		$post_id = self::get_style_post_id( $theme_name );
 		$style_post = get_post( $post_id );
 		return $style_post->post_content;
 	}
-
-	public static function explode_styles( $css ) {
-		$results = array();
-
-		preg_match_all( '/(.+?)\s?\{\s?(.+?)\s?\}/', $css, $matches );
-		foreach ( $matches[0] as $i => $original ) {
-			$results[ trim( $matches[1][ $i ] ) ] = trim( $matches[2][ $i ] );
-		}
-		return $results;
-	}
-
-	public static function sanitize_and_optimize( $css, $element = 'div' ) {}
 }
+
+/**
+ * @todo instantiate this appropriately.
+ */
 $wp_custom_css = new WP_Custom_CSS();

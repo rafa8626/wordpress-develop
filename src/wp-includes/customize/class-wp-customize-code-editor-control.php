@@ -19,6 +19,8 @@
 class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 
 	/**
+	 * The Control Type.
+	 *
 	 * @access public
 	 * @var string
 	 */

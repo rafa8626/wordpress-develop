@@ -2312,17 +2312,13 @@ final class WP_Customize_Manager {
 		}
 
 		/* Custom CSS */
-
 		$this->add_section( 'wp_custom_css', array(
 			'title'    => __( 'Additional CSS' ),
 			'priority' => 140,
 		) );
 
 		$this->add_setting( new WP_Customize_Custom_CSS_Setting( $this, 'wp_custom_css', array(
-			'capability'        => 'unfiltered_css',
-			'transport'         => 'postMessage',
-			'sanitize_callback' => array( $this, '_sanitize_css' ),
-			'validate_callback' => array( $this, '_validate_css' ),
+			'capability' => 'unfiltered_css',
 		) ) );
 
 		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
@@ -2348,7 +2344,7 @@ final class WP_Customize_Manager {
 					'https://developer.wordpress.org/themes/advanced-topics/child-themes/',
 					__( 'Take your customizations to the next level with a child theme' ),
 					__( '(link opens in a new window)' )
-				)
+				),
 			) );
 		}
 
@@ -2390,53 +2386,6 @@ final class WP_Customize_Manager {
 			$color = get_theme_support( 'custom-header', 'default-text-color' );
 
 		return $color;
-	}
-
-	/**
-	 * Callback for sanitizing CSS.
-	 *
-	 * @since 4.7.0
-	 *
-	 * @param string $css
-	 * @return mixed
-	 */
-	public function _sanitize_css( $css ) {
-		// @todo determine what is required for CSS sanitization. Likely requires breaking css into arrays and handling piece by piece.
-
-		return $css;
-	}
-
-	/**
-	 * Callback for validating CSS.
-	 *
-	 * Checks for unbalanced braces and unclosed comments.
-	 *
-	 * @since 4.7.0
-	 *
-	 * @param mixed  $validity
-	 * @param string $css
-	 * @return mixed
-	 */
-	public function _validate_css( $validity, $css ) {
-		// Make sure that there is a closing brace for each opening brace.
-		if ( substr_count( $css, '{' ) !== substr_count( $css, '}' ) ) {
-			$validity->add( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
-		}
-		
-		// Make sure that any code comments are closed properly.
-		$count = 0;
-		$comments = explode( '/*', $css );
-		unset( $comments[0] ); // The first array came before the first comment.
-		foreach( $comments as $comment ) {
-			if ( false === strpos( $comment, '*/' ) ) {
-				$count++;
-			}
-		}
-		if ( 0 < $count ) {
-			$validity->add( 'unclosed_comment', sprintf( _n( 'There is an unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $count ), $count ) );
-		}
-
-		return $validity;
 	}
 
 	/**
