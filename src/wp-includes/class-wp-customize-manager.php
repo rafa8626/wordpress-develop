@@ -1393,14 +1393,16 @@ final class WP_Customize_Manager {
 				wp_send_json_error( 'invalid_customize_changeset_data' );
 			}
 			foreach ( $input_changeset_data as $setting_id => $setting_params ) {
-				if ( null === $setting_params ) {
-					$this->set_post_value( $setting_id, null ); // Explicit revert value.
-				} elseif ( array_key_exists( 'value', $setting_params ) ) {
-					$this->set_post_value( $setting_id, $setting_params['value'] );
+				if ( array_key_exists( 'value', $setting_params ) ) {
+					$this->set_post_value( $setting_id, $setting_params['value'] ); // Add to post values so that they can be validated and sanitized.
 				}
 			}
+			$this->add_dynamic_settings( array_keys( $input_changeset_data ) ); // Ensure settings get created even if they lack an input value.
 		} else {
 			$input_changeset_data = array();
+		}
+		if ( empty( $input_changeset_data ) ) {
+			wp_send_json_error( 'empty_customize_changeset_data' );
 		}
 
 		// Validate title.
@@ -1502,40 +1504,29 @@ final class WP_Customize_Manager {
 		$updated_setting_ids = array();
 		$original_changeset_data = $this->changeset_data();
 		$data = $original_changeset_data;
-		foreach ( $post_values as $setting_id => $unsanitized_value ) {
+
+		foreach ( $input_changeset_data as $setting_id => $setting_params ) {
 			$setting = $this->get_setting( $setting_id );
-			if ( ! $setting ) {
+			if ( ! $setting || ! $setting->check_capabilities() ) {
 				continue;
 			}
 
-			// Skip updating changeset with invalid values.
+			// Skip updating changeset for invalid setting values.
 			if ( isset( $setting_validities[ $setting_id ] ) && is_wp_error( $setting_validities[ $setting_id ] ) ) {
 				continue;
 			}
 
-			$updated_setting_ids[] = $setting_id;
-
-			if ( ! isset( $data[ $setting_id ] ) ) {
-				$data[ $setting_id ] = array();
-			}
-			$data[ $setting_id ]['value'] = $unsanitized_value;
-
-			if ( isset( $input_changeset_data[ $setting_id ] ) && is_array( $input_changeset_data[ $setting_id ] ) ) {
-				$setting_params = $input_changeset_data[ $setting_id ];
-				unset( $setting_params['value'] );
-				$data[ $setting_id ] = array_merge( $input_changeset_data[ $setting_id ], $setting_params );
-			}
-		}
-
-		// Handle removal of settings from changeset.
-		foreach ( $input_changeset_data as $setting_id => $setting_data ) {
-			if ( ! is_null( $setting_data ) ) {
-				continue;
-			}
-			$setting = $this->get_setting( $setting_id );
-			if ( $setting && $setting->check_capabilities() ) {
+			if ( null === $setting_params ) {
+				// Remove setting from changeset entirely.
 				unset( $data[ $setting_id ] );
+			} else {
+				// Merge any additional setting params that have been supplied with the existing params.
+				if ( ! isset( $data[ $setting_id ] ) ) {
+					$data[ $setting_id ] = array();
+				}
+				$data[ $setting_id ] = array_merge( $data[ $setting_id ], $setting_params );
 			}
+			$updated_setting_ids[] = $setting_id;
 		}
 
 		$filter_context = array(
