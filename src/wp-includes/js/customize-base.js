@@ -811,6 +811,28 @@ window.wp = window.wp || {};
 		return result;
 	};
 
+	/**
+	 * Utility function namespace
+	 */
+	api.utils = {};
+
+	/**
+	 * Parse query string.
+	 *
+	 * @param {string} queryString Query string.
+	 * @returns {object} Parsed query string.
+	 */
+	api.utils.parseQueryString = function parseQueryString( queryString ) {
+		var queryParams = {};
+		_.each( queryString.split( '&' ), function( pair ) {
+			var parts = pair.split( '=', 2 );
+			if ( parts[0] ) {
+				queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
+			}
+		} );
+		return queryParams;
+	};
+
 	// Expose the API publicly on window.wp.customize
 	exports.customize = api;
 })( wp, jQuery );

@@ -176,11 +176,6 @@
 	};
 
 	/**
-	 * Utility function namespace
-	 */
-	api.utils = {};
-
-	/**
 	 * Watch all changes to Value properties, and bubble changes to parent Values instance
 	 *
 	 * @since 4.1.0
@@ -3346,7 +3341,7 @@
 
 				// Remove state query params.
 				if ( urlParser.search.length > 1 ) {
-					queryParams = previewer.parseQueryParams( urlParser.search.substr( 1 ) );
+					queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
 					delete queryParams.customize_changeset_uuid;
 					delete queryParams.customize_theme;
 					delete queryParams.customize_messenger_channel;
@@ -3559,25 +3554,6 @@
 		},
 
 		/**
-		 * Parse query string.
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param {string} queryString Query string.
-		 * @returns {object} Params.
-		 */
-		parseQueryParams: function parseQueryParams( queryString ) {
-			var queryParams = {};
-			_.each( queryString.split( '&' ), function( pair ) {
-				var parts = pair.split( '=', 2 );
-				if ( parts[0] ) {
-					queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
-				}
-			} );
-			return queryParams;
-		},
-
-		/**
 		 * Set the iframe's src URL.
 		 *
 		 * @since 4.7.0
@@ -3598,7 +3574,7 @@
 			params.customize_messenger_channel = previewer.channel();
 
 			urlParser.href = url;
-			oldParams = previewer.parseQueryParams( urlParser.search.substring( 1 ) );
+			oldParams = api.utils.parseQueryString( urlParser.search.substring( 1 ) );
 			newParams = _.extend( {}, oldParams, params );
 
 			// @todo We may need to add a new param for customize_persistent_query_params as _.keys( newParams ).

@@ -163,23 +163,6 @@
 	};
 
 	/**
-	 * Parse query string.
-	 *
-	 * @param {string} queryString Query string.
-	 * @returns {object} Parsed query string.
-	 */
-	api.parseQueryString = function parseQueryString( queryString ) {
-		var queryParams = {};
-		_.each( queryString.split( '&' ), function( pair ) {
-			var parts = pair.split( '=', 2 );
-			if ( parts[0] ) {
-				queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
-			}
-		} );
-		return queryParams;
-	};
-
-	/**
 	 * Should the supplied link is previewable.
 	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
@@ -260,7 +243,7 @@
 		}
 		$( element ).removeClass( 'customize-unpreviewable' );
 
-		queryParams = api.parseQueryString( element.search.substring( 1 ) );
+		queryParams = api.utils.parseQueryString( element.search.substring( 1 ) );
 		queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
 		if ( ! api.settings.theme.active ) {
 			queryParams.customize_theme = api.settings.theme.stylesheet;
@@ -293,7 +276,7 @@
 				return;
 			}
 
-			queryParams = api.parseQueryString( urlParser.search.substring( 1 ) );
+			queryParams = api.utils.parseQueryString( urlParser.search.substring( 1 ) );
 			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
 			if ( ! api.settings.theme.active ) {
 				queryParams.customize_theme = api.settings.theme.stylesheet;
@@ -406,7 +389,7 @@
 
 		urlParser = document.createElement( 'a' );
 		urlParser.href = location.href;
-		queryParams = api.parseQueryString( urlParser.search.substr( 1 ) );
+		queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
 
 		if ( history.replaceState ) {
 			needsParamRestoration = ! queryParams.customize_changeset_uuid || ( ! api.settings.theme.active && ! queryParams.customize_theme ) || ( api.settings.channel && ! queryParams.customize_messenger_channel );
