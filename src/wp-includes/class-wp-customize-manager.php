@@ -2314,7 +2314,7 @@ final class WP_Customize_Manager {
 		/* Custom CSS */
 
 		$this->add_section( 'custom_css', array(
-			'title'    => __( 'Custom CSS' ),
+			'title'    => __( 'Additional CSS' ),
 			'priority' => 140,
 		) );
 
