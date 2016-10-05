@@ -2,6 +2,8 @@
 /**
  * Customize API: WP_Customize_Custom_CSS_Setting class
  *
+ * This handles validation, sanitization and saving of the value.
+ *
  * @package WordPress
  * @subpackage Customize
  * @since 4.7.0
@@ -43,13 +45,17 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args = array() );
 		add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) );
-		add_action( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
-		add_filter( "customize_validate_{$this->id}", array( $this, 'validiate_css' ), 10, 2 );
+		add_filter( "customize_validate_{$this->id}", array( $this, 'validate_css' ), 10, 2 );
 		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
+		add_action( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
 	}
 
 	/**
 	 * Fetch the value of the setting.
+	 *
+	 * @see WP_Customize_Setting::value()
+	 *
+	 * @filter customize_value_{$this->id_data['base']}
 	 *
 	 * @since 4.7.0
 	 *
@@ -71,29 +77,50 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Validate CSS.
 	 *
-	 * Checks for unbalanced braces and unclosed comments.
+	 * Checks for unbalanced braces, brackets and comments.
 	 *
 	 * Notifications are rendered when the Preview
 	 * is saved.
 	 *
 	 * @todo Needs Expansion.
 	 *
+	 * @see WP_Customize_Setting::validate()
+	 *
+	 * @filter customize_validate_{$this->id}
+	 *
 	 * @since 4.7.0
 	 *
+	 * @param mixed  $validity WP_Error, else true.
 	 * @param string $css The input string.
 	 *
-	 * @return mixed
+	 * @return mixed true|WP_Error True if the input was validated, otherwise WP_Error.
 	 */
-	public function validiate_css( $validity, $css ) {
+	public function validate_css( $validity, $css ) {
 		// Make sure that there is a closing brace for each opening brace.
-		if ( ! self::validate_balanced_braces( $css ) ) {
+		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
 			$validity->add( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
 		}
 
-		// Make sure that any code comments are closed properly.
+		// Ensure brackets are balanced.
+		if ( ! self::validate_balanced_characters( '[', ']', $css ) ) {
+			$validity->add( 'unbalanced_braces', __( 'Your brackets <code>[]</code> are unbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
+		}
+
+		/*
+		 * Make sure any code comments are closed properly.
+		 *
+		 * The first check could miss stray an unpaired comment closing figure, so if
+		 * The number appears to be balanced, then check for equal numbers
+		 * of opening/closing comment figures.
+		 *
+		 * Although it may initially appear redundant, we use the first method
+		 * to give more specific feedback to the user.
+		 */
 		$unclosed_comment_count = self::validate_count_unclosed_comments( $css );
 		if ( 0 < $unclosed_comment_count ) {
 			$validity->add( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
+		} elseif ( ! self::validate_balanced_characters( '/*', '*/', $css ) ) {
+			$validity->add( 'unbalanced_comments', __( 'There is an extra <code>*/</code>, indicating an end to a comment.  Be sure that there is an opening <code>/*</code> for every closing <code>*/</code>.' ) );
 		}
 		return $validity;
 	}
@@ -104,6 +131,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * Currently runs a basic wp_kses check.
 	 *
 	 * @todo Needs Expansion.
+	 *
+	 * @filter customize_sanitize_{$this->id}
 	 *
 	 * @since 4.7.0
 	 *
@@ -127,9 +156,11 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @see WP_Customize_Setting::update()
 	 *
+	 * @action customize_update_{$this->type}
+	 *
 	 * @since 4.7.0
 	 *
-	 * @param string $value The value to be saved.
+	 * @param string $value The input value.
 	 *
 	 * @return bool
 	 */
@@ -160,16 +191,24 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Ensure there are a balanced number of braces.
+	 * Ensure there are a balanced number of paired characters.
+	 *
+	 * This is used to ensure the number of opening and closing
+	 * characters is equal.
+	 *
+	 * For instance, there should be an equal number of braces ("{", "}")
+	 * in the CSS.
 	 *
 	 * @since 4.7.0
 	 *
+	 * @param string $opening_char The opening character.
+	 * @param string $closing_char The closing character.
 	 * @param string $css The CSS input string.
 	 *
 	 * @return bool
 	 */
-	public static function validate_balanced_braces( $css ) {
-		return substr_count( $css, '{' ) === substr_count( $css, '}' );
+	public static function validate_balanced_characters( $opening_char, $closing_char, $css ) {
+		return substr_count( $css, $opening_char ) === substr_count( $css, $closing_char );
 	}
 
 	/**
