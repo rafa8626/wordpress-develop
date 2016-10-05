@@ -838,7 +838,21 @@ final class WP_Customize_Manager {
 		$values = array();
 
 		if ( ! $args['exclude_changeset'] ) {
-			$values = array_merge( $values, wp_list_pluck( $this->changeset_data(), 'value' ) );
+			foreach ( $this->changeset_data() as $setting_id => $setting_params ) {
+				if ( ! array_key_exists( 'value', $setting_params ) ) {
+					continue;
+				}
+				if ( isset( $setting_params['type'] ) && 'theme_mod' === $setting_params['type'] ) {
+
+					// Ensure that theme mods values are only used if they were saved under the current theme.
+					$namespace_pattern = '/^theme_mod:(?P<stylesheet>.+?):(?P<setting_id>.+)$/';
+					if ( preg_match( $namespace_pattern, $setting_id, $matches ) && $this->get_stylesheet() === $matches['stylesheet'] ) {
+						$values[ $matches['setting_id'] ] = $setting_params['value'];
+					}
+				} else {
+					$values[ $setting_id ] = $setting_params['value'];
+				}
+			}
 		}
 
 		if ( ! $args['exclude_post_data'] ) {
@@ -1516,15 +1530,21 @@ final class WP_Customize_Manager {
 				continue;
 			}
 
+			$namespaced_setting_id = $setting_id;
+			if ( 'theme_mod' === $setting->type ) {
+				$namespaced_setting_id = sprintf( 'theme_mod:%s:%s', $this->get_stylesheet(), $setting_id );
+			}
+
 			if ( null === $setting_params ) {
 				// Remove setting from changeset entirely.
-				unset( $data[ $setting_id ] );
+				unset( $data[ $namespaced_setting_id ] );
 			} else {
 				// Merge any additional setting params that have been supplied with the existing params.
-				if ( ! isset( $data[ $setting_id ] ) ) {
-					$data[ $setting_id ] = array();
+				if ( ! isset( $data[ $namespaced_setting_id ] ) ) {
+					$data[ $namespaced_setting_id ] = array();
 				}
-				$data[ $setting_id ] = array_merge( $data[ $setting_id ], $setting_params );
+				$data[ $namespaced_setting_id ] = array_merge( $data[ $namespaced_setting_id ], $setting_params );
+				$data[ $namespaced_setting_id ]['type'] = $setting->type;
 			}
 			$updated_setting_ids[] = $setting_id;
 		}
