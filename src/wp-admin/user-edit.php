@@ -51,8 +51,8 @@ get_current_screen()->add_help_tab( array(
 
 get_current_screen()->set_help_sidebar(
     '<p><strong>' . __('For more information:') . '</strong></p>' .
-    '<p>' . __('<a href="https://codex.wordpress.org/Users_Your_Profile_Screen" target="_blank">Documentation on User Profiles</a>') . '</p>' .
-    '<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+    '<p>' . __('<a href="https://codex.wordpress.org/Users_Your_Profile_Screen">Documentation on User Profiles</a>') . '</p>' .
+    '<p>' . __('<a href="https://wordpress.org/support/">Support Forums</a>') . '</p>'
 );
 
 $wp_http_referer = remove_query_arg( array( 'update', 'delete_count', 'user_id' ), $wp_http_referer );
@@ -269,6 +269,38 @@ if ( !( IS_PROFILE_PAGE && !$user_can_edit ) ) : ?>
 </fieldset>
 </td>
 </tr>
+
+<?php
+$languages = get_available_languages();
+if ( $languages ) : ?>
+<tr class="user-language-wrap">
+	<th scope="row">
+		<label for="site_language"><?php _e( 'Site Language' ); ?></label>
+	</th>
+	<td>
+		<?php
+		$user_locale = get_user_option( 'locale', $profileuser->ID );
+
+		if ( 'en_US' === $user_locale ) { // en_US
+			$user_locale = false;
+		} elseif ( ! in_array( $user_locale, $languages, true ) ) {
+			$user_locale = get_locale();
+		}
+
+		wp_dropdown_languages( array(
+			'name'                        => 'locale',
+			'id'                          => 'locale',
+			'selected'                    => $user_locale,
+			'languages'                   => $languages,
+			'show_available_translations' => false
+		) );
+		?>
+	</td>
+</tr>
+<?php
+endif;
+?>
+
 <?php
 /**
  * Fires at the end of the 'Personal Options' settings table on the user editing screen.
