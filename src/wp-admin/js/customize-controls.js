@@ -3085,7 +3085,6 @@
 		 * Initialize the PreviewFrame.
 		 *
 		 * @param {object} params.container
-		 * @param {object} params.signature
 		 * @param {object} params.previewUrl
 		 * @param {object} params.query
 		 * @param {object} options
@@ -3100,7 +3099,6 @@
 			deferred.promise( this );
 
 			this.container = params.container;
-			this.signature = params.signature;
 
 			$.extend( params, { channel: api.PreviewFrame.uuid() });
 
@@ -3285,7 +3283,6 @@
 		 *                                    frame to be placed.
 		 * @param {string} params.form
 		 * @param {string} params.previewUrl  The URL to preview.
-		 * @param {string} params.signature
 		 * @param {object} options
 		 */
 		initialize: function( params, options ) {
@@ -3312,7 +3309,6 @@
 
 			previewer.container   = api.ensure( params.container );
 			previewer.allowedUrls = params.allowedUrls;
-			previewer.signature   = params.signature;
 
 			params.url = window.location.href;
 
@@ -3630,8 +3626,7 @@
 				url:        previewer.url(),
 				previewUrl: previewer.previewUrl(),
 				query:      previewer.query() || {},
-				container:  previewer.container,
-				signature:  previewer.signature
+				container:  previewer.container
 			});
 
 			previewer.loading.done( function( readyData ) {
@@ -3988,8 +3983,7 @@
 			container:   '#customize-preview',
 			form:        '#customize-controls',
 			previewUrl:  api.settings.url.preview,
-			allowedUrls: api.settings.url.allowed,
-			signature:   'WP_CUSTOMIZER_SIGNATURE'
+			allowedUrls: api.settings.url.allowed
 		}, {
 
 			nonce: api.settings.nonce,
