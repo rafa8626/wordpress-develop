@@ -10,9 +10,6 @@
 /** Load WordPress Administration Bootstrap */
 require_once( dirname( __FILE__ ) . '/admin.php' );
 
-if ( ! is_multisite() )
-	wp_die( __( 'Multisite support is not enabled.' ) );
-
 if ( ! current_user_can( 'manage_sites' ) )
 	wp_die( __( 'Sorry, you are not allowed to access this page.' ), 403 );
 
@@ -42,8 +39,8 @@ get_current_screen()->add_help_tab( array(
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
-	'<p>' . __('<a href="https://codex.wordpress.org/Network_Admin_Sites_Screen" target="_blank">Documentation on Site Management</a>') . '</p>' .
-	'<p>' . __('<a href="https://wordpress.org/support/forum/multisite/" target="_blank">Support Forums</a>') . '</p>'
+	'<p>' . __('<a href="https://codex.wordpress.org/Network_Admin_Sites_Screen">Documentation on Site Management</a>') . '</p>' .
+	'<p>' . __('<a href="https://wordpress.org/support/forum/multisite/">Support Forums</a>') . '</p>'
 );
 
 get_current_screen()->set_screen_reader_content( array(
@@ -159,6 +156,26 @@ if ( isset( $_GET['action'] ) ) {
 					} else {
 						wp_die( __( 'Sorry, you are not allowed to change the current site.' ) );
 					}
+				}
+				if ( ! in_array( $doaction, array( 'delete', 'spam', 'notspam' ), true ) ) {
+					$redirect_to = wp_get_referer();
+					$blogs = (array) $_POST['allblogs'];
+					/**
+					 * Fires when a custom bulk action should be handled.
+					 *
+					 * The redirect link should be modified with success or failure feedback
+					 * from the action to be used to display feedback to the user.
+					 *
+					 * @since 4.7.0
+					 *
+					 * @param string $redirect_to The redirect URL.
+					 * @param string $doaction      The action being taken.
+					 * @param array  $blogs       The blogs to take the action on.
+					 * @param int    $site_id     The current site id.
+					 */
+					$redirect_to = apply_filters( 'handle_bulk_actions-' . get_current_screen()->id, $redirect_to, $doaction, $blogs, $id );
+					wp_safe_redirect( $redirect_to );
+					exit();
 				}
 			} else {
 				$location = network_admin_url( 'sites.php' );

@@ -108,7 +108,7 @@ case 'delete':
 	$tag_ID = (int) $_REQUEST['tag_ID'];
 	check_admin_referer( 'delete-tag_' . $tag_ID );
 
-	if ( ! current_user_can( $tax->cap->delete_terms ) ) {
+	if ( ! current_user_can( 'delete_term', $tag_ID ) ) {
 		wp_die(
 			'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
 			'<p>' . __( 'Sorry, you are not allowed to delete this item.' ) . '</p>',
@@ -168,7 +168,7 @@ case 'editedtag':
 	$tag_ID = (int) $_POST['tag_ID'];
 	check_admin_referer( 'update-tag_' . $tag_ID );
 
-	if ( ! current_user_can( $tax->cap->edit_terms ) ) {
+	if ( ! current_user_can( 'edit_term', $tag_ID ) ) {
 		wp_die(
 			'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
 			'<p>' . __( 'Sorry, you are not allowed to edit this item.' ) . '</p>',
@@ -195,6 +195,26 @@ case 'editedtag':
 	else
 		$location = add_query_arg( array( 'error' => true, 'message' => 5 ), $location );
 	break;
+default:
+	if ( ! $wp_list_table->current_action() || ! isset( $_REQUEST['delete_tags'] ) ) {
+		break;
+	}
+	check_admin_referer( 'bulk-tags' );
+	$tags = (array) $_REQUEST['delete_tags'];
+	/**
+	 * Fires when a custom bulk action should be handled.
+	 *
+	 * The sendback link should be modified with success or failure feedback
+	 * from the action to be used to display feedback to the user.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $location The redirect URL.
+	 * @param string $action   The action being taken.
+	 * @param array  $tags     The tag IDs to take the action on.
+	 */
+	$location = apply_filters( 'handle_bulk_actions-' . get_current_screen()->id, $location, $wp_list_table->current_action(), $tags );
+	break;
 }
 
 if ( ! $location && ! empty( $_REQUEST['_wp_http_referer'] ) ) {
@@ -210,7 +230,7 @@ if ( $location ) {
 	 * Filters the taxonomy redirect destination URL.
 	 *
 	 * @since 4.6.0
-	 * 
+	 *
 	 * @param string $location The destination URL.
 	 * @param object $tax      The taxonomy object.
 	 */
@@ -279,13 +299,13 @@ if ( 'category' == $taxonomy || 'link_category' == $taxonomy || 'post_tag' == $t
 	$help = '<p><strong>' . __( 'For more information:' ) . '</strong></p>';
 
 	if ( 'category' == $taxonomy )
-		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Posts_Categories_Screen" target="_blank">Documentation on Categories</a>' ) . '</p>';
+		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Posts_Categories_Screen">Documentation on Categories</a>' ) . '</p>';
 	elseif ( 'link_category' == $taxonomy )
-		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Links_Link_Categories_Screen" target="_blank">Documentation on Link Categories</a>' ) . '</p>';
+		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Links_Link_Categories_Screen">Documentation on Link Categories</a>' ) . '</p>';
 	else
-		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Posts_Tags_Screen" target="_blank">Documentation on Tags</a>' ) . '</p>';
+		$help .= '<p>' . __( '<a href="https://codex.wordpress.org/Posts_Tags_Screen">Documentation on Tags</a>' ) . '</p>';
 
-	$help .= '<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>';
+	$help .= '<p>' . __('<a href="https://wordpress.org/support/">Support Forums</a>') . '</p>';
 
 	get_current_screen()->set_help_sidebar( $help );
 
@@ -293,14 +313,6 @@ if ( 'category' == $taxonomy || 'link_category' == $taxonomy || 'post_tag' == $t
 }
 
 require_once( ABSPATH . 'wp-admin/admin-header.php' );
-
-if ( ! current_user_can( $tax->cap->edit_terms ) ) {
-	wp_die(
-		'<h1>' . __( 'Cheatin&#8217; uh?' ) . '</h1>' .
-		'<p>' . __( 'Sorry, you are not allowed to edit this item.' ) . '</p>',
-		403
-	);
-}
 
 /** Also used by the Edit Tag  form */
 require_once( ABSPATH . 'wp-admin/includes/edit-tag-messages.php' );
@@ -392,10 +404,9 @@ if ( current_user_can($tax->cap->edit_terms) ) {
 
 <div class="form-wrap">
 <h2><?php echo $tax->labels->add_new_item; ?></h2>
-<form id="addtag" method="post" action="edit-tags.php" class="validate"
-<?php
+<form id="addtag" method="post" action="edit-tags.php" class="validate"<?php
 /**
- * Fires at the beginning of the Add Tag form.
+ * Fires inside the Add Tag form tag.
  *
  * The dynamic portion of the hook name, `$taxonomy`, refers to the taxonomy slug.
  *

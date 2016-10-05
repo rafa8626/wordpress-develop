@@ -596,6 +596,10 @@ class wp_xmlrpc_server extends IXR_Server {
 	 *  - 'xmlrpc' - url of xmlrpc endpoint
 	 */
 	public function wp_getUsersBlogs( $args ) {
+		if ( ! $this->minimum_args( $args, 2 ) ) {
+			return $this->error;
+		}
+
 		// If this isn't on WPMU then just use blogger_getUsersBlogs
 		if ( !is_multisite() ) {
 			array_unshift( $args, 1 );
@@ -1882,8 +1886,9 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		$taxonomy = get_taxonomy( $content_struct['taxonomy'] );
 
-		if ( ! current_user_can( $taxonomy->cap->manage_terms ) )
+		if ( ! current_user_can( $taxonomy->cap->edit_terms ) ) {
 			return new IXR_Error( 401, __( 'Sorry, you are not allowed to create terms in this taxonomy.' ) );
+		}
 
 		$taxonomy = (array) $taxonomy;
 
@@ -1969,9 +1974,6 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		$taxonomy = get_taxonomy( $content_struct['taxonomy'] );
 
-		if ( ! current_user_can( $taxonomy->cap->edit_terms ) )
-			return new IXR_Error( 401, __( 'Sorry, you are not allowed to edit terms in this taxonomy.' ) );
-
 		$taxonomy = (array) $taxonomy;
 
 		// hold the data of the term
@@ -1984,6 +1986,10 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		if ( ! $term )
 			return new IXR_Error( 404, __( 'Invalid term ID.' ) );
+
+		if ( ! current_user_can( 'edit_term', $term_id ) ) {
+			return new IXR_Error( 401, __( 'Sorry, you are not allowed to edit this term.' ) );
+		}
 
 		if ( isset( $content_struct['name'] ) ) {
 			$term_data['name'] = trim( $content_struct['name'] );
@@ -2064,10 +2070,6 @@ class wp_xmlrpc_server extends IXR_Server {
 			return new IXR_Error( 403, __( 'Invalid taxonomy.' ) );
 
 		$taxonomy = get_taxonomy( $taxonomy );
-
-		if ( ! current_user_can( $taxonomy->cap->delete_terms ) )
-			return new IXR_Error( 401, __( 'Sorry, you are not allowed to delete terms in this taxonomy.' ) );
-
 		$term = get_term( $term_id, $taxonomy->name );
 
 		if ( is_wp_error( $term ) )
@@ -2075,6 +2077,10 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		if ( ! $term )
 			return new IXR_Error( 404, __( 'Invalid term ID.' ) );
+
+		if ( ! current_user_can( 'delete_term', $term_id ) ) {
+			return new IXR_Error( 401, __( 'Sorry, you are not allowed to delete this term.' ) );
+		}
 
 		$result = wp_delete_term( $term_id, $taxonomy->name );
 
@@ -2136,9 +2142,6 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		$taxonomy = get_taxonomy( $taxonomy );
 
-		if ( ! current_user_can( $taxonomy->cap->assign_terms ) )
-			return new IXR_Error( 401, __( 'Sorry, you are not allowed to assign terms in this taxonomy.' ) );
-
 		$term = get_term( $term_id , $taxonomy->name, ARRAY_A );
 
 		if ( is_wp_error( $term ) )
@@ -2146,6 +2149,10 @@ class wp_xmlrpc_server extends IXR_Server {
 
 		if ( ! $term )
 			return new IXR_Error( 404, __( 'Invalid term ID.' ) );
+
+		if ( ! current_user_can( 'assign_term', $term_id ) ) {
+			return new IXR_Error( 401, __( 'Sorry, you are not allowed to assign this term.' ) );
+		}
 
 		return $this->_prepare_term( $term );
 	}
@@ -4322,8 +4329,13 @@ class wp_xmlrpc_server extends IXR_Server {
 	 * @return array|IXR_Error
 	 */
 	public function blogger_getUsersBlogs($args) {
-		if ( is_multisite() )
+		if ( ! $this->minimum_args( $args, 3 ) ) {
+			return $this->error;
+		}
+
+		if ( is_multisite() ) {
 			return $this->_multisite_getUsersBlogs($args);
+		}
 
 		$this->escape($args);
 
@@ -6314,9 +6326,10 @@ class wp_xmlrpc_server extends IXR_Server {
 		$remote_source = preg_replace( "/<\/*(h1|h2|h3|h4|h5|h6|p|th|td|li|dt|dd|pre|caption|input|textarea|button|body)[^>]*>/", "\n\n", $remote_source );
 
 		preg_match( '|<title>([^<]*?)</title>|is', $remote_source, $matchtitle );
-		$title = $matchtitle[1];
-		if ( empty( $title ) )
-			return $this->pingback_error( 32, __('We cannot find a title on that page.' ) );
+		$title = isset( $matchtitle[1] ) ? $matchtitle[1] : '';
+		if ( empty( $title ) ) {
+			return $this->pingback_error( 32, __( 'We cannot find a title on that page.' ) );
+		}
 
 		$remote_source = strip_tags( $remote_source, '<a>' ); // just keep the tag we need
 
