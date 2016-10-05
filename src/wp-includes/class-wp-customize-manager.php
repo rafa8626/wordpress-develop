@@ -2321,20 +2321,6 @@ final class WP_Customize_Manager {
 				__( '(link opens in a new window)' )
 			),
 		) ) );
-
-		if ( ! is_multisite() ) {
-			$this->add_setting( 'wp_custom_css_more', array() );
-			$this->add_control( 'wp_custom_css_more', array(
-				'type'        => 'none',
-				'section'     => 'wp_custom_css',
-				'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',
-					__( 'Enjoy writing custom CSS?' ),
-					'https://developer.wordpress.org/themes/advanced-topics/child-themes/',
-					__( 'Take your customizations to the next level with a child theme' ),
-					__( '(link opens in a new window)' )
-				),
-			) );
-		}
 	}
 
 	/**
