@@ -268,5 +268,17 @@ class WP_Custom_CSS {
 		$style_post = get_post( $post_id );
 		return $style_post->post_content;
 	}
+
+	public static function explode_styles( $css ) {
+		$results = array();
+
+		preg_match_all( '/(.+?)\s?\{\s?(.+?)\s?\}/', $css, $matches );
+		foreach ( $matches[0] as $i => $original ) {
+			$results[ trim( $matches[1][ $i ] ) ] = trim( $matches[2][ $i ] );
+		}
+		return $results;
+	}
+
+	public static function sanitize_and_optimize( $css, $element = 'div' ) {}
 }
 $wp_custom_css = new WP_Custom_CSS();

@@ -25,17 +25,6 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 	public $type = 'code_editor';
 
 	/**
-	 * Enqueue control-related scripts/styles
-	 *
-	 * @since 4.7.0
-	 */
-	public function enqueue() {
-		parent::enqueue();
-		wp_enqueue_script( 'codemirror' );
-		wp_enqueue_style( 'codemirror' );
-	}
-
-	/**
 	 * Empty method
 	 *
 	 * Don't render the control content from PHP,
@@ -59,8 +48,8 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 			<# if ( data.description ) { #>
 				<span class="description customize-control-description">{{{ data.description }}}</span>
 			<# } #>
-			<div class="customize-control-content">
-				<textarea class="code-editor" <?php $this->link(); ?>><?php echo esc_textarea( $this->value() ); ?></textarea>
+			<div class="customize-control-content"><!-- @todo set the height in CSS -->
+				<textarea class="code-editor" <?php $this->link(); ?> style="height: 200px;"><?php echo esc_textarea( $this->value() ); ?></textarea>
 			</div>
 		</label>
 		<?php

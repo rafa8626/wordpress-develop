@@ -2328,11 +2328,11 @@ final class WP_Customize_Manager {
 			'section'     => 'custom_css',
 			'settings'    => 'wp_custom_css',
 			'label'       => __( 'Custom CSS' ),
-			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">(%s)</span></a>.',
+			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',
 				__( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis.' ),
 				'https://codex.wordpress.org/Know_Your_Sources#CSS',
 				__( 'Learn more about CSS' ),
-				__( 'link opens in a new window' )
+				__( '(link opens in a new window)' )
 			),
 		) ) );
 
@@ -2341,11 +2341,11 @@ final class WP_Customize_Manager {
 			$this->add_control( 'wp_custom_css_more', array(
 				'type'        => 'none',
 				'section'     => 'custom_css',
-				'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">(%s)</span></a>.',
+				'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>.',
 					__( 'Enjoy writing custom CSS?' ),
 					'https://developer.wordpress.org/themes/advanced-topics/child-themes/',
 					__( 'Take your customizations to the next level with a child theme' ),
-					__( 'link opens in a new window' )
+					__( '(link opens in a new window)' )
 				)
 			) );
 		}

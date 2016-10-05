@@ -102,8 +102,11 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 */
 	public function update_setting( $value ) {
 
+		// @todo sanitize this somehow.
+		$new_value = $value;
+
 		$args = array(
-			'post_content' => $value,
+			'post_content' => $new_value,
 		);
 		$current_theme_post_id = WP_Custom_CSS::get_style_post_id();
 		if ( ! is_numeric( $current_theme_post_id ) ) {

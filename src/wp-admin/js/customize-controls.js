@@ -2890,21 +2890,6 @@
 			textareas = control.container.find( '.code-editor' );
 			textarea = textareas[0];
 			control._setUpSettingLinks( textarea );
-
-			// Wait to instantiate CodeMirror until this Customizer section is expanded.
-			// @todo check that CodeMirror exists.
-			api.section( control.section() ).container
-				.on( 'expanded', function() {
-					var editor = CodeMirror.fromTextArea( textarea, {
-							lineNumbers: false,
-							lineWrapping: true,
-							theme : 'wordpress'
-						});
-					editor.on( 'change', function( codeMirror ) {
-						var editorVal = codeMirror.getValue();
-						$( textarea ).val( editorVal ).trigger( 'change' );
-					});
-				});
 		},
 
 		/**
