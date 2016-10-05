@@ -2319,6 +2319,7 @@ final class WP_Customize_Manager {
 		) );
 
 		$this->add_setting( new WP_Customize_Custom_CSS_Setting( $this, 'wp_custom_css', array(
+			'capability' => 'unfiltered_css',
 			'sanitize_callback' => array( $this, '_sanitize_css' ),
 			'validate_callback' => array( $this, '_validate_css' ),
 		) ) );
