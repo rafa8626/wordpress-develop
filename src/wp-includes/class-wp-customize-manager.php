@@ -1415,9 +1415,6 @@ final class WP_Customize_Manager {
 		} else {
 			$input_changeset_data = array();
 		}
-		if ( empty( $input_changeset_data ) ) {
-			wp_send_json_error( 'empty_customize_changeset_data' );
-		}
 
 		// Validate title.
 		$changeset_title = null;
