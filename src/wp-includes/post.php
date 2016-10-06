@@ -133,7 +133,7 @@ function create_initial_post_types() {
 		'hierarchical' => false,
 		'rewrite' => false,
 		'query_var' => false,
-		'can_export' => true,
+		'can_export' => false,
 		'delete_with_user' => false,
 		'supports' => array( 'title', 'author' ),
 		'capability_type' => 'customize_changeset',
