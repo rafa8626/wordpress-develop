@@ -109,7 +109,7 @@ function plugins_api( $action, $args = array() ) {
 	}
 
 	if ( ! isset( $args->locale ) ) {
-		$args->locale = get_locale();
+		$args->locale = get_user_locale();
 	}
 
 	/**
@@ -556,10 +556,12 @@ function install_plugin_information() {
 				</li>
 			<?php } if ( ! empty( $api->tested ) ) { ?>
 				<li><strong><?php _e( 'Compatible up to:' ); ?></strong> <?php echo $api->tested; ?></li>
-			<?php } if ( ! empty( $api->active_installs ) ) { ?>
+			<?php } if ( isset( $api->active_installs ) ) { ?>
 				<li><strong><?php _e( 'Active Installs:' ); ?></strong> <?php
 					if ( $api->active_installs >= 1000000 ) {
 						_ex( '1+ Million', 'Active plugin installs' );
+					} elseif ( 0 == $api->active_installs ) {
+						_ex( 'Less Than 10', 'Active plugin installs' );
 					} else {
 						echo number_format_i18n( $api->active_installs ) . '+';
 					}
