@@ -1025,6 +1025,7 @@ p.customize-section-description {
 }
 
 .customize-control-code_editor .code-editor {
+	font-family: Consolas, Monaco, monospace;
 	height: 550px;
 }
 
