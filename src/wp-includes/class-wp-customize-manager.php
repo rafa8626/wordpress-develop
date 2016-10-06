@@ -1731,7 +1731,37 @@ final class WP_Customize_Manager {
 		if ( ! is_array( $changeset_data ) ) {
 			return;
 		}
-		$this->add_dynamic_settings( array_keys( $changeset_data ) );
+
+		$other_theme_mod_settings = array();
+		$active_theme_setting_values = array();
+		foreach ( $changeset_data as $raw_setting_id => $setting_params ) {
+
+			if ( ! isset( $setting_params['value'] ) ) {
+				continue;
+			}
+
+			// @todo There is some duplication of logic here with what is in the save method.
+			if ( isset( $setting_params['type'] ) && 'theme_mod' === $setting_params['type'] ) {
+
+				// Ensure that theme mods values are only used if they were saved under the current theme.
+				$namespace_pattern = '/^theme_mod:(?P<stylesheet>.+?):(?P<setting_id>.+)$/';
+				if ( preg_match( $namespace_pattern, $raw_setting_id, $matches ) ) {
+					if ( $this->get_stylesheet() === $matches['stylesheet'] ) {
+						$active_theme_setting_values[ $matches['setting_id'] ] = $setting_params['value'];
+					} else {
+						if ( ! isset( $other_theme_mod_settings[ $matches['stylesheet'] ] ) ) {
+							$other_theme_mod_settings[ $matches['stylesheet'] ] = array();
+						}
+						unset( $setting_params['type'] );
+						$other_theme_mod_settings[ $matches['stylesheet'] ][ $matches['setting_id'] ] = $setting_params;
+					}
+				}
+			} else {
+				$other_theme_mod_settings[ $raw_setting_id ] = $setting_params['value'];
+			}
+		}
+
+		$this->add_dynamic_settings( array_keys( $active_theme_setting_values ) );
 
 		/**
 		 * Fires once the theme has switched in the Customizer, but before settings
@@ -1755,14 +1785,22 @@ final class WP_Customize_Manager {
 			$setting->capability = 'exist';
 		}
 
-		foreach ( $changeset_data as $setting_id => $setting_params ) {
-			$setting = $this->get_setting( $setting_id );
-			if ( $setting && isset( $setting_params['value'] ) ) {
+		// Ensure post data are all set before iterating to save.
+		foreach ( $active_theme_setting_values as $setting_id => $setting_params ) {
+			if ( isset( $setting_params['value'] ) ) {
 				$this->set_post_value( $setting_id, $setting_params['value'] );
+			}
+		}
+
+		foreach ( $active_theme_setting_values as $setting_id => $setting_params ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting ) {
 				$setting->save();
 			}
 		}
 
+		// @todo Now merge $other_theme_mod_settings onto another private stashed snapshot is specifically for storing unactivated theme mod changes.
+		// @todo Ensure that $other_theme_mod_settings gets loaded up when doing a theme switch to serve as the initial dirty values for the theme.
 		/**
 		 * Fires after Customize settings have been saved.
 		 *
