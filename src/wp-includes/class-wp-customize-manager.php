@@ -2303,6 +2303,13 @@ final class WP_Customize_Manager {
 		$this->add_section( 'wp_custom_css', array(
 			'title'    => __( 'Additional CSS' ),
 			'priority' => 140,
+			'description_hidden' => true,
+			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>',
+				__( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis.' ),
+				'https://codex.wordpress.org/Know_Your_Sources#CSS',
+				__( 'Learn more about CSS' ),
+				__( '(link opens in a new window)' )
+			),
 		) );
 
 		$this->add_setting( new WP_Customize_Custom_CSS_Setting( $this, 'wp_custom_css', array(
