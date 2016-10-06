@@ -2126,6 +2126,7 @@ function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) 
 		$wp_customize = new WP_Customize_Manager( $changeset_post->post_name );
 	}
 	if ( ! did_action( 'customize_register' ) ) {
+		/** This filter is documented in /wp-includes/class-wp-customize-manager.php */
 		do_action( 'customize_register', $wp_customize );
 	}
 	$wp_customize->publish_changeset_values( $changeset_post_id ) ;
