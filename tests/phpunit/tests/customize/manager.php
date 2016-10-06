@@ -27,6 +27,22 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	public $undefined;
 
 	/**
+	 * Admin user ID.
+	 *
+	 * @var int
+	 */
+	protected static $admin_user_id;
+
+	/**
+	 * Set up before class.
+	 *
+	 * @param WP_UnitTest_Factory $factory Factory.
+	 */
+	public static function wpSetUpBeforeClass( $factory ) {
+		self::$admin_user_id = $factory->user->create( array( 'role' => 'administrator' ) );
+	}
+
+	/**
 	 * Set up test.
 	 */
 	function setUp() {
@@ -91,7 +107,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30988
 	 */
 	function test_unsanitized_post_values() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$manager = $this->manager;
 
 		$customized = array(
@@ -109,7 +125,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30988
 	 */
 	function test_post_value() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$posted_settings = array(
 			'foo' => 'OOF',
 		);
@@ -133,7 +149,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 34893
 	 */
 	function test_invalid_post_value() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$default_value = 'foo_default';
 		$setting = $this->manager->add_setting( 'foo', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_foo' ),
@@ -199,7 +215,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 37247
 	 */
 	function test_post_value_validation_sanitization_order() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$default_value = '0';
 		$setting = $this->manager->add_setting( 'numeric', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_numeric' ),
@@ -244,7 +260,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::validate_setting_values()
 	 */
 	function test_validate_setting_values() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$setting = $this->manager->add_setting( 'foo', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_foo' ),
 			'sanitize_callback' => array( $this, 'filter_customize_sanitize_foo' ),
@@ -289,7 +305,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 37247
 	 */
 	function test_validate_setting_values_validation_sanitization_order() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$setting = $this->manager->add_setting( 'numeric', array(
 			'validate_callback' => array( $this, 'filter_customize_validate_numeric' ),
 			'sanitize_callback' => array( $this, 'filter_customize_sanitize_numeric' ),
@@ -331,7 +347,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::set_post_value()
 	 */
 	function test_set_post_value() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$this->manager->add_setting( 'foo', array(
 			'sanitize_callback' => array( $this, 'sanitize_foo_for_test_set_post_value' ),
 		) );
@@ -436,7 +452,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		}
 		$this->assertFalse( $this->manager->has_published_pages() );
 
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$this->manager->nav_menus->customize_register();
 		$setting_id = 'nav_menus_created_posts';
 		$setting = $this->manager->get_setting( $setting_id );
@@ -455,7 +471,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @ticket 30936
 	 */
 	function test_register_dynamic_settings() {
-		wp_set_current_user( $this->factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$posted_settings = array(
 			'foo' => 'OOF',
 			'bar' => 'RAB',
@@ -555,7 +571,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
 		$this->assertEquals( home_url( '/' ), $this->manager->get_return_url() );
 
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$this->assertTrue( current_user_can( 'edit_theme_options' ) );
 		$this->assertEquals( home_url( '/' ), $this->manager->get_return_url() );
 
@@ -648,7 +664,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::customize_pane_settings()
 	 */
 	function test_customize_pane_settings() {
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$this->manager->register_controls();
 		$this->manager->prepare_controls();
 		$autofocus = array( 'control' => 'blogname' );
@@ -682,7 +698,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @see WP_Customize_Manager::customize_preview_settings()
 	 */
 	function test_customize_preview_settings() {
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$this->manager->register_controls();
 		$this->manager->prepare_controls();
 		$this->manager->set_post_value( 'foo', 'bar' );
@@ -777,7 +793,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$manager = new WP_Customize_Manager();
 		$manager->register_controls();
 		$section_id = 'foo-section';
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$manager->add_section( $section_id, array(
 			'title'      => 'Section',
 			'priority'   => 1,
@@ -808,7 +824,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 */
 	function test_add_section_return_instance() {
 		$manager = new WP_Customize_Manager();
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 
 		$section_id = 'foo-section';
 		$result_section = $manager->add_section( $section_id, array(
@@ -835,7 +851,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 */
 	function test_add_setting_return_instance() {
 		$manager = new WP_Customize_Manager();
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 
 		$setting_id = 'foo-setting';
 		$result_setting = $manager->add_setting( $setting_id );
@@ -906,7 +922,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 */
 	function test_add_panel_return_instance() {
 		$manager = new WP_Customize_Manager();
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 
 		$panel_id = 'foo-panel';
 		$result_panel = $manager->add_panel( $panel_id, array(
@@ -933,7 +949,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	function test_add_control_return_instance() {
 		$manager = new WP_Customize_Manager();
 		$section_id = 'foo-section';
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( self::$admin_user_id );
 		$manager->add_section( $section_id, array(
 			'title'    => 'Section',
 			'priority' => 1,
