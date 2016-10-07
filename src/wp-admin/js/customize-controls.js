@@ -3377,9 +3377,20 @@
 			previewer.refresh = _.debounce(
 				( function( originalRefresh ) {
 					return function() {
-						$.when.apply( $, previewer.pendingChangesetUpdateRequests ).then( function() {
-							originalRefresh.call( previewer );
-						} );
+						var refreshOnceChangesetRequestsComplete = function() {
+							$.when.apply( $, previewer.pendingChangesetUpdateRequests ).then( function() {
+								// Check for any newly-pending requests and then wait for them as well.
+								var pendingCount = _.filter( previewer.pendingChangesetUpdateRequests, function( request ) {
+									return 'pending' === request.state();
+								} ).length;
+								if ( pendingCount > 0 ) {
+									refreshOnceChangesetRequestsComplete();
+								} else {
+									originalRefresh.call( previewer );
+								}
+							} );
+						};
+						refreshOnceChangesetRequestsComplete();
 					};
 				}( previewer.refresh ) ),
 				previewer.refreshBuffer
