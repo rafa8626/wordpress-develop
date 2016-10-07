@@ -837,6 +837,15 @@ final class WP_Customize_Manager {
 
 		$values = array();
 
+		// Let default values be from the stashed theme mods if doing a theme switch and if no changeset is present.
+		if ( ! $this->is_theme_active() && ! $this->changeset_post_id() ) {
+			$stashed_theme_mods = get_option( 'customize_stashed_theme_mods' );
+			$stylesheet = $this->get_stylesheet();
+			if ( isset( $stashed_theme_mods[ $stylesheet ] ) ) {
+				$values = array_merge( $values, wp_list_pluck( $stashed_theme_mods[ $stylesheet ], 'value' ) );
+			}
+		}
+
 		if ( ! $args['exclude_changeset'] ) {
 			foreach ( $this->changeset_data() as $setting_id => $setting_params ) {
 				if ( ! array_key_exists( 'value', $setting_params ) ) {
@@ -1760,7 +1769,6 @@ final class WP_Customize_Manager {
 						if ( ! isset( $other_theme_mod_settings[ $matches['stylesheet'] ] ) ) {
 							$other_theme_mod_settings[ $matches['stylesheet'] ] = array();
 						}
-						unset( $setting_params['type'] );
 						$other_theme_mod_settings[ $matches['stylesheet'] ][ $matches['setting_id'] ] = $setting_params;
 					}
 				}
@@ -1807,8 +1815,11 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		// @todo Now merge $other_theme_mod_settings onto another private stashed snapshot is specifically for storing unactivated theme mod changes.
-		// @todo Ensure that $other_theme_mod_settings gets loaded up when doing a theme switch to serve as the initial dirty values for the theme.
+		// Update the stashed theme mod settings, removing the active theme's stashed settings, if activated.
+		if ( did_action( 'switch_theme' ) ) {
+			$this->update_stashed_theme_mod_settings( $other_theme_mod_settings );
+		}
+
 		/**
 		 * Fires after Customize settings have been saved.
 		 *
@@ -1823,6 +1834,44 @@ final class WP_Customize_Manager {
 				$setting->capability = $original_setting_capabilities[ $setting->id ];
 			}
 		}
+	}
+
+	/**
+	 * Update stashed theme mod settings.
+	 *
+	 * @since 4.7.0
+	 * @access private
+	 *
+	 * @param array $inactive_theme_mod_settings Mapping of stylesheet to arrays of theme mod settings.
+	 * @return array|false Returns array of updated stashed theme mods or false if the update failed or there were no changes.
+	 */
+	protected function update_stashed_theme_mod_settings( $inactive_theme_mod_settings ) {
+		$stashed_theme_mod_settings = get_option( 'customize_stashed_theme_mods' );
+		if ( empty( $stashed_theme_mod_settings ) ) {
+			$stashed_theme_mod_settings = array();
+		}
+
+		// Delete any stashed theme mods for the active theme since since they would have been loaded and saved upon activation.
+		unset( $stashed_theme_mod_settings[ $this->get_stylesheet() ] );
+
+		// Merge inactive theme mods with the stashed theme mod settings.
+		foreach ( $inactive_theme_mod_settings as $stylesheet => $theme_mod_settings ) {
+			if ( ! isset( $stashed_theme_mod_settings[ $stylesheet ] ) ) {
+				$stashed_theme_mod_settings[ $stylesheet ] = array();
+			}
+
+			$stashed_theme_mod_settings[ $stylesheet ] = array_merge(
+				$stashed_theme_mod_settings[ $stylesheet ],
+				$theme_mod_settings
+			);
+		}
+
+		$autoload = false;
+		$result = update_option( 'customize_stashed_theme_mods', $stashed_theme_mod_settings, $autoload );
+		if ( ! $result ) {
+			return false;
+		}
+		return $stashed_theme_mod_settings;
 	}
 
 	/**

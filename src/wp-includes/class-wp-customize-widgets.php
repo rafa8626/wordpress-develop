@@ -278,6 +278,7 @@ final class WP_Customize_Widgets {
 
 		$this->old_sidebars_widgets = wp_get_sidebars_widgets();
 		add_filter( 'customize_value_old_sidebars_widgets_data', array( $this, 'filter_customize_value_old_sidebars_widgets_data' ) );
+		$this->manager->set_post_value( 'old_sidebars_widgets_data', $this->old_sidebars_widgets ); // Override any value cached in changeset.
 
 		// retrieve_widgets() looks at the global $sidebars_widgets
 		$sidebars_widgets = $this->old_sidebars_widgets;
