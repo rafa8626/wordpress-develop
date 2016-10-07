@@ -845,7 +845,7 @@ final class WP_Customize_Manager {
 				if ( isset( $setting_params['type'] ) && 'theme_mod' === $setting_params['type'] ) {
 
 					// Ensure that theme mods values are only used if they were saved under the current theme.
-					$namespace_pattern = '/^theme_mod:(?P<stylesheet>.+?):(?P<setting_id>.+)$/';
+					$namespace_pattern = '/^(?P<stylesheet>.+?)::(?P<setting_id>.+)$/';
 					if ( preg_match( $namespace_pattern, $setting_id, $matches ) && $this->get_stylesheet() === $matches['stylesheet'] ) {
 						$values[ $matches['setting_id'] ] = $setting_params['value'];
 					}
@@ -1527,24 +1527,27 @@ final class WP_Customize_Manager {
 				continue;
 			}
 
-			$namespaced_setting_id = $setting_id;
+			$changeset_setting_id = $setting_id;
 			if ( 'theme_mod' === $setting->type ) {
-				$namespaced_setting_id = sprintf( 'theme_mod:%s:%s', $this->get_stylesheet(), $setting_id );
+				$changeset_setting_id = sprintf( '%s::%s', $this->get_stylesheet(), $setting_id );
 			}
 
 			if ( null === $setting_params ) {
 				// Remove setting from changeset entirely.
-				unset( $data[ $namespaced_setting_id ] );
+				unset( $data[ $changeset_setting_id ] );
 			} else {
 				// Merge any additional setting params that have been supplied with the existing params.
-				if ( ! isset( $data[ $namespaced_setting_id ] ) ) {
-					$data[ $namespaced_setting_id ] = array();
+				if ( ! isset( $data[ $changeset_setting_id ] ) ) {
+					$data[ $changeset_setting_id ] = array();
 				}
-				$data[ $namespaced_setting_id ] = array_merge( $data[ $namespaced_setting_id ], $setting_params );
-				$data[ $namespaced_setting_id ]['type'] = $setting->type;
+				$data[ $changeset_setting_id ] = array_merge(
+					$data[ $changeset_setting_id ],
+					$setting_params,
+					array( 'type' => $setting->type )
+				);
 			}
 			$updated_setting_ids[] = $setting_id;
-		}
+		} // End foreach().
 
 		$filter_context = array(
 			'uuid' => $this->changeset_uuid(),
@@ -1749,7 +1752,7 @@ final class WP_Customize_Manager {
 			if ( isset( $setting_params['type'] ) && 'theme_mod' === $setting_params['type'] ) {
 
 				// Ensure that theme mods values are only used if they were saved under the current theme.
-				$namespace_pattern = '/^theme_mod:(?P<stylesheet>.+?):(?P<setting_id>.+)$/';
+				$namespace_pattern = '/^(?P<stylesheet>.+?)::(?P<setting_id>.+)$/';
 				if ( preg_match( $namespace_pattern, $raw_setting_id, $matches ) ) {
 					if ( $this->get_stylesheet() === $matches['stylesheet'] ) {
 						$active_theme_setting_values[ $matches['setting_id'] ] = $setting_params['value'];
