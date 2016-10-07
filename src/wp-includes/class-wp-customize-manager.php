@@ -1765,7 +1765,7 @@ final class WP_Customize_Manager {
 					}
 				}
 			} else {
-				$other_theme_mod_settings[ $raw_setting_id ] = $setting_params['value'];
+				$active_theme_setting_values[ $raw_setting_id ] = $setting_params['value'];
 			}
 		}
 
