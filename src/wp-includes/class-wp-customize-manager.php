@@ -2320,7 +2320,7 @@ final class WP_Customize_Manager {
 			'type'        => 'code_editor',
 			'section'     => 'wp_custom_css',
 			'settings'    => 'wp_custom_css',
-			'label'       => __( 'Additional CSS' ),
+			'label'       => '',
 			'description' => '',
 		) ) );
 	}

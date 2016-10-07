@@ -1028,12 +1028,6 @@ p.customize-section-description {
 	float: right;
 }
 
-.customize-control-code_editor .customize-control-code-editor-textarea {
-	font-family: Consolas, Monaco, monospace;
-	min-height: 550px;
-	font-size: 12px;
-}
-
 /**
  * Themes
  */

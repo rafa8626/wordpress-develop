@@ -11,17 +11,22 @@
     -webkit-box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
     box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
     font-family: Consolas, Monaco, monospace;
-    font-size: 12px;
-    height: 550px;
-    padding: 2px 2px 0;
-    line-height: 1.4;
+    height: 553px;
+    padding: 2px 4px 0 2px;
     text-align: right;
     box-sizing: border-box;
     display: none;
     background-color: #fff;
     pointer-events:none;
     overflow-x: hidden;
+}
+
+.customize-control-code_editor .customize-control-code-editor-textarea {
+    font-family: Consolas, Monaco, monospace;
+    min-height: 553px;
+    font-size: 12px;
     resize: none;
+    padding-left: 8px;
 }
 
 /* Hide the blue highlights on textarea focus */
@@ -34,7 +39,15 @@
 /* Prevent line breaks in the text */
 .customize-control-content .customize-control-code-editor-textarea,
 .customize-control-code-editor-line-numbers {
+    padding-top: 7px;
     white-space: nowrap;
+    line-height: 1.6;
+    font-size: 12px;
+}
+
+#sub-accordion-section-wp_custom_css .customize-control-notifications-container {
+    margin-top: 0;
+    margin-bottom: 15px;
 }
 
 /*
@@ -73,7 +86,7 @@
 
 /* Eliminate the space between inline-block elements
  *
- * The conatined elements are not floated because
+ * The contained elements are not floated because
  * there is a common browser bug where when
  * all content in a floated textarea is deleted,
  * the textarea itself disappears until the user
