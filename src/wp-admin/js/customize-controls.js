@@ -2967,10 +2967,15 @@
 		 */
 		ready: function() {
 			var control = this,
-				textareas;
+				textarea;
 
-			textareas = control.container.find( '.code-editor' );
-			control._setUpSettingLinks( textareas[0] );
+			textarea = control.container.find( '.customize-control-code-editor-textarea' ).get( 0 );
+			control._setUpSettingLinks( textarea );
+
+			// Scroll the line numbers with the textarea.
+			$( textarea ).on( 'scroll resize', function () {
+				$( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code-editor-line-numbers' ).scrollTop( $( this ).scrollTop() );
+			});
 		},
 
 		/**

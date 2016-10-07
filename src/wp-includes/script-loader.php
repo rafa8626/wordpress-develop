@@ -825,6 +825,7 @@ function wp_default_styles( &$styles ) {
 	$styles->add( 'customize-controls',  "/wp-admin/css/customize-controls$suffix.css", array( 'wp-admin', 'colors', 'ie', 'imgareaselect' ) );
 	$styles->add( 'customize-widgets',   "/wp-admin/css/customize-widgets$suffix.css", array( 'wp-admin', 'colors' ) );
 	$styles->add( 'customize-nav-menus', "/wp-admin/css/customize-nav-menus$suffix.css", array( 'wp-admin', 'colors' ) );
+	$styles->add( 'customize-code-editor', "/wp-admin/css/customize-code-editor$suffix.css", array( 'wp-admin', 'colors' ) );
 	$styles->add( 'press-this',          "/wp-admin/css/press-this$suffix.css", array( 'buttons' ) );
 
 	$styles->add( 'ie', "/wp-admin/css/ie$suffix.css" );
@@ -862,7 +863,7 @@ function wp_default_styles( &$styles ) {
 	$rtl_styles = array(
 		// wp-admin
 		'common', 'forms', 'admin-menu', 'dashboard', 'list-tables', 'edit', 'revisions', 'media', 'themes', 'about', 'nav-menus',
-		'widgets', 'site-icon', 'l10n', 'install', 'wp-color-picker', 'customize-controls', 'customize-widgets', 'customize-nav-menus',
+		'widgets', 'site-icon', 'l10n', 'install', 'wp-color-picker', 'customize-controls', 'customize-widgets', 'customize-nav-menus', 'customize-code-editor',
 		'ie', 'login', 'press-this',
 		// wp-includes
 		'buttons', 'admin-bar', 'wp-auth-check', 'editor-buttons', 'media-views', 'wp-pointer',

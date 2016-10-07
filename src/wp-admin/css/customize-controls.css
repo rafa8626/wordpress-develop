@@ -373,6 +373,10 @@ body {
 	background: #fff;
 }
 
+.customize-description-hidden .customize-section-title {
+	margin: -12px 0 0;
+}
+
 div.customize-section-description {
 	margin-top: 22px;
 }
@@ -1024,9 +1028,10 @@ p.customize-section-description {
 	float: right;
 }
 
-.customize-control-code_editor .code-editor {
+.customize-control-code_editor .customize-control-code-editor-textarea {
 	font-family: Consolas, Monaco, monospace;
-	height: 550px;
+	min-height: 550px;
+	font-size: 12px;
 }
 
 /**

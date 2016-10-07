@@ -2305,7 +2305,7 @@ final class WP_Customize_Manager {
 			'priority' => 140,
 			'description_hidden' => true,
 			'description' => sprintf( '%s<br /><a href="%s" class="external-link" target="_blank">%s&nbsp;<span class="screen-reader-text">%s</span></a>',
-				__( 'CSS allows you to customize the appearance and layout of your site with code. Each theme has its own set of CSS styles, which this option overrides on a per-theme basis.' ),
+				__( 'CSS allows you to customize the appearance and layout of your site with code. Separate CSS is saved for each of your themes.' ),
 				'https://codex.wordpress.org/Know_Your_Sources#CSS',
 				__( 'Learn more about CSS' ),
 				__( '(link opens in a new window)' )

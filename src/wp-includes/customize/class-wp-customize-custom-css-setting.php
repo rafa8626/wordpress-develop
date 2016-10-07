@@ -44,11 +44,14 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 */
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args = array() );
+
 		add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) );
 		add_filter( "customize_validate_{$this->id}", array( $this, 'validate_css' ), 10, 2 );
 		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
 		add_action( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
 	}
+
+
 
 	/**
 	 * Fetch the value of the setting.

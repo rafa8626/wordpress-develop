@@ -1409,7 +1409,7 @@ body.custom-background { <?php echo trim( $style ); ?> }
  */
 function wp_custom_css_cb() {
 	$styles = wp_get_custom_css();
-	if ( $styles ) : ?>
+	if ( $styles || is_customize_preview() ) : ?>
 		<style type="text/css" id="wp-custom-css">
 			<?php echo $styles; ?>
 		</style>
