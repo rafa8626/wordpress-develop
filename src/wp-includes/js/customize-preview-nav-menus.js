@@ -379,6 +379,11 @@ wp.customize.navMenusPreview = wp.customize.MenusCustomizerPreview = ( function(
 	self.highlightControls = function() {
 		var selector = '.menu-item';
 
+		// Skip adding highlights if not in the customizer preview iframe.
+		if ( ! api.settings.channel ) {
+			return;
+		}
+
 		// Focus on the menu item control when shift+clicking the menu item.
 		$( document ).on( 'click', selector, function( e ) {
 			var navMenuItemParts;

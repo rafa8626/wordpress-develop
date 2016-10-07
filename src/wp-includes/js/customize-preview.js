@@ -61,14 +61,20 @@
 					return;
 				}
 
-				// Prevent initiating navigating from click and instead rely on sending url message to pane below.
-				event.preventDefault();
-
 				// If the link is not previewable, prevent the browser from navigating to it.
 				if ( ! api.isLinkPreviewable( link[0] ) ) {
 					wp.a11y.speak( api.settings.l10n.linkUnpreviewable );
+					event.preventDefault();
 					return;
 				}
+
+				// If not in an iframe, then allow the link click to proceed normally since the state query params are added.
+				if ( ! api.settings.channel ) {
+					return;
+				}
+
+				// Prevent initiating navigating from click and instead rely on sending url message to pane.
+				event.preventDefault();
 
 				/*
 				 * Note the shift key is checked so shift+click on widgets or
@@ -90,6 +96,11 @@
 				// If the link is not previewable, prevent the browser from navigating to it.
 				if ( ! api.isLinkPreviewable( urlParser ) ) {
 					wp.a11y.speak( api.settings.l10n.formUnpreviewable );
+					return;
+				}
+
+				// If not in an iframe, then allow the form submission to proceed normally with the state inputs injected.
+				if ( ! api.settings.channel ) {
 					return;
 				}
 
@@ -117,13 +128,16 @@
 			});
 
 			preview.window = $( window );
-			preview.window.on( 'scroll.preview', debounce( function() {
-				preview.send( 'scroll', preview.window.scrollTop() );
-			}, 200 ) );
 
-			preview.bind( 'scroll', function( distance ) {
-				preview.window.scrollTop( distance );
-			});
+			if ( api.settings.channel ) {
+				preview.window.on( 'scroll.preview', debounce( function() {
+					preview.send( 'scroll', preview.window.scrollTop() );
+				}, 200 ) );
+
+				preview.bind( 'scroll', function( distance ) {
+					preview.window.scrollTop( distance );
+				});
+			}
 		}
 	});
 
