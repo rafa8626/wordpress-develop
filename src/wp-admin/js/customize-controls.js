@@ -4124,8 +4124,13 @@
 					changesetStatus = args.status;
 				}
 
+				if ( api.state( 'saving' ).get() ) {
+					deferred.reject( 'already_saving' );
+					deferred.promise();
+				}
+
 				api.state( 'changesetStatus' ).set( changesetStatus );
-				body.addClass( 'saving' );
+				api.state( 'saving' ).set( true );
 
 				function captureSettingModifiedDuringSave( setting ) {
 					modifiedWhileSaving[ setting.id ] = true;
@@ -4154,11 +4159,11 @@
 					invalidControls = api.findControlsForSettings( invalidSettings );
 					if ( ! _.isEmpty( invalidControls ) ) {
 						_.values( invalidControls )[0][0].focus();
-						body.removeClass( 'saving' );
 						api.unbind( 'change', captureSettingModifiedDuringSave );
 						deferred.rejectWith( previewer, [
 							{ setting_invalidities: settingInvalidities }
 						] );
+						api.state( 'saving' ).set( false );
 						return deferred.promise();
 					}
 
@@ -4192,7 +4197,7 @@
 					api.trigger( 'save', request );
 
 					request.always( function () {
-						body.removeClass( 'saving' );
+						api.state( 'saving' ).set( false );
 						saveBtn.prop( 'disabled', false );
 						api.unbind( 'change', captureSettingModifiedDuringSave );
 					} );
@@ -4371,28 +4376,40 @@
 		(function() {
 			var state = new api.Values(),
 				saved = state.create( 'saved' ),
+				saving = state.create( 'saving' ),
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
 				changesetStatus = state.create( 'changesetStatus' );
 
 			state.bind( 'change', function() {
+				var canSave;
+
 				if ( ! activated() ) {
-					saveBtn.val( api.l10n.activate ).prop( 'disabled', false );
+					saveBtn.val( api.l10n.activate );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
 
 				} else if ( '' === changesetStatus.get() ) {
-					saveBtn.val( api.l10n.saved ).prop( 'disabled', true );
+					saveBtn.val( api.l10n.saved );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
 
 				} else {
-					saveBtn.val( api.l10n.save ).prop( 'disabled', false );
+					saveBtn.val( api.l10n.save );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
 				}
+
+				/*
+				 * Save (publish) button should be enabled if saving is not currently happening,
+				 * and if the theme is not active or the changeset exists but is not published.
+				 */
+				canSave = ! saving() && ( ! activated() || ( '' !== changesetStatus() && 'publish' !== changesetStatus() ) );
+
+				saveBtn.prop( 'disabled', ! canSave );
 			});
 
 			// Set default states.
 			saved( true );
+			saving( false );
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
@@ -4401,6 +4418,10 @@
 			api.bind( 'change', function() {
 				state('saved').set( false );
 			});
+
+			saving.bind( function( isSaving ) {
+				body.toggleClass( 'saving', isSaving );
+			} );
 
 			api.bind( 'saved', function( response ) {
 				state('saved').set( true );
