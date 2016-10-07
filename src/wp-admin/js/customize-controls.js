@@ -3239,6 +3239,7 @@
 				title: api.l10n.previewIframeTitle,
 				src: urlParser.href
 			} );
+			previewFrame.iframe.attr( 'onmousewheel', '' ); // Workaround for Safari bug. See WP Trac #38149.
 			previewFrame.iframe.appendTo( previewFrame.container );
 			previewFrame.targetWindow( previewFrame.iframe[0].contentWindow );
 
