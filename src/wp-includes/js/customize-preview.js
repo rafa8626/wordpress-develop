@@ -281,14 +281,13 @@
 	 * @return {void}
 	 */
 	api.addRequestPreviewing = function addRequestPreviewing() {
-		$.ajaxPrefilter( function prefilterAjax( options, originalOptions, jqXHR ) {
+		$.ajaxPrefilter( function prefilterAjax( options ) {
 			var urlParser, queryParams;
 			urlParser = document.createElement( 'a' );
 			urlParser.href = options.url;
 
-			// Abort if the request is not for this site or using a POST method.
-			if ( 'GET' !== options.method.toUpperCase() || ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
-				jqXHR.abort();
+			// Abort if the request is not for this site.
+			if ( ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
 				return;
 			}
 
