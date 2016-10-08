@@ -207,10 +207,8 @@
 				// Ensure that if any plugins add data to save requests by extending query() that they get included here.
 				api.previewer.query( { excludeCustomized: true } ),
 				{
-					wp_customize: 'on',
-					customize_theme: api.settings.theme.stylesheet,
 					nonce: api.settings.nonce.save,
-					customize_changeset_uuid: api.settings.changeset.uuid,
+					customize_theme: api.settings.theme.stylesheet,
 					customize_changeset_data: JSON.stringify( pendingChanges )
 				}
 			) );
@@ -2798,7 +2796,7 @@
 
 			// Ensure custom-header-crop Ajax requests bootstrap the Customizer to activate the previewed theme.
 			wp.media.controller.Cropper.prototype.defaults.doCropArgs.wp_customize = 'on';
-			wp.media.controller.Cropper.prototype.defaults.doCropArgs.theme = api.settings.theme.stylesheet;
+			wp.media.controller.Cropper.prototype.defaults.doCropArgs.customize_theme = api.settings.theme.stylesheet;
 		},
 
 		/**
@@ -3227,16 +3225,16 @@
 			previewFrame.bind( 'ready', previewFrame._ready );
 
 			urlParser = document.createElement( 'a' );
-			urlParser.href = this.previewUrl();
-			if ( urlParser.search.length > 1 ) {
-				urlParser.search += '&';
-			}
+			urlParser.href = previewFrame.previewUrl();
 
-			// @todo Logic duplicated.
-			params = _.clone( this.query );
-			delete params.customized;
-			delete params.wp_customize;
-			delete params.nonce;
+			params = _.extend(
+				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
+				{
+					customize_changeset_uuid: previewFrame.query.customize_changeset_uuid,
+					customize_theme: previewFrame.query.customize_theme,
+					customize_messenger_channel: previewFrame.query.customize_messenger_channel
+				}
+			);
 
 			urlParser.search += $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
@@ -3656,9 +3654,7 @@
 
 			urlParser = document.createElement( 'a' );
 
-			// @todo Duplication.
-			params = previewer.query();
-			delete params.customized;
+			params = previewer.query( { excludeCustomized: true } );
 			delete params.wp_customize;
 			delete params.nonce;
 			params.customize_messenger_channel = previewer.channel();
@@ -3719,7 +3715,7 @@
 			previewer.loading = new api.PreviewFrame({
 				url:        previewer.url(),
 				previewUrl: previewer.previewUrl(),
-				query:      previewer.query() || {},
+				query:      previewer.query( { excludeCustomized: true } ) || {},
 				container:  previewer.container
 			});
 
@@ -4187,6 +4183,10 @@
 						return deferred.promise();
 					}
 
+					/*
+					 * Note that exclueCustomized is intentionally not present so that the entire
+					 * set of customized data will be included if bypassed changeset update.
+					 */
 					query = $.extend( previewer.query(), {
 						nonce: previewer.nonce.save,
 						customize_changeset_status: api.state( 'changesetStatus' ).get()
