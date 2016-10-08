@@ -247,6 +247,11 @@
 			return;
 		}
 
+		// Ignore links with href="#" or href="#id".
+		if ( '#' === $( element ).attr( 'href' ).substr( 0, 1 ) ) {
+			return;
+		}
+
 		// Make sure links in preview use HTTPS if parent frame uses HTTPS.
 		if ( 'https' === api.preview.scheme.get() && 'http:' === element.protocol && -1 !== api.settings.url.allowedHosts.indexOf( element.host ) ) {
 			element.protocol = 'https:';
