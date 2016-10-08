@@ -94,8 +94,9 @@
 				urlParser.href = this.action;
 
 				// If the link is not previewable, prevent the browser from navigating to it.
-				if ( ! api.isLinkPreviewable( urlParser ) ) {
+				if ( 'GET' !== this.method.toUpperCase() || ! api.isLinkPreviewable( urlParser ) ) {
 					wp.a11y.speak( api.settings.l10n.formUnpreviewable );
+					event.preventDefault();
 					return;
 				}
 
@@ -115,7 +116,7 @@
 				 * a no-op, which is the same behavior as when clicking a link to an
 				 * external site in the preview.
 				 */
-				if ( ! event.isDefaultPrevented() && 'GET' === this.method.toUpperCase() ) {
+				if ( ! event.isDefaultPrevented() ) {
 					if ( urlParser.search.length > 1 ) {
 						urlParser.search += '&';
 					}
@@ -280,13 +281,14 @@
 	 * @return {void}
 	 */
 	api.addRequestPreviewing = function addRequestPreviewing() {
-		$.ajaxPrefilter( function prefilterAjax( options ) {
+		$.ajaxPrefilter( function prefilterAjax( options, originalOptions, jqXHR ) {
 			var urlParser, queryParams;
 			urlParser = document.createElement( 'a' );
 			urlParser.href = options.url;
 
-			// Abort if the request is not for this site.
-			if ( ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
+			// Abort if the request is not for this site or using a POST method.
+			if ( 'GET' !== options.method.toUpperCase() || ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
+				jqXHR.abort();
 				return;
 			}
 
@@ -355,7 +357,7 @@
 			form.action = urlParser.href;
 		}
 
-		if ( ! api.isLinkPreviewable( urlParser ) ) {
+		if ( 'GET' !== form.method.toUpperCase() || ! api.isLinkPreviewable( urlParser ) ) {
 			$( form ).addClass( 'customize-unpreviewable' );
 			return;
 		}
