@@ -1802,9 +1802,9 @@ final class WP_Customize_Manager {
 		}
 
 		// Ensure post data are all set before iterating to save.
-		foreach ( $active_theme_setting_values as $setting_id => $setting_params ) {
-			if ( isset( $setting_params['value'] ) ) {
-				$this->set_post_value( $setting_id, $setting_params['value'] );
+		foreach ( $active_theme_setting_values as $setting_id => $value ) {
+			if ( ! is_null( $value ) ) {
+				$this->set_post_value( $setting_id, $value );
 			}
 		}
 
