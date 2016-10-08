@@ -203,13 +203,17 @@
 			requestDeferred = api._pendingChangesetUpdateRequestDeferred;
 			api._pendingChangesetUpdateRequestDeferred = null;
 
-			request = wp.ajax.post( 'customize_save', {
-				wp_customize: 'on',
-				customize_theme: api.settings.theme.stylesheet,
-				nonce: api.settings.nonce.save,
-				customize_changeset_uuid: api.settings.changeset.uuid,
-				customize_changeset_data: JSON.stringify( pendingChanges )
-			} );
+			request = wp.ajax.post( 'customize_save', _.extend(
+				// Ensure that if any plugins add data to save requests by extending query() that they get included here.
+				api.previewer.query( { excludeCustomized: true } ),
+				{
+					wp_customize: 'on',
+					customize_theme: api.settings.theme.stylesheet,
+					nonce: api.settings.nonce.save,
+					customize_changeset_uuid: api.settings.changeset.uuid,
+					customize_changeset_data: JSON.stringify( pendingChanges )
+				}
+			) );
 			api._currentUpdateRequest = request;
 
 			request.done( function requestChangesetUpdateDone( data ) {
@@ -4081,23 +4085,38 @@
 			/**
 			 * Build the query to send along with the Preview request.
 			 *
-			 * @return {object}
+			 * @since 4.7.0 Added options param.
+			 *
+			 * @param {object}  [options] Options.
+			 * @param {boolean} [options.excludeCustomized=false] Exclude customized from response.
+			 * @return {object} Query vars.
 			 */
-			query: function() {
-				var dirtyCustomized = {};
-				api.each( function ( value, key ) {
-					if ( value._dirty ) {
-						dirtyCustomized[ key ] = value();
-					}
-				} );
+			query: function( options ) {
+				var dirtyCustomized, queryVars;
 
-				return {
+				queryVars = {
 					wp_customize: 'on',
 					customize_theme: api.settings.theme.stylesheet,
-					customized: JSON.stringify( dirtyCustomized ),
 					nonce: this.nonce.preview,
 					customize_changeset_uuid: api.settings.changeset.uuid
 				};
+
+				/*
+				 * Exclude customized data if requested especially for calls to requestChangesetUpdate.
+				 * Changeset updates are differential and so it is a performance waste to send all of
+				 * the dirty settings with each update.
+				 */
+				if ( ! options || ! options.excludeCustomized ) {
+					dirtyCustomized = {};
+					api.each( function ( value, key ) {
+						if ( value._dirty ) {
+							dirtyCustomized[ key ] = value();
+						}
+					} );
+					queryVars.customized = JSON.stringify( dirtyCustomized );
+				}
+
+				return queryVars;
 			},
 
 			/**
