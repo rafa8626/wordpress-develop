@@ -1633,7 +1633,7 @@ final class WP_Customize_Manager {
 		// Gather the data for wp_insert_post()/wp_update_post().
 		$json_options = 0;
 		if ( defined( 'JSON_UNESCAPED_SLASHES' ) ) {
-			$json_options |= JSON_UNESCAPED_SLASHES; // Introduced in PHP 5.4.
+			$json_options |= JSON_UNESCAPED_SLASHES; // Introduced in PHP 5.4. This is only to improve readability as slashes needn't be escaped in storage.
 		}
 		$json_options |= JSON_PRETTY_PRINT; // Also introduced in PHP 5.4, but WP defines constant for back compat. See WP Trac #30139.
 		$post_array = array(
