@@ -784,6 +784,35 @@ final class WP_Customize_Manager {
 	}
 
 	/**
+	 * Get the data stored in a changeset post.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param int $post_id Changeset post ID.
+	 * @return array|WP_Error Changeset data or WP_Error on error.
+	 */
+	protected function get_changeset_post_data( $post_id ) {
+		if ( ! $post_id ) {
+			return new WP_Error( 'empty_post_id' );
+		}
+		$changeset_post = get_post( $post_id );
+		if ( ! $changeset_post ) {
+			return new WP_Error( 'missing_post' );
+		}
+		if ( 'customize_changeset' !== $changeset_post->post_type ) {
+			return new WP_Error( 'wrong_post_type' );
+		}
+		$changeset_data = json_decode( $changeset_post->post_content, true );
+		if ( json_last_error() ) {
+			return new WP_Error( 'json_parse_error', '', json_last_error() );
+		}
+		if ( ! is_array( $changeset_data ) ) {
+			return new WP_Error( 'expected_array' );
+		}
+		return $changeset_data;
+	}
+
+	/**
 	 * Get changeset data.
 	 *
 	 * @since 4.7.0
@@ -798,14 +827,11 @@ final class WP_Customize_Manager {
 		if ( ! $changeset_post_id ) {
 			$this->_changeset_data = array();
 		} else {
-			$changeset_post = get_post( $changeset_post_id );
-			if ( $changeset_post ) {
-				$changeset = json_decode( $changeset_post->post_content, true );
-				if ( is_array( $changeset ) ) {
-					$this->_changeset_data = $changeset;
-				} else {
-					$this->_changeset_data = array();
-				}
+			$data = $this->get_changeset_post_data( $changeset_post_id );
+			if ( ! is_wp_error( $data ) ) {
+				$this->_changeset_data = $data;
+			} else {
+				$this->_changeset_data = array();
 			}
 		}
 		return $this->_changeset_data;
@@ -821,14 +847,16 @@ final class WP_Customize_Manager {
 	 * @param array $args {
 	 *     Args.
 	 *
-	 *     @type bool $exclude_changeset Whether or not the changeset values should also be included. This is excluded obtaining values for updating a snapshot.
-	 *     @type bool $exclude_post_data Whether or not the post input values should also be included. When lacking a valid nonce, this should be excluded.
+	 *     @type bool $exclude_stashed_theme_mods Whether stashed theme mods should be excluded in the basis of the values. Defaults to false if theme is active.
+	 *     @type bool $exclude_changeset          Whether the changeset values should also be excluded. Defaults to false.
+	 *     @type bool $exclude_post_data          Whether the post input values should also be excluded. Defaults to false when lacking the customize capability.
 	 * }
 	 * @return array
 	 */
 	public function unsanitized_post_values( $args = array() ) {
 		$args = array_merge(
 			array(
+				'exclude_stashed_theme_mods' => $this->is_theme_active(),
 				'exclude_changeset' => false,
 				'exclude_post_data' => ! current_user_can( 'customize' ),
 			),
@@ -838,7 +866,7 @@ final class WP_Customize_Manager {
 		$values = array();
 
 		// Let default values be from the stashed theme mods if doing a theme switch and if no changeset is present.
-		if ( ! $this->is_theme_active() && ! $this->changeset_post_id() ) {
+		if ( empty( $args['exclude_stashed_theme_mods'] ) ) {
 			$stashed_theme_mods = get_option( 'customize_stashed_theme_mods' );
 			$stylesheet = $this->get_stylesheet();
 			if ( isset( $stashed_theme_mods[ $stylesheet ] ) ) {
@@ -926,7 +954,7 @@ final class WP_Customize_Manager {
 	 * @param mixed  $value      Post value.
 	 */
 	public function set_post_value( $setting_id, $value ) {
-		$this->unsanitized_post_values();
+		$this->unsanitized_post_values(); // Populate _post_values from $_POST['customized'].
 		$this->_post_values[ $setting_id ] = $value;
 
 		/**
@@ -1484,6 +1512,7 @@ final class WP_Customize_Manager {
 
 		// Validate settings.
 		$post_values = $this->unsanitized_post_values( array(
+			'exclude_stashed_theme_mods' => true,
 			'exclude_changeset' => true,
 			'exclude_post_data' => false,
 		) );
@@ -1618,6 +1647,7 @@ final class WP_Customize_Manager {
 		}
 		if ( $changeset_date ) {
 			$post_array['post_date'] = $changeset_date;
+			$post_array['post_date_gmt'] = get_gmt_from_date( $changeset_date );
 		}
 
 		// @todo Consider a separate 'revision' param which makes this explicit, versus looking at whether the status is provided.
@@ -1728,54 +1758,51 @@ final class WP_Customize_Manager {
 	 * @see _wp_customize_publish_changeset()
 	 *
 	 * @param int $changeset_post_id ID for customize_changeset post. Defaults to the changeset for the current manager instance.
+	 * @return true|WP_Error True or error info.
 	 */
-	public function publish_changeset_values( $changeset_post_id = null ) {
-
-		if ( empty( $changeset_post_id ) ) {
-			$changeset_post_id = $this->changeset_post_id();
-		}
-		if ( empty( $changeset_post_id ) ) {
-			return;
-		}
-		$changeset_post = get_post( $changeset_post_id );
-		if ( ! $changeset_post ) {
-			return;
+	public function publish_changeset_values( $changeset_post_id ) {
+		$publishing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
+		if ( is_wp_error( $publishing_changeset_data ) ) {
+			return $publishing_changeset_data;
 		}
 
-		$changeset_data = json_decode( $changeset_post->post_content, true );
-		if ( ! is_array( $changeset_data ) ) {
-			return;
-		}
+		// Temporarily override changeset_data so that it will be read in calls to unsanitized_post_values().
+		$previous_changeset_data = $this->_changeset_data;
+		$this->_changeset_data = $publishing_changeset_data;
 
+		// Ensure that other theme mods are stashed.
 		$other_theme_mod_settings = array();
-		$active_theme_setting_values = array();
-		foreach ( $changeset_data as $raw_setting_id => $setting_params ) {
-
-			if ( ! isset( $setting_params['value'] ) ) {
-				continue;
-			}
-
-			// @todo There is some duplication of logic here with what is in the save method.
-			if ( isset( $setting_params['type'] ) && 'theme_mod' === $setting_params['type'] ) {
-
-				// Ensure that theme mods values are only used if they were saved under the current theme.
-				$namespace_pattern = '/^(?P<stylesheet>.+?)::(?P<setting_id>.+)$/';
-				if ( preg_match( $namespace_pattern, $raw_setting_id, $matches ) ) {
-					if ( $this->get_stylesheet() === $matches['stylesheet'] ) {
-						$active_theme_setting_values[ $matches['setting_id'] ] = $setting_params['value'];
-					} else {
-						if ( ! isset( $other_theme_mod_settings[ $matches['stylesheet'] ] ) ) {
-							$other_theme_mod_settings[ $matches['stylesheet'] ] = array();
-						}
-						$other_theme_mod_settings[ $matches['stylesheet'] ][ $matches['setting_id'] ] = $setting_params;
+		if ( did_action( 'switch_theme' ) ) {
+			$namespace_pattern = '/^(?P<stylesheet>.+?)::(?P<setting_id>.+)$/';
+			$matches = array();
+			foreach ( $this->_changeset_data as $raw_setting_id => $setting_params ) {
+				$is_other_theme_mod = (
+					isset( $setting_params['value'] )
+					&&
+					isset( $setting_params['type'] )
+					&&
+					'theme_mod' === $setting_params['type']
+					&&
+					preg_match( $namespace_pattern, $raw_setting_id, $matches )
+					&&
+					$this->get_stylesheet() !== $matches['stylesheet']
+				);
+				if ( $is_other_theme_mod ) {
+					if ( ! isset( $other_theme_mod_settings[ $matches['stylesheet'] ] ) ) {
+						$other_theme_mod_settings[ $matches['stylesheet'] ] = array();
 					}
+					$other_theme_mod_settings[ $matches['stylesheet'] ][ $matches['setting_id'] ] = $setting_params;
 				}
-			} else {
-				$active_theme_setting_values[ $raw_setting_id ] = $setting_params['value'];
 			}
 		}
 
-		$this->add_dynamic_settings( array_keys( $active_theme_setting_values ) );
+		$changeset_setting_values = $this->unsanitized_post_values( array(
+			'exclude_post_data' => true,
+			'exclude_stashed_theme_mods' => true,
+			'exclude_changeset' => false,
+		) );
+		$changeset_setting_ids = array_keys( $changeset_setting_values );
+		$this->add_dynamic_settings( $changeset_setting_ids );
 
 		/**
 		 * Fires once the theme has switched in the Customizer, but before settings
@@ -1791,22 +1818,18 @@ final class WP_Customize_Manager {
 		 * Ensure that all settings will allow themselves to be saved. Note that
 		 * this is safe because the setting would have checked the capability
 		 * when the setting value was written into the changeset. So this is why
-		 * an additional check is not required here.
+		 * an additional capability check is not required here.
 		 */
 		$original_setting_capabilities = array();
-		foreach ( $this->settings() as $setting ) {
-			$original_setting_capabilities[ $setting->id ] = $setting->capability;
-			$setting->capability = 'exist';
-		}
-
-		// Ensure post data are all set before iterating to save.
-		foreach ( $active_theme_setting_values as $setting_id => $value ) {
-			if ( ! is_null( $value ) ) {
-				$this->set_post_value( $setting_id, $value );
+		foreach ( $changeset_setting_ids as $setting_id ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting ) {
+				$original_setting_capabilities[ $setting->id ] = $setting->capability;
+				$setting->capability = 'exist';
 			}
 		}
 
-		foreach ( $active_theme_setting_values as $setting_id => $setting_params ) {
+		foreach ( $changeset_setting_ids as $setting_id ) {
 			$setting = $this->get_setting( $setting_id );
 			if ( $setting ) {
 				$setting->save();
@@ -1827,11 +1850,18 @@ final class WP_Customize_Manager {
 		 */
 		do_action( 'customize_save_after', $this );
 
-		foreach ( $this->settings() as $setting ) {
-			if ( isset( $original_setting_capabilities[ $setting->id ] ) ) {
+		// Restore original capabilities.
+		foreach ( $changeset_setting_ids as $setting_id ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting ) {
 				$setting->capability = $original_setting_capabilities[ $setting->id ];
 			}
 		}
+
+		// Restore original changeset data.
+		$this->_changeset_data = $previous_changeset_data;
+
+		return true;
 	}
 
 	/**
@@ -2576,11 +2606,18 @@ final class WP_Customize_Manager {
 			'customize-login' => 1,
 		), wp_login_url() );
 
-		// Ensure dirty flags are set.
-		foreach ( array_keys( $this->unsanitized_post_values() ) as $setting_id ) {
-			$setting = $this->get_setting( $setting_id );
-			if ( $setting ) {
-				$setting->dirty = true;
+		// Ensure dirty flags are set for any unstashed theme mods.
+		if ( ! $this->is_theme_active() ) {
+			$unstashed_theme_mod_setting_ids = array_keys( $this->unsanitized_post_values( array(
+				'exclude_stashed_theme_mods' => false,
+				'exclude_changeset' => true,
+				'exclude_post_data' => true,
+			) ) );
+			foreach ( $unstashed_theme_mod_setting_ids as $setting_id ) {
+				$setting = $this->get_setting( $setting_id );
+				if ( $setting ) {
+					$setting->dirty = true;
+				}
 			}
 		}
 
