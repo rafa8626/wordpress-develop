@@ -1093,8 +1093,6 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_settings() {
-		$setting_values = $this->unsanitized_post_values();
-
 		$self_url = home_url( empty( $_SERVER['REQUEST_URI'] ) ? '/' : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 		$state_query_params = array(
 			'customize_theme',
@@ -1141,7 +1139,7 @@ final class WP_Customize_Manager {
 				'linkUnpreviewable' => __( 'This link is not live-previewable.' ),
 				'formUnpreviewable' => __( 'This form is not live-previewable.' ),
 			),
-			'_dirty' => array_keys( $setting_values ),
+			'_dirty' => array(),
 		);
 
 		foreach ( $this->panels as $panel_id => $panel ) {

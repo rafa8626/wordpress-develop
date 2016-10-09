@@ -721,7 +721,6 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertArrayHasKey( '_dirty', $settings );
 
 		$this->assertArrayHasKey( 'preview', $settings['nonce'] );
-		$this->assertEquals( array( 'foo' ), $settings['_dirty'] );
 	}
 
 	/**

@@ -43,9 +43,16 @@
 		 */
 		handleChange: function( value ) {
 			var setting = this, promise, changes = {};
+
+			/*
+			 * Note that changes is just being explicit for what would be sent
+			 * regardless since setting._dirty is true, thus meaning it will be
+			 * included in the changeses sent to the changeset.
+			 */
 			changes[ setting.id ] = {
 				value: value
 			};
+
 			promise = api.requestChangesetUpdate( changes );
 			setting.previewer.addPendingChangesetUpdateRequest( promise );
 			setting.preview();
@@ -97,7 +104,7 @@
 	 * @type {object|null}
 	 * @private
 	 */
-	api._pendingUpdateChanges = null;
+	api._pendingUpdateChanges = {};
 
 	/**
 	 * Current jqXHR made from a call to requestChangesetUpdate.
@@ -121,21 +128,12 @@
 	 * This is implemented in the same way as wp.customize.selectiveRefresh.requestPartial()
 	 * in that it will combine multiple calls (debounce) into a single request.
 	 *
-	 * @param {object} changes Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+	 * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+	 *                           If not provided, then the changes will still be obtained from dirty settings.
 	 * @returns {jQuery.Promise}
 	 */
 	api.requestChangesetUpdate = function requestChangesetUpdate( changes ) {
 		var currentDeferred, nextDeferred;
-
-		// Make sure the first request to update the changes will include any initially-dirty settings.
-		if ( null === api._pendingUpdateChanges ) {
-			api._pendingUpdateChanges = {};
-			api.each( function( setting ) {
-				if ( setting._dirty ) {
-					api._pendingUpdateChanges[ setting.id ] = { value: setting.get() };
-				}
-			} );
-		}
 
 		if ( api._pendingChangesetUpdateRequestDeferred ) {
 			currentDeferred = api._pendingChangesetUpdateRequestDeferred;
@@ -151,20 +149,22 @@
 		}
 
 		// Store the changes in a object containing all of the pending settings for the next request.
-		_.each( changes, function( settingParams, settingId ) {
-			if ( null === settingParams ) {
+		if ( changes ) {
+			_.each( changes, function( settingParams, settingId ) {
+				if ( null === settingParams ) {
 
-				// When null is passed as the change, the result will be the removal of the setting from the changeset. A revert.
-				api._pendingUpdateChanges[ settingId ] = null;
-			} else if ( _.isObject( settingParams ) ) {
-				if ( _.isUndefined( api._pendingUpdateChanges[ settingId ] ) ) {
-					api._pendingUpdateChanges[ settingId ] = {};
+					// When null is passed as the change, the result will be the removal of the setting from the changeset. A revert.
+					api._pendingUpdateChanges[ settingId ] = null;
+				} else if ( _.isObject( settingParams ) ) {
+					if ( _.isUndefined( api._pendingUpdateChanges[ settingId ] ) ) {
+						api._pendingUpdateChanges[ settingId ] = {};
+					}
+					_.extend( api._pendingUpdateChanges[ settingId ], settingParams );
+				} else {
+					throw new Error( 'Unexpected change for ' + settingId );
 				}
-				_.extend( api._pendingUpdateChanges[ settingId ], settingParams );
-			} else {
-				throw new Error( 'Unexpected change for ' + settingId );
-			}
-		} );
+			} );
+		}
 
 		/*
 		 * If there is a changeset update request currently being made, wait until it completes.
@@ -197,6 +197,19 @@
 			pendingChanges = _.clone( api._pendingUpdateChanges );
 			api._pendingUpdateChanges = {};
 
+			// Ensure all dirty settings are also included, unless pending change is for deletion from changeset.
+			api.each( function( setting ) {
+				if ( setting._dirty && null !== pendingChanges[ setting.id ] ) {
+					pendingChanges[ setting.id ] = _.extend(
+						{},
+						pendingChanges[ setting.id ] || {},
+						{
+							value: setting.get()
+						}
+					);
+				}
+			} );
+
 			// Allow plugins to attach additional params to the settings.
 			api.trigger( 'changeset-save', pendingChanges );
 
@@ -217,6 +230,19 @@
 			request.done( function requestChangesetUpdateDone( data ) {
 				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
+
+				// Mark settings from pending changes as clean if there is not a new change pending.
+				_.each( _.keys( pendingChanges ), function( settingId ) {
+					var markClean = (
+						api.has( settingId ) &&
+						_.isUndefined( api._pendingUpdateChanges[ settingId ] ) &&
+						data.setting_validities &&
+						true === data.setting_validities[ settingId ]
+					);
+					if ( markClean ) {
+						api( settingId )._dirty = false;
+					}
+				} );
 
 				api.trigger( 'changeset-saved', data );
 				api.previewer.send( 'changeset-saved', data );
@@ -4253,13 +4279,6 @@
 					} );
 
 					request.done( function( response ) {
-
-						// Clear setting dirty states, if setting wasn't modified while saving.
-						api.each( function( setting ) {
-							if ( ! modifiedWhileSaving[ setting.id ] ) {
-								setting._dirty = false;
-							}
-						} );
 
 						previewer.send( 'saved', response );
 
