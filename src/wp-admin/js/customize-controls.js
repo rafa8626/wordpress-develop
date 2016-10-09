@@ -1452,7 +1452,7 @@
 		 * @param {Object}   theme
 		 */
 		showDetails: function ( theme, callback ) {
-			var section = this;
+			var section = this, link;
 			callback = callback || function(){};
 			section.currentTheme = theme.id;
 			section.overlay.html( section.template( theme ) )
@@ -1461,7 +1461,16 @@
 			$( 'body' ).addClass( 'modal-open' );
 			section.containFocus( section.overlay );
 			section.updateLimits();
-			section.overlay.find( '.inactive-theme > a' ).prop( 'href', section.getThemePreviewUrl( theme.id ) );
+
+			link = section.overlay.find( '.inactive-theme > a' );
+			link.prop( 'href', section.getThemePreviewUrl( theme.id ) );
+
+			// Remove AYS if the changes can persist via the changeset UUID in the URL.
+			link.on( 'click', function() {
+				if ( history.replaceState && 0 === api.state( 'processing' ).get() ) {
+					$( window ).off( 'beforeunload.customize-confirm' );
+				}
+			} );
 			callback();
 		},
 
