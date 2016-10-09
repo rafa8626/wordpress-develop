@@ -1773,7 +1773,17 @@ final class WP_Customize_Manager {
 			return $publishing_changeset_data;
 		}
 
-		// Temporarily override changeset_data so that it will be read in calls to unsanitized_post_values().
+		$changeset_post = get_post( $changeset_post_id );
+
+		/*
+		 * Temporarily override the changeset context so that it will be read
+		 * in calls to unsanitized_post_values() and so that it will be available
+		 * on the $wp_customize object passed to hooks during the save logic.
+		 */
+		$previous_changeset_post_id = $this->_changeset_post_id;
+		$this->_changeset_post_id = $changeset_post_id;
+		$previous_changeset_uuid = $this->changeset_uuid;
+		$this->changeset_uuid = $changeset_post->post_name;
 		$previous_changeset_data = $this->_changeset_data;
 		$this->_changeset_data = $publishing_changeset_data;
 
@@ -1867,6 +1877,8 @@ final class WP_Customize_Manager {
 
 		// Restore original changeset data.
 		$this->_changeset_data = $previous_changeset_data;
+		$this->_changeset_post_id = $previous_changeset_post_id;
+		$this->changeset_uuid = $previous_changeset_uuid;
 
 		return true;
 	}
