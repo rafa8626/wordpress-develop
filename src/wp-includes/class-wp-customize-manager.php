@@ -1327,8 +1327,8 @@ final class WP_Customize_Manager {
 	 * @param array $options {
 	 *     Options.
 	 *
-	 *     @var bool $validate_existence    Whether a setting's existence will be checked.
-	 *     @var bool $validate_capability Whether the setting capability will be checked.
+	 *     @type bool $validate_existence  Whether a setting's existence will be checked.
+	 *     @type bool $validate_capability Whether the setting capability will be checked.
 	 * }
 	 * @return array Mapping of setting IDs to return value of validate method calls, either `true` or `WP_Error`.
 	 */
