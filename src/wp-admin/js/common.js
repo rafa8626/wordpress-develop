@@ -33,18 +33,18 @@ columns = {
 	saveManageColumnsState : _.debounce( function() {
 		var hidden = this.hidden();
 
-		if ( columns.ajaxRequst ) {
-			columns.ajaxRequst.abort();
+		if ( columns.ajaxRequest ) {
+			columns.ajaxRequest.abort();
 		}
-		columns.ajaxRequst = wp.ajax.post( 'hidden-columns', {
+		columns.ajaxRequest = wp.ajax.post( 'hidden-columns', {
 			hidden: hidden,
 			screenoptionnonce: $( '#screenoptionnonce' ).val(),
 			page: pagenow
 		});
-		columns.ajaxRequst.always( function() {
-			columns.ajaxRequst = null;
+		columns.ajaxRequest.always( function() {
+			columns.ajaxRequest = null;
 		} );
-	}, 2000 ),
+	}, 2000, true ),
 
 	checked : function(column) {
 		$('.column-' + column).removeClass( 'hidden' );
