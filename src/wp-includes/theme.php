@@ -2125,7 +2125,25 @@ function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) 
 		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
 		$wp_customize = new WP_Customize_Manager( $changeset_post->post_name );
 	}
+
 	if ( ! did_action( 'customize_register' ) ) {
+		/*
+		 * When running from CLI or Cron, the customize_register action will need
+		 * to be triggered in order for core, themes, and plugins to register their
+		 * settings. Normally core will add_action( 'customize_register' ) at
+		 * priority 10 to register the core settings, and if any themes/plugins
+		 * also add_action( 'customize_register' ) at the same priority, they
+		 * will have a $wp_customize with those settings registered since they
+		 * call add_action() afterward, normally. However, when manually doing
+		 * the customize_register action after the setup_theme, then the order
+		 * will be reversed for two actions added at priority 10, resulting in
+		 * the core settings no longer being available as expected to themes/plugins.
+		 * So the following manually calls the method that registers the core
+		 * settings up front before doing the action.
+		 */
+		remove_action( 'customize_register', array( $wp_customize, 'register_controls' ) );
+		$wp_customize->register_controls();
+
 		/** This filter is documented in /wp-includes/class-wp-customize-manager.php */
 		do_action( 'customize_register', $wp_customize );
 	}
