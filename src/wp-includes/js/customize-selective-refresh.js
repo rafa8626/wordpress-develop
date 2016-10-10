@@ -11,8 +11,7 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 			renderQueryVar: '',
 			l10n: {
 				shiftClickToEdit: ''
-			},
-			refreshBuffer: 250
+			}
 		},
 		currentRequest: null
 	};
@@ -669,7 +668,7 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 					self._pendingPartialRequests = {};
 				} );
 			},
-			self.data.refreshBuffer
+			api.settings.timeouts.selectiveRefresh
 		);
 
 		return partialRequest.deferred.promise();

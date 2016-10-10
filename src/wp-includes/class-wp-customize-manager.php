@@ -1145,7 +1145,11 @@ final class WP_Customize_Manager {
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
-				'stateQueryParams' => $state_query_params, // @todo Additional persisted query vars may need to be indiated via a customized_persisted_query_vars param.
+				'stateQueryParams' => $state_query_params, // @todo Additional persisted query vars may need to be indicated via a customized_persisted_query_vars param.
+			),
+			'timeouts' => array(
+				'selectiveRefresh' => 250,
+				'keepAliveSend' => 1000,
 			),
 			'theme' => array(
 				'stylesheet' => $this->get_stylesheet(),
@@ -2645,6 +2649,13 @@ final class WP_Customize_Manager {
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
 				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : '',
+			),
+			'timeouts' => array(
+				'windowRefresh' => 250,
+				'changesetUpdate' => 250,
+				'keepAliveCheck' => 2500,
+				'reflowPaneContents' => 100,
+				'previewFrameSensitivity' => 2000,
 			),
 			'theme'    => array(
 				'stylesheet' => $this->get_stylesheet(),

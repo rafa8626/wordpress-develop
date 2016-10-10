@@ -60,13 +60,26 @@
 
 		/**
 		 * Refresh the preview, respective of the setting's refresh policy.
+		 *
+		 * If the preview hasn't sent a keep-alive message and is likely
+		 * disconnected by having navigated to a non-allowed URL, then the
+		 * refresh transport will be forced when postMessage is the transport.
+		 * Note that postMessage does not throw an error when the recipient window
+		 * fails to match the origin window, so using try/catch around the
+		 * previewer.send() call to then fallback to refresh will not work.
 		 */
 		preview: function() {
-			switch ( this.transport ) {
-				case 'refresh':
-					return this.previewer.refresh();
-				case 'postMessage':
-					return this.previewer.send( 'setting', [ this.id, this() ] );
+			var setting = this, transport;
+			transport = setting.transport;
+
+			if ( 'postMessage' === transport && ! api.state( 'previewerAlive' ).get() ) {
+				transport = 'refresh';
+			}
+
+			if ( 'postMessage' === transport ) {
+				return setting.previewer.send( 'setting', [ setting.id, setting() ] );
+			} else if ( 'refresh' === transport ) {
+				return setting.previewer.refresh();
 			}
 		},
 
@@ -276,7 +289,7 @@
 					} );
 				}
 			} );
-		}, api.previewer.refreshBuffer ); // @todo Let this come from api.settings.updateChangesetBuffer.
+		}, api.settings.timeouts.updateChangeset );
 
 		return currentDeferred.promise();
 	};
@@ -3194,7 +3207,7 @@
 	 * @mixes wp.customize.Events
 	 */
 	api.PreviewFrame = api.Messenger.extend({
-		sensitivity: 2000,
+		sensitivity: null, // Will get set to api.settings.timeouts.previewFrameSensitivity.
 
 		/**
 		 * Initialize the PreviewFrame.
@@ -3391,7 +3404,7 @@
 	 * @mixes wp.customize.Events
 	 */
 	api.Previewer = api.Messenger.extend({
-		refreshBuffer: 250,
+		refreshBuffer: null, // Will get set to api.settings.timeouts.windowRefresh.
 
 		/**
 		 * @param {array}  params.allowedUrls
@@ -3650,30 +3663,43 @@
 		 * @returns {void}
 		 */
 		keepPreviewAlive: function keepPreviewAlive() {
-			var previewer = this, heartbeatTick, timeoutId, handleMissingHeartbeat, scheduleHeartbeatCheck, lastKnownUrl;
+			var previewer = this, keepAliveTick, timeoutId, handleMissingKeepAlive, scheduleKeepAliveCheck;
 
-			lastKnownUrl = previewer.previewUrl.get();
-			previewer.previewUrl.bind( function( url ) {
-				lastKnownUrl = url;
-			} );
-
-			// @todo What if a page load takes more than 3 seconds?
-			scheduleHeartbeatCheck = function() {
-				timeoutId = setTimeout( handleMissingHeartbeat, 3000 ); // @todo Let interval be a parameter.
+			/**
+			 * Schedule a preview keep-alive check.
+			 *
+			 * Note that if a page load takes longer than keepAliveCheck milliseconds,
+			 * the keep-alive messages will still be getting sent from the previous
+			 * URL.
+			 */
+			scheduleKeepAliveCheck = function() {
+				timeoutId = setTimeout( handleMissingKeepAlive, api.settings.timeouts.keepAliveCheck );
 			};
-			heartbeatTick = function() {
+
+			/**
+			 * Set the previewerAlive state to true when receiving a message from the preview.
+			 */
+			keepAliveTick = function() {
+				api.state( 'previewerAlive' ).set( true );
 				clearTimeout( timeoutId );
-				scheduleHeartbeatCheck();
+				scheduleKeepAliveCheck();
 			};
-			handleMissingHeartbeat = function() {
 
-				// @todo Instead of changing the URL if the iframe, there should be a notification to prompt the user to return to a customize preview.
-				previewer.setIframeSrc( lastKnownUrl );
+			/**
+			 * Set the previewerAlive state to false if keepAliveCheck milliseconds have transpired without a message.
+			 *
+			 * This is most likely to happen in the case of a connectivity error, or if the theme causes the browser
+			 * to navigate to a non-allowed URL. Setting this state to false will force settings with a postMessage
+			 * transport to use refresh instead, causing the preview frame also to be replaced with the current
+			 * allowed preview URL.
+			 */
+			handleMissingKeepAlive = function() {
+				api.state( 'previewerAlive' ).set( false );
 			};
-			scheduleHeartbeatCheck();
+			scheduleKeepAliveCheck();
 
-			previewer.bind( 'ready', heartbeatTick );
-			previewer.bind( 'keep-alive', heartbeatTick );
+			previewer.bind( 'ready', keepAliveTick );
+			previewer.bind( 'keep-alive', keepAliveTick );
 		},
 
 		/**
@@ -4065,6 +4091,13 @@
 			return;
 		}
 
+		if ( null === api.PreviewFrame.prototype.sensitivity ) {
+			api.PreviewFrame.prototype.sensitivity = api.settings.timeouts.previewFrameSensitivity;
+		}
+		if ( null === api.Previewer.prototype.refreshBuffer ) {
+			api.Previewer.prototype.refreshBuffer = api.settings.timeouts.windowRefresh;
+		}
+
 		var parent,
 			body = $( document.body ),
 			overlay = body.children( '.wp-full-overlay' ),
@@ -4414,7 +4447,7 @@
 
 		api.bind( 'ready', api.reflowPaneContents );
 		$( [ api.panel, api.section, api.control ] ).each( function ( i, values ) {
-			var debouncedReflowPaneContents = _.debounce( api.reflowPaneContents, 100 );
+			var debouncedReflowPaneContents = _.debounce( api.reflowPaneContents, api.settings.timeouts.reflowPaneContents );
 			values.bind( 'add', debouncedReflowPaneContents );
 			values.bind( 'change', debouncedReflowPaneContents );
 			values.bind( 'remove', debouncedReflowPaneContents );
@@ -4428,7 +4461,8 @@
 				activated = state.create( 'activated' ),
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
-				changesetStatus = state.create( 'changesetStatus' );
+				changesetStatus = state.create( 'changesetStatus' ),
+				previewerAlive = state.create( 'previewerAlive' );
 
 			state.bind( 'change', function() {
 				var canSave;
@@ -4461,6 +4495,7 @@
 			activated( api.settings.theme.active );
 			processing( 0 );
 			paneVisible( true );
+			previewerAlive( true );
 			changesetStatus( api.settings.changeset.status );
 
 			api.bind( 'change', function() {

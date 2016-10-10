@@ -583,7 +583,7 @@
 		} );
 
 		// Send ready when URL changes via JS.
-		setInterval( api.keepAliveCurrentUrl, 1000 );
+		setInterval( api.keepAliveCurrentUrl, api.settings.timeouts.keepAliveSend );
 
 		// Display a loading indicator when preview is reloading, and remove on failure.
 		api.preview.bind( 'loading-initiated', function () {

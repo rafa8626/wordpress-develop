@@ -148,9 +148,16 @@ window._wpCustomizeSettings = {
 			'label': 'Enter mobile preview mode'
 		}
 	},
-	'changeset': {
-		'status': '',
-		'uuid': '0c674ff4-c159-4e7a-beb4-cb830ae73979'
+	changeset: {
+		status: '',
+		uuid: '0c674ff4-c159-4e7a-beb4-cb830ae73979'
+	},
+	timeouts: {
+		windowRefresh: 250,
+		changesetUpdate: 250,
+		keepAliveCheck: 2500,
+		reflowPaneContents: 100,
+		previewFrameSensitivity: 2000
 	}
 };
 window._wpCustomizeControlsL10n = {};
