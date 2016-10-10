@@ -28,6 +28,8 @@ columns = {
 
 			columns.saveManageColumnsState();
 		});
+
+		$( '#adv-settings' ).on( 'submit', columns.delaySubmitIfAjaxRequest );
 	},
 
 	saveManageColumnsState : _.debounce( function() {
@@ -45,6 +47,17 @@ columns = {
 			columns.ajaxRequest = null;
 		} );
 	}, 2000, true ),
+
+	delaySubmitIfAjaxRequest: function( event ) {
+		if ( columns.ajaxRequest ) {
+			event.preventDefault();
+			columns.ajaxRequest.always( function() {
+				$( event.currentTarget ).trigger( event.type );
+			} );
+		} else {
+			return true;
+		}
+	},
 
 	checked : function(column) {
 		$('.column-' + column).removeClass( 'hidden' );
