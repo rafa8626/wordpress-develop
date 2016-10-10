@@ -3,7 +3,64 @@
  */
 (function( exports, $ ){
 	var api = wp.customize,
-		debounce;
+		debounce,
+		currentHistoryState = {};
+
+	/*
+	 * Capture the state that is passed into history.replaceState() and history.pushState()
+	 * and also which is returned in the popstate event so that when the changeset_uuid
+	 * gets updated when transitioning to a new changeset there the current state will
+	 * be supplied in the call to history.replaceState().
+	 */
+	( function( history ) {
+		var injectUrlWithState;
+
+		if ( ! history.replaceState ) {
+			return;
+		}
+
+		/**
+		 * Amend the supplied URL with the customized state.
+		 *
+		 * @param {string} url URL.
+		 * @returns {string} URL with customized state.
+		 */
+		injectUrlWithState = function( url ) {
+			var urlParser, queryParams;
+			urlParser = document.createElement( 'a' );
+			urlParser.href = url;
+			queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+
+			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
+			if ( ! api.settings.theme.active ) {
+				queryParams.customize_theme = api.settings.theme.stylesheet;
+			}
+			if ( api.settings.theme.channel ) {
+				queryParams.customize_messenger_channel = api.settings.channel;
+			}
+			urlParser.search = $.param( queryParams );
+			return url;
+		};
+
+		history.replaceState = ( function( nativeReplaceState ) {
+			return function historyReplaceState( data, title, url ) {
+				currentHistoryState = data;
+				return nativeReplaceState.call( history, data, title, injectUrlWithState( url ) );
+			};
+		} )( history.replaceState );
+
+		history.pushState = ( function( nativePushState ) {
+			return function historyPushState( data, title, url ) {
+				currentHistoryState = data;
+				return nativePushState.call( history, data, title, injectUrlWithState( url ) );
+			};
+		} )( history.pushState );
+
+		window.addEventListener( 'popstate', function( event ) {
+			currentHistoryState = event.state;
+		} );
+
+	}( history ) );
 
 	/**
 	 * Returns a debounced version of the function.
@@ -399,60 +456,55 @@
 	 *
 	 * Keep the customizer pane notified that the preview is still alive
 	 * and that the user hasn't navigated to a non-customized URL.
-	 * These messages also keep the customizer updated on the current URL
-	 * for JS-driven sites that use history.pushState()/history.replaceState().
-	 *
-	 * @returns {void}
 	 */
-	api.keepAliveCurrentUrl = function keepAliveCurrentUrl() {
-		var currentUrl, urlParser, queryParams, needsParamRestoration = false;
+	api.keepAliveCurrentUrl = ( function() {
+		var previousPathName = location.pathname,
+			previousQueryString = location.search.substr( 1 ),
+			previousQueryParams = null;
 
-		urlParser = document.createElement( 'a' );
-		urlParser.href = location.href;
-		queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+		return function keepAliveCurrentUrl() {
+			var urlParser, currentQueryParams;
 
-		if ( history.replaceState ) {
-			needsParamRestoration = ! queryParams.customize_changeset_uuid || ( ! api.settings.theme.active && ! queryParams.customize_theme ) || ( api.settings.channel && ! queryParams.customize_messenger_channel );
-		}
+			// Short-circuit with keep-alive if previous URL is identical (as is normal case).
+			if ( previousQueryString === location.search.substr( 1 ) && previousPathName === location.pathname ) {
+				api.preview.send( 'keep-alive' );
+				return;
+			}
 
-		// Scrub the URL of any customized state query params.
-		_.each( api.settings.changeset.stateQueryParams, function( name ) {
-			delete queryParams[ name ];
-		} );
-		if ( _.isEmpty( queryParams ) ) {
-			urlParser.search = '';
-		} else {
-			urlParser.search = '?' + $.param( queryParams );
-		}
-		urlParser.hash = '';
-		currentUrl = urlParser.href;
+			urlParser = document.createElement( 'a' );
+			if ( null === previousQueryParams ) {
+				urlParser.search = previousQueryString;
+				previousQueryParams = api.utils.parseQueryString( previousQueryString );
+				_.each( api.settings.changeset.stateQueryParams, function( name ) {
+					delete previousQueryParams[ name ];
+				} );
+			}
 
-		// Ensure that the customized state params remain in the URL.
-		if ( needsParamRestoration ) {
+			// Determine if current URL minus customized state params and URL hash.
 			urlParser.href = location.href;
-			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
-			if ( ! api.settings.theme.active ) {
-				queryParams.customize_changeset_uuid = api.settings.theme.stylesheet;
-			}
-			if ( api.settings.theme.channel ) {
-				queryParams.customize_messenger_channel = api.settings.channel;
-			}
-			urlParser.search = $.param( queryParams );
-			history.replaceState( {}, '', urlParser.href ); // @todo This is going to clobber any state in any JS app. The state needs to be captured.
-		}
-
-		if ( api.settings.url.self !== currentUrl ) {
-			api.settings.url.self = currentUrl;
-			api.preview.send( 'ready', {
-				currentUrl: api.settings.url.self,
-				activePanels: api.settings.activePanels,
-				activeSections: api.settings.activeSections,
-				activeControls: api.settings.activeControls
+			currentQueryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+			_.each( api.settings.changeset.stateQueryParams, function( name ) {
+				delete currentQueryParams[ name ];
 			} );
-		} else {
-			api.preview.send( 'keep-alive' );
-		}
-	};
+
+			if ( previousPathName !== location.pathname || ! _.isEqual( previousQueryParams, currentQueryParams ) ) {
+				urlParser.search = $.param( currentQueryParams );
+				urlParser.hash = '';
+				api.settings.url.self = urlParser.href;
+				api.preview.send( 'ready', {
+					currentUrl: api.settings.url.self,
+					activePanels: api.settings.activePanels,
+					activeSections: api.settings.activeSections,
+					activeControls: api.settings.activeControls
+				} );
+			} else {
+				api.preview.send( 'keep-alive' );
+			}
+			previousQueryParams = currentQueryParams;
+			previousQueryString = location.search.substr( 1 );
+			previousPathName = location.pathname;
+		};
+	} )();
 
 	$( function() {
 		var bg, setValue;
@@ -530,7 +582,6 @@
 		});
 
 		api.preview.bind( 'saved', function( response ) {
-			var urlParser;
 
 			if ( response.next_changeset_uuid ) {
 				api.settings.changeset.uuid = response.next_changeset_uuid;
@@ -543,17 +594,13 @@
 					api.prepareFormPreview( this );
 				} );
 
-				// Replace the UUID in the URL.
-				urlParser = document.createElement( 'a' );
-				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /(\?|&)customize_changeset_uuid=[^&]+(&|$)/, '$1' );
-				if ( urlParser.search.length > 1 ) {
-					urlParser.search += '&';
-				}
-				urlParser.search += 'customize_changeset_uuid=' + response.next_changeset_uuid;
-
+				/*
+				 * Replace the UUID in the URL. Note that the wrapped history.replaceState()
+				 * will handle injecting the current api.settings.changeset.uuid into the URL,
+				 * so this is merely to trigger that logic.
+				 */
 				if ( history.replaceState ) {
-					history.replaceState( {}, document.title, urlParser.href ); // @todo This is going to clobber any state in any JS app. The state needs to be captured.
+					history.replaceState( currentHistoryState, '', location.href );
 				}
 			}
 
