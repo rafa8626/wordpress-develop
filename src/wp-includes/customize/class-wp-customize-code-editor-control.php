@@ -71,11 +71,9 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 			<# } #>
 			<div class="customize-control-content">
 				<div class="customize-control-code_editor-line-numbers">
-					<?php foreach ( range( 1, 999 ) as $i ) {
-					echo esc_html( $i ) . '<br />';
-					} ?>
+					<?php echo join( '<br>', range( 1, 999 ) ); ?>
 				</div>
-					<textarea class="customize-control-code_editor-textarea" data-customize-setting-link="{{ data.id }}"></textarea>
+				<textarea class="customize-control-code_editor-textarea"></textarea>
 			</div>
 		</label>
 		<?php

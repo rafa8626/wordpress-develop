@@ -1586,14 +1586,9 @@
 			nodes  = control.container.find('[data-customize-setting-link]');
 			radios = {};
 
-			console.log( nodes.prevObject );
-			//console.log( nodes );
-
 			nodes.each( function() {
 				var node = $( this ),
 					name;
-
-				console.log( this );
 
 				if ( node.is( ':radio' ) ) {
 					name = node.prop( 'name' );
@@ -2968,8 +2963,13 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, textarea;
-			textarea = control.container.find( '.customize-control-code-editor-textarea' ).get( 0 );
+			var control = this, textarea, element;
+			textarea = control.container.find( '.customize-control-code_editor-textarea' );
+
+			element = new api.Element( textarea );
+			element.sync( control.setting );
+			element.set( control.setting() );
+			control.elements.push( element );
 
 			// Scroll the line numbers with the textarea.
 			$( textarea ).on( 'scroll resize', function () {
