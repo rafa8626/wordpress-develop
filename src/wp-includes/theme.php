@@ -1489,6 +1489,7 @@ function wp_get_custom_css_by_theme_name( $theme_name = '', $value = '' ) {
 		$args['post_content'] = $post->post_content;
 	}
 
+	// Create/update the post.
 	$post_id = wp_insert_post( wp_slash( $args ) );
 	$post = get_post( $post_id );
 

@@ -114,9 +114,9 @@ function create_initial_post_types() {
 	register_post_type( 'custom_css', array(
 		'labels' => array(
 			'name'          => __( 'Custom CSS' ),
-			'singular_name' => __( 'WP Custom CSS' ),
-			'edit_item'     => __( 'Edit WP Custom CSS' ),
-			'add_new_item'  => __( 'Add New WP Custom CSS' ),
+			'singular_name' => __( 'Custom CSS' ),
+			'edit_item'     => __( 'Edit Custom CSS' ),
+			'add_new_item'  => __( 'Add New Custom CSS' ),
 		),
 		'public'           => false,
 		'hierarchical'     => false,
