@@ -135,14 +135,12 @@ window.wp = window.wp || {};
 			// Expose the changeset UUID on the parent window's URL so that the customized state can survive a refresh.
 			if ( history.replaceState ) {
 				this.messenger.bind( 'changeset-uuid', function( changesetUuid ) {
-					var urlParser;
-					urlParser = document.createElement( 'a' );
+					var urlParser = document.createElement( 'a' );
 					urlParser.href = location.href;
-					urlParser.search = urlParser.search.replace( /(\?|&)changeset_uuid=[^&]+(?=$|&)/, '$1' );
-					if ( urlParser.search.length > 1 ) {
-						urlParser.search += '&';
-					}
-					urlParser.search += 'changeset_uuid=' + changesetUuid;
+					urlParser.search = $.param( _.extend(
+						api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
+						{ changeset_uuid: changesetUuid }
+					) );
 					history.replaceState( { customize: urlParser.href }, '', urlParser.href );
 				} );
 			}

@@ -1449,11 +1449,10 @@
 		getThemePreviewUrl: function( themeId ) {
 			var urlParser = document.createElement( 'a' );
 			urlParser.href = location.href;
-			urlParser.search = urlParser.search.replace( /(\?|&)theme=[^&]+(&|$)/, '$1' );
-			if ( urlParser.search.length > 1 ) {
-				urlParser.search += '&';
-			}
-			urlParser.search += 'theme=' + themeId;
+			urlParser.search = $.param( _.extend(
+				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
+				{ theme: themeId }
+			) );
 			return urlParser.href;
 		},
 
@@ -4533,14 +4532,10 @@
 
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = urlParser.search.replace( /(\?|&)changeset_uuid=[^&]+(&|$)/, '$1' );
-				urlParser.search = urlParser.search.replace( /&+$/, '' );
-				if ( '' !== newStatus ) {
-					if ( urlParser.search.length > 1 ) {
-						urlParser.search += '&';
-					}
-					urlParser.search += 'changeset_uuid=' + api.settings.changeset.uuid;
-				}
+				urlParser.search = $.param( _.extend(
+					api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
+					{ changeset_uuid: api.settings.changeset.uuid }
+				) );
 				history.replaceState( {}, document.title, urlParser.href );
 			} );
 
