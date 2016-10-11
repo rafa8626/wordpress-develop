@@ -134,7 +134,7 @@ function create_initial_post_types() {
 			'delete_others_posts'    => 'edit_theme_options',
 			'edit_post'              => 'unfiltered_css',
 			'edit_posts'             => 'unfiltered_css',
-			'edit_others_posts'      => 'edit_theme_options',
+			'edit_others_posts'      => 'unfiltered_css',
 			'edit_published_posts'   => 'unfiltered_css',
 			'read_post'              => 'read',
 			'read_private_posts'     => 'read',
