@@ -62,6 +62,11 @@ body {
 	cursor: default;
 }
 
+/* A control title, not a panel title */
+#customize-controls .customize-info.control-section .accordion-section-title {
+	cursor: pointer;
+}
+
 #customize-controls .customize-info.open .accordion-section-title:after,
 #customize-controls .customize-info .accordion-section-title:hover:after,
 #customize-controls .customize-info .accordion-section-title:focus:after {
@@ -139,6 +144,10 @@ body {
 
 #customize-controls .customize-info .customize-panel-description.open + .no-widget-areas-rendered-notice {
 	border-top: none;
+}
+
+#customize-controls .customize-info .customize-section-description {
+	margin-bottom: 10px;
 }
 
 #customize-controls .customize-info .customize-panel-description p:first-child,
@@ -536,8 +545,7 @@ p.customize-section-description {
 	margin: 0;
 }
 
-.customize-control-textarea textarea,
-.customize-control-code-editor textarea {
+.customize-control-textarea textarea {
 	width: 100%;
 	resize: vertical;
 }
@@ -997,6 +1005,99 @@ p.customize-section-description {
 .customize-control .attachment-media-view .upload-button,
 .customize-control-header .new {
 	float: right;
+}
+
+/**
+ * Code Editor Control
+ */
+.customize-control-code_editor-line-numbers {
+	border: 1px solid #ddd;
+	border-right: none;
+	border-left: none;
+	-webkit-box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
+	box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
+	font-family: Consolas, Monaco, monospace;
+	height: 553px;
+	padding: 2px 4px 0 2px;
+	text-align: right;
+	box-sizing: border-box;
+	background-color: #fff;
+	pointer-events:none;
+	overflow-x: hidden;
+}
+
+.customize-control-code_editor .customize-control-content {
+	margin-left: -12px;
+	margin-right: -12px;
+}
+
+.customize-control-code_editor-textarea {
+	font-family: Consolas, Monaco, monospace;
+	min-height: 553px;
+	font-size: 12px;
+	resize: none;
+	padding-left: 8px;
+}
+
+/* Hide the blue highlights on textarea focus */
+.customize-control-code_editor-textarea:focus {
+	border: 1px solid #ddd;
+	box-shadow: none;
+	outline: none;
+}
+
+/* Prevent line breaks in the text */
+.customize-control-code_editor-line-numbers,
+.customize-control-code_editor-textarea {
+	padding-top: 7px;
+	white-space: nowrap;
+	line-height: 1.6;
+	font-size: 12px;
+}
+
+.customize-control-code_editor .customize-control-notifications-container {
+	margin-top: 0;
+	margin-bottom: 15px;
+}
+
+/* Eliminate the space between inline-block elements
+ *
+ * The contained elements are not floated because
+ * there is a common browser bug where when
+ * all content in a floated textarea is deleted,
+ * the textarea itself disappears until the user
+ * clicks on it again.
+ */
+.customize-control-code_editor .customize-control-content {
+	font-size: 0;
+}
+
+/* Width of line numbers */
+.customize-control-code_editor-line-numbers {
+	width: 10%;
+	display: inline-block;
+}
+
+/* Display of textarea */
+.customize-control-code_editor-textarea {
+	width: 90%;
+	border-right: 0;
+	display: inline-block;
+}
+
+/* Hide the scrollbar on the line numbers */
+.customize-control-code_editor-line-numbers::-webkit-scrollbar {
+	display: none;
+}
+
+/* Adjust widths on smaller screens */
+@media (max-width:850px), (max-height:472px) {
+	.customize-control-code_editor-line-numbers {
+		width: 9%;
+	}
+	.customize-control-code_editor-textarea {
+		width: 91%;
+	}
 }
 
 /**

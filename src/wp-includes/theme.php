@@ -1401,7 +1401,7 @@ body.custom-background { <?php echo trim( $style ); ?> }
 }
 
 /**
- * Render the Custom CSS.
+ * Render the Custom CSS style element.
  *
  * @since 4.7.0
  */
@@ -1427,44 +1427,72 @@ function wp_custom_css_cb() {
  * @return string The Custom CSS Post content.
  */
 function wp_get_custom_css( $theme_name = '' ) {
-	$post = wp_get_custom_css_by_theme_name( $theme_name );
-
-	//@todo jr3 remove after testing.
-	if ( empty( $post->ID ) ) {
-		return 'test';
+	$custom_css_post = wp_get_custom_css_by_theme_name( $theme_name );
+	if ( empty( $custom_css_post->post_content ) ) {
+		return '';
 	}
-	$style_post = get_post( $post->ID );
-	return $style_post->post_content;
+
+	return $custom_css_post->post_content;
 }
 
 
 /**
- * Find a Custom CSS post's ID
+ * Find a Custom CSS Post Object.
  *
- * Defaults to finding the current theme's Style CPT post object.
- * Optionally, this can find a Style CPT post if a stylesheet
+ * Defaults to finding the current theme's Custom CSS CPT post object.
+ * Optionally, this can find a Custom CSS CPT post if a stylesheet
  * name (e.g., "twentyfifteen") is provided.
+ *
+ * Also, if the Custom CSS post doesn't exist, then create it.
  *
  * @since 4.7.0
  *
  * @param string $theme_name Optional. A Theme object stylesheet name. Defaults to the current theme.
+ * @param string $value Optional. A value to update the post content.
  *
  * @return object WP_Post Object
  */
-function wp_get_custom_css_by_theme_name( $theme_name = '' ) {
+function wp_get_custom_css_by_theme_name( $theme_name = '', $value = '' ) {
 	// By default, use the current theme.
 	if ( empty( $theme_name ) || ! is_string( $theme_name ) ) {
 		$theme = wp_get_theme();
 		if ( ! empty( $theme->stylesheet ) ) {
 			$theme_name = $theme->stylesheet;
+		} else {
+			return false;
 		}
 	}
 
-	if ( empty( $theme_name ) ) {
-		return false;
+	/*
+	 * If a new $value is passed, use it as the post_content.
+	 */
+	$args = array(
+		'post_content' => $value,
+		'post_type'    => 'custom_css',
+		'post_title'   => $theme_name,
+		'post_status'  => 'publish',
+	);
+
+	$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
+
+	if ( ! empty( $post->ID ) ) {
+		$args['ID'] = $post->ID;
 	}
 
-	return get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
+	/*
+	 * If no $value is passed, but post_content already exists,
+	 * use the post_content.
+	 *
+	 * This is used specifically in wp_get_custom_css().
+	 */
+	if ( empty( $value ) && ! empty( $post->post_content ) ) {
+		$args['post_content'] = $post->post_content;
+	}
+
+	$post_id = wp_insert_post( wp_slash( $args ) );
+	$post = get_post( $post_id );
+
+	return $post;
 
 }
 

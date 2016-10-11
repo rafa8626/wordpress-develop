@@ -750,7 +750,6 @@
 			// This is very similar to what is found for api.Panel.attachEvents().
 			section.container.find( '.customize-section-title .customize-help-toggle' ).on( 'click', function() {
 
-				// @todo jr3 should probably by .customize-info.
 				meta = section.container.find( '.section-meta' );
 				if ( meta.hasClass( 'cannot-expand' ) ) {
 					return;
@@ -2963,17 +2962,19 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, textarea, element;
-			textarea = control.container.find( '.customize-control-code-editor-textarea' );
+			var control = this, textarea, element, lineNumbers;
+			textarea = control.container.find( '.customize-control-code_editor-textarea' );
+			lineNumbers = $( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code_editor-line-numbers');
 
 			element = new api.Element( textarea );
 			element.sync( control.setting );
 			element.set( control.setting() );
 			control.elements.push( element );
 
+
 			// Scroll the line numbers with the textarea.
 			$( textarea ).on( 'scroll resize', function () {
-				$( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code-editor-line-numbers' ).scrollTop( $( this ).scrollTop() );
+				lineNumbers.scrollTop( $( this ).scrollTop() );
 			});
 
 			// @todo jr3 dynamically create line numbers.

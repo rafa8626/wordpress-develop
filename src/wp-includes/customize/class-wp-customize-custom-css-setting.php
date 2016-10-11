@@ -19,15 +19,39 @@
 final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 	/**
+	 * The setting type.
+	 *
+	 * @var string
+	 *
+	 * @access public
+	 * @since 4.7.0
+	 */
+	public $type = 'wp_custom_css';
+
+	/**
+	 * Used to determine if we're in the Preview.
+	 *
+	 * @var bool
+	 *
+	 * @access public
+	 * @since 4.7.0
+	 */
+	public $is_previewing;
+
+	/**
 	 * Setting Transport
 	 *
 	 * @var string
+	 *
+	 * @access public
+	 * @since 4.7.0
 	 */
 	public $transport = 'postMessage';
 
 	/**
 	 * WP_Customize_Custom_CSS_Setting constructor.
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param WP_Customize_Manager $manager The Customize Manager class.
@@ -40,6 +64,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 		add_filter( "customize_validate_{$this->id}", array( $this, 'validate_css' ), 10, 2 );
 		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
+		add_action( "customize_preview_{$this->id}", array( $this, 'is_previewing' ) );
 
 		if ( ! has_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) ) ) {
 			add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ), 10, 2 );
@@ -51,14 +76,25 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Fetch the value of the setting.
+	 * Set is_previewing to true.
 	 *
-	 * @todo jr3 validate that this works.
+	 * @action customize_preview_{$this->id}
+	 *
+	 * @access public
+	 * @since 4.7.0
+	 */
+	public function is_previewing() {
+		$this->is_previewing = true;
+	}
+
+	/**
+	 * Fetch the value of the setting.
 	 *
 	 * @see WP_Customize_Setting::value()
 	 *
 	 * @filter customize_value_{$this->id_data['base']}
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $value The value.
@@ -66,18 +102,18 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return string
 	 */
-	public static function get_value( $value, $setting ) {
+	public function get_value( $value, $setting ) {
 		$value = $setting->post_value();
-		if ( ! is_null( $value ) ) {
+		if ( $this->is_previewing && ! is_null( $value ) ) {
 			return $value;
 		}
 
-		$curr_style_post = wp_get_custom_css_by_theme_name();
-		if ( ! empty( $curr_style_post->ID ) && is_numeric( $curr_style_post->ID ) ) {
-			$post_obj = get_post( $curr_style_post->ID );
-			return $post_obj->post_content;
+		$custom_css_post = wp_get_custom_css_by_theme_name( '', $value );
+		if ( ! empty( $custom_css_post->ID ) && is_numeric( $custom_css_post->ID ) ) {
+			$post_obj = get_post( $custom_css_post->ID );
+			$value = $post_obj->post_content;
 		}
-		return '';
+		return $value;
 	}
 
 	/**
@@ -94,6 +130,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @filter customize_validate_{$this->id}
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param mixed  $validity WP_Error, else true.
@@ -118,8 +155,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		}
 
 		/*
-		 * @todo jr3
-		 * @todo remove string literals before counting characters for cases where
+		 * @todo jr3 remove string literals before counting characters for cases where
 		 * a character is used in a "content:" string.
 		 *
 		 * Example:
@@ -165,6 +201,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @filter customize_sanitize_{$this->id}
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $css The input string.
@@ -189,6 +226,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @action customize_update_{$this->type}
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $value The input value.
@@ -196,23 +234,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return int  The custom_css Post ID.
 	 */
 	public static function update_setting( $value ) {
-		$args = array(
-			'post_content' => $value,
-			'post_type'    => 'custom_css',
-		);
-		$current_theme_post = wp_get_custom_css_by_theme_name();
-
-		// If there is no post id, prepare to create a post.
-		if ( is_numeric( $current_theme_post->ID ) ) {
-			$args['ID'] = $current_theme_post->ID;
-		} else {
-			$theme = wp_get_theme();
-			if ( ! empty( $theme->stylesheet ) ) {
-				$args['title'] = $theme->stylesheet;
-			}
-		}
-
-		return wp_insert_post( wp_slash( $args ) );
+		$current_theme_post = wp_get_custom_css_by_theme_name( '', $value );
+		return $current_theme_post->ID;
 	}
 
 	/**
@@ -224,6 +247,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * For instance, there should be an equal number of braces ("{", "}")
 	 * in the CSS.
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $opening_char The opening character.
@@ -245,6 +269,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * For instance, there should be an even number of double quotes
 	 * in the CSS.
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $char A character.
@@ -264,6 +289,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @see self::validate()
 	 *
+	 * @access public
 	 * @since 4.7.0
 	 *
 	 * @param string $css The CSS input string.

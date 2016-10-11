@@ -21,20 +21,11 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 	/**
 	 * The Control Type.
 	 *
+	 * @since 4.7.0
 	 * @access public
 	 * @var string
 	 */
-	public $type = 'code-editor';
-
-	/**
-	 * Enqueue scripts and styles for this Control.
-	 *
-	 * @since 4.7.0
-	 * @access public
-	 */
-	public function enqueue() {
-		wp_enqueue_style( 'customize-code-editor' );
-	}
+	public $type = 'code_editor';
 
 	/**
 	 * Empty method
@@ -70,10 +61,10 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 				<span class="description customize-control-description">{{{ data.description }}}</span>
 			<# } #>
 			<div class="customize-control-content">
-				<div class="customize-control-code-editor-line-numbers">
-					<?php echo join( '<br>', range( 1, 999 ) ); ?>
+				<div class="customize-control-code_editor-line-numbers">
+					<?php echo join( '<br>', esc_html( range( 1, 999 ) ) ); ?>
 				</div>
-				<textarea class="customize-control-code-editor-textarea"></textarea>
+				<textarea class="customize-control-code_editor-textarea"></textarea>
 			</div>
 		</label>
 		<?php
