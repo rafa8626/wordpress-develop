@@ -70,12 +70,12 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 				<span class="description customize-control-description">{{{ data.description }}}</span>
 			<# } #>
 			<div class="customize-control-content">
-				<div class="customize-control-code-editor-line-numbers">
+				<div class="customize-control-code_editor-line-numbers">
 					<?php foreach ( range( 1, 999 ) as $i ) {
 					echo esc_html( $i ) . '<br />';
 					} ?>
 				</div>
-					<textarea class="customize-control-code-editor-textarea"></textarea>
+					<textarea class="customize-control-code_editor-textarea" data-customize-setting-link="{{ data.id }}"></textarea>
 			</div>
 		</label>
 		<?php

@@ -198,7 +198,6 @@ require( ABSPATH . WPINC . '/class-wp-embed.php' );
 require( ABSPATH . WPINC . '/class-oembed.php' );
 require( ABSPATH . WPINC . '/class-wp-oembed-controller.php' );
 require( ABSPATH . WPINC . '/media.php' );
-require( ABSPATH . WPINC . '/class-wp-custom-css.php' );
 require( ABSPATH . WPINC . '/http.php' );
 require( ABSPATH . WPINC . '/class-http.php' );
 require( ABSPATH . WPINC . '/class-wp-http-streams.php' );

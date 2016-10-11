@@ -262,7 +262,7 @@
 
 		api( 'wp_custom_css', function( value ) {
 			value.bind( function( to ) {
-				$( '#wp-custom-css' ).html( to );
+				$( '#wp-custom-css' ).text( to );
 			} );
 		} );
 

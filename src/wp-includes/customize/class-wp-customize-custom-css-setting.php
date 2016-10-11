@@ -19,13 +19,6 @@
 final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 	/**
-	 * Setting Type
-	 *
-	 * @var string
-	 */
-	public $type = 'wp_custom_css';
-
-	/**
 	 * Setting Transport
 	 *
 	 * @var string
@@ -45,16 +38,22 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args = array() );
 
-		add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) );
 		add_filter( "customize_validate_{$this->id}", array( $this, 'validate_css' ), 10, 2 );
 		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
-		add_action( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
+
+		if ( ! has_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) ) ) {
+			add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ), 10, 2 );
+		}
+
+		if ( ! has_filter( "customize_update_{$this->type}", array( $this, 'update_setting' ) ) ) {
+			add_filter( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
+		}
 	}
-
-
 
 	/**
 	 * Fetch the value of the setting.
+	 *
+	 * @todo jr3 validate that this works.
 	 *
 	 * @see WP_Customize_Setting::value()
 	 *
@@ -63,18 +62,22 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @since 4.7.0
 	 *
 	 * @param string $value The value.
+	 * @param object $setting The Setting.
 	 *
 	 * @return string
 	 */
-	public function get_value( $value ) {
-		$curr_style_post_id = WP_Custom_CSS::get_style_post_id();
-		if ( ! empty( $curr_style_post_id ) && is_numeric( $curr_style_post_id ) ) {
-			$post_obj = get_post( $curr_style_post_id );
-			if ( ! empty( $post_obj->post_content ) ) {
-				$value = $post_obj->post_content;
-			}
+	public static function get_value( $value, $setting ) {
+		$value = $setting->post_value();
+		if ( ! is_null( $value ) ) {
+			return $value;
 		}
-		return $value;
+
+		$curr_style_post = wp_get_custom_css_by_theme_name();
+		if ( ! empty( $curr_style_post->ID ) && is_numeric( $curr_style_post->ID ) ) {
+			$post_obj = get_post( $curr_style_post->ID );
+			return $post_obj->post_content;
+		}
+		return '';
 	}
 
 	/**
@@ -109,6 +112,25 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$validity->add( 'unbalanced_braces', __( 'Your brackets <code>[]</code> are unbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
 		}
 
+		// Ensure parentheses are balanced.
+		if ( ! self::validate_balanced_characters( '(', ')', $css ) ) {
+			$validity->add( 'unbalanced_braces', __( 'Your parentheses <code>()</code> are unbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
+		}
+
+		/*
+		 * @todo jr3
+		 * @todo remove string literals before counting characters for cases where
+		 * a character is used in a "content:" string.
+		 *
+		 * Example:
+		 * .element::before {
+		 *   content: "(\"";
+		 * }
+		 * .element::after {
+		 *   content: "\")";
+		 * }
+		 */
+
 		// Ensure single quotes are equal.
 		if ( ! self::validate_equal_characters( '\'', $css ) ) {
 			$validity->add( 'unequal_single_quotes', __( 'Your single quotes <code>\'</code> are uneven. Make sure there is a closing <code>\'</code> for every opening <code>\'</code>.' ) );
@@ -141,10 +163,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Sanitize CSS.
 	 *
-	 * Currently runs a basic wp_kses check.
-	 *
-	 * @todo Needs Expansion.
-	 *
 	 * @filter customize_sanitize_{$this->id}
 	 *
 	 * @since 4.7.0
@@ -154,7 +172,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return mixed
 	 */
 	public function sanitize_css( $css ) {
-		return wp_kses( $css, array( '\'', '\"', '>', '<', '+' ) );
+		return wp_sanitize_css( $css );
 	}
 
 	/**
@@ -175,32 +193,26 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @param string $value The input value.
 	 *
-	 * @return bool
+	 * @return int  The custom_css Post ID.
 	 */
-	public function update_setting( $value ) {
+	public static function update_setting( $value ) {
 		$args = array(
 			'post_content' => $value,
+			'post_type'    => 'custom_css',
 		);
-		$current_theme_post_id = WP_Custom_CSS::get_style_post_id();
-		// If there is no post id, or the post object itself is empty return false.
-		if ( ! is_numeric( $current_theme_post_id ) ) {
-			return false;
+		$current_theme_post = wp_get_custom_css_by_theme_name();
+
+		// If there is no post id, prepare to create a post.
+		if ( is_numeric( $current_theme_post->ID ) ) {
+			$args['ID'] = $current_theme_post->ID;
+		} else {
+			$theme = wp_get_theme();
+			if ( ! empty( $theme->stylesheet ) ) {
+				$args['title'] = $theme->stylesheet;
+			}
 		}
 
-		$style_post = get_post( $current_theme_post_id );
-
-		if ( empty( $style_post ) ) {
-			return false;
-		}
-
-		$args['ID'] = $current_theme_post_id;
-
-		$result = wp_update_post( wp_slash( $args ) );
-		if ( 0 !== $result ) {
-			WP_Custom_CSS::clear_transient();
-		}
-
-		return true;
+		return wp_insert_post( wp_slash( $args ) );
 	}
 
 	/**

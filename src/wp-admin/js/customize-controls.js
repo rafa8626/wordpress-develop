@@ -731,7 +731,7 @@
 		 * @since 4.1.0
 		 */
 		attachEvents: function () {
-			var meta, section = this;
+			var meta, content, section = this;
 
 			// Expand/Collapse accordion sections on click.
 			section.container.find( '.accordion-section-title, .customize-section-back' ).on( 'click keydown', function( event ) {
@@ -748,18 +748,15 @@
 			});
 
 			// This is very similar to what is found for api.Panel.attachEvents().
-			section.container.find( '.customize-section-title .customize-help-toggle' ).on( 'click keydown', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-				event.preventDefault(); // Keep this AFTER the key filter above
+			section.container.find( '.customize-section-title .customize-help-toggle' ).on( 'click', function() {
 
+				// @todo jr3 should probably by .customize-info.
 				meta = section.container.find( '.section-meta' );
 				if ( meta.hasClass( 'cannot-expand' ) ) {
 					return;
 				}
 
-				var content = meta.find( '.customize-section-description:first' );
+				content = meta.find( '.customize-section-description:first' );
 				if ( meta.hasClass( 'open' ) ) {
 					meta.toggleClass( 'open' );
 					content.slideUp( section.defaultExpandedArguments.duration );
@@ -1589,9 +1586,14 @@
 			nodes  = control.container.find('[data-customize-setting-link]');
 			radios = {};
 
+			console.log( nodes.prevObject );
+			//console.log( nodes );
+
 			nodes.each( function() {
 				var node = $( this ),
 					name;
+
+				console.log( this );
 
 				if ( node.is( ':radio' ) ) {
 					name = node.prop( 'name' );
@@ -2966,48 +2968,15 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this,
-				textarea;
-
+			var control = this, textarea;
 			textarea = control.container.find( '.customize-control-code-editor-textarea' ).get( 0 );
-			control._setUpSettingLinks( textarea );
 
 			// Scroll the line numbers with the textarea.
 			$( textarea ).on( 'scroll resize', function () {
 				$( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code-editor-line-numbers' ).scrollTop( $( this ).scrollTop() );
 			});
-		},
 
-		/**
-		 * Bidrectional Data Binding.
-		 *
-		 * First, when the textarea is updated, update the Setting.
-		 * Then, when the Setting is updated, set the value to the textarea.
-		 *
-		 * @access private
-		 * @return {void}
-		 */
-		_setUpSettingLinks: function( textarea ) {
-			var control = this,
-				element = new api.Element( $( textarea ) );
-			if ( ! control.setting ) {
-				return;
-			}
-			// Fill the textarea.
-			element.set( control.setting() );
-
-			element.bind( function( newValue ) {
-				if ( newValue === control.setting() ) {
-					return;
-				}
-				control.setting.set( newValue );
-			} );
-
-			control.setting.bind( function( newValue ) {
-				if ( newValue !== element.get() ) {
-					element.set( newValue );
-				}
-			} );
+			// @todo jr3 dynamically create line numbers.
 		}
 	});
 

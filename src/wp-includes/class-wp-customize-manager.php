@@ -2152,7 +2152,6 @@ final class WP_Customize_Manager {
 			'section' => 'colors',
 		) ) );
 
-
 		/* Custom Header */
 
 		$this->add_section( 'header_image', array(
@@ -2317,9 +2316,7 @@ final class WP_Customize_Manager {
 		) ) );
 
 		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
-			'type'        => 'code_editor',
 			'section'     => 'wp_custom_css',
-			'settings'    => 'wp_custom_css',
 			'label'       => '',
 			'description' => '',
 		) ) );

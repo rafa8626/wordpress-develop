@@ -1401,9 +1401,7 @@ body.custom-background { <?php echo trim( $style ); ?> }
 }
 
 /**
- * Render custom CSS.
- *
- * @todo sanitize this.
+ * Render the Custom CSS.
  *
  * @since 4.7.0
  */
@@ -1411,22 +1409,80 @@ function wp_custom_css_cb() {
 	$styles = wp_get_custom_css();
 	if ( $styles || is_customize_preview() ) : ?>
 		<style type="text/css" id="wp-custom-css">
-			<?php echo $styles; ?>
+			<?php echo esc_html( $styles ); ?>
 		</style>
 	<?php endif;
 }
 
 /**
- * Fetch the saved WP Custom CSS content.
+ * Fetch the saved Custom CSS content.
  *
- * Wrapper for WP_Custom_CSS::get_styles().
+ * Gets the content of a Custom CSS post that matches the
+ * current theme.
  *
  * @since 4.7.0
  *
- * @return string
+ * @param string $theme_name Optional. A Theme object stylesheet name.  Defaults to the current theme.
+ *
+ * @return string The Custom CSS Post content.
  */
-function wp_get_custom_css() {
-	return WP_Custom_CSS::get_styles();
+function wp_get_custom_css( $theme_name = '' ) {
+	$post = wp_get_custom_css_by_theme_name( $theme_name );
+
+	//@todo jr3 remove after testing.
+	if ( empty( $post->ID ) ) {
+		return 'test';
+	}
+	$style_post = get_post( $post->ID );
+	return $style_post->post_content;
+}
+
+
+/**
+ * Find a Custom CSS post's ID
+ *
+ * Defaults to finding the current theme's Style CPT post object.
+ * Optionally, this can find a Style CPT post if a stylesheet
+ * name (e.g., "twentyfifteen") is provided.
+ *
+ * @since 4.7.0
+ *
+ * @param string $theme_name Optional. A Theme object stylesheet name. Defaults to the current theme.
+ *
+ * @return object WP_Post Object
+ */
+function wp_get_custom_css_by_theme_name( $theme_name = '' ) {
+	// By default, use the current theme.
+	if ( empty( $theme_name ) || ! is_string( $theme_name ) ) {
+		$theme = wp_get_theme();
+		if ( ! empty( $theme->stylesheet ) ) {
+			$theme_name = $theme->stylesheet;
+		}
+	}
+
+	if ( empty( $theme_name ) ) {
+		return false;
+	}
+
+	return get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
+
+}
+
+/**
+ * Sanitize CSS.
+ *
+ * Currently runs a basic wp_kses check.
+ *
+ * @todo Needs Expansion.
+ *
+ * @since 4.7.0
+ *
+ * @param string $css The input string.
+ *
+ * @return mixed
+ */
+function wp_sanitize_css( $css ) {
+	return wp_kses( $css, array( '\'', '\"', '>', '<', '+' ) );
 }
 
 /**

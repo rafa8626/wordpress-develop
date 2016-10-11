@@ -1,10 +1,10 @@
 /* Hide line numbers by default */
-.customize-control-code-editor-line-numbers {
+.customize-control-code_editor-line-numbers {
     display: none;
 }
 
 /* Hide line numbers by default */
-.customize-control-code-editor-line-numbers {
+.customize-control-code_editor-line-numbers {
     border: 1px solid rgb(221, 221, 221);
     border-right: none;
     border-left: none;
@@ -21,7 +21,7 @@
     overflow-x: hidden;
 }
 
-.customize-control-code_editor .customize-control-code-editor-textarea {
+.customize-control-code_editor .customize-control-code_editor-textarea {
     font-family: Consolas, Monaco, monospace;
     min-height: 553px;
     font-size: 12px;
@@ -30,15 +30,15 @@
 }
 
 /* Hide the blue highlights on textarea focus */
-.customize-control-code_editor .customize-control-code-editor-textarea:focus {
+.customize-control-code_editor .customize-control-code_editor-textarea:focus {
     border: 1px solid rgb(221, 221, 221);
     box-shadow: none;
     outline: none;
 }
 
 /* Prevent line breaks in the text */
-.customize-control-content .customize-control-code-editor-textarea,
-.customize-control-code-editor-line-numbers {
+.customize-control-content .customize-control-code_editor-textarea,
+.customize-control-code_editor-line-numbers {
     padding-top: 7px;
     white-space: nowrap;
     line-height: 1.6;
@@ -97,29 +97,29 @@
 }
 
 /* Width of line numbers */
-#sub-accordion-section-wp_custom_css .customize-control-code-editor-line-numbers {
+#sub-accordion-section-wp_custom_css .customize-control-code_editor-line-numbers {
     width: 10%;
     display: inline-block;
 }
 
 /* Display of textarea */
-#sub-accordion-section-wp_custom_css .customize-control-code-editor-textarea {
+#sub-accordion-section-wp_custom_css .customize-control-code_editor-textarea {
     width: 90%;
     border-right: 0;
     display: inline-block;
 }
 
 /* Hide the scrollbar on the line numbers */
-#sub-accordion-section-wp_custom_css .customize-control-code-editor-line-numbers::-webkit-scrollbar {
+#sub-accordion-section-wp_custom_css .customize-control-code_editor-line-numbers::-webkit-scrollbar {
     display: none;
 }
 
 /* Adjust widths on smaller screens */
 @media (max-width:850px), (max-height:472px) {
-    #sub-accordion-section-wp_custom_css .customize-control-code-editor-line-numbers {
+    #sub-accordion-section-wp_custom_css .customize-control-code_editor-line-numbers {
         width: 9%;
     }
-    #sub-accordion-section-wp_custom_css .customize-control-code-editor-textarea {
+    #sub-accordion-section-wp_custom_css .customize-control-code_editor-textarea {
         width: 91%;
     }
 }
