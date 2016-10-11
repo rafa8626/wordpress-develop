@@ -2963,9 +2963,13 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, textarea;
-			textarea = control.container.find( '.customize-control-code-editor-textarea' ).get( 0 );
-			control._setUpSettingLinks( textarea );
+			var control = this, textarea, element;
+			textarea = control.container.find( '.customize-control-code-editor-textarea' );
+
+			element = new api.Element( textarea );
+			element.sync( control.setting );
+			element.set( control.setting() );
+			control.elements.push( element );
 
 			// Scroll the line numbers with the textarea.
 			$( textarea ).on( 'scroll resize', function () {
@@ -2973,42 +2977,7 @@
 			});
 
 			// @todo jr3 dynamically create line numbers.
-		},
-
-		/**
-		 * Bidrectional Data Binding.
-		 *
-		 * First, when the textarea is updated, update the Setting.
-		 * Then, when the Setting is updated, set the value to the textarea.
-		 *
-		 * @access private
-		 * @return {void}
-		 */
-		_setUpSettingLinks: function( textarea ) {
-			var control = this,
-				element = new api.Element( $( textarea ) );
-			if ( ! control.setting ) {
-				return;
-			}
-			// Fill the textarea.
-			element.set( control.setting() );
-
-			element.bind( function( newValue ) {
-				if ( newValue === control.setting() ) {
-					return;
-				}
-				control.setting.set( newValue );
-			} );
-
-			control.setting.bind( function( newValue ) {
-				if ( newValue !== element.get() ) {
-					element.set( newValue );
-				}
-			} );
 		}
-
-
-
 	});
 
 	// Change objects contained within the main customize object to Settings.
