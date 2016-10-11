@@ -1024,6 +1024,8 @@ final class WP_Customize_Manager {
 			$this->prepare_controls();
 		}
 
+		add_filter( 'wp_redirect', array( $this, 'add_customize_state_query_params' ) );
+
 		wp_enqueue_script( 'customize-preview' );
 		add_action( 'wp_head', array( $this, 'customize_preview_loading_style' ) );
 		add_action( 'wp_footer', array( $this, 'customize_preview_settings' ), 20 );
@@ -1053,6 +1055,50 @@ final class WP_Customize_Manager {
 		$headers['X-Frame-Options'] = 'ALLOW-FROM ' . $customize_url;
 		$headers['Content-Security-Policy'] = 'frame-ancestors ' . preg_replace( '#^(\w+://[^/]+).+?$#', '$1', $customize_url );
 		return $headers;
+	}
+
+	/**
+	 * Add customize state query params to a given URL if preview is allowed.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 * @see wp_redirect()
+	 * @see WP_Customize_Manager::get_allowed_url()
+	 *
+	 * @param string $url URL.
+	 * @return string URL.
+	 */
+	public function add_customize_state_query_params( $url ) {
+		$parsed_original_url = wp_parse_url( $url );
+		$is_allowed = false;
+		foreach ( $this->get_allowed_urls() as $allowed_url ) {
+			$parsed_allowed_url = wp_parse_url( $allowed_url );
+			$is_allowed = (
+				$parsed_allowed_url['scheme'] === $parsed_original_url['scheme']
+				&&
+				$parsed_allowed_url['host'] === $parsed_original_url['host']
+				&&
+				0 === strpos( $parsed_original_url['path'], $parsed_allowed_url['path'] )
+			);
+			if ( $is_allowed ) {
+				break;
+			}
+		}
+
+		if ( $is_allowed ) {
+			$query_params = array(
+				'customize_changeset_uuid' => $this->changeset_uuid(),
+			);
+			if ( ! $this->is_theme_active() ) {
+				$query_params['customize_theme'] = $this->get_stylesheet();
+			}
+			if ( $this->messenger_channel ) {
+				$query_params['customize_messenger_channel'] = $this->messenger_channel;
+			}
+			$url = add_query_arg( $query_params, $url );
+		}
+
+		return $url;
 	}
 
 	/**
