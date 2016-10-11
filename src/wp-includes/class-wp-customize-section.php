@@ -356,7 +356,7 @@ class WP_Customize_Section {
 	 */
 	protected function render_template() {
 		?>
-		<li id="accordion-section-{{ data.id }}" class="accordion-section control-section control-section-{{ data.type }} <# if ( data.description_hidden ) { #>customize-description-hidden<# } #>">
+		<li id="accordion-section-{{ data.id }}" class="accordion-section control-section control-section-{{ data.type }} <# if ( data.description_hidden ) { #>customize-info<# } #>">
 			<h3 class="accordion-section-title" tabindex="0">
 				{{ data.title }}
 				<span class="screen-reader-text"><?php _e( 'Press return or enter to open this section' ); ?></span>
