@@ -65,6 +65,8 @@ body {
 /* A control title, not a panel title */
 #customize-controls .customize-info.control-section .accordion-section-title {
 	cursor: pointer;
+	border-bottom: 1px solid #eee;
+	border-left: 4px solid #fff;
 }
 
 #customize-controls .customize-info.open .accordion-section-title:after,

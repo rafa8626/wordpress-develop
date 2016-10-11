@@ -2971,7 +2971,6 @@
 			element.set( control.setting() );
 			control.elements.push( element );
 
-
 			// Scroll the line numbers with the textarea.
 			$( textarea ).on( 'scroll resize', function () {
 				lineNumbers.scrollTop( $( this ).scrollTop() );

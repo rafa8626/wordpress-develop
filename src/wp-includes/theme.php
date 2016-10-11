@@ -1455,12 +1455,7 @@ function wp_get_custom_css( $theme_name = '' ) {
 function wp_get_custom_css_by_theme_name( $theme_name = '', $value = '' ) {
 	// By default, use the current theme.
 	if ( empty( $theme_name ) || ! is_string( $theme_name ) ) {
-		$theme = wp_get_theme();
-		if ( ! empty( $theme->stylesheet ) ) {
-			$theme_name = $theme->stylesheet;
-		} else {
-			return false;
-		}
+		$theme_name = get_stylesheet();
 	}
 
 	/*
