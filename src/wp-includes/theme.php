@@ -1428,6 +1428,7 @@ function wp_custom_css_cb() {
  */
 function wp_get_custom_css( $theme_name = '' ) {
 	$custom_css_post = wp_get_custom_css_by_theme_name( $theme_name );
+
 	if ( empty( $custom_css_post->post_content ) ) {
 		return '';
 	}
@@ -1443,53 +1444,27 @@ function wp_get_custom_css( $theme_name = '' ) {
  * Optionally, this can find a Custom CSS CPT post if a stylesheet
  * name (e.g., "twentyfifteen") is provided.
  *
- * Also, if the Custom CSS post doesn't exist, then create it.
- *
  * @since 4.7.0
  *
  * @param string $theme_name Optional. A Theme object stylesheet name. Defaults to the current theme.
- * @param string $value Optional. A value to update the post content.
  *
- * @return object WP_Post Object
+ * @return object|bool WP_Post Object, else false.
  */
-function wp_get_custom_css_by_theme_name( $theme_name = '', $value = '' ) {
+function wp_get_custom_css_by_theme_name( $theme_name = '' ) {
 	// By default, use the current theme.
 	if ( empty( $theme_name ) || ! is_string( $theme_name ) ) {
 		$theme_name = get_stylesheet();
 	}
 
-	/*
-	 * If a new $value is passed, use it as the post_content.
-	 */
-	$args = array(
-		'post_content' => $value,
-		'post_type'    => 'custom_css',
-		'post_title'   => $theme_name,
-		'post_status'  => 'publish',
-	);
-
 	$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
 
-	if ( ! empty( $post->ID ) ) {
-		$args['ID'] = $post->ID;
+	if ( empty( $post->ID ) ) {
+		return false;
 	}
 
-	/*
-	 * If no $value is passed, but post_content already exists,
-	 * use the post_content.
-	 *
-	 * This is used specifically in wp_get_custom_css().
-	 */
-	if ( empty( $value ) && ! empty( $post->post_content ) ) {
-		$args['post_content'] = $post->post_content;
-	}
-
-	// Create/update the post.
-	$post_id = wp_insert_post( wp_slash( $args ) );
-	$post = get_post( $post_id );
+	$post = get_post( $post->ID );
 
 	return $post;
-
 }
 
 /**

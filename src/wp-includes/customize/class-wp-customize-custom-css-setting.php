@@ -108,12 +108,11 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			return $value;
 		}
 
-		$custom_css_post = wp_get_custom_css_by_theme_name( '', $value );
-		if ( ! empty( $custom_css_post->ID ) && is_numeric( $custom_css_post->ID ) ) {
-			$post_obj = get_post( $custom_css_post->ID );
-			$value = $post_obj->post_content;
+		$custom_css_post = wp_get_custom_css_by_theme_name();
+		if ( empty( $custom_css_post->post_content ) ) {
+			return '';
 		}
-		return $value;
+		return $custom_css_post->post_content;
 	}
 
 	/**
@@ -218,7 +217,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * This setting does not use "option" or "theme_mod," but
 	 * rather "wp_custom_css" to trigger saving.  The value is
-	 * then saved to a Custom Post Type.
+	 * then saved to the custom_css CPT.
 	 *
 	 * This is already sanitized in the sanitize() method.
 	 *
@@ -234,8 +233,22 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return int  The custom_css Post ID.
 	 */
 	public static function update_setting( $value ) {
-		$current_theme_post = wp_get_custom_css_by_theme_name( '', $value );
-		return $current_theme_post->ID;
+		$theme_name = get_stylesheet();
+		$args = array(
+			'post_content' => ( null === $value ) ? '' : $value,
+			'post_title'   => $theme_name,
+			'post_type'    => 'custom_css',
+			'post_status'  => 'publish',
+		);
+
+		// Check to see if the post already exists.
+		$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
+		if ( ! empty( $post->ID ) ) {
+			$args['ID'] = $post->ID;
+		}
+
+		$post_id = wp_insert_post( $args );
+		return $post_id;
 	}
 
 	/**
