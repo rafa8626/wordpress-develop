@@ -3514,9 +3514,6 @@
 				return result ? result : null;
 			});
 
-			// Change preview iframe URL when the previewUrl changes.
-			previewer.setIframeSrc = _.bind( previewer.setIframeSrc, previewer );
-			previewer.setIframeSrcToPreviewUrl = _.bind( previewer.setIframeSrcToPreviewUrl, previewer );
 			previewer.bind( 'ready', previewer.ready );
 
 			// Start listening for keep-alive messages when iframe first loads.
@@ -3525,6 +3522,9 @@
 			previewer.bind( 'synced', function() {
 				previewer.send( 'active' );
 			} );
+
+			// Refresh the preview when the URL is changed (but not yet).
+			previewer.previewUrl.bind( previewer.refresh );
 
 			previewer.scroll = 0;
 			previewer.bind( 'scroll', function( distance ) {
@@ -3539,48 +3539,6 @@
 				api.setDocumentTitle( title );
 			} );
 		},
-
-		/**
-		 * Handle changes to previewUrl to updating the iframe url once any pending processing has completed.
-		 *
-		 * This will call setIframeSrc once the the customizer processing state has turned to 0,
-		 * or if it is 0 upon invocation. This ensures that the changeset will have been written
-		 * before the iframe attempts to load so that the changes will be available when the
-		 * request is made. Also, if there is already such a deferred setting of the iframe src
-		 * queued up, the function will short-circuit and let the existing pending call handle
-		 * the updating of the iframe src.
-		 *
-		 * @since 4.7.0
-		 * @access private
-		 *
-		 * @returns {void}
-		 */
-		setIframeSrcToPreviewUrl: ( function() {
-			var onceProcessed;
-
-			return function setIframeSrcToPreviewUrl() {
-				var previewer = this, processing;
-
-				// Short-circuit if we're still waiting for processing to complete.
-				if ( onceProcessed ) {
-					return;
-				}
-
-				processing = api.state( 'processing' );
-				if ( 0 === processing.get() ) {
-					previewer.setIframeSrc( previewer.previewUrl.get() );
-				} else {
-					onceProcessed = function( processingCount ) {
-						if ( 0 === processingCount ) {
-							processing.unbind( onceProcessed );
-							onceProcessed = null;
-							previewer.setIframeSrc( previewer.previewUrl.get() );
-						}
-					};
-					processing.bind( onceProcessed );
-				}
-			};
-		} )(),
 
 		/**
 		 * Handle the preview receiving the ready message.
@@ -3605,9 +3563,9 @@
 
 			// Set the previewUrl without causing the url to set the iframe.
 			if ( data.currentUrl ) {
-				previewer.previewUrl.unbind( previewer.setIframeSrcToPreviewUrl );
+				previewer.previewUrl.unbind( previewer.refresh );
 				previewer.previewUrl.set( data.currentUrl );
-				previewer.previewUrl.bind( previewer.setIframeSrcToPreviewUrl );
+				previewer.previewUrl.bind( previewer.refresh );
 			}
 
 			/*
@@ -3699,33 +3657,6 @@
 
 			previewer.bind( 'ready', keepAliveTick );
 			previewer.bind( 'keep-alive', keepAliveTick );
-		},
-
-		/**
-		 * Set the iframe's src URL.
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param {string} url URL.
-		 * @returns {void}
-		 */
-		setIframeSrc: function( url ) {
-			var previewer = this, urlParser, params, oldParams, newParams;
-
-			urlParser = document.createElement( 'a' );
-
-			params = previewer.query( { excludeCustomized: true } );
-			delete params.wp_customize;
-			delete params.nonce;
-			params.customize_messenger_channel = previewer.channel();
-
-			urlParser.href = url;
-			oldParams = api.utils.parseQueryString( urlParser.search.substring( 1 ) );
-			newParams = _.extend( {}, oldParams, params );
-
-			// @todo We may need to add a new param for customize_persistent_query_params as _.keys( newParams ).
-			urlParser.search = $.param( newParams );
-			previewer.preview.iframe.prop( 'src', urlParser.href );
 		},
 
 		/**

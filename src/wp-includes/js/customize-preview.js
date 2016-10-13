@@ -142,7 +142,7 @@
 					return;
 				}
 
-				// Note: It's not relevant to send scroll because sending url message will cause iframe src change instead of refresh.
+				// Note: It's not relevant to send scroll because sending url message will have the same effect.
 				preview.send( 'url', link.prop( 'href' ) );
 			} );
 
