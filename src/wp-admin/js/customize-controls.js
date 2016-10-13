@@ -42,7 +42,7 @@
 		 * @returns {void}
 		 */
 		handleChange: function( value ) {
-			var setting = this, promise, changes = {};
+			var setting = this, changes = {};
 
 			/*
 			 * Note that changes is just being explicit for what would be sent
@@ -53,8 +53,7 @@
 				value: value
 			};
 
-			promise = api.requestChangesetUpdate( changes );
-			setting.previewer.addPendingChangesetUpdateRequest( promise );
+			api.requestChangesetUpdate( changes );
 			setting.preview();
 		},
 
@@ -3421,26 +3420,26 @@
 			previewer.deferred = {
 				active: $.Deferred()
 			};
-			previewer.pendingChangesetUpdateRequests = [];
 
 			// Debounce to prevent hammering server and then wait for any pending update requests.
 			previewer.refresh = _.debounce(
 				( function( originalRefresh ) {
 					return function() {
-						var refreshOnceChangesetRequestsComplete = function() {
-							$.when.apply( $, previewer.pendingChangesetUpdateRequests ).then( function() {
-								// Check for any newly-pending requests and then wait for them as well.
-								var pendingCount = _.filter( previewer.pendingChangesetUpdateRequests, function( request ) {
-									return 'pending' === request.state();
-								} ).length;
-								if ( pendingCount > 0 ) {
-									refreshOnceChangesetRequestsComplete();
-								} else {
-									originalRefresh.call( previewer );
-								}
-							} );
+						var isProcessingComplete, refreshOnceProcessingComplete;
+						isProcessingComplete = function() {
+							return 0 === api.state( 'processing' ).get();
 						};
-						refreshOnceChangesetRequestsComplete();
+						if ( isProcessingComplete() ) {
+							originalRefresh.call( previewer );
+						} else {
+							refreshOnceProcessingComplete = function() {
+								if ( isProcessingComplete() ) {
+									originalRefresh.call( previewer );
+									api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+								}
+							};
+							api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+						}
 					};
 				}( previewer.refresh ) ),
 				previewer.refreshBuffer
@@ -3669,25 +3668,6 @@
 
 			previewer.bind( 'ready', keepAliveTick );
 			previewer.bind( 'keep-alive', keepAliveTick );
-		},
-
-		/**
-		 * Add pending changeset update request promise.
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param {jQuery.Promise} promise Promise.
-		 * @returns {void}
-		 */
-		addPendingChangesetUpdateRequest: function( promise ) {
-			var previewer = this;
-			previewer.pendingChangesetUpdateRequests.push( promise );
-			promise.always( function() {
-				var i = _.indexOf( previewer.pendingChangesetUpdateRequests, promise );
-				if ( -1 !== i ) {
-					previewer.pendingChangesetUpdateRequests.splice( i, 1 );
-				}
-			} );
 		},
 
 		/**
