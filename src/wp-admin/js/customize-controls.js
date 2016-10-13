@@ -37,6 +37,7 @@
 		 * Handle setting change.
 		 *
 		 * @since 4.7.0
+		 * @access protected
 		 *
 		 * @param {mixed} value Value.
 		 * @returns {void}
@@ -66,6 +67,8 @@
 		 * Note that postMessage does not throw an error when the recipient window
 		 * fails to match the origin window, so using try/catch around the
 		 * previewer.send() call to then fallback to refresh will not work.
+		 *
+		 * @since 3.4.0
 		 */
 		preview: function() {
 			var setting = this, transport;
@@ -4174,7 +4177,7 @@
 					}
 
 					/*
-					 * Note that exclueCustomized is intentionally not present so that the entire
+					 * Note that excludeCustomized is intentionally not present so that the entire
 					 * set of customized data will be included if bypassed changeset update.
 					 */
 					query = $.extend( previewer.query(), {

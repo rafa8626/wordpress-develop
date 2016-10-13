@@ -819,6 +819,9 @@ window.wp = window.wp || {};
 	/**
 	 * Parse query string.
 	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
 	 * @param {string} queryString Query string.
 	 * @returns {object} Parsed query string.
 	 */

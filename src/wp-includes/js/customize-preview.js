@@ -22,6 +22,9 @@
 		/**
 		 * Amend the supplied URL with the customized state.
 		 *
+		 * @since 4.7.0
+		 * @access private
+		 *
 		 * @param {string} url URL.
 		 * @returns {string} URL with customized state.
 		 */
@@ -202,6 +205,10 @@
 	/**
 	 * Inject the changeset UUID into links in the document.
 	 *
+	 * @since 4.7.0
+	 * @access protected
+	 *
+	 * @access private
 	 * @returns {void}
 	 */
 	api.addLinkPreviewing = function addLinkPreviewing() {
@@ -236,6 +243,9 @@
 
 	/**
 	 * Should the supplied link is previewable.
+	 *
+	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
 	 * @param {string} element.search Query string.
@@ -292,6 +302,9 @@
 	/**
 	 * Inject the customize_changeset_uuid query param into links on the frontend.
 	 *
+	 * @since 4.7.0
+	 * @access protected
+	 *
 	 * @param {HTMLAnchorElement|HTMLAreaElement} element Link element.
 	 * @param {object} element.search Query string.
 	 * @returns {void}
@@ -339,7 +352,9 @@
 	/**
 	 * Inject the changeset UUID into Ajax requests.
 	 *
-	 * @access private
+	 * @since 4.7.0
+	 * @access protected
+	 *
 	 * @return {void}
 	 */
 	api.addRequestPreviewing = function addRequestPreviewing() {
@@ -370,7 +385,9 @@
 	/**
 	 * Inject changeset UUID into forms, allowing preview to persist through submissions.
 	 *
-	 * @access private
+	 * @since 4.7.0
+	 * @access protected
+	 *
 	 * @returns {void}
 	 */
 	api.addFormPreviewing = function addFormPreviewing() {
@@ -398,6 +415,9 @@
 
 	/**
 	 * Inject changeset into form inputs.
+	 *
+	 * @since 4.7.0
+	 * @access protected
 	 *
 	 * @param {HTMLFormElement} form Form.
 	 * @returns {void}
@@ -456,6 +476,9 @@
 	 *
 	 * Keep the customizer pane notified that the preview is still alive
 	 * and that the user hasn't navigated to a non-customized URL.
+	 *
+	 * @since 4.7.0
+	 * @access protected
 	 */
 	api.keepAliveCurrentUrl = ( function() {
 		var previousPathName = location.pathname,
