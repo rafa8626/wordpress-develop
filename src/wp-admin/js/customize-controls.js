@@ -3283,7 +3283,7 @@
 				}
 			);
 
-			urlParser.search += $.param( params );
+			urlParser.search = $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
 				title: api.l10n.previewIframeTitle,
 				src: urlParser.href
