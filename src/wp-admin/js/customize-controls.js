@@ -289,7 +289,7 @@
 					} );
 				}
 			} );
-		}, api.settings.timeouts.updateChangeset );
+		}, api.settings.timeouts.changesetUpdate );
 
 		return currentDeferred.promise();
 	};
