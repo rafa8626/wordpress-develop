@@ -644,10 +644,8 @@ window.wp = window.wp || {};
 		 * @param  {object} options - Extend any instance parameter or method with this object.
 		 */
 		initialize: function( params, options ) {
-			var defaultTarget;
-
 			// Target the parent frame by default, but only if a parent frame exists.
-			defaultTarget = window.parent === window ? null : window.parent;
+			var defaultTarget = window.parent === window ? null : window.parent;
 
 			$.extend( this, options || {} );
 
