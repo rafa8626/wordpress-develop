@@ -1729,6 +1729,7 @@ final class WP_Customize_Manager {
 		if ( $has_kses ) {
 			kses_init_filters();
 		}
+		$this->_changeset_data = null; // Reset so WP_Customize_Manager::changeset_data() will re-populate with updated contents.
 
 		remove_filter( 'wp_save_post_revision_post_has_changed', array( $this, '_filter_revision_post_has_changed' ) );
 
