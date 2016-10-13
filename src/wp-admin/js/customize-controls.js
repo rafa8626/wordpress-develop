@@ -3531,8 +3531,20 @@
 				previewer.scroll = distance;
 			});
 
-			// Update the URL when the iframe sends a URL message.
-			previewer.bind( 'url', previewer.previewUrl );
+			// Update the URL when the iframe sends a URL message, resetting scroll position. If URL is unchanged, then refresh.
+			previewer.bind( 'url', function( url ) {
+				var onUrlChange, urlChanged = false;
+				previewer.scroll = 0;
+				onUrlChange = function() {
+					urlChanged = true;
+				};
+				previewer.previewUrl.bind( onUrlChange );
+				previewer.previewUrl.set( url );
+				previewer.previewUrl.unbind( onUrlChange );
+				if ( ! urlChanged ) {
+					previewer.refresh();
+				}
+			} );
 
 			// Update the document title when the preview changes.
 			previewer.bind( 'documentTitle', function ( title ) {
