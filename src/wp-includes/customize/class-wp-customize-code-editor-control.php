@@ -62,7 +62,7 @@ class WP_Customize_Code_Editor_Control extends WP_Customize_Control {
 			<# } #>
 			<div class="customize-control-content">
 				<div class="customize-control-code_editor-line-numbers">
-					<?php echo join( '<br>', range( 1, 999 ) ); ?>
+					<span><?php echo join( '</span><br><span>', range( 1, 100 ) ); ?></span>
 				</div>
 				<textarea class="customize-control-code_editor-textarea"></textarea>
 			</div>

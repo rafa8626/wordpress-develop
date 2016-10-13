@@ -2962,9 +2962,11 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, textarea, element, lineNumbers;
+			var control = this, textarea, element, lineNumbers, lineNumbersHeight;
 			textarea = control.container.find( '.customize-control-code_editor-textarea' );
+			textareaHeight = textarea.height();
 			lineNumbers = $( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code_editor-line-numbers');
+
 
 			element = new api.Element( textarea );
 			element.sync( control.setting );
@@ -2972,11 +2974,19 @@
 			control.elements.push( element );
 
 			// Scroll the line numbers with the textarea.
+			// @todo jr3 dynamically create line numbers.
 			$( textarea ).on( 'scroll resize', function () {
-				lineNumbers.scrollTop( $( this ).scrollTop() );
+				var textareaTop = $( this ).scrollTop(),
+				lineNumbersHeight = lineNumbers.height();
+				lineNumbers.scrollTop( textareaTop );
+				if ( ( lineNumbersHeight + lineNumbers.scrollTop() ) < ( textareaHeight + textareaTop )) {
+					var last = $( 'span', lineNumbers ).last().text();
+					lineNumbers.append( '<br><span>' + (parseInt( last ) + 1) + '</span>' );
+					console.log( last );
+				}
 			});
 
-			// @todo jr3 dynamically create line numbers.
+
 		}
 	});
 

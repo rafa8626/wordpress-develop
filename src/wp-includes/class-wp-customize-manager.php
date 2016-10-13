@@ -2312,14 +2312,14 @@ final class WP_Customize_Manager {
 		) );
 
 		$theme_name = get_stylesheet();
-		$setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'wp_custom_css[%s]', $theme_name ), array(
+		$custom_css_setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'wp_custom_css[%s]', $theme_name ), array(
 			'capability' => 'unfiltered_css',
 		) );
-		$this->add_setting( $setting );
+		$this->add_setting( $custom_css_setting );
 
 		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
 			'section' => 'wp_custom_css',
-			'settings' => array( 'default' => $setting->id ),
+			'settings' => array( 'default' => $custom_css_setting->id ),
 		) ) );
 	}
 
