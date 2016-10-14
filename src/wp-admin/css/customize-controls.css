@@ -53,6 +53,10 @@ body {
 	margin-bottom: 15px;
 }
 
+#customize-controls .customize-info.section-meta {
+	margin-bottom: 10px;
+}
+
 #customize-controls .customize-info .accordion-section-title {
 	background: #fff;
 	color: #555;
@@ -567,15 +571,14 @@ p.customize-section-description {
 	margin-bottom: 5px;
 }
 
-.customize-section-description a.external-link {
-	text-decoration: none;
-}
-
 .customize-section-description a.external-link:after {
     font: 16px/11px dashicons;
     content: "\f310";
     top: 3px;
     position: relative;
+	padding-left: 3px;
+	display: inline-block;
+	text-decoration: none;
 }
 
 .customize-control-color .color-picker,
@@ -1013,12 +1016,12 @@ p.customize-section-description {
 
 #customize-theme-controls #sub-accordion-section-custom_css .customize-control-title,
 #customize-theme-controls #sub-accordion-section-custom_css .notice {
-	margin-left: 10%;
+	margin-left: 10px;
 	margin-right: 10px;
 }
 
-#customize-theme-controls #sub-accordion-section-custom_css .notice {
-	margin-left: 10px;
+#sub-accordion-section-custom_css .customize-control-notifications-container {
+	margin-bottom: 15px;
 }
 
 #sub-accordion-section-custom_css textarea {
