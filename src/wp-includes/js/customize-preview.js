@@ -260,10 +260,9 @@
 			});
 		});
 
-		api( 'wp_custom_css', function( value ) {
+		api( 'wp_custom_css' + api.settings.theme.stylesheet + ']', function( value ) {
 			value.bind( function( to ) {
-				console.log( to );
-				$( '#wp-custom-css' ).text( to );
+				$( '#wp-custom-css' ).html( to );
 			} );
 		} );
 
