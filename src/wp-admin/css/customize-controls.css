@@ -1010,96 +1010,24 @@ p.customize-section-description {
 }
 
 /**
- * Code Editor Control
+ * Custom CSS Section
  */
-.customize-control-code_editor-line-numbers {
-	border: 1px solid #ddd;
-	border-right: none;
-	border-left: none;
-	-webkit-box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
-	box-shadow: inset 0 1px 2px rgba( 0, 0, 0, 0.07 );
-	font-family: Consolas, Monaco, monospace;
-	height: 553px;
-	padding: 2px 4px 0 2px;
-	text-align: right;
-	box-sizing: border-box;
-	background-color: #fff;
-	pointer-events:none;
-	overflow-x: hidden;
+
+#customize-theme-controls #sub-accordion-section-wp_custom_css {
+	padding: 12px 0;
 }
 
-.customize-control-code_editor .customize-control-content {
-	margin-left: -12px;
-	margin-right: -12px;
+#customize-theme-controls #sub-accordion-section-wp_custom_css .description {
+	margin: 0 15px;
 }
 
-.customize-control-code_editor-textarea {
-	font-family: Consolas, Monaco, monospace;
-	min-height: 553px;
-	font-size: 12px;
-	resize: none;
-	padding-left: 8px;
-}
-
-/* Hide the blue highlights on textarea focus */
-.customize-control-code_editor-textarea:focus {
-	border: 1px solid #ddd;
-	box-shadow: none;
-	outline: none;
-}
-
-/* Prevent line breaks in the text */
-.customize-control-code_editor-line-numbers,
-.customize-control-code_editor-textarea {
-	padding-top: 7px;
-	white-space: nowrap;
-	line-height: 1.6;
-	font-size: 12px;
-}
-
-.customize-control-code_editor .customize-control-notifications-container {
-	margin-top: 0;
-	margin-bottom: 15px;
-}
-
-/* Eliminate the space between inline-block elements
- *
- * The contained elements are not floated because
- * there is a common browser bug where when
- * all content in a floated textarea is deleted,
- * the textarea itself disappears until the user
- * clicks on it again.
- */
-.customize-control-code_editor .customize-control-content {
-	font-size: 0;
-}
-
-/* Width of line numbers */
-.customize-control-code_editor-line-numbers {
-	width: 10%;
-	display: inline-block;
-}
-
-/* Display of textarea */
-.customize-control-code_editor-textarea {
-	width: 90%;
+#sub-accordion-section-wp_custom_css textarea {
 	border-right: 0;
-	display: inline-block;
-}
-
-/* Hide the scrollbar on the line numbers */
-.customize-control-code_editor-line-numbers::-webkit-scrollbar {
-	display: none;
-}
-
-/* Adjust widths on smaller screens */
-@media (max-width:850px), (max-height:472px) {
-	.customize-control-code_editor-line-numbers {
-		width: 9%;
-	}
-	.customize-control-code_editor-textarea {
-		width: 91%;
-	}
+	border-left: 0;
+	font-family: Consolas, Monaco, monospace;
+	padding: 6px 8px;
+	height: 553px;
+	background-color: #fff;
 }
 
 /**

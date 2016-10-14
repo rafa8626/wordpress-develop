@@ -210,7 +210,6 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/class-wp-customize-section.php' );
 		require_once( ABSPATH . WPINC . '/class-wp-customize-control.php' );
 
-		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-code-editor-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-color-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-media-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-upload-control.php' );
@@ -1965,7 +1964,6 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
-		$this->register_control_type( 'WP_Customize_Code_Editor_Control' );
 
 		/* Themes */
 
@@ -2317,10 +2315,11 @@ final class WP_Customize_Manager {
 		) );
 		$this->add_setting( $custom_css_setting );
 
-		$this->add_control( new WP_Customize_Code_Editor_Control( $this, 'wp_custom_css', array(
-			'section' => 'wp_custom_css',
+		$this->add_control( 'wp_custom_css', array(
+			'type'     => 'textarea',
+			'section'  => 'wp_custom_css',
 			'settings' => array( 'default' => $custom_css_setting->id ),
-		) ) );
+		) );
 	}
 
 	/**
