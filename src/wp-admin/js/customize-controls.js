@@ -2950,46 +2950,6 @@
 		}
 	});
 
-	/**
-	 * A Code Editor control.
-	 *
-	 * @class
-	 * @augments wp.customize.Control
-	 * @augments wp.customize.Class
-	 */
-	api.CodeEditorControl = api.Control.extend({
-		/**
-		 * @inheritdoc
-		 */
-		ready: function() {
-			var control = this, textarea, element, lineNumbers, lineNumbersHeight;
-			textarea = control.container.find( '.customize-control-code_editor-textarea' );
-			textareaHeight = textarea.height();
-			lineNumbers = $( textarea ).parents( '.customize-control-content' ).find( '.customize-control-code_editor-line-numbers');
-
-
-			element = new api.Element( textarea );
-			element.sync( control.setting );
-			element.set( control.setting() );
-			control.elements.push( element );
-
-			// Scroll the line numbers with the textarea.
-			// @todo jr3 dynamically create line numbers.
-			$( textarea ).on( 'scroll resize', function () {
-				var textareaTop = $( this ).scrollTop(),
-				lineNumbersHeight = lineNumbers.height();
-				lineNumbers.scrollTop( textareaTop );
-				if ( ( lineNumbersHeight + lineNumbers.scrollTop() ) < ( textareaHeight + textareaTop )) {
-					var last = $( 'span', lineNumbers ).last().text();
-					lineNumbers.append( '<br><span>' + (parseInt( last ) + 1) + '</span>' );
-					console.log( last );
-				}
-			});
-
-
-		}
-	});
-
 	// Change objects contained within the main customize object to Settings.
 	api.defaultConstructor = api.Setting;
 
@@ -3549,8 +3509,7 @@
 		site_icon:     api.SiteIconControl,
 		header:        api.HeaderControl,
 		background:    api.BackgroundControl,
-		theme:         api.ThemeControl,
-		code_editor:   api.CodeEditorControl
+		theme:         api.ThemeControl
 	};
 	api.panelConstructor = {};
 	api.sectionConstructor = {
