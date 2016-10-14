@@ -4445,7 +4445,7 @@
 			});
 
 			changesetStatus.bind( function( newStatus, oldStatus ) {
-				var urlParser;
+				var urlParser, queryParams;
 
 				if ( ! history.replaceState ) {
 					return;
@@ -4458,10 +4458,13 @@
 
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
-				urlParser.search = $.param( _.extend(
-					api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
-					{ changeset_uuid: api.settings.changeset.uuid }
-				) );
+				queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+				if ( '' === newStatus ) {
+					delete queryParams.changeset_uuid;
+				} else {
+					queryParams.changeset_uuid = api.settings.changeset.uuid;
+				}
+				urlParser.search = $.param( queryParams );
 				history.replaceState( {}, document.title, urlParser.href );
 			} );
 
