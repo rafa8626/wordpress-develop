@@ -1669,7 +1669,7 @@ final class WP_Customize_Manager {
 		 *     @type WP_Customize_Manager $manager       Manager instance.
 		 * }
 		 */
-		$data = apply_filters( 'customize_changeset_save', $data, $filter_context );
+		$data = apply_filters( 'customize_changeset_save_data', $data, $filter_context );
 
 		// Switch theme if publishing changes now.
 		if ( 'publish' === $changeset_status && ! $this->is_theme_active() ) {
