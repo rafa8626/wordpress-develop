@@ -2297,7 +2297,7 @@ final class WP_Customize_Manager {
 		) );
 
 		/* Custom CSS */
-		$this->add_section( 'wp_custom_css', array(
+		$this->add_section( 'custom_css', array(
 			'title'              => __( 'Additional CSS' ),
 			'priority'           => 140,
 			'description_hidden' => true,
@@ -2310,14 +2310,14 @@ final class WP_Customize_Manager {
 		) );
 
 		$theme_name = get_stylesheet();
-		$custom_css_setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'wp_custom_css[%s]', $theme_name ), array(
+		$custom_css_setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'custom_css[%s]', $theme_name ), array(
 			'capability' => 'unfiltered_css',
 		) );
 		$this->add_setting( $custom_css_setting );
 
-		$this->add_control( 'wp_custom_css', array(
+		$this->add_control( 'custom_css', array(
 			'type'     => 'textarea',
-			'section'  => 'wp_custom_css',
+			'section'  => 'custom_css',
 			'settings' => array( 'default' => $custom_css_setting->id ),
 		) );
 	}

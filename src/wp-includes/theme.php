@@ -1446,7 +1446,7 @@ function wp_get_custom_css( $theme_name = '' ) {
  *
  * @since 4.7.0
  *
- * @param string $theme_name Optional. A Theme object stylesheet name. Defaults to the current theme.
+ * @param string $theme_name Optional. A Theme stylesheet name. Defaults to the current theme.
  *
  * @return object|bool WP_Post Object, else false.
  */

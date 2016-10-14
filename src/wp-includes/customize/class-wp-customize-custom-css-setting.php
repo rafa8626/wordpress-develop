@@ -26,7 +26,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @access public
 	 * @since 4.7.0
 	 */
-	public $type = 'wp_custom_css';
+	public $type = 'custom_css';
 
 	/**
 	 * Used to determine if we're in the Preview.
@@ -216,7 +216,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * customizer setting.
 	 *
 	 * This setting does not use "option" or "theme_mod," but
-	 * rather "wp_custom_css" to trigger saving.  The value is
+	 * rather "custom_css" to trigger saving.  The value is
 	 * then saved to the custom_css CPT.
 	 *
 	 * This is already sanitized in the sanitize() method.

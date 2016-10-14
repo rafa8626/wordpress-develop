@@ -115,8 +115,6 @@ function create_initial_post_types() {
 		'labels' => array(
 			'name'          => __( 'Custom CSS' ),
 			'singular_name' => __( 'Custom CSS' ),
-			'edit_item'     => __( 'Edit Custom CSS' ),
-			'add_new_item'  => __( 'Add New Custom CSS' ),
 		),
 		'public'           => false,
 		'hierarchical'     => false,

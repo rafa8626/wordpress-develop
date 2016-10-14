@@ -62,13 +62,6 @@ body {
 	cursor: default;
 }
 
-/* A control title, not a panel title */
-#customize-controls .customize-info.control-section .accordion-section-title {
-	cursor: pointer;
-	border-bottom: 1px solid #eee;
-	border-left: 4px solid #fff;
-}
-
 #customize-controls .customize-info.open .accordion-section-title:after,
 #customize-controls .customize-info .accordion-section-title:hover:after,
 #customize-controls .customize-info .accordion-section-title:focus:after {
@@ -78,10 +71,6 @@ body {
 #customize-controls .customize-info .accordion-section-title:after {
 	display: none;
 }
-
-#customize-controls .customize-info .accordion-section-title:after {
-	display: block;
- }
 
 #customize-controls .customize-info .preview-notice {
 	font-size: 13px;
@@ -1013,21 +1002,32 @@ p.customize-section-description {
  * Custom CSS Section
  */
 
-#customize-theme-controls #sub-accordion-section-wp_custom_css {
-	padding: 12px 0;
+#customize-theme-controls #sub-accordion-section-custom_css {
+	padding-left: 0;
+	padding-right: 0;
 }
 
-#customize-theme-controls #sub-accordion-section-wp_custom_css .description {
-	margin: 0 15px;
+#customize-theme-controls #sub-accordion-section-custom_css .customize-section-title {
+	margin-left: 0;
 }
 
-#sub-accordion-section-wp_custom_css textarea {
+#customize-theme-controls #sub-accordion-section-custom_css .customize-control-title,
+#customize-theme-controls #sub-accordion-section-custom_css .notice {
+	margin-left: 10%;
+	margin-right: 10px;
+}
+
+#customize-theme-controls #sub-accordion-section-custom_css .notice {
+	margin-left: 10px;
+}
+
+#sub-accordion-section-custom_css textarea {
 	border-right: 0;
 	border-left: 0;
 	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
 	padding: 6px 8px;
 	height: 553px;
-	background-color: #fff;
 }
 
 /**
