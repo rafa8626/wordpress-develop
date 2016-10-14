@@ -125,6 +125,18 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @todo Needs Expansion.
 	 *
+	 * @todo remove string literals before counting characters for cases where
+	 * a character is used in a "content:" string.
+	 *
+	 * Example:
+	 * .element::before {
+	 *   content: "(\"";
+	 * }
+	 * .element::after {
+	 *   content: "\")";
+	 * }
+	 *
+	 *
 	 * @see WP_Customize_Setting::validate()
 	 *
 	 * @filter customize_validate_{$this->id}
@@ -152,19 +164,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		if ( ! self::validate_balanced_characters( '(', ')', $css ) ) {
 			$validity->add( 'unbalanced_braces', __( 'Your parentheses <code>()</code> are unbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
 		}
-
-		/*
-		 * @todo jr3 remove string literals before counting characters for cases where
-		 * a character is used in a "content:" string.
-		 *
-		 * Example:
-		 * .element::before {
-		 *   content: "(\"";
-		 * }
-		 * .element::after {
-		 *   content: "\")";
-		 * }
-		 */
 
 		// Ensure single quotes are equal.
 		if ( ! self::validate_equal_characters( '\'', $css ) ) {
@@ -220,6 +219,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * then saved to the custom_css CPT.
 	 *
 	 * This is already sanitized in the sanitize() method.
+	 *
+	 * @todo store post ID in a theme mod.
 	 *
 	 * @see WP_Customize_Setting::update()
 	 *

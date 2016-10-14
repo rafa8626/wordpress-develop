@@ -572,10 +572,10 @@ p.customize-section-description {
 }
 
 .customize-section-description a.external-link:after {
-    font: 16px/11px dashicons;
-    content: "\f310";
-    top: 3px;
-    position: relative;
+	font: 16px/11px dashicons;
+	content: "\f310";
+	top: 3px;
+	position: relative;
 	padding-left: 3px;
 	display: inline-block;
 	text-decoration: none;
@@ -1003,8 +1003,10 @@ p.customize-section-description {
 
 /**
  * Custom CSS Section
+ *
+ * Modifications to the Section Container to
+ * make the textarea full-width.
  */
-
 #customize-theme-controls #sub-accordion-section-custom_css {
 	padding-left: 0;
 	padding-right: 0;
