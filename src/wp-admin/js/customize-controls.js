@@ -107,8 +107,9 @@
 	/**
 	 * Timeout ID for the current debounced call to requestChangesetUpdate.
 	 *
+	 * @since 4.7.0
 	 * @type {int|null}
-	 * @private
+	 * @protected
 	 */
 	api._updateChangesetTimeoutId = null;
 
@@ -117,25 +118,73 @@
 	 *
 	 * @since 4.7.0
 	 * @type {object|null}
-	 * @private
+	 * @protected
 	 */
 	api._pendingUpdateChanges = {};
 
 	/**
 	 * Current jqXHR made from a call to requestChangesetUpdate.
 	 *
+	 * @since 4.7.0
 	 * @type {jQuery.ajax|null}
-	 * @private
+	 * @protected
 	 */
 	api._currentUpdateRequest = null;
 
 	/**
 	 * Deferred returned by debounced calls to requestChangesetUpdate.
 	 *
+	 * @since 4.7.0
 	 * @type {jQuery.Deferred|null}
-	 * @private
+	 * @protected
 	 */
 	api._pendingChangesetUpdateRequestDeferred = null;
+
+	/**
+	 * Current change count.
+	 *
+	 * @since 4.7.0
+	 * @type {number}
+	 * @protected
+	 */
+	api._latestRevision = 0;
+
+	/**
+	 * Last revision that was saved.
+	 *
+	 * @since 4.7.0
+	 * @type {number}
+	 * @protected
+	 */
+	api._lastSavedRevision = 0;
+
+	/**
+	 * Latest revisions associated with the updated setting.
+	 *
+	 * @since 4.7.0
+	 * @type {object}
+	 * @protected
+	 */
+	api._latestSettingRevisions = {};
+
+	/*
+	 * Keep track of the revision associated with each updated setting so that
+	 * requestChangesetUpdate knows which dirty settings to include. Also, once
+	 * ready is triggered and all initial settings have been added, increment
+	 * revision for each newly-created setting so that it will also be included
+	 * in changeset update requests.
+	 */
+	api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+		api._latestRevision += 1;
+		api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+	} );
+	api.bind( 'ready', function() {
+		// Note that if a created setting is not _dirty it will not be included in a changeset update.
+		api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+			api._latestRevision += 1;
+			api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+		} );
+	} );
 
 	/**
 	 * Request updates to the changeset.
@@ -212,9 +261,18 @@
 			pendingChanges = _.clone( api._pendingUpdateChanges );
 			api._pendingUpdateChanges = {};
 
-			// Ensure all dirty settings are also included, unless pending change is for deletion from changeset.
-			api.each( function( setting ) {
-				if ( setting._dirty && null !== pendingChanges[ setting.id ] ) {
+			// Ensure all revised settings are also included.
+			_.each( api._latestSettingRevisions, function( latestSettingRevision, settingId ) {
+				var setting;
+
+				// Skip any settings that were already sent in previous requests.
+				if ( latestSettingRevision <= api._lastSavedRevision ) {
+					return;
+				}
+
+				// Include the setting if it is still marked as dirty and if it is not marked for deletion.
+				setting = api( settingId );
+				if ( setting && setting._dirty && null !== pendingChanges[ setting.id ] ) {
 					pendingChanges[ setting.id ] = _.extend(
 						{},
 						pendingChanges[ setting.id ] || {},
@@ -224,6 +282,9 @@
 					);
 				}
 			} );
+
+			// Ensure that all settings updated subsequently will be included in the next changeset update request.
+			api._lastSavedRevision = api._latestRevision;
 
 			// Allow plugins to attach additional params to the settings.
 			api.trigger( 'changeset-save', pendingChanges );
