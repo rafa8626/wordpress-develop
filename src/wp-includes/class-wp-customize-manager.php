@@ -838,25 +838,33 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Parse the incoming $_POST['customized'] JSON data and store the unsanitized
-	 * settings for subsequent post_value() lookups.
+	 * Get dirty pre-sanitized setting values in the current customized state.
+	 *
+	 * The returned array consists of a merge of three sources:
+	 * 1. If the theme is not currently active, then the base array is any stashed
+	 *    theme mods that were modified previously but never published.
+	 * 2. The values from the current changeset, if it exists.
+	 * 3. If the user can customize, the values parsed from the incoming
+	 *    `$_POST['customized']` JSON data.
+	 * 4. Any programmatically-set post values via `WP_Customize_Manager::set_post_value()`.
+	 *
+	 * The name "unsanitized_post_values" is a carry-over from when the customized
+	 * state was exclusively sourced from `$_POST['customized']`.
 	 *
 	 * @since 4.1.1
-	 * @since 4.7.0 Added $args param.
+	 * @since 4.7.0 Added $args param and merging with changeset values and stashed theme mods.
 	 *
 	 * @param array $args {
 	 *     Args.
 	 *
-	 *     @type bool $exclude_stashed_theme_mods Whether stashed theme mods should be excluded in the basis of the values. Defaults to false if theme is active.
-	 *     @type bool $exclude_changeset          Whether the changeset values should also be excluded. Defaults to false.
-	 *     @type bool $exclude_post_data          Whether the post input values should also be excluded. Defaults to false when lacking the customize capability.
+	 *     @type bool $exclude_changeset Whether the changeset values should also be excluded. Defaults to false.
+	 *     @type bool $exclude_post_data Whether the post input values should also be excluded. Defaults to false when lacking the customize capability.
 	 * }
 	 * @return array
 	 */
 	public function unsanitized_post_values( $args = array() ) {
 		$args = array_merge(
 			array(
-				'exclude_stashed_theme_mods' => $this->is_theme_active(),
 				'exclude_changeset' => false,
 				'exclude_post_data' => ! current_user_can( 'customize' ),
 			),
@@ -866,7 +874,7 @@ final class WP_Customize_Manager {
 		$values = array();
 
 		// Let default values be from the stashed theme mods if doing a theme switch and if no changeset is present.
-		if ( empty( $args['exclude_stashed_theme_mods'] ) ) {
+		if ( ! $this->is_theme_active() ) {
 			$stashed_theme_mods = get_option( 'customize_stashed_theme_mods' );
 			$stylesheet = $this->get_stylesheet();
 			if ( isset( $stashed_theme_mods[ $stylesheet ] ) ) {
@@ -1569,7 +1577,6 @@ final class WP_Customize_Manager {
 
 		// Validate settings.
 		$post_values = $this->unsanitized_post_values( array(
-			'exclude_stashed_theme_mods' => true,
 			'exclude_changeset' => true,
 			'exclude_post_data' => false,
 		) );
@@ -1866,7 +1873,6 @@ final class WP_Customize_Manager {
 
 		$changeset_setting_values = $this->unsanitized_post_values( array(
 			'exclude_post_data' => true,
-			'exclude_stashed_theme_mods' => true,
 			'exclude_changeset' => false,
 		) );
 		$changeset_setting_ids = array_keys( $changeset_setting_values );
@@ -2676,18 +2682,11 @@ final class WP_Customize_Manager {
 			'customize-login' => 1,
 		), wp_login_url() );
 
-		// Ensure dirty flags are set for any unstashed theme mods.
-		if ( ! $this->is_theme_active() ) {
-			$unstashed_theme_mod_setting_ids = array_keys( $this->unsanitized_post_values( array(
-				'exclude_stashed_theme_mods' => false,
-				'exclude_changeset' => true,
-				'exclude_post_data' => true,
-			) ) );
-			foreach ( $unstashed_theme_mod_setting_ids as $setting_id ) {
-				$setting = $this->get_setting( $setting_id );
-				if ( $setting ) {
-					$setting->dirty = true;
-				}
+		// Ensure dirty flags are set for modified settings.
+		foreach ( array_keys( $this->unsanitized_post_values() ) as $setting_id ) {
+			$setting = $this->get_setting( $setting_id );
+			if ( $setting ) {
+				$setting->dirty = true;
 			}
 		}
 
