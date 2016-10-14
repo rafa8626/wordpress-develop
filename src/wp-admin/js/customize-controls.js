@@ -4199,7 +4199,6 @@
 					deferred.promise();
 				}
 
-				api.state( 'changesetStatus' ).set( changesetStatus );
 				api.state( 'saving' ).set( true );
 
 				function captureSettingModifiedDuringSave( setting ) {
@@ -4243,7 +4242,7 @@
 					 */
 					query = $.extend( previewer.query(), {
 						nonce: previewer.nonce.save,
-						customize_changeset_status: api.state( 'changesetStatus' ).get()
+						customize_changeset_status: changesetStatus
 					} );
 					if ( args && args.date ) {
 						query.customize_changeset_date = args.date;
