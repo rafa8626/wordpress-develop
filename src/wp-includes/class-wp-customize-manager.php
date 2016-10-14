@@ -1534,7 +1534,7 @@ final class WP_Customize_Manager {
 				if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
 					wp_send_json_error( 'changeset_publish_unauthorized', 403 );
 				}
-				if ( false === has_action( 'publish_customize_changeset', '_wp_customize_publish_changeset' ) ) {
+				if ( false === has_action( 'transition_post_status', '_wp_customize_publish_changeset' ) ) {
 					wp_send_json_error( 'missing_publish_callback', 500 );
 				}
 			}

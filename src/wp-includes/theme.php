@@ -2116,11 +2116,24 @@ function _wp_customize_include() {
 /**
  * Publish a snapshot's changes.
  *
- * @param int     $changeset_post_id Changeset post ID.
- * @param WP_Post $changeset_post    Changeset post object.
+ * @param string  $new_status     New post status.
+ * @param string  $old_status     Old post status.
+ * @param WP_Post $changeset_post Changeset post object.
  */
-function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) {
+function _wp_customize_publish_changeset( $new_status, $old_status, $changeset_post ) {
 	global $wp_customize;
+
+	$is_publishing_changeset = (
+		'customize_changeset' === $changeset_post->post_type
+		&&
+		'publish' === $new_status
+		&&
+		'publish' !== $old_status
+	);
+	if ( ! $is_publishing_changeset ) {
+		return;
+	}
+
 	if ( empty( $wp_customize ) ) {
 		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
 		$wp_customize = new WP_Customize_Manager( $changeset_post->post_name );
@@ -2147,7 +2160,7 @@ function _wp_customize_publish_changeset( $changeset_post_id, $changeset_post ) 
 		/** This filter is documented in /wp-includes/class-wp-customize-manager.php */
 		do_action( 'customize_register', $wp_customize );
 	}
-	$wp_customize->publish_changeset_values( $changeset_post_id ) ;
+	$wp_customize->publish_changeset_values( $changeset_post->ID ) ;
 
 	/*
 	 * Trash the changeset post if revisions are not enabled. Unpublished
