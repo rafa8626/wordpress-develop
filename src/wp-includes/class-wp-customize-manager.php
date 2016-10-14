@@ -1919,10 +1919,10 @@ final class WP_Customize_Manager {
 		do_action( 'customize_save_after', $this );
 
 		// Restore original capabilities.
-		foreach ( $changeset_setting_ids as $setting_id ) {
+		foreach ( $original_setting_capabilities as $setting_id => $capability ) {
 			$setting = $this->get_setting( $setting_id );
 			if ( $setting ) {
-				$setting->capability = $original_setting_capabilities[ $setting->id ];
+				$setting->capability = $capability;
 			}
 		}
 
