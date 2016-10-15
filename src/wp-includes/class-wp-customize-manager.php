@@ -406,6 +406,7 @@ final class WP_Customize_Manager {
 		if ( $this->messenger_channel ) {
 			header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
 			echo '<!DOCTYPE html><html>';
+			wp_enqueue_scripts();
 			wp_print_scripts( array( 'customize-base' ) );
 
 			$settings = array(
