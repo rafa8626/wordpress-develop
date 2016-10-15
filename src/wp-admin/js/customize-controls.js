@@ -280,6 +280,12 @@
 			// Ensure that all settings updated subsequently will be included in the next changeset update request.
 			api._lastSavedRevision = api._latestRevision;
 
+			// Short-circuit when there are no pending changes.
+			if ( _.isEmpty( pendingChanges ) ) {
+				currentDeferred.resolve( {} );
+				return currentDeferred.promise();
+			}
+
 			// Allow plugins to attach additional params to the settings.
 			api.trigger( 'changeset-save', pendingChanges );
 
