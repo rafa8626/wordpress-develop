@@ -645,7 +645,6 @@
 		 * Send a message to the parent customize frame with a list of which
 		 * containers and controls are active.
 		 */
-
 		api.preview.send( 'ready', {
 			currentUrl: api.settings.url.self,
 			activePanels: api.settings.activePanels,

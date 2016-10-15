@@ -2083,30 +2083,42 @@ function _wp_customize_include() {
 		||
 		( isset( $_REQUEST['wp_customize'] ) && 'on' == $_REQUEST['wp_customize'] )
 		||
-		! empty( $_REQUEST['customize_changeset_uuid'] )
+		( ! empty( $_GET['customize_changeset_uuid'] ) || ! empty( $_POST['customize_changeset_uuid'] ) )
 	);
 
 	if ( ! $should_include ) {
 		return;
 	}
 
+	/*
+	 * Note that wp_unslash() is not being used on the input vars because it is
+	 * called before wp_magic_quotes() gets called. Besides this fact, none of
+	 * the values should contain any characters needing slashes anyway.
+	 */
+	$keys = array( 'changeset_uuid', 'customize_changeset_uuid', 'customize_theme', 'theme', 'customize_messenger_channel' );
+	$input_vars = array_merge(
+		wp_array_slice_assoc( $_GET, $keys ),
+		wp_array_slice_assoc( $_POST, $keys )
+	);
+
 	$theme = null;
 	$changeset_uuid = null;
 	$messenger_channel = null;
 
-	if ( $is_customize_admin_page && isset( $_REQUEST['changeset_uuid'] ) ) {
-		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['changeset_uuid'] ) );
-	} elseif ( ! empty( $_REQUEST['customize_changeset_uuid'] ) ) {
-		$changeset_uuid = sanitize_key( wp_unslash( $_REQUEST['customize_changeset_uuid'] ) );
+	if ( $is_customize_admin_page && isset( $input_vars['changeset_uuid'] ) ) {
+		$changeset_uuid = sanitize_key( $input_vars['changeset_uuid'] );
+	} elseif ( ! empty( $input_vars['customize_changeset_uuid'] ) ) {
+		$changeset_uuid = sanitize_key( $input_vars['customize_changeset_uuid'] );
 	}
 
-	if ( $is_customize_admin_page && isset( $_REQUEST['theme'] ) ) {
-		$theme = wp_unslash( $_REQUEST['theme'] );
-	} elseif ( isset( $_REQUEST['customize_theme'] ) ) {
-		$theme = wp_unslash( $_REQUEST['customize_theme'] );
+	// Note that theme will be sanitized via WP_Theme.
+	if ( $is_customize_admin_page && isset( $input_vars['theme'] ) ) {
+		$theme = $input_vars['theme'];
+	} elseif ( isset( $input_vars['customize_theme'] ) ) {
+		$theme = $input_vars['customize_theme'];
 	}
-	if ( isset( $_REQUEST['customize_messenger_channel'] ) ) {
-		$messenger_channel = sanitize_key( wp_unslash( $_REQUEST['customize_messenger_channel'] ) );
+	if ( isset( $input_vars['customize_messenger_channel'] ) ) {
+		$messenger_channel = sanitize_key( $input_vars['customize_messenger_channel'] );
 	}
 
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
