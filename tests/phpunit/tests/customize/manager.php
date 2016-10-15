@@ -761,6 +761,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'activePanels', $settings );
 		$this->assertArrayHasKey( 'activeSections', $settings );
 		$this->assertArrayHasKey( 'activeControls', $settings );
+		$this->assertArrayHasKey( 'settingValidities', $settings );
 		$this->assertArrayHasKey( 'nonce', $settings );
 		$this->assertArrayHasKey( '_dirty', $settings );
 		$this->assertArrayHasKey( 'timeouts', $settings );

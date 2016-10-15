@@ -1175,6 +1175,9 @@ final class WP_Customize_Manager {
 	 * @since 3.4.0
 	 */
 	public function customize_preview_settings() {
+		$setting_validities = $this->validate_setting_values( $this->unsanitized_post_values() );
+		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
+
 		$self_url = home_url( empty( $_SERVER['REQUEST_URI'] ) ? '/' : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
 		$state_query_params = array(
 			'customize_theme',
@@ -1219,13 +1222,14 @@ final class WP_Customize_Manager {
 			'activePanels' => array(),
 			'activeSections' => array(),
 			'activeControls' => array(),
+			'settingValidities' => $exported_setting_validities,
 			'nonce' => current_user_can( 'customize' ) ? $this->get_nonces() : array(),
 			'l10n' => array(
 				'shiftClickToEdit' => __( 'Shift-click to edit this element.' ),
 				'linkUnpreviewable' => __( 'This link is not live-previewable.' ),
 				'formUnpreviewable' => __( 'This form is not live-previewable.' ),
 			),
-			'_dirty' => array(),
+			'_dirty' => array_keys( $this->unsanitized_post_values() ),
 		);
 
 		foreach ( $this->panels as $panel_id => $panel ) {
@@ -2698,7 +2702,7 @@ final class WP_Customize_Manager {
 			),
 			'timeouts' => array(
 				'windowRefresh' => 250,
-				'changesetUpdate' => 250,
+				'changesetAutoSave' => 10000,
 				'keepAliveCheck' => 2500,
 				'reflowPaneContents' => 100,
 				'previewFrameSensitivity' => 2000,
