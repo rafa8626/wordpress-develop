@@ -3444,14 +3444,18 @@
 	});
 
 	(function(){
-		var uuid = 0;
+		var id = 0;
 		/**
-		 * Create a universally unique identifier.
+		 * Return an incremented ID for a preview messenger channel.
 		 *
-		 * @return {int}
+		 * This function is named "uuid" for historical reasons, but it is a
+		 * misnomer as it is not an actual UUID, and it is not universally unique.
+		 * This is not to be confused with `api.settings.changeset.uuid`.
+		 *
+		 * @return {string}
 		 */
 		api.PreviewFrame.uuid = function() {
-			return 'preview-' + uuid++;
+			return 'preview-' + String( id++ );
 		};
 	}());
 
