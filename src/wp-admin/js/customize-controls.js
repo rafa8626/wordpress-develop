@@ -147,18 +147,19 @@
 	 * Keep track of the revision associated with each updated setting so that
 	 * requestChangesetUpdate knows which dirty settings to include. Also, once
 	 * ready is triggered and all initial settings have been added, increment
-	 * revision for each newly-created setting so that it will also be included
-	 * in changeset update requests.
+	 * revision for each newly-created initially-dirty setting so that it will
+	 * also be included in changeset update requests.
 	 */
 	api.bind( 'change', function incrementChangedSettingRevision( setting ) {
 		api._latestRevision += 1;
 		api._latestSettingRevisions[ setting.id ] = api._latestRevision;
 	} );
 	api.bind( 'ready', function() {
-		// Note that if a created setting is not _dirty it will not be included in a changeset update.
 		api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
-			api._latestRevision += 1;
-			api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+			if ( setting._dirty ) {
+				api._latestRevision += 1;
+				api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+			}
 		} );
 	} );
 
