@@ -518,7 +518,8 @@
 					currentUrl: api.settings.url.self,
 					activePanels: api.settings.activePanels,
 					activeSections: api.settings.activeSections,
-					activeControls: api.settings.activeControls
+					activeControls: api.settings.activeControls,
+					settingValidities: api.settings.settingValidities
 				} );
 			} else {
 				api.preview.send( 'keep-alive' );
@@ -649,7 +650,8 @@
 			currentUrl: api.settings.url.self,
 			activePanels: api.settings.activePanels,
 			activeSections: api.settings.activeSections,
-			activeControls: api.settings.activeControls
+			activeControls: api.settings.activeControls,
+			settingValidities: api.settings.settingValidities
 		} );
 
 		// Send ready when URL changes via JS.
