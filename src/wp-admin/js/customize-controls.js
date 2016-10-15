@@ -3432,12 +3432,11 @@
 
 		destroy: function() {
 			api.Messenger.prototype.destroy.call( this );
-			// @todo this.request.abort();
 
-			if ( this.iframe )
+			if ( this.iframe ) {
 				this.iframe.remove();
+			}
 
-			delete this.request;
 			delete this.iframe;
 			delete this.targetWindow;
 		}
