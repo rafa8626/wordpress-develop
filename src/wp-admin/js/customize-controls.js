@@ -277,9 +277,6 @@
 				}
 			} );
 
-			// Ensure that all settings updated subsequently will be included in the next changeset update request.
-			api._lastSavedRevision = api._latestRevision;
-
 			// Short-circuit when there are no pending changes.
 			if ( _.isEmpty( pendingChanges ) ) {
 				currentDeferred.resolve( {} );
@@ -304,6 +301,10 @@
 			api._currentUpdateRequest = request;
 
 			request.done( function requestChangesetUpdateDone( data ) {
+
+				// Ensure that all settings updated subsequently will be included in the next changeset update request.
+				api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+
 				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
 				api.trigger( 'changeset-saved', data );
