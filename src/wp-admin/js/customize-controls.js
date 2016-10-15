@@ -164,6 +164,34 @@
 	} );
 
 	/**
+	 * Get the dirty setting values.
+	 *
+	 * @param {object} [options] Options.
+	 * @param {boolean} [options.unsaved=false] Whether only values not saved yet into a changeset will be returned (differential changes).
+	 * @returns {object} Dirty setting values.
+	 */
+	api.dirtyValues = function dirtyValues( options ) {
+		var values = {};
+		api.each( function( setting ) {
+			var settingRevision;
+
+			if ( ! setting._dirty ) {
+				return;
+			}
+
+			settingRevision = api._latestSettingRevisions[ setting.id ];
+
+			// Skip including settings that have already been included in the changeset, if only requesting unsaved.
+			if ( ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
+				return;
+			}
+
+			values[ setting.id ] = setting.get();
+		} );
+		return values;
+	};
+
+	/**
 	 * Request updates to the changeset.
 	 *
 	 * This is implemented in the same way as wp.customize.selectiveRefresh.requestPartial()
@@ -238,24 +266,13 @@
 			pendingChanges = _.clone( api._pendingUpdateChanges );
 			api._pendingUpdateChanges = {};
 
-			// Ensure all revised settings are also included.
-			_.each( api._latestSettingRevisions, function( latestSettingRevision, settingId ) {
-				var setting;
-
-				// Skip any settings that were already sent in previous requests.
-				if ( latestSettingRevision <= api._lastSavedRevision ) {
-					return;
-				}
-
-				// Include the setting if it is still marked as dirty and if it is not marked for deletion.
-				setting = api( settingId );
-				if ( setting && setting._dirty && null !== pendingChanges[ setting.id ] ) {
-					pendingChanges[ setting.id ] = _.extend(
+			// Ensure all revised settings (changes pending save) are also included.
+			_.each( api.dirtyValues( { unsaved: true } ), function( dirtyValue, settingId ) {
+				if ( null !== pendingChanges[ settingId ] ) {
+					pendingChanges[ settingId ] = _.extend(
 						{},
-						pendingChanges[ setting.id ] || {},
-						{
-							value: setting.get()
-						}
+						pendingChanges[ settingId ] || {},
+						{ value: dirtyValue }
 					);
 				}
 			} );
@@ -3725,7 +3742,7 @@
 			previewer.loading = new api.PreviewFrame({
 				url:        previewer.url(),
 				previewUrl: previewer.previewUrl(),
-				query:      previewer.query( { excludeCustomized: true } ) || {},
+				query:      previewer.query( { excludeCustomizedSaved: true } ) || {},
 				container:  previewer.container
 			});
 
@@ -4101,13 +4118,11 @@
 			 * @since 4.7.0 Added options param.
 			 *
 			 * @param {object}  [options] Options.
-			 * @param {boolean} [options.excludeCustomized=false] Exclude customized from response.
+			 * @param {boolean} [options.excludeCustomizedSaved=false] Exclude saved settings in customized response (values pending writing to changeset).
 			 * @return {object} Query vars.
 			 */
 			query: function( options ) {
-				var dirtyCustomized, queryVars;
-
-				queryVars = {
+				var queryVars = {
 					wp_customize: 'on',
 					customize_theme: api.settings.theme.stylesheet,
 					nonce: this.nonce.preview,
@@ -4119,15 +4134,9 @@
 				 * Changeset updates are differential and so it is a performance waste to send all of
 				 * the dirty settings with each update.
 				 */
-				if ( ! options || ! options.excludeCustomized ) {
-					dirtyCustomized = {};
-					api.each( function ( value, key ) {
-						if ( value._dirty ) {
-							dirtyCustomized[ key ] = value();
-						}
-					} );
-					queryVars.customized = JSON.stringify( dirtyCustomized );
-				}
+				queryVars.customized = JSON.stringify( api.dirtyValues( {
+					unsaved: options && options.excludeCustomizedSaved
+				} ) );
 
 				return queryVars;
 			},
@@ -4200,10 +4209,10 @@
 					}
 
 					/*
-					 * Note that excludeCustomized is intentionally not present so that the entire
+					 * Note that excludeCustomizedSaved is intentionally false so that the entire
 					 * set of customized data will be included if bypassed changeset update.
 					 */
-					query = $.extend( previewer.query(), {
+					query = $.extend( previewer.query( { excludeCustomizedSaved: false } ), {
 						nonce: previewer.nonce.save,
 						customize_changeset_status: changesetStatus
 					} );
