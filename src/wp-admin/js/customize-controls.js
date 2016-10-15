@@ -81,42 +81,6 @@
 	});
 
 	/**
-	 * Timeout ID for the current debounced call to requestChangesetUpdate.
-	 *
-	 * @since 4.7.0
-	 * @type {int|null}
-	 * @protected
-	 */
-	api._updateChangesetTimeoutId = null;
-
-	/**
-	 * Staging for changeset changes added by calls to requestChangesetUpdate.
-	 *
-	 * @since 4.7.0
-	 * @type {object|null}
-	 * @protected
-	 */
-	api._pendingUpdateChanges = {};
-
-	/**
-	 * Current jqXHR made from a call to requestChangesetUpdate.
-	 *
-	 * @since 4.7.0
-	 * @type {jQuery.ajax|null}
-	 * @protected
-	 */
-	api._currentUpdateRequest = null;
-
-	/**
-	 * Deferred returned by debounced calls to requestChangesetUpdate.
-	 *
-	 * @since 4.7.0
-	 * @type {jQuery.Deferred|null}
-	 * @protected
-	 */
-	api._pendingChangesetUpdateRequestDeferred = null;
-
-	/**
 	 * Current change count.
 	 *
 	 * @since 4.7.0
@@ -194,154 +158,78 @@
 	/**
 	 * Request updates to the changeset.
 	 *
-	 * This is implemented in the same way as wp.customize.selectiveRefresh.requestPartial()
-	 * in that it will combine multiple calls (debounce) into a single request.
-	 *
 	 * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
-	 *                           If not provided, then the changes will still be obtained from dirty settings.
+	 *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
 	 * @returns {jQuery.Promise}
 	 */
 	api.requestChangesetUpdate = function requestChangesetUpdate( changes ) {
-		var currentDeferred, nextDeferred;
+		var deferred, request, submittedChanges = {}, data;
+		deferred = new $.Deferred();
 
-		if ( api._pendingChangesetUpdateRequestDeferred ) {
-			currentDeferred = api._pendingChangesetUpdateRequestDeferred;
-		} else {
-			currentDeferred = new $.Deferred();
-			api._pendingChangesetUpdateRequestDeferred = currentDeferred;
+		// Make sure that publishing a changeset waits for all changeset update requests to complete.
+		api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+		deferred.always( function() {
+			api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+		} );
 
-			// Make sure that publishing a changeset waits for all changeset update requests to complete.
-			api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
-			currentDeferred.always( function() {
-				api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
-			} );
-		}
-
-		// Store the changes in a object containing all of the pending settings for the next request.
 		if ( changes ) {
-			_.each( changes, function( settingParams, settingId ) {
-				if ( null === settingParams ) {
-
-					// When null is passed as the change, the result will be the removal of the setting from the changeset. A revert.
-					api._pendingUpdateChanges[ settingId ] = null;
-				} else if ( _.isObject( settingParams ) ) {
-					if ( _.isUndefined( api._pendingUpdateChanges[ settingId ] ) ) {
-						api._pendingUpdateChanges[ settingId ] = {};
-					}
-					_.extend( api._pendingUpdateChanges[ settingId ], settingParams );
-				} else {
-					throw new Error( 'Unexpected change for ' + settingId );
-				}
-			} );
+			_.extend( submittedChanges, changes );
 		}
 
-		/*
-		 * If there is a changeset update request currently being made, wait until it completes.
-		 * No need to pass along the changes because they're already on _pendingUpdateChanges.
-		 * Return a new promise that will resolve/reject with the next requests's response.
-		 */
-		if ( api._currentUpdateRequest ) {
-			nextDeferred = $.Deferred();
-			api._currentUpdateRequest.always( function oncePendingUpdateRequestCompletes() {
-				api.requestChangesetUpdate( {} ).then(
-					function doneNextRequest( data ) {
-						nextDeferred.resolve( data );
-					},
-					function failNextRequest( data ) {
-						nextDeferred.reject( data );
-					}
+		// Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
+		_.each( api.dirtyValues( { unsaved: true } ), function( dirtyValue, settingId ) {
+			if ( ! changes || null !== changes[ settingId ] ) {
+				submittedChanges[ settingId ] = _.extend(
+					{},
+					submittedChanges[ settingId ] || {},
+					{ value: dirtyValue }
 				);
-			} );
-			return nextDeferred.promise();
-		}
-
-		// Reset the timeout for the debounced call.
-		if ( api._updateChangesetTimeoutId ) {
-			clearTimeout( api._updateChangesetTimeoutId );
-		}
-
-		api._updateChangesetTimeoutId = setTimeout( function requestAjaxChangesetUpdate() {
-			var pendingChanges, requestDeferred, request;
-
-			pendingChanges = _.clone( api._pendingUpdateChanges );
-			api._pendingUpdateChanges = {};
-
-			// Ensure all revised settings (changes pending save) are also included.
-			_.each( api.dirtyValues( { unsaved: true } ), function( dirtyValue, settingId ) {
-				if ( null !== pendingChanges[ settingId ] ) {
-					pendingChanges[ settingId ] = _.extend(
-						{},
-						pendingChanges[ settingId ] || {},
-						{ value: dirtyValue }
-					);
-				}
-			} );
-
-			// Short-circuit when there are no pending changes.
-			if ( _.isEmpty( pendingChanges ) ) {
-				currentDeferred.resolve( {} );
-				return currentDeferred.promise();
 			}
+		} );
 
-			// Allow plugins to attach additional params to the settings.
-			api.trigger( 'changeset-save', pendingChanges );
+		// Short-circuit when there are no pending changes.
+		if ( _.isEmpty( submittedChanges ) ) {
+			deferred.resolve( {} );
+			return deferred.promise();
+		}
 
-			requestDeferred = api._pendingChangesetUpdateRequestDeferred;
-			api._pendingChangesetUpdateRequestDeferred = null;
+		// Allow plugins to attach additional params to the settings.
+		api.trigger( 'changeset-save', submittedChanges );
 
-			request = wp.ajax.post( 'customize_save', _.extend(
-				// Ensure that if any plugins add data to save requests by extending query() that they get included here.
-				api.previewer.query( { excludeCustomized: true } ),
-				{
-					nonce: api.settings.nonce.save,
-					customize_theme: api.settings.theme.stylesheet,
-					customize_changeset_data: JSON.stringify( pendingChanges )
-				}
-			) );
-			api._currentUpdateRequest = request;
+		// Ensure that if any plugins add data to save requests by extending query() that they get included here.
+		data = api.previewer.query( { excludeCustomizedSaved: true } );
+		delete data.customized; // Being sent in customize_changeset_data instead.
+		_.extend( data, {
+			nonce: api.settings.nonce.save,
+			customize_theme: api.settings.theme.stylesheet,
+			customize_changeset_data: JSON.stringify( submittedChanges )
+		} );
 
-			request.done( function requestChangesetUpdateDone( data ) {
+		request = wp.ajax.post( 'customize_save', data );
 
-				// Ensure that all settings updated subsequently will be included in the next changeset update request.
-				api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+		request.done( function requestChangesetUpdateDone( data ) {
 
-				api.state( 'changesetStatus' ).set( data.changeset_status );
-				requestDeferred.resolve( data );
-				api.trigger( 'changeset-saved', data );
-				api.previewer.send( 'changeset-saved', data );
-			} );
-			request.fail( function requestChangesetUpdateFail( data ) {
+			// Ensure that all settings updated subsequently will be included in the next changeset update request.
+			api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
 
-				api.trigger( 'changeset-error', data );
-
-				// Make the changes pending again, merging the changes sent in the request with any new pending changes.
-				_.each( pendingChanges, function( settingParams, settingId ) {
-					if ( _.isObject( api._pendingUpdateChanges[ settingId ] ) ) {
-						api._pendingUpdateChanges[ settingId ] = _.extend(
-							settingParams,
-							api._pendingUpdateChanges[ settingId ]
-						);
-					} else if ( null !== api._pendingUpdateChanges[ settingId ] ) {
-						api._pendingUpdateChanges[ settingId ] = settingParams;
-					}
+			api.state( 'changesetStatus' ).set( data.changeset_status );
+			deferred.resolve( data );
+			api.trigger( 'changeset-saved', data );
+			api.previewer.send( 'changeset-saved', data );
+		} );
+		request.fail( function requestChangesetUpdateFail( data ) {
+			deferred.reject( data );
+			api.trigger( 'changeset-error', data );
+		} );
+		request.always( function( data ) {
+			if ( data.setting_validities ) {
+				api._handleSettingValidities( {
+					settingValidities: data.setting_validities
 				} );
+			}
+		} );
 
-				requestDeferred.reject( data );
-			} );
-			request.always( function( data ) {
-
-				// Allow another request to be made.
-				api._currentUpdateRequest = null;
-
-				if ( data.setting_validities ) {
-					api._handleSettingValidities( {
-						settingValidities: data.setting_validities
-					} );
-				}
-			} );
-		}, api.settings.timeouts.changesetUpdate );
-
-		return currentDeferred.promise();
+		return deferred.promise();
 	};
 
 	/**
