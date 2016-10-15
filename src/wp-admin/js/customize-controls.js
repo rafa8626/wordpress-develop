@@ -282,20 +282,6 @@
 			request.done( function requestChangesetUpdateDone( data ) {
 				api.state( 'changesetStatus' ).set( data.changeset_status );
 				requestDeferred.resolve( data );
-
-				// Mark settings from pending changes as clean if there is not a new change pending.
-				_.each( _.keys( pendingChanges ), function( settingId ) {
-					var markClean = (
-						api.has( settingId ) &&
-						_.isUndefined( api._pendingUpdateChanges[ settingId ] ) &&
-						data.setting_validities &&
-						true === data.setting_validities[ settingId ]
-					);
-					if ( markClean ) {
-						api( settingId )._dirty = false;
-					}
-				} );
-
 				api.trigger( 'changeset-saved', data );
 				api.previewer.send( 'changeset-saved', data );
 			} );
