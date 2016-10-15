@@ -4710,10 +4710,58 @@
 			api.previewer.refresh();
 		});
 
-		// Start auto-save polling for changeset updates.
-		setInterval( function() {
-			api.requestChangesetUpdate();
-		}, api.settings.timeouts.changesetAutoSave );
+		// Autosave changeset.
+		( function() {
+			var timeoutId, updateChangesetWithReschedule, scheduleChangesetUpdate, visibilityStateProp, visibilityChangeEvent;
+
+			/**
+			 * Request changeset update and then re-schedule the next changeset update time.
+			 *
+			 * @private
+			 */
+			updateChangesetWithReschedule = function() {
+				api.requestChangesetUpdate();
+				scheduleChangesetUpdate();
+			};
+
+			/**
+			 * Schedule changeset update.
+			 *
+			 * @private
+			 */
+			scheduleChangesetUpdate = function() {
+				clearTimeout( timeoutId );
+				timeoutId = setTimeout( function() {
+					api.requestChangesetUpdate();
+					scheduleChangesetUpdate();
+				}, api.settings.timeouts.changesetAutoSave );
+			};
+
+			// Start auto-save interval for updating changeset.
+			scheduleChangesetUpdate();
+
+			// Save any unsaved changes in changeset whenever hiding window or unloading.
+			if ( ! _.isUndefined( document.visibilityState ) ) {
+				visibilityChangeEvent = 'visibilitychange';
+				visibilityStateProp = 'visibilityState';
+			} else if ( ! _.isUndefined( document.msVisibilityState ) ) { // IE10
+				visibilityChangeEvent = 'msvisibilitychange';
+				visibilityStateProp = 'msVisibilityState';
+			} else if ( ! _.isUndefined( document.webkitVisibilityState ) ) { // Android
+				visibilityChangeEvent = 'webkitvisibilitychange';
+				visibilityStateProp = 'webkitVisibilityState';
+			}
+			if ( visibilityStateProp ) {
+				$( document ).on( visibilityChangeEvent + '.wp-customize', function() {
+					if ( 'hidden' === document[ visibilityStateProp ] ) {
+						updateChangesetWithReschedule();
+					}
+				} );
+			}
+			$( window ).on( 'beforeunload.wp-customize', function() {
+				updateChangesetWithReschedule();
+			} );
+		} ());
 
 		api.trigger( 'ready' );
 	});
