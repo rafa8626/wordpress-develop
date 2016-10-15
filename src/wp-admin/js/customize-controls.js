@@ -3299,7 +3299,8 @@
 				ready = false,
 				readyData = null,
 				urlParser,
-				params;
+				params,
+				form;
 
 			if ( previewFrame._ready ) {
 				previewFrame.unbind( 'ready', previewFrame._ready );
@@ -3335,11 +3336,35 @@
 			urlParser.search = $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
 				title: api.l10n.previewIframeTitle,
-				src: urlParser.href
+				name: 'customize-' + previewFrame.channel()
 			} );
 			previewFrame.iframe.attr( 'onmousewheel', '' ); // Workaround for Safari bug. See WP Trac #38149.
 			previewFrame.iframe.appendTo( previewFrame.container );
 			previewFrame.targetWindow( previewFrame.iframe[0].contentWindow );
+
+			form = $( '<form>', {
+				action: urlParser.href,
+				target: previewFrame.iframe.attr( 'name' ),
+				method: 'post',
+				hidden: 'hidden'
+			} );
+			form.append( $( '<input>', {
+				type: 'hidden',
+				name: '_method',
+				value: 'GET'
+			} ) );
+			_.each( previewFrame.query, function( value, key ) {
+				form.append( $( '<input>', {
+					type: 'hidden',
+					name: key,
+					value: value
+				} ) );
+			} );
+			previewFrame.container.append( form );
+			form.submit();
+			form.remove(); // No need to keep the form around after submitted.
+			// @todo If there are no pending changes, we can just do: previewFrame.iframe.attr( 'src', urlParser.href );
+			// @todo Also if this is a headless site, then doing POST request won't work.
 
 			previewFrame.bind( 'iframe-loading-error', function( error ) {
 				previewFrame.iframe.remove();
