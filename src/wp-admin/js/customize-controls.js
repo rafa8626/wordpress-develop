@@ -30,32 +30,8 @@
 			setting._dirty = options.dirty || false;
 			setting.notifications = new api.Values({ defaultConstructor: api.Notification });
 
-			setting.bind( setting.handleChange );
-		},
-
-		/**
-		 * Handle setting change.
-		 *
-		 * @since 4.7.0
-		 * @access protected
-		 *
-		 * @param {mixed} value Value.
-		 * @returns {void}
-		 */
-		handleChange: function( value ) {
-			var setting = this, changes = {};
-
-			/*
-			 * Note that changes is just being explicit for what would be sent
-			 * regardless since setting._dirty is true, thus meaning it will be
-			 * included in the changeses sent to the changeset.
-			 */
-			changes[ setting.id ] = {
-				value: value
-			};
-
-			api.requestChangesetUpdate( changes );
-			setting.preview();
+			// Whenever the setting's value changes, refresh the preview.
+			setting.bind( setting.preview );
 		},
 
 		/**
@@ -4814,6 +4790,11 @@
 		api.previewer.bind( 'refresh', function() {
 			api.previewer.refresh();
 		});
+
+		// Start auto-save polling for changeset updates.
+		setInterval( function() {
+			api.requestChangesetUpdate();
+		}, api.settings.timeouts.changesetAutoSave );
 
 		api.trigger( 'ready' );
 	});
