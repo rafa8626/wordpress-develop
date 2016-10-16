@@ -1204,7 +1204,6 @@ final class WP_Customize_Manager {
 		$settings = array(
 			'changeset' => array(
 				'uuid' => $this->changeset_uuid,
-				'stateQueryParams' => $state_query_params, // @todo Additional persisted query vars may need to be indicated via a customized_persisted_query_vars param.
 			),
 			'timeouts' => array(
 				'selectiveRefresh' => 250,

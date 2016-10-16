@@ -521,7 +521,8 @@
 	api.keepAliveCurrentUrl = ( function() {
 		var previousPathName = location.pathname,
 			previousQueryString = location.search.substr( 1 ),
-			previousQueryParams = null;
+			previousQueryParams = null,
+			stateQueryParams = [ 'customize_theme', 'customize_changeset_uuid', 'customize_messenger_channel' ];
 
 		return function keepAliveCurrentUrl() {
 			var urlParser, currentQueryParams;
@@ -536,7 +537,7 @@
 			if ( null === previousQueryParams ) {
 				urlParser.search = previousQueryString;
 				previousQueryParams = api.utils.parseQueryString( previousQueryString );
-				_.each( api.settings.changeset.stateQueryParams, function( name ) {
+				_.each( stateQueryParams, function( name ) {
 					delete previousQueryParams[ name ];
 				} );
 			}
@@ -544,7 +545,7 @@
 			// Determine if current URL minus customized state params and URL hash.
 			urlParser.href = location.href;
 			currentQueryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
-			_.each( api.settings.changeset.stateQueryParams, function( name ) {
+			_.each( stateQueryParams, function( name ) {
 				delete currentQueryParams[ name ];
 			} );
 
