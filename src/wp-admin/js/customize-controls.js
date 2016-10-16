@@ -208,6 +208,7 @@
 		request = wp.ajax.post( 'customize_save', data );
 
 		request.done( function requestChangesetUpdateDone( data ) {
+			var savedChangesetValues = {};
 
 			// Ensure that all settings updated subsequently will be included in the next changeset update request.
 			api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
@@ -215,7 +216,16 @@
 			api.state( 'changesetStatus' ).set( data.changeset_status );
 			deferred.resolve( data );
 			api.trigger( 'changeset-saved', data );
-			api.previewer.send( 'changeset-saved', data );
+
+			if ( data.setting_validities ) {
+				_.each( data.setting_validities, function( validity, settingId ) {
+					if ( true === validity && _.isObject( submittedChanges[ settingId ] ) && ! _.isUndefined( submittedChanges[ settingId ].value ) ) {
+						savedChangesetValues[ settingId ] = submittedChanges[ settingId ].value;
+					}
+				} );
+			}
+
+			api.previewer.send( 'changeset-saved', _.extend( {}, data, { saved_changeset_values: savedChangesetValues } ) );
 		} );
 		request.fail( function requestChangesetUpdateFail( data ) {
 			deferred.reject( data );

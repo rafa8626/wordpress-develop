@@ -669,9 +669,16 @@
 			api.trigger( 'saved', response );
 		} );
 
-		api.bind( 'saved', function() {
-			api.each( function( setting ) {
-				setting._dirty = false;
+		/*
+		 * Clear dirty flag for settings when saved to changeset so that they
+		 * won't be needlessly included in selective refresh or ajax requests.
+		 */
+		api.preview.bind( 'changeset-saved', function( data ) {
+			_.each( data.saved_changeset_values, function( value, settingId ) {
+				var setting = api( settingId );
+				if ( setting && _.isEqual( setting.get(), value ) ) {
+					setting._dirty = false;
+				}
 			} );
 		} );
 
