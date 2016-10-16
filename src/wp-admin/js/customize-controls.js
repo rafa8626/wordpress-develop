@@ -4753,7 +4753,7 @@
 
 		// Autosave changeset.
 		( function() {
-			var timeoutId, updateChangesetWithReschedule, scheduleChangesetUpdate;
+			var timeoutId, updateChangesetWithReschedule, scheduleChangesetUpdate, updatePending = false;
 
 			/**
 			 * Request changeset update and then re-schedule the next changeset update time.
@@ -4761,7 +4761,12 @@
 			 * @private
 			 */
 			updateChangesetWithReschedule = function() {
-				api.requestChangesetUpdate();
+				if ( ! updatePending ) {
+					updatePending = true;
+					api.requestChangesetUpdate().always( function() {
+						updatePending = false;
+					} );
+				}
 				scheduleChangesetUpdate();
 			};
 
@@ -4773,8 +4778,7 @@
 			scheduleChangesetUpdate = function() {
 				clearTimeout( timeoutId );
 				timeoutId = setTimeout( function() {
-					api.requestChangesetUpdate();
-					scheduleChangesetUpdate();
+					updateChangesetWithReschedule();
 				}, api.settings.timeouts.changesetAutoSave );
 			};
 
