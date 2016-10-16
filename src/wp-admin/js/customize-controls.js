@@ -1389,19 +1389,54 @@
 		},
 
 		/**
-		 * Get the url to preview a given theme switch.
+		 * Load theme preview.
+		 *
+		 * @since 4.7.0
 		 *
 		 * @param {string} themeId Theme ID.
-		 * @returns {string} Customize URL.
+		 * @returns {jQuery.promise} Promise.
 		 */
-		getThemePreviewUrl: function( themeId ) {
-			var urlParser = document.createElement( 'a' );
+		loadThemePreview: function( themeId ) {
+			var deferred = $.Deferred(), onceProcessingComplete, overlay, urlParser;
+
+			urlParser = document.createElement( 'a' );
 			urlParser.href = location.href;
 			urlParser.search = $.param( _.extend(
 				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
-				{ theme: themeId }
+				{
+					theme: themeId,
+					changeset_uuid: api.settings.changeset.uuid
+				}
 			) );
-			return urlParser.href;
+
+			overlay = $( '.wp-full-overlay' );
+			overlay.addClass( 'customize-loading' );
+
+			onceProcessingComplete = function() {
+				var request;
+				if ( api.state( 'processing' ).get() > 0 ) {
+					return;
+				}
+
+				api.state( 'processing' ).unbind( onceProcessingComplete );
+
+				request = api.requestChangesetUpdate();
+				request.done( function() {
+					$( window ).off( 'beforeunload.customize-confirm' );
+					window.location.href = urlParser.href;
+				} );
+				request.fail( function() {
+					overlay.removeClass( 'customize-loading' );
+				} );
+			};
+
+			if ( 0 === api.state( 'processing' ).get() ) {
+				onceProcessingComplete();
+			} else {
+				api.state( 'processing' ).bind( onceProcessingComplete );
+			}
+
+			return deferred.promise();
 		},
 
 		/**
@@ -1423,13 +1458,19 @@
 			section.updateLimits();
 
 			link = section.overlay.find( '.inactive-theme > a' );
-			link.prop( 'href', section.getThemePreviewUrl( theme.id ) );
 
-			// Remove AYS if the changes can persist via the changeset UUID in the URL.
-			link.on( 'click', function() {
-				if ( history.replaceState && 0 === api.state( 'processing' ).get() ) {
-					$( window ).off( 'beforeunload.customize-confirm' );
+			link.on( 'click', function( event ) {
+				event.preventDefault();
+
+				// Short-circuit if request is currently being made.
+				if ( link.hasClass( 'disabled' ) ) {
+					return;
 				}
+				link.addClass( 'disabled' );
+
+				section.loadThemePreview( theme.id ).fail( function() {
+					link.removeClass( 'disabled' );
+				} );
 			} );
 			callback();
 		},
@@ -3068,8 +3109,6 @@
 
 			// Bind details view trigger.
 			control.container.on( 'click keydown touchend', '.theme', function( event ) {
-				var previewUrl;
-
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -3084,16 +3123,7 @@
 					return;
 				}
 
-				previewUrl = api.ThemesSection.prototype.getThemePreviewUrl( control.params.theme.id );
-
-				$( '.wp-full-overlay' ).addClass( 'customize-loading' );
-
-				// Remove AYS if the changes can persist via the changeset UUID in the URL.
-				if ( history.replaceState && 0 === api.state( 'processing' ).get() ) {
-					$( window ).off( 'beforeunload.customize-confirm' );
-				}
-
-				window.parent.location = previewUrl;
+				api.section( control.section() ).loadThemePreview( control.params.theme.id );
 			});
 
 			control.container.on( 'click keydown', '.theme-actions .theme-details', function( event ) {
