@@ -4110,7 +4110,7 @@
 			 *
 			 * @param {object} [args] Args.
 			 * @param {string} [args.status=publish] Status.
-			 * @param {string} [args.date] Date, in local time.
+			 * @param {string} [args.date] Date, in local time in MySQL format.
 			 * @param {string} [args.title] Title
 			 *
 			 * @returns {jQuery.promise}
@@ -4152,7 +4152,7 @@
 					 */
 					api.each( function( setting ) {
 						setting.notifications.each( function( notification ) {
-							if ( 'error' === notification.type && ! notification.fromServer ) { // @todo Eliminate the fromServer now that changeset is updated with each change?
+							if ( 'error' === notification.type && ! notification.fromServer ) {
 								invalidSettings.push( setting.id );
 								if ( ! settingInvalidities[ setting.id ] ) {
 									settingInvalidities[ setting.id ] = {};
@@ -4753,7 +4753,7 @@
 
 		// Autosave changeset.
 		( function() {
-			var timeoutId, updateChangesetWithReschedule, scheduleChangesetUpdate, visibilityStateProp, visibilityChangeEvent;
+			var timeoutId, updateChangesetWithReschedule, scheduleChangesetUpdate;
 
 			/**
 			 * Request changeset update and then re-schedule the next changeset update time.
@@ -4781,25 +4781,13 @@
 			// Start auto-save interval for updating changeset.
 			scheduleChangesetUpdate();
 
-			// Save any unsaved changes in changeset whenever hiding window or unloading.
-			if ( ! _.isUndefined( document.visibilityState ) ) {
-				visibilityChangeEvent = 'visibilitychange';
-				visibilityStateProp = 'visibilityState';
-			} else if ( ! _.isUndefined( document.msVisibilityState ) ) { // IE10
-				visibilityChangeEvent = 'msvisibilitychange';
-				visibilityStateProp = 'msVisibilityState';
-			} else if ( ! _.isUndefined( document.webkitVisibilityState ) ) { // Android
-				visibilityChangeEvent = 'webkitvisibilitychange';
-				visibilityStateProp = 'webkitVisibilityState';
-			}
-			if ( visibilityStateProp ) {
-				$( document ).on( visibilityChangeEvent + '.wp-customize', function() {
-					if ( 'hidden' === document[ visibilityStateProp ] ) {
-						updateChangesetWithReschedule();
-					}
-				} );
-			}
-			$( window ).on( 'beforeunload.wp-customize', function() {
+			// Save changeset when focus removed from window.
+			$( window ).on( 'blur.wp-customize-changeset-update', function() {
+				updateChangesetWithReschedule();
+			} );
+
+			// Save changeset before unloading window.
+			$( window ).on( 'beforeunload.wp-customize-changeset-update', function() {
 				updateChangesetWithReschedule();
 			} );
 		} ());
