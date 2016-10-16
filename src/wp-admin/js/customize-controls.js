@@ -3225,7 +3225,8 @@
 			urlParser.search = $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
 				title: api.l10n.previewIframeTitle,
-				name: 'customize-' + previewFrame.channel()
+				name: 'customize-' + previewFrame.channel(),
+				'data-src': urlParser.href
 			} );
 			previewFrame.iframe.attr( 'onmousewheel', '' ); // Workaround for Safari bug. See WP Trac #38149.
 			previewFrame.iframe.appendTo( previewFrame.container );
