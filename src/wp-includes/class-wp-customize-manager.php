@@ -2703,7 +2703,7 @@ final class WP_Customize_Manager {
 			),
 			'timeouts' => array(
 				'windowRefresh' => 250,
-				'changesetAutoSave' => 10000,
+				'changesetAutoSave' => AUTOSAVE_INTERVAL * 1000,
 				'keepAliveCheck' => 2500,
 				'reflowPaneContents' => 100,
 				'previewFrameSensitivity' => 2000,
