@@ -358,8 +358,19 @@
 	 * @return {void}
 	 */
 	api.addRequestPreviewing = function addRequestPreviewing() {
-		$.ajaxPrefilter( function prefilterAjax( options ) {
-			var urlParser, queryParams;
+
+		/**
+		 * Rewrite Ajax requests to inject customizer state.
+		 *
+		 * @param {object} options Options.
+		 * @param {string} options.type Type.
+		 * @param {string} options.url URL.
+		 * @param {object} originalOptions Original options.
+		 * @param {XMLHttpRequest} xhr XHR.
+		 * @returns {void}
+		 */
+		var prefilterAjax = function( options, originalOptions, xhr ) {
+			var urlParser, queryParams, requestMethod, dirtyValues = {};
 			urlParser = document.createElement( 'a' );
 			urlParser.href = options.url;
 
@@ -367,19 +378,46 @@
 			if ( ! api.isLinkPreviewable( urlParser, { allowAdminAjax: true } ) ) {
 				return;
 			}
-
 			queryParams = api.utils.parseQueryString( urlParser.search.substring( 1 ) );
+
+			// @todo Only include values that are not saved into the changeset. See wp.customize.getDirtyValues({unsaved:true}).
+			api.each( function( setting ) {
+				if ( setting._dirty ) {
+					dirtyValues[ setting.id ] = setting.get();
+				}
+			} );
+
+			if ( ! _.isEmpty( dirtyValues ) ) {
+				requestMethod = options.type.toUpperCase();
+
+				// Override underlying request method to ensure unsaved changes to changeset can be included (force Backbone.emulateHTTP).
+				if ( 'POST' !== requestMethod ) {
+					xhr.setRequestHeader( 'X-HTTP-Method-Override', requestMethod );
+					queryParams._method = requestMethod;
+					options.type = 'POST';
+				}
+
+				// Amend the post data with the customized values.
+				if ( options.data ) {
+					options.data += '&';
+				} else {
+					options.data = '';
+				}
+				options.data += $.param( {
+					customized: JSON.stringify( dirtyValues )
+				} );
+			}
+
+			// Include customized state query params in URL.
 			queryParams.customize_changeset_uuid = api.settings.changeset.uuid;
 			if ( ! api.settings.theme.active ) {
 				queryParams.customize_theme = api.settings.theme.stylesheet;
 			}
-			if ( api.settings.channel ) {
-				queryParams.customize_messenger_channel = api.settings.channel;
-			}
 			urlParser.search = $.param( queryParams );
-
 			options.url = urlParser.href;
-		} );
+		};
+
+		$.ajaxPrefilter( prefilterAjax );
 	};
 
 	/**
