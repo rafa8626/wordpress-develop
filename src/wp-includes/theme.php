@@ -2172,7 +2172,7 @@ function _wp_customize_publish_changeset( $new_status, $old_status, $changeset_p
 		/** This filter is documented in /wp-includes/class-wp-customize-manager.php */
 		do_action( 'customize_register', $wp_customize );
 	}
-	$wp_customize->publish_changeset_values( $changeset_post->ID ) ;
+	$wp_customize->_publish_changeset_values( $changeset_post->ID ) ;
 
 	/*
 	 * Trash the changeset post if revisions are not enabled. Unpublished
