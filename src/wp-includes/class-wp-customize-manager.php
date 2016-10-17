@@ -1788,7 +1788,7 @@ final class WP_Customize_Manager {
 		$nonces = array(
 			'save' => wp_create_nonce( 'save-customize_' . $this->get_stylesheet() ),
 			'preview' => wp_create_nonce( 'preview-customize_' . $this->get_stylesheet() ),
-			'customize-themes' => wp_create_nonce( 'customize-themes' ),
+			'switch-themes' => wp_create_nonce( 'switch-themes' ),
 		);
 
 		/**
@@ -2397,7 +2397,7 @@ final class WP_Customize_Manager {
 	 * @access public
 	 */
 	public function load_themes_ajax() {
-		check_ajax_referer( 'customize-themes', 'customize-themes-nonce' );
+		check_ajax_referer( 'switch-themes', 'switch-themes-nonce' );
 
 		if ( ! current_user_can( 'switch_themes' ) ) {
 			wp_die( -1 );
