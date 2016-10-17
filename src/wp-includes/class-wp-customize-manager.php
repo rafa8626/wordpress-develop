@@ -756,8 +756,6 @@ final class WP_Customize_Manager {
 	/**
 	 * Get the changeset post.
 	 *
-	 * @todo Add persistent object caching for query.
-	 *
 	 * @since 4.7.0
 	 * @access public
 	 *
@@ -767,19 +765,29 @@ final class WP_Customize_Manager {
 		if ( isset( $this->_changeset_post_id ) ) {
 			return $this->_changeset_post_id;
 		}
-		$changeset_post_query = new WP_Query( array(
-			'post_type' => 'customize_changeset',
-			'post_status' => get_post_stati(),
-			'name' => $this->changeset_uuid,
-			'number' => 1,
-			'no_found_rows' => true,
-			'update_post_meta_cache' => false,
-			'update_term_meta_cache' => false,
-		) );
-		if ( ! empty( $changeset_post_query->posts ) ) {
-			$this->_changeset_post_id = $changeset_post_query->posts[0]->ID;
+
+		$cache_group = 'customize_changeset_post';
+		$changeset_post_id = wp_cache_get( $this->changeset_uuid, $cache_group );
+		if ( $changeset_post_id && 'customize_changeset' === get_post_type( $changeset_post_id ) ) {
+			$this->_changeset_post_id = $changeset_post_id;
 		} else {
-			$this->_changeset_post_id = false;
+			$changeset_post_query = new WP_Query( array(
+				'post_type' => 'customize_changeset',
+				'post_status' => get_post_stati(),
+				'name' => $this->changeset_uuid,
+				'number' => 1,
+				'no_found_rows' => true,
+				'cache_results' => true,
+				'update_post_meta_cache' => false,
+				'update_term_meta_cache' => false,
+			) );
+			if ( ! empty( $changeset_post_query->posts ) ) {
+				// Note: 'fields'=>'ids' is not being used in order to cache the post object as it will be needed.
+				$this->_changeset_post_id = $changeset_post_query->posts[0]->ID;
+				wp_cache_set( $this->changeset_uuid, $this->_changeset_post_id, $cache_group );
+			} else {
+				$this->_changeset_post_id = false;
+			}
 		}
 		return $this->_changeset_post_id;
 	}
