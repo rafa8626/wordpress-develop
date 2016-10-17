@@ -408,8 +408,7 @@ final class WP_Customize_Manager {
 		}
 
 		if ( $this->messenger_channel ) {
-			header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
-			echo '<!DOCTYPE html><html>';
+			ob_start();
 			wp_enqueue_scripts();
 			wp_print_scripts( array( 'customize-base' ) );
 
@@ -428,9 +427,7 @@ final class WP_Customize_Manager {
 			} )( wp.customize, <?php echo wp_json_encode( $settings ) ?> );
 			</script>
 			<?php
-			echo "<p>$message</p>";
-			echo '</html>';
-			die();
+			$message .= ob_get_clean();
 		}
 
 		wp_die( $message );
@@ -482,9 +479,13 @@ final class WP_Customize_Manager {
 			$this->wp_die( -1, __( 'Invalid changeset UUID' ) );
 		}
 
-		// If unauthenticated then require a valid changeset UUID to load the preview. In this way, the UUID serves as a secret key.
+		/*
+		 * If unauthenticated then require a valid changeset UUID to load the preview.
+		 * In this way, the UUID serves as a secret key. If the messenger channel is present,
+		 * then send unauthenticated code to prompt re-auth.
+		 */
 		if ( ! current_user_can( 'customize' ) && ! $this->changeset_post_id() ) {
-			$this->wp_die( -1, __( 'Non-existent changeset UUID.' ) );
+			$this->wp_die( $this->messenger_channel ? 0 : -1, __( 'Non-existent changeset UUID.' ) );
 		}
 
 		if ( ! headers_sent() ) {

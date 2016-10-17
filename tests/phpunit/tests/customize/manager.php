@@ -66,6 +66,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	function tearDown() {
 		$this->manager = null;
 		unset( $GLOBALS['wp_customize'] );
+		$_REQUEST = array();
 		parent::tearDown();
 	}
 
