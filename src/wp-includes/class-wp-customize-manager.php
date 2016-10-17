@@ -1076,7 +1076,7 @@ final class WP_Customize_Manager {
 
 		$this->prepare_controls();
 
-		add_filter( 'wp_redirect', array( $this, 'add_customize_state_query_params' ) );
+		add_filter( 'wp_redirect', array( $this, 'add_state_query_params' ) );
 
 		wp_enqueue_script( 'customize-preview' );
 		add_action( 'wp_head', array( $this, 'customize_preview_loading_style' ) );
@@ -1120,7 +1120,7 @@ final class WP_Customize_Manager {
 	 * @param string $url URL.
 	 * @return string URL.
 	 */
-	public function add_customize_state_query_params( $url ) {
+	public function add_state_query_params( $url ) {
 		$parsed_original_url = wp_parse_url( $url );
 		$is_allowed = false;
 		foreach ( $this->get_allowed_urls() as $allowed_url ) {

@@ -299,7 +299,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 
 		$this->assertEquals( 10, has_action( 'wp_head', 'wp_no_robots' ) );
 		$this->assertEquals( 10, has_filter( 'wp_headers', array( $wp_customize, 'filter_iframe_security_headers' ) ) );
-		$this->assertEquals( 10, has_filter( 'wp_redirect', array( $wp_customize, 'add_customize_state_query_params' ) ) );
+		$this->assertEquals( 10, has_filter( 'wp_redirect', array( $wp_customize, 'add_state_query_params' ) ) );
 		$this->assertTrue( wp_script_is( 'customize-preview', 'enqueued' ) );
 		$this->assertEquals( 10, has_action( 'wp_head', array( $wp_customize, 'customize_preview_loading_style' ) ) );
 		$this->assertEquals( 20, has_action( 'wp_footer', array( $wp_customize, 'customize_preview_settings' ) ) );
@@ -332,17 +332,63 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::filter_iframe_security_headers()
 	 */
 	function test_filter_iframe_security_headers() {
-		$this->markTestIncomplete();
+		$customize_url = admin_url( 'customize.php' );
+		$wp_customize = new WP_Customize_Manager();
+		$headers = $wp_customize->filter_iframe_security_headers( array() );
+		$this->assertArrayHasKey( 'X-Frame-Options', $headers );
+		$this->assertArrayHasKey( 'Content-Security-Policy', $headers );
+		$this->assertEquals( "ALLOW-FROM $customize_url", $headers['X-Frame-Options'] );
 	}
 
 	/**
-	 * Test WP_Customize_Manager::add_customize_state_query_params().
+	 * Test WP_Customize_Manager::add_state_query_params().
 	 *
 	 * @ticket 30937
-	 * @covers WP_Customize_Manager::add_customize_state_query_params()
+	 * @covers WP_Customize_Manager::add_state_query_params()
 	 */
-	function test_add_customize_state_query_params() {
-		$this->markTestIncomplete();
+	function test_add_state_query_params() {
+		$uuid = wp_generate_uuid4();
+		$messenger_channel = 'preview-0';
+		$wp_customize = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+			'messenger_channel' => $messenger_channel,
+		) );
+		$url = $wp_customize->add_state_query_params( home_url( '/' ) );
+		$parsed_url = wp_parse_url( $url );
+		parse_str( $parsed_url['query'], $query_params );
+		$this->assertArrayHasKey( 'customize_messenger_channel', $query_params );
+		$this->assertArrayHasKey( 'customize_changeset_uuid', $query_params );
+		$this->assertArrayNotHasKey( 'customize_theme', $query_params );
+		$this->assertEquals( $uuid, $query_params['customize_changeset_uuid'] );
+		$this->assertEquals( $messenger_channel, $query_params['customize_messenger_channel'] );
+
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+			'messenger_channel' => null,
+			'theme' => 'twentyfifteen',
+		) );
+		$url = $wp_customize->add_state_query_params( home_url( '/' ) );
+		$parsed_url = wp_parse_url( $url );
+		parse_str( $parsed_url['query'], $query_params );
+		$this->assertArrayNotHasKey( 'customize_messenger_channel', $query_params );
+		$this->assertArrayHasKey( 'customize_changeset_uuid', $query_params );
+		$this->assertArrayHasKey( 'customize_theme', $query_params );
+		$this->assertEquals( $uuid, $query_params['customize_changeset_uuid'] );
+		$this->assertEquals( 'twentyfifteen', $query_params['customize_theme'] );
+
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+			'messenger_channel' => null,
+			'theme' => 'twentyfifteen',
+		) );
+		$url = $wp_customize->add_state_query_params( 'http://not-allowed.example.com/?q=1' );
+		$parsed_url = wp_parse_url( $url );
+		parse_str( $parsed_url['query'], $query_params );
+		$this->assertArrayNotHasKey( 'customize_messenger_channel', $query_params );
+		$this->assertArrayNotHasKey( 'customize_changeset_uuid', $query_params );
+		$this->assertArrayNotHasKey( 'customize_theme', $query_params );
 	}
 
 	/**
