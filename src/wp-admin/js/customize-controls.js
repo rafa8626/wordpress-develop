@@ -4408,7 +4408,7 @@
 					saveBtn.val( api.l10n.activate );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
 
-				} else if ( '' === changesetStatus.get() ) {
+				} else if ( '' === changesetStatus.get() && saved() ) {
 					saveBtn.val( api.l10n.saved );
 					closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
 
@@ -4421,7 +4421,7 @@
 				 * Save (publish) button should be enabled if saving is not currently happening,
 				 * and if the theme is not active or the changeset exists but is not published.
 				 */
-				canSave = ! saving() && ( ! activated() || ( '' !== changesetStatus() && 'publish' !== changesetStatus() ) );
+				canSave = ! saving() && ( ! activated() || ! saved() || ( '' !== changesetStatus() && 'publish' !== changesetStatus() ) );
 
 				saveBtn.prop( 'disabled', ! canSave );
 			});
