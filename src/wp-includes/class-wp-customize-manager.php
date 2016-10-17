@@ -1735,6 +1735,7 @@ final class WP_Customize_Manager {
 			kses_remove_filters(); // Prevent KSES from corrupting JSON in post_content.
 		}
 		if ( $changeset_post_id ) {
+			$post_array['edit_date'] = true; // Prevent date clearing.
 			$r = wp_update_post( wp_slash( $post_array ), true );
 		} else {
 			$r = wp_insert_post( wp_slash( $post_array ), true );
