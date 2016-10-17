@@ -2458,7 +2458,6 @@ final class WP_Customize_Manager {
 					break;
 				case 'favorites':
 					$args['user'] = wp_unslash( $_POST['user'] );
-					break;
 				case 'featured':
 				case 'popular':
 					$args['browse'] = wp_unslash( $_POST['theme_action'] );
