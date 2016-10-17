@@ -1057,8 +1057,8 @@ final class WP_Customize_Manager {
 		 * allowed then the auth cookies would not be sent and WordPress would
 		 * not send no-cache headers by default.
 		 */
-		nocache_headers();
 		if ( ! headers_sent() ) {
+			nocache_headers();
 			header( 'X-Robots: noindex, nofollow, noarchive' );
 		}
 		add_action( 'wp_head', 'wp_no_robots' );
@@ -1074,9 +1074,7 @@ final class WP_Customize_Manager {
 			return;
 		}
 
-		if ( current_user_can( 'customize' ) ) {
-			$this->prepare_controls();
-		}
+		$this->prepare_controls();
 
 		add_filter( 'wp_redirect', array( $this, 'add_customize_state_query_params' ) );
 

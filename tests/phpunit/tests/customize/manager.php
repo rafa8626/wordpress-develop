@@ -266,7 +266,20 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::changeset_data()
 	 */
 	function test_changeset_data() {
-		$this->markTestIncomplete();
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$this->assertEquals( array(), $wp_customize->changeset_data() );
+
+		$uuid = wp_generate_uuid4();
+		$data = array( 'blogname' => array( 'value' => 'Hello World' ) );
+		$this->factory()->post->create( array(
+			'post_name' => $uuid,
+			'post_type' => 'customize_changeset',
+			'post_status' => 'auto-draft',
+			'post_content' => wp_json_encode( $data ),
+		) );
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$this->assertEquals( $data, $wp_customize->changeset_data() );
 	}
 
 	/**
@@ -276,7 +289,40 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::customize_preview_init()
 	 */
 	function test_customize_preview_init() {
-		$this->markTestIncomplete();
+
+		// Test authorized admin user.
+		wp_set_current_user( self::$admin_user_id );
+		$did_action_customize_preview_init = did_action( 'customize_preview_init' );
+		$wp_customize = new WP_Customize_Manager();
+		$wp_customize->customize_preview_init();
+		$this->assertEquals( $did_action_customize_preview_init + 1, did_action( 'customize_preview_init' ) );
+
+		$this->assertEquals( 10, has_action( 'wp_head', 'wp_no_robots' ) );
+		$this->assertEquals( 10, has_filter( 'wp_headers', array( $wp_customize, 'filter_iframe_security_headers' ) ) );
+		$this->assertEquals( 10, has_filter( 'wp_redirect', array( $wp_customize, 'add_customize_state_query_params' ) ) );
+		$this->assertTrue( wp_script_is( 'customize-preview', 'enqueued' ) );
+		$this->assertEquals( 10, has_action( 'wp_head', array( $wp_customize, 'customize_preview_loading_style' ) ) );
+		$this->assertEquals( 20, has_action( 'wp_footer', array( $wp_customize, 'customize_preview_settings' ) ) );
+
+		// Test unauthorized user outside preview (no messenger_channel).
+		wp_set_current_user( self::$subscriber_user_id );
+		$wp_customize = new WP_Customize_Manager();
+		$wp_customize->register_controls();
+		$this->assertNotEmpty( $wp_customize->controls() );
+		$wp_customize->customize_preview_init();
+		$this->assertEmpty( $wp_customize->controls() );
+
+		// Test unauthorized user inside preview (with messenger_channel).
+		wp_set_current_user( self::$subscriber_user_id );
+		$wp_customize = new WP_Customize_Manager( array( 'messenger_channel' => 'preview-0' ) );
+		$exception = null;
+		try {
+			$wp_customize->customize_preview_init();
+		} catch ( WPDieException $e ) {
+			$exception = $e;
+		}
+		$this->assertNotNull( $exception );
+		$this->assertContains( 'Unauthorized', $exception->getMessage() );
 	}
 
 	/**
