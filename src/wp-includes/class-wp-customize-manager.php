@@ -1552,18 +1552,37 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		// Validate changeset date param. Date is assumed to be in local time for the WP.
-		$changeset_date = null;
+		/*
+		 * Validate changeset date param. Date is assumed to be in local time for
+		 * the WP if in MySQL format (YYYY-MM-DD HH:MM:SS). Otherwise, the date
+		 * is parsed with strtotime() so that ISO date format may be supplied
+		 * or a string like "+10 minutes".
+		 */
+		$changeset_date_gmt = null;
 		if ( isset( $_POST['customize_changeset_date'] ) ) {
-			$changeset_date = wp_unslash( $_POST['customize_changeset_date'] );
-			if ( ! preg_match( '/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/', $changeset_date ) ) {
-				wp_send_json_error( 'bad_customize_changeset_date', 400 );
-			}
 			if ( ( 'publish' === $changeset_status || 'future' === $changeset_status ) && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
 				wp_send_json_error( 'changeset_publish_unauthorized', 403 );
 			}
-			$changeset_date_gmt = get_gmt_from_date( $changeset_date );
+
+			$changeset_date = wp_unslash( $_POST['customize_changeset_date'] );
+			if ( preg_match( '/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/', $changeset_date ) ) {
+				$mm = substr( $changeset_date, 5, 2 );
+				$jj = substr( $changeset_date, 8, 2 );
+				$aa = substr( $changeset_date, 0, 4 );
+				$valid_date = wp_checkdate( $mm, $jj, $aa, $changeset_date );
+				if ( ! $valid_date ) {
+					wp_send_json_error( 'bad_customize_changeset_date', 400 );
+				}
+				$changeset_date_gmt = get_gmt_from_date( $changeset_date );
+			} else {
+				$timestamp = strtotime( $changeset_date );
+				if ( ! $timestamp ) {
+					wp_send_json_error( 'bad_customize_changeset_date', 400 );
+				}
+				$changeset_date_gmt = gmdate( 'Y-m-d H:i:s', $timestamp );
+			}
 			$now = gmdate( 'Y-m-d H:i:59' );
+
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
 			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
 				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
@@ -1664,7 +1683,7 @@ final class WP_Customize_Manager {
 		$filter_context = array(
 			'uuid' => $this->changeset_uuid(),
 			'status' => $changeset_status,
-			'date' => $changeset_date,
+			'date_gmt' => $changeset_date_gmt,
 			'post_id' => $this->changeset_post_id(),
 			'previous_data' => $original_changeset_data,
 			'manager' => $this,
@@ -1682,7 +1701,7 @@ final class WP_Customize_Manager {
 		 *     @type string               $uuid          Changeset UUID.
 		 *     @type string               $title         Requested title for the changeset post.
 		 *     @type string               $status        Requested status for the changeset post.
-		 *     @type string               $date          Requested date for the changeset post.
+		 *     @type string               $date_gmt      Requested date for the changeset post in MySQL format and GMT timezone.
 		 *     @type int|false            $post_id       Post ID for the changeset, or false if it doesn't exist yet.
 		 *     @type array                $previous_data Previous data contained in the changeset.
 		 *     @type WP_Customize_Manager $manager       Manager instance.
@@ -1721,9 +1740,9 @@ final class WP_Customize_Manager {
 		if ( $changeset_status ) {
 			$post_array['post_status'] = $changeset_status;
 		}
-		if ( $changeset_date ) {
-			$post_array['post_date'] = $changeset_date;
-			$post_array['post_date_gmt'] = get_gmt_from_date( $changeset_date );
+		if ( $changeset_date_gmt ) {
+			$post_array['post_date_gmt'] = $changeset_date_gmt;
+			$post_array['post_date'] = get_date_from_gmt( $changeset_date_gmt );
 		}
 
 		$this->store_changeset_revision = $allow_revision;
