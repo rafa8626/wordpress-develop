@@ -693,13 +693,13 @@
 				section = this,
 				container = $( '#customize-theme-controls' );
 
-			// Watch for changes to the panel state
+			// Watch for changes to the panel state.
 			inject = function ( panelId ) {
 				var parentContainer;
 				if ( panelId ) {
-					// The panel has been supplied, so wait until the panel object is registered
+					// The panel has been supplied, so wait until the panel object is registered.
 					api.panel( panelId, function ( panel ) {
-						// The panel has been registered, wait for it to become ready/initialized
+						// The panel has been registered, wait for it to become ready/initialized.
 						panel.deferred.embedded.done( function () {
 							parentContainer = panel.contentContainer;
 							if ( ! section.headContainer.parent().is( parentContainer ) ) {
@@ -724,7 +724,7 @@
 				}
 			};
 			section.panel.bind( inject );
-			inject( section.panel.get() ); // Since a section may never get a panel, assume that it won't ever get one
+			inject( section.panel.get() ); // Since a section may never get a panel, assume that it won't ever get one.
 		},
 
 		/**
@@ -1037,7 +1037,7 @@
 
 			// Event listeners for queries with user-entered terms.
 			if ( 'search' === section.params.action ) {
-				var debounced = _.debounce( section.checkTerm, 500 ); // Wait until there is no input for 500 miliseconds to initiate a search.
+				var debounced = _.debounce( section.checkTerm, 500 ); // Wait until there is no input for 500 milliseconds to initiate a search.
 				$( '.control-panel-themes' ).on( 'input', '#wp-filter-search-input', function() {
 					debounced( section );
 					if ( ! section.expanded() ) {
@@ -1069,10 +1069,12 @@
 
 				// Toggle feature filter sections.
 				section.container.on( 'click', '.filter-group legend button', function( e ) {
-					$( e.currentTarget ).toggleClass( 'open' ).attr('aria-expanded', function ( i, attr ) {
-					                    	return attr === 'true' ? 'false' : 'true';
-					                    })
-					                    .parent().next( '.filter-group-feature' ).slideToggle( 180 );
+					$( e.currentTarget )
+						.toggleClass( 'open' )
+						.attr('aria-expanded', function ( i, attr ) {
+							return attr === 'true' ? 'false' : 'true';
+						})
+						.parent().next( '.filter-group-feature' ).slideToggle( 180 );
 				});
 			}
 
@@ -1092,7 +1094,7 @@
 		 * @param {Boolean}  expanded
 		 * @param {Object}   args
 		 * @param {Boolean}  args.unchanged
-		 * @param {Callback} args.completeCallback
+		 * @param {Function} args.completeCallback
 		 */
 		onChangeExpanded: function ( expanded, args ) {
 
@@ -1312,7 +1314,7 @@
 		 *
 		 * @since 4.7.0
 		 *
-		 * @param {api.ThemesSection} section The current theme section, passed through the debouncer.
+		 * @param {wp.customize.ThemesSection} section The current theme section, passed through the debouncer.
 		 */
 		checkTerm: function( section ) {
 			var newTerm;
@@ -1907,7 +1909,7 @@
 		 * @param {Boolean}  expanded
 		 * @param {Object}   args
 		 * @param {Boolean}  args.unchanged
-		 * @param {Callback} args.completeCallback
+		 * @param {Function} args.completeCallback
 		 */
 		onChangeExpanded: function ( expanded, args ) {
 
@@ -1937,8 +1939,9 @@
 				// Automatically open the installed themes section.
 				api.section( 'installed_themes' ).expand();
 			} else {
-				overlay.removeClass( 'in-themes-panel' )
-				       .find( '.customize-themes-full-container' ).removeClass( 'animate' );
+				overlay
+					.removeClass( 'in-themes-panel' )
+					.find( '.customize-themes-full-container' ).removeClass( 'animate' );
 			}
 		},
 
@@ -2384,7 +2387,7 @@
 		 * @param {Boolean}  active
 		 * @param {Object}   args
 		 * @param {Number}   args.duration
-		 * @param {Callback} args.completeCallback
+		 * @param {Function} args.completeCallback
 		 */
 		onChangeActive: function ( active, args ) {
 			if ( args.unchanged ) {
