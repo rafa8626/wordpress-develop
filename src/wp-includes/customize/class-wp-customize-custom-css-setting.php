@@ -125,8 +125,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @todo Needs Expansion.
 	 *
-	 * @todo remove string literals before counting characters for cases where
-	 * a character is used in a "content:" string.
+	 * @todo remove string literals before counting characters for cases where a
+	 * character is used in a "content:" string.
 	 *
 	 * Example:
 	 * .element::before {
@@ -135,7 +135,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * .element::after {
 	 *   content: "\")";
 	 * }
-	 *
 	 *
 	 * @see WP_Customize_Setting::validate()
 	 *
@@ -220,8 +219,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * This is already sanitized in the sanitize() method.
 	 *
-	 * @todo store post ID in a theme mod.
-	 *
 	 * @see WP_Customize_Setting::update()
 	 *
 	 * @action customize_update_{$this->type}
@@ -233,7 +230,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return int  The custom_css Post ID.
 	 */
-	public static function update_setting( $value ) {
+	public function update_setting( $value ) {
 		$theme_name = get_stylesheet();
 		$args = array(
 			'post_content' => ( null === $value ) ? '' : $value,
@@ -246,6 +243,15 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
 		if ( ! empty( $post->ID ) ) {
 			$args['ID'] = $post->ID;
+
+			/*
+			 * Save the Post ID to theme_mod.
+			 *
+			 * Keep in mind that the Setting ID includes the theme name,
+			 * and that the Custom CSS Post Title matches the value
+			 * of get_stylesheet().
+			 */
+			set_theme_mod( $this->id_data['base'], $post->ID );
 		}
 
 		$post_id = wp_insert_post( $args );

@@ -1427,13 +1427,21 @@ function wp_custom_css_cb() {
  * @return string The Custom CSS Post content.
  */
 function wp_get_custom_css( $theme_name = '' ) {
+	$css = '';
 	$custom_css_post = wp_get_custom_css_by_theme_name( $theme_name );
 
-	if ( empty( $custom_css_post->post_content ) ) {
-		return '';
+	if ( ! empty( $custom_css_post->post_content ) ) {
+		$css = $custom_css_post->post_content;
 	}
 
-	return $custom_css_post->post_content;
+	/**
+	 * Modify the Custom CSS Output into the <head>.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $css CSS pulled in from the Custom CSS CPT.
+	 */
+	return apply_filters( 'custom_css_output', $css );
 }
 
 
