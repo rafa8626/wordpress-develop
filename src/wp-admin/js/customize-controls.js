@@ -3227,6 +3227,7 @@
 				loaded = false,
 				ready = false,
 				readyData = null,
+				hasPendingChangesetUpdate = '{}' !== previewFrame.query.customized,
 				urlParser,
 				params,
 				form;
@@ -3265,36 +3266,46 @@
 			urlParser.search = $.param( params );
 			previewFrame.iframe = $( '<iframe />', {
 				title: api.l10n.previewIframeTitle,
-				name: 'customize-' + previewFrame.channel(),
-				'data-src': urlParser.href
+				name: 'customize-' + previewFrame.channel()
 			} );
 			previewFrame.iframe.attr( 'onmousewheel', '' ); // Workaround for Safari bug. See WP Trac #38149.
+
+			if ( ! hasPendingChangesetUpdate ) {
+				previewFrame.iframe.attr( 'src', urlParser.href );
+			} else {
+				previewFrame.iframe.attr( 'data-src', urlParser.href ); // For debugging purposes.
+			}
+
 			previewFrame.iframe.appendTo( previewFrame.container );
 			previewFrame.targetWindow( previewFrame.iframe[0].contentWindow );
 
-			form = $( '<form>', {
-				action: urlParser.href,
-				target: previewFrame.iframe.attr( 'name' ),
-				method: 'post',
-				hidden: 'hidden'
-			} );
-			form.append( $( '<input>', {
-				type: 'hidden',
-				name: '_method',
-				value: 'GET'
-			} ) );
-			_.each( previewFrame.query, function( value, key ) {
+			/*
+			 * Submit customized data in POST request to preview frame window since
+			 * there are setting value changes not yet written to changeset.
+			 */
+			if ( hasPendingChangesetUpdate ) {
+				form = $( '<form>', {
+					action: urlParser.href,
+					target: previewFrame.iframe.attr( 'name' ),
+					method: 'post',
+					hidden: 'hidden'
+				} );
 				form.append( $( '<input>', {
 					type: 'hidden',
-					name: key,
-					value: value
+					name: '_method',
+					value: 'GET'
 				} ) );
-			} );
-			previewFrame.container.append( form );
-			form.submit();
-			form.remove(); // No need to keep the form around after submitted.
-			// @todo If there are no pending changes, we can just do: previewFrame.iframe.attr( 'src', urlParser.href );
-			// @todo Also if this is a headless site, then doing POST request won't work.
+				_.each( previewFrame.query, function( value, key ) {
+					form.append( $( '<input>', {
+						type: 'hidden',
+						name: key,
+						value: value
+					} ) );
+				} );
+				previewFrame.container.append( form );
+				form.submit();
+				form.remove(); // No need to keep the form around after submitted.
+			}
 
 			previewFrame.bind( 'iframe-loading-error', function( error ) {
 				previewFrame.iframe.remove();
