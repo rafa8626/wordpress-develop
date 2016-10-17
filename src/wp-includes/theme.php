@@ -1441,7 +1441,7 @@ function wp_get_custom_css( $theme_name = '' ) {
 	 *
 	 * @param string $css CSS pulled in from the Custom CSS CPT.
 	 */
-	return apply_filters( 'custom_css_output', $css );
+	return apply_filters( 'wp_get_custom_css', $css );
 }
 
 

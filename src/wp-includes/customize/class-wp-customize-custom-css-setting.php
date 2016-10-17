@@ -149,29 +149,35 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return mixed true|WP_Error True if the input was validated, otherwise WP_Error.
 	 */
 	public function validate_css( $validity, $css ) {
+		$css_validation_error = false;
 		// Make sure that there is a closing brace for each opening brace.
 		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
 			$validity->add( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
+			$css_validation_error = true;
 		}
 
 		// Ensure brackets are balanced.
 		if ( ! self::validate_balanced_characters( '[', ']', $css ) ) {
 			$validity->add( 'unbalanced_braces', __( 'Your brackets <code>[]</code> are unbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
+			$css_validation_error = true;
 		}
 
 		// Ensure parentheses are balanced.
 		if ( ! self::validate_balanced_characters( '(', ')', $css ) ) {
 			$validity->add( 'unbalanced_braces', __( 'Your parentheses <code>()</code> are unbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
+			$css_validation_error = true;
 		}
 
 		// Ensure single quotes are equal.
 		if ( ! self::validate_equal_characters( '\'', $css ) ) {
 			$validity->add( 'unequal_single_quotes', __( 'Your single quotes <code>\'</code> are uneven. Make sure there is a closing <code>\'</code> for every opening <code>\'</code>.' ) );
+			$css_validation_error = true;
 		}
 
 		// Ensure single quotes are equal.
 		if ( ! self::validate_equal_characters( '"', $css ) ) {
 			$validity->add( 'unequal_double_quotes', __( 'Your double quotes <code>"</code> are uneven. Make sure there is a closing <code>"</code> for every opening <code>"</code>.' ) );
+			$css_validation_error = true;
 		}
 
 		/*
@@ -187,8 +193,13 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		$unclosed_comment_count = self::validate_count_unclosed_comments( $css );
 		if ( 0 < $unclosed_comment_count ) {
 			$validity->add( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
+			$css_validation_error = true;
 		} elseif ( ! self::validate_balanced_characters( '/*', '*/', $css ) ) {
 			$validity->add( 'unbalanced_comments', __( 'There is an extra <code>*/</code>, indicating an end to a comment.  Be sure that there is an opening <code>/*</code> for every closing <code>*/</code>.' ) );
+			$css_validation_error = true;
+		}
+		if ( true === $css_validation_error && self::is_possible_content_error( $css ) ) {
+			$validity->add( 'css_validation_notice', __( 'Unbalanced/Unclosed character errors can be caused by strings within a <code>content: "";</code> declaration. You may need to remove this or add it a custom CSS file.' ) );
 		}
 		return $validity;
 	}
@@ -329,5 +340,38 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			}
 		}
 		return $count;
+	}
+
+	/**
+	 * Find "content:" within a string.
+	 *
+	 * Unbalanced/Unclosed validation errors may be caused
+	 * when a character is used in a "content:" declaration.
+	 *
+	 * This function is used to detect if this is a possible
+	 * cause of the validation error, so that if it is,
+	 * a notification may be added to the Validation Errors.
+	 *
+	 * Example:
+	 * .element::before {
+	 *   content: "(\"";
+	 * }
+	 * .element::after {
+	 *   content: "\")";
+	 * }
+	 *
+	 * Using ! empty() because strpos() may return non-boolean values
+	 * that evaluate to false. This would be problematic when
+	 * using a strict "false === strpos()" comparison.
+	 *
+	 * @param string $css The CSS input string.
+	 *
+	 * @return bool
+	 */
+	public static function is_possible_content_error( $css ) {
+		if ( ! empty( preg_match( '/\bcontent\s*:/', $css ) ) ) {
+			return true;
+		}
+		return false;
 	}
 }
