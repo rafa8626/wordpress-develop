@@ -2065,7 +2065,6 @@ final class WP_Customize_Manager {
 			'capability' => 'switch_themes',
 		) ) );
 
-
 		/* Site Identity */
 
 		$this->add_section( 'title_tagline', array(
@@ -2449,7 +2448,7 @@ final class WP_Customize_Manager {
 					'homepage' => true,
 					'num_ratings' => true,
 					'tags' => true,
-				)
+				),
 			);
 
 			// Specialized handling for each query.
@@ -2458,10 +2457,11 @@ final class WP_Customize_Manager {
 					$args['search'] = wp_unslash( $_POST['search'] );
 					break;
 				case 'favorites':
-					$args['user'] = wp_unslash(  $_POST['user'] );
+					$args['user'] = wp_unslash( $_POST['user'] );
+					break;
 				case 'featured':
 				case 'popular':
-					$args['browse'] = $_POST['theme_action'];
+					$args['browse'] = wp_unslash( $_POST['theme_action'] );
 					break;
 				case 'latest':
 					$args['browse'] = 'new';
@@ -2487,7 +2487,7 @@ final class WP_Customize_Manager {
 			foreach ( $themes->themes as &$theme ) {
 				$theme->install_url = add_query_arg( array(
 					'theme'    => $theme->slug,
-					'_wpnonce' => wp_create_nonce( 'install-theme_' . $theme->slug )
+					'_wpnonce' => wp_create_nonce( 'install-theme_' . $theme->slug ),
 				), $update_php );
 
 				$theme->name        = wp_kses( $theme->name, $themes_allowedtags );
@@ -2500,7 +2500,7 @@ final class WP_Customize_Manager {
 				$theme->preview_url = set_url_scheme( $theme->preview_url );
 
 				// Handle themes that are already installed as installed themes.
-				if ( in_array( $theme->slug, $installed_themes ) ) {
+				if ( in_array( $theme->slug, $installed_themes, true ) ) {
 					$theme->type = 'installed';
 				} else {
 					$theme->type = $_POST['theme_action'];
@@ -2520,8 +2520,8 @@ final class WP_Customize_Manager {
 				unset( $theme->slug );
 				unset( $theme->screenshot_url );
 				unset( $theme->author );
-			}
-		}
+			} // End foreach().
+		} // End if().
 		wp_send_json_success( $themes );
 	}
 
