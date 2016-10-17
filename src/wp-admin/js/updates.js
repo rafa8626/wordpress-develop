@@ -912,6 +912,7 @@
 			$notice = $( '[data-slug="' + args.slug + '"]' ).find( '.update-message' ).removeClass( 'notice-error' ).addClass( 'updating-message notice-warning' ).find( 'p' );
 
 		} else if ( 'customize' === pagenow ) {
+
 			// Update the theme details UI.
 			$notice = $( '#update-theme' ).closest( '.notice' ).removeClass( 'notice-large' );
 
