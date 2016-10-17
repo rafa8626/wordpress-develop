@@ -224,7 +224,17 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::find_changeset_post_id()
 	 */
 	function test_find_changeset_post_id() {
-		$this->markTestIncomplete();
+		$uuid = wp_generate_uuid4();
+		$post_id = $this->factory()->post->create( array(
+			'post_name' => $uuid,
+			'post_type' => 'customize_changeset',
+			'post_status' => 'auto-draft',
+			'post_content' => '{}',
+		) );
+
+		$wp_customize = new WP_Customize_Manager();
+		$this->assertNull( $wp_customize->find_changeset_post_id( wp_generate_uuid4() ) );
+		$this->assertEquals( $post_id, $wp_customize->find_changeset_post_id( $uuid ) );
 	}
 
 	/**
@@ -234,7 +244,19 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::changeset_post_id()
 	 */
 	function test_changeset_post_id() {
-		$this->markTestIncomplete();
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$this->assertNull( $wp_customize->changeset_post_id() );
+
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$post_id = $this->factory()->post->create( array(
+			'post_name' => $uuid,
+			'post_type' => 'customize_changeset',
+			'post_status' => 'auto-draft',
+			'post_content' => '{}',
+		) );
+		$this->assertEquals( $post_id, $wp_customize->changeset_post_id() );
 	}
 
 	/**

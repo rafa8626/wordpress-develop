@@ -779,7 +779,7 @@ final class WP_Customize_Manager {
 		$changeset_post_query = new WP_Query( array(
 			'post_type' => 'customize_changeset',
 			'post_status' => get_post_stati(),
-			'name' => $this->_changeset_uuid,
+			'name' => $uuid,
 			'number' => 1,
 			'no_found_rows' => true,
 			'cache_results' => true,
@@ -806,7 +806,14 @@ final class WP_Customize_Manager {
 	 */
 	public function changeset_post_id() {
 		if ( ! isset( $this->_changeset_post_id ) ) {
-			$this->_changeset_post_id = $this->find_changeset_post_id( $this->_changeset_uuid );
+			$post_id = $this->find_changeset_post_id( $this->_changeset_uuid );
+			if ( ! $post_id ) {
+				$post_id = false;
+			}
+			$this->_changeset_post_id = $post_id;
+		}
+		if ( false === $this->_changeset_post_id ) {
+			return null;
 		}
 		return $this->_changeset_post_id;
 	}
@@ -1868,7 +1875,11 @@ final class WP_Customize_Manager {
 			$r = wp_insert_post( wp_slash( $post_array ), true );
 			if ( ! is_wp_error( $changeset_post_id ) ) {
 				$changeset_post_id = $r;
-				$this->_changeset_post_id = $changeset_post_id;
+
+				// Update cached post ID for the loaded changeset.
+				if ( $args['uuid'] === $this->changeset_uuid() ) {
+					$this->_changeset_post_id = $changeset_post_id;
+				}
 			}
 		}
 		if ( $has_kses ) {
