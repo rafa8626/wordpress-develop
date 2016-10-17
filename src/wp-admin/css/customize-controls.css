@@ -1025,16 +1025,16 @@ p.customize-section-description {
 }
 
 .control-panel-themes .customize-themes-full-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    transition: .18s left ease-in-out;
-    margin: 0 0 0 300px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	transition: .18s left ease-in-out;
+	margin: 0 0 0 300px;
 	padding:25px;
-    overflow-y: scroll;
-    width: calc(100% - 350px);
-    height: calc(100% - 50px);
-    background: #eee;
+	overflow-y: scroll;
+	width: calc(100% - 350px);
+	height: calc(100% - 50px);
+	background: #eee;
 	z-index: 20;
 }
 
@@ -1553,7 +1553,7 @@ p.customize-section-description {
 
 .wp-customizer .theme-overlay .theme-actions {
 	text-align: right; /* Because there're only one or two actions, match the UI pattern of media modals and right-align the action. */
-    padding: 10px 15px;
+	padding: 10px 15px;
 }
 
 .wp-customizer .theme-overlay .theme-actions .theme-install.preview {
