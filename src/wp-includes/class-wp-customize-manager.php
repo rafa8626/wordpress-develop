@@ -1449,7 +1449,7 @@ final class WP_Customize_Manager {
 			$setting = $this->get_setting( $setting_id );
 			if ( ! $setting ) {
 				if ( $options['validate_existence'] ) {
-					$validities[ $setting_id ] = new WP_Error( 'unrecognized_setting', __( 'Setting does not exist or is unrecognized.' ) );
+					$validities[ $setting_id ] = new WP_Error( 'unrecognized', __( 'Setting does not exist or is unrecognized.' ) );
 				}
 				continue;
 			}
@@ -1457,7 +1457,7 @@ final class WP_Customize_Manager {
 				continue;
 			}
 			if ( $options['validate_capability'] && ! current_user_can( $setting->capability ) ) {
-				$validity = new WP_Error( 'unauthorized', __( 'Unauthorized.' ) );
+				$validity = new WP_Error( 'unauthorized', __( 'Unauthorized to modify setting due to capability.' ) );
 			} else {
 				$validity = $setting->validate( $unsanitized_value );
 			}

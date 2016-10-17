@@ -687,8 +687,6 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$error = $invalid_settings[ $setting->id ];
 		$this->assertEquals( 'invalid_value_in_validate', $error->get_error_code() );
 		$this->assertEquals( array( 'source' => 'filter_customize_validate_foo' ), $error->get_error_data() );
-
-		$this->markTestIncomplete( 'Add tests for validate_capability and validate_existence.' );
 	}
 
 	/**
@@ -715,6 +713,40 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$validity = $setting_validities[ $setting->id ];
 		$this->assertInstanceOf( 'WP_Error', $validity );
 		$this->assertEquals( 'minlength', $validity->get_error_code() );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::validate_setting_values().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::validate_setting_values()
+	 */
+	function test_validate_setting_values_args() {
+		wp_set_current_user( self::$admin_user_id );
+		$this->manager->register_controls();
+
+		$validities = $this->manager->validate_setting_values( array( 'unknown' => 'X' ) );
+		$this->assertEmpty( $validities );
+
+		$validities = $this->manager->validate_setting_values( array( 'unknown' => 'X' ), array( 'validate_existence' => false ) );
+		$this->assertEmpty( $validities );
+
+		$validities = $this->manager->validate_setting_values( array( 'unknown' => 'X' ), array( 'validate_existence' => true ) );
+		$this->assertNotEmpty( $validities );
+		$this->assertArrayHasKey( 'unknown', $validities );
+		$error = $validities['unknown'];
+		$this->assertInstanceOf( 'WP_Error', $error );
+		$this->assertEquals( 'unrecognized', $error->get_error_code() );
+
+		$this->manager->get_setting( 'blogname' )->capability = 'do_not_allow';
+		$validities = $this->manager->validate_setting_values( array( 'blogname' => 'X' ), array( 'validate_capability' => false ) );
+		$this->assertArrayHasKey( 'blogname', $validities );
+		$this->assertTrue( $validities['blogname'] );
+		$validities = $this->manager->validate_setting_values( array( 'blogname' => 'X' ), array( 'validate_capability' => true ) );
+		$this->assertArrayHasKey( 'blogname', $validities );
+		$error = $validities['blogname'];
+		$this->assertInstanceOf( 'WP_Error', $error );
+		$this->assertEquals( 'unauthorized', $error->get_error_code() );
 	}
 
 	/**
