@@ -654,7 +654,7 @@ window.wp = window.wp || {};
 			this.add( 'origin', this.url() ).link( this.url ).setter( function( to ) {
 				var urlParser = document.createElement( 'a' );
 				urlParser.href = to;
-				return urlParser.protocol + '//' + urlParser.host;
+				return urlParser.protocol + '//' + urlParser.hostname;
 			});
 
 			// first add with no value

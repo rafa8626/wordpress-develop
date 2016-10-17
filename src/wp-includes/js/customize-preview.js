@@ -272,7 +272,7 @@
 		urlParser = document.createElement( 'a' );
 		hasMatchingHost = ! _.isUndefined( _.find( api.settings.url.allowed, function( allowedUrl ) {
 			urlParser.href = allowedUrl;
-			if ( urlParser.host === element.host && urlParser.protocol === element.protocol ) {
+			if ( urlParser.hostname === element.hostname && urlParser.protocol === element.protocol ) {
 				return true;
 			}
 			return false;
@@ -323,7 +323,7 @@
 		}
 
 		// Make sure links in preview use HTTPS if parent frame uses HTTPS.
-		if ( 'https' === api.preview.scheme.get() && 'http:' === element.protocol && -1 !== api.settings.url.allowedHosts.indexOf( element.host ) ) {
+		if ( 'https' === api.preview.scheme.get() && 'http:' === element.protocol && -1 !== api.settings.url.allowedHosts.indexOf( element.hostname ) ) {
 			element.protocol = 'https:';
 		}
 
@@ -471,7 +471,7 @@
 		urlParser.href = form.action;
 
 		// Make sure forms in preview use HTTPS if parent frame uses HTTPS.
-		if ( 'https' === api.preview.scheme.get() && 'http:' === urlParser.protocol && -1 !== api.settings.url.allowedHosts.indexOf( urlParser.host ) ) {
+		if ( 'https' === api.preview.scheme.get() && 'http:' === urlParser.protocol && -1 !== api.settings.url.allowedHosts.indexOf( urlParser.hostname ) ) {
 			urlParser.protocol = 'https:';
 			form.action = urlParser.href;
 		}
