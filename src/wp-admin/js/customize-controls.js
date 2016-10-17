@@ -1179,7 +1179,7 @@
 			// Parameters for every API query. Additional params are set in PHP.
 			page = Math.ceil( section.loaded / 100 ) + 1;
 			params = {
-				'customize-themes-nonce': api.settings.nonce['customize-themes'],
+				'switch-themes-nonce': api.settings.nonce['switch-themes'],
 				'wp_customize': 'on',
 				'theme_action': section.params.action,
 				'customized_theme': api.settings.theme.stylesheet,
