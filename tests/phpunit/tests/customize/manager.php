@@ -34,11 +34,19 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	protected static $admin_user_id;
 
 	/**
+	 * Subscriber user ID.
+	 *
+	 * @var int
+	 */
+	protected static $subscriber_user_id;
+
+	/**
 	 * Set up before class.
 	 *
 	 * @param WP_UnitTest_Factory $factory Factory.
 	 */
 	public static function wpSetUpBeforeClass( $factory ) {
+		self::$subscriber_user_id = $factory->user->create( array( 'role' => 'subscriber' ) );
 		self::$admin_user_id = $factory->user->create( array( 'role' => 'administrator' ) );
 	}
 
@@ -69,6 +77,253 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	function instantiate() {
 		$GLOBALS['wp_customize'] = new WP_Customize_Manager();
 		return $GLOBALS['wp_customize'];
+	}
+
+	/**
+	 * Test WP_Customize_Manager::__construct().
+	 *
+	 * @covers WP_Customize_Manager::__construct()
+	 */
+	function test_constructor() {
+		$uuid = wp_generate_uuid4();
+		$theme = 'twentyfifteen';
+		$messenger_channel = 'preview-123';
+		$wp_customize = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+			'theme' => $theme,
+			'messenger_channel' => $messenger_channel,
+		) );
+		$this->assertEquals( $uuid, $wp_customize->changeset_uuid() );
+		$this->assertEquals( $theme, $wp_customize->get_stylesheet() );
+		$this->assertEquals( $messenger_channel, $wp_customize->get_messenger_channel() );
+
+		$theme = 'twentyfourteen';
+		$messenger_channel = 'preview-456';
+		$_REQUEST['theme'] = $theme;
+		$_REQUEST['customize_messenger_channel'] = $messenger_channel;
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$this->assertEquals( $theme, $wp_customize->get_stylesheet() );
+		$this->assertEquals( $messenger_channel, $wp_customize->get_messenger_channel() );
+
+		$theme = 'twentyfourteen';
+		$_REQUEST['customize_theme'] = $theme;
+		$wp_customize = new WP_Customize_Manager();
+		$this->assertEquals( $theme, $wp_customize->get_stylesheet() );
+		$this->assertNotEmpty( $wp_customize->changeset_uuid() );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::setup_theme() for admin screen.
+	 *
+	 * @covers WP_Customize_Manager::setup_theme()
+	 */
+	function test_setup_theme_in_customize_admin() {
+		global $pagenow, $wp_customize;
+		$pagenow = 'customize.php';
+		set_current_screen( 'customize' );
+
+		// Unauthorized.
+		$exception = null;
+		$wp_customize = new WP_Customize_Manager();
+		wp_set_current_user( self::$subscriber_user_id );
+		try {
+			$wp_customize->setup_theme();
+		} catch ( Exception $e ) {
+			$exception = $e;
+		}
+		$this->assertInstanceOf( 'WPDieException', $exception );
+		$this->assertContains( 'you are not allowed to customize this site', $exception->getMessage() );
+
+		// Bad changeset.
+		$exception = null;
+		wp_set_current_user( self::$admin_user_id );
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => 'bad' ) );
+		try {
+			$wp_customize->setup_theme();
+		} catch ( Exception $e ) {
+			$exception = $e;
+		}
+		$this->assertInstanceOf( 'WPDieException', $exception );
+		$this->assertContains( 'Invalid changeset UUID', $exception->getMessage() );
+
+		$wp_customize = new WP_Customize_Manager();
+		$wp_customize->setup_theme();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::setup_theme() for frontend.
+	 *
+	 * @covers WP_Customize_Manager::setup_theme()
+	 */
+	function test_setup_theme_in_frontend() {
+		global $wp_customize, $pagenow, $show_admin_bar;
+		$pagenow = 'front';
+		set_current_screen( 'front' );
+
+		wp_set_current_user( 0 );
+		$exception = null;
+		$wp_customize = new WP_Customize_Manager();
+		wp_set_current_user( self::$subscriber_user_id );
+		try {
+			$wp_customize->setup_theme();
+		} catch ( Exception $e ) {
+			$exception = $e;
+		}
+		$this->assertInstanceOf( 'WPDieException', $exception );
+		$this->assertContains( 'Non-existent changeset UUID', $exception->getMessage() );
+
+		wp_set_current_user( self::$admin_user_id );
+		$wp_customize = new WP_Customize_Manager( array( 'messenger_channel' => 'preview-1' ) );
+		$wp_customize->setup_theme();
+		$this->assertFalse( $show_admin_bar );
+
+		show_admin_bar( true );
+		wp_set_current_user( self::$admin_user_id );
+		$wp_customize = new WP_Customize_Manager( array( 'messenger_channel' => null ) );
+		$wp_customize->setup_theme();
+		$this->assertTrue( $show_admin_bar );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::changeset_uuid().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::changeset_uuid()
+	 */
+	function test_changeset_uuid() {
+		$uuid = wp_generate_uuid4();
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $uuid ) );
+		$this->assertEquals( $uuid, $wp_customize->changeset_uuid() );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::wp_loaded().
+	 *
+	 * Ensure that post values are previewed even without being in preview.
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::wp_loaded()
+	 */
+	function test_wp_loaded() {
+		wp_set_current_user( self::$admin_user_id );
+		$wp_customize = new WP_Customize_Manager();
+		$title = 'Hello World';
+		$wp_customize->set_post_value( 'blogname', $title );
+		$this->assertNotEquals( $title, get_option( 'blogname' ) );
+		$wp_customize->wp_loaded();
+		$this->assertFalse( $wp_customize->is_preview() );
+		$this->assertEquals( $title, $wp_customize->get_setting( 'blogname' )->value() );
+		$this->assertEquals( $title, get_option( 'blogname' ) );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::find_changeset_post_id().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::find_changeset_post_id()
+	 */
+	function test_find_changeset_post_id() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::changeset_post_id().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::changeset_post_id()
+	 */
+	function test_changeset_post_id() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::changeset_data().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::changeset_data()
+	 */
+	function test_changeset_data() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::customize_preview_init().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::customize_preview_init()
+	 */
+	function test_customize_preview_init() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::filter_iframe_security_headers().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::filter_iframe_security_headers()
+	 */
+	function test_filter_iframe_security_headers() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::add_customize_state_query_params().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::add_customize_state_query_params()
+	 */
+	function test_add_customize_state_query_params() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::save().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::save()
+	 */
+	function test_save() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::save_changeset_post().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::save_changeset_post()
+	 */
+	function test_save_changeset_post() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::update_stashed_theme_mod_settings().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::update_stashed_theme_mod_settings()
+	 */
+	function test_update_stashed_theme_mod_settings() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::is_cross_domain().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::is_cross_domain()
+	 */
+	function test_is_cross_domain() {
+		$this->markTestIncomplete();
+	}
+
+	/**
+	 * Test WP_Customize_Manager::get_allowed_urls().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::get_allowed_urls()
+	 */
+	function test_get_allowed_urls() {
+		$this->markTestIncomplete();
 	}
 
 	/**
@@ -117,6 +372,8 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$_POST['customized'] = wp_slash( wp_json_encode( $customized ) );
 		$post_values = $manager->unsanitized_post_values();
 		$this->assertEquals( $customized, $post_values );
+
+		$this->markTestIncomplete( 'Need to check params and also changeset source.' );
 	}
 
 	/**
@@ -297,6 +554,8 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$error = $invalid_settings[ $setting->id ];
 		$this->assertEquals( 'invalid_value_in_validate', $error->get_error_code() );
 		$this->assertEquals( array( 'source' => 'filter_customize_validate_foo' ), $error->get_error_data() );
+
+		$this->markTestIncomplete( 'Add tests for validate_capability and validate_existence.' );
 	}
 
 	/**

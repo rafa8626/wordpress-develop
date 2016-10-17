@@ -247,6 +247,7 @@ final class WP_Customize_Manager {
 			$args
 		);
 
+		// Note that the UUID format will be validated in the setup_theme() method.
 		if ( ! isset( $args['changeset_uuid'] ) ) {
 			$args['changeset_uuid'] = wp_generate_uuid4();
 		}
@@ -486,7 +487,9 @@ final class WP_Customize_Manager {
 			$this->wp_die( -1, __( 'Non-existent changeset UUID.' ) );
 		}
 
-		send_origin_headers();
+		if ( ! headers_sent() ) {
+			send_origin_headers();
+		}
 
 		// Hide the admin bar if we're embedded in the customizer iframe.
 		if ( $this->messenger_channel ) {
@@ -2673,6 +2676,18 @@ final class WP_Customize_Manager {
 		$allowed_urls = array_unique( apply_filters( 'customize_allowed_urls', $allowed_urls ) );
 
 		return $allowed_urls;
+	}
+
+	/**
+	 * Get messenger channel.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @return string Messenger channel.
+	 */
+	public function get_messenger_channel() {
+		return $this->messenger_channel;
 	}
 
 	/**
