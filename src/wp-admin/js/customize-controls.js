@@ -166,12 +166,6 @@
 		var deferred, request, submittedChanges = {}, data;
 		deferred = new $.Deferred();
 
-		// Make sure that publishing a changeset waits for all changeset update requests to complete.
-		api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
-		deferred.always( function() {
-			api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
-		} );
-
 		if ( changes ) {
 			_.extend( submittedChanges, changes );
 		}
@@ -192,6 +186,12 @@
 			deferred.resolve( {} );
 			return deferred.promise();
 		}
+
+		// Make sure that publishing a changeset waits for all changeset update requests to complete.
+		api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+		deferred.always( function() {
+			api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+		} );
 
 		// Allow plugins to attach additional params to the settings.
 		api.trigger( 'changeset-save', submittedChanges );
