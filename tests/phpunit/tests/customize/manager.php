@@ -406,18 +406,9 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 *
 	 * @ticket 30937
 	 * @covers WP_Customize_Manager::save_changeset_post()
-	 */
-	function test_save_changeset_post() {
-		$this->markTestIncomplete();
-	}
-
-	/**
-	 * Test WP_Customize_Manager::update_stashed_theme_mod_settings().
-	 *
-	 * @ticket 30937
 	 * @covers WP_Customize_Manager::update_stashed_theme_mod_settings()
 	 */
-	function test_update_stashed_theme_mod_settings() {
+	function test_save_changeset_post() {
 		$this->markTestIncomplete();
 	}
 
@@ -428,7 +419,15 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::is_cross_domain()
 	 */
 	function test_is_cross_domain() {
-		$this->markTestIncomplete();
+		$wp_customize = new WP_Customize_Manager();
+
+		update_option( 'home', 'http://example.com' );
+		update_option( 'siteurl', 'http://example.com' );
+		$this->assertFalse( $wp_customize->is_cross_domain() );
+
+		update_option( 'home', 'http://example.com' );
+		update_option( 'siteurl', 'https://admin.example.com' );
+		$this->assertTrue( $wp_customize->is_cross_domain() );
 	}
 
 	/**
@@ -438,7 +437,26 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 * @covers WP_Customize_Manager::get_allowed_urls()
 	 */
 	function test_get_allowed_urls() {
-		$this->markTestIncomplete();
+		$wp_customize = new WP_Customize_Manager();
+		$this->assertFalse( is_ssl() );
+		$this->assertFalse( $wp_customize->is_cross_domain() );
+		$allowed = $wp_customize->get_allowed_urls();
+		$this->assertEquals( $allowed, array( home_url( '/', 'http' ) ) );
+
+		add_filter( 'customize_allowed_urls', array( $this, 'filter_customize_allowed_urls' ) );
+		$allowed = $wp_customize->get_allowed_urls();
+		$this->assertEqualSets( $allowed, array( 'http://headless.example.com/', home_url( '/', 'http' ) ) );
+	}
+
+	/**
+	 * Callback for customize_allowed_urls filter.
+	 *
+	 * @param array $urls URLs.
+	 * @return array URLs.
+	 */
+	function filter_customize_allowed_urls( $urls ) {
+		$urls[] = 'http://headless.example.com/';
+		return $urls;
 	}
 
 	/**
