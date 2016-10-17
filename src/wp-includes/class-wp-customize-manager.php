@@ -839,7 +839,7 @@ final class WP_Customize_Manager {
 			return new WP_Error( 'wrong_post_type' );
 		}
 		$changeset_data = json_decode( $changeset_post->post_content, true );
-		if ( json_last_error() ) {
+		if ( function_exists( 'json_last_error' ) && json_last_error() ) {
 			return new WP_Error( 'json_parse_error', '', json_last_error() );
 		}
 		if ( ! is_array( $changeset_data ) ) {
