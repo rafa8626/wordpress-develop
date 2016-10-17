@@ -426,7 +426,7 @@ final class WP_Customize_Manager {
 			<?php
 			echo "<p>$message</p>";
 			echo '</html>';
-			die(); // @todo Not testable.
+			die();
 		}
 
 		wp_die( $message );

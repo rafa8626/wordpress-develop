@@ -2182,8 +2182,6 @@ function _wp_customize_publish_changeset( $new_status, $old_status, $changeset_p
 	 * since they would just be endlessly piling up. So here we use the revisions
 	 * feature to indicate whether or not a published changeset should get trashed
 	 * and thus garbage collected.
-	 *
-	 * @todo There could be a better way to indicate that published changeset posts should be garbage-collected.
 	 */
 	if ( ! wp_revisions_enabled( $changeset_post ) ) {
 		wp_trash_post( $changeset_post->ID );
@@ -2210,9 +2208,6 @@ function _wp_customize_changeset_filter_insert_post_data( $post_data, $supplied_
 		if ( empty( $post_data['post_name'] ) && ! empty( $supplied_post_data['post_name'] ) ) {
 			$post_data['post_name'] = $supplied_post_data['post_name'];
 		}
-
-		// @todo Let the post_name be immutable by setting $post_data['post_name'] to get_post( $post_data['ID'] )->post_name?
-		// @todo Otherwise, supply a UUID via wp_generate_uuid4() if it is empty?
 	}
 	return $post_data;
 }

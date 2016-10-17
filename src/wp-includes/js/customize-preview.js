@@ -380,7 +380,7 @@
 			}
 			queryParams = api.utils.parseQueryString( urlParser.search.substring( 1 ) );
 
-			// @todo Only include values that are not saved into the changeset. See wp.customize.getDirtyValues({unsaved:true}).
+			// Note that _dirty flag will be cleared with changeset updates.
 			api.each( function( setting ) {
 				if ( setting._dirty ) {
 					dirtyValues[ setting.id ] = setting.get();
