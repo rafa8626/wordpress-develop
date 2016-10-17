@@ -479,6 +479,11 @@ function get_post_class( $class = '', $post_id = null ) {
 			$classes[] = 'format-standard';
 	}
 
+	// Front page sections.
+	if ( is_front_page() && is_front_page_section( $post->ID ) ) {
+		$classes[] = 'front-page-section';
+	}
+
 	$post_password_required = post_password_required( $post->ID );
 
 	// Post requires password.
@@ -1801,4 +1806,17 @@ function wp_list_post_revisions( $post_id = 0, $type = 'all' ) {
 	echo "<ul class='post-revisions hide-if-no-js'>\n";
 	echo $rows;
 	echo "</ul>";
+}
+
+/**
+ * Whether a post is a front page section.
+ *
+ * @since 4.7.0
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_front_page_section( $post_id ) {
+	$section_ids = array_filter( wp_parse_id_list( get_option( 'front_page_sections' ) ) );
+	return in_array( intval( $post_id ), $section_ids, true );
 }

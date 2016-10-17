@@ -487,6 +487,15 @@ class WP_Query {
 	private $compat_methods = array( 'init_query_flags', 'parse_tax_query' );
 
 	/**
+	 * Whether we're currently showing a static front page with sections.
+	 *
+	 * @since 4.7.0
+	 * @access private
+	 * @var boolean
+	 */
+	private $is_front_page_with_sections = false;
+
+	/**
 	 * Resets query flags to false.
 	 *
 	 * The query flags are what page info WordPress was able to figure out.
@@ -521,6 +530,7 @@ class WP_Query {
 		$this->is_robots = false;
 		$this->is_posts_page = false;
 		$this->is_post_type_archive = false;
+		$this->is_front_page_with_sections = false;
 	}
 
 	/**
@@ -976,6 +986,20 @@ class WP_Query {
 					$qv['page'] = $qv['paged'];
 					unset($qv['paged']);
 				}
+
+				// Add section pages, if they exist.
+				if ( $this->is_main_query() ) {
+					$front_page_sections = array_filter( wp_parse_id_list( get_option( 'front_page_sections' ) ) );
+					if ( $front_page_sections ) {
+						$this->is_front_page_with_sections = true;
+						if ( ! in_array( $qv['page_id'], $front_page_sections ) ) {
+							array_unshift( $front_page_sections, $qv['page_id'] );
+						}
+
+						$qv['post__in'] = $front_page_sections;
+						$qv['orderby'] = 'post__in';
+					}
+				}
 			}
 		}
 
@@ -1007,7 +1031,7 @@ class WP_Query {
 			}
 		}
 
-		if ( $qv['page_id'] ) {
+		if ( ! $this->is_front_page_with_sections && ! empty( $qv['page_id'] ) ) {
 			if  ( 'page' == get_option('show_on_front') && $qv['page_id'] == get_option('page_for_posts') ) {
 				$this->is_page = false;
 				$this->is_home = true;
@@ -1970,7 +1994,7 @@ class WP_Query {
 			$where .= " AND {$wpdb->posts}.post_parent NOT IN ($post_parent__not_in)";
 		}
 
-		if ( $q['page_id'] ) {
+		if ( ! $this->is_front_page_with_sections && $q['page_id'] ) {
 			if  ( ('page' != get_option('show_on_front') ) || ( $q['page_id'] != get_option('page_for_posts') ) ) {
 				$q['p'] = $q['page_id'];
 				$where = " AND {$wpdb->posts}.ID = " . $q['page_id'];
@@ -3006,7 +3030,20 @@ class WP_Query {
 			if ( $q['cache_results'] )
 				update_post_caches($this->posts, $post_type, $q['update_post_term_cache'], $q['update_post_meta_cache']);
 
-			$this->post = reset( $this->posts );
+			if ( $this->is_front_page_with_sections ) {
+				$this->post = reset( $this->posts );
+				do {
+					if ( $this->post && $this->post->ID == get_option( 'page_on_front' ) ) {
+						reset( $this->posts );
+						break;
+					}
+				} while ( $this->post = next( $this->posts ) );
+				if ( ! $this->post ) {
+					$this->post = reset( $this->posts );
+				}
+			} else {
+				$this->post = reset( $this->posts );
+			}
 		} else {
 			$this->post_count = 0;
 			$this->posts = array();
@@ -3107,6 +3144,10 @@ class WP_Query {
 
 		$post = $this->next_post();
 		$this->setup_postdata( $post );
+
+		if ( $this->is_front_page_with_sections && $post ) {
+			echo '<a id="' . str_replace( '/', '.', get_page_uri( $post->ID ) ) . '"></a>';
+		}
 	}
 
 	/**

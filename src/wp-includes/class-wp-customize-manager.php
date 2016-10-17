@@ -227,6 +227,7 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-name-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menu-auto-add-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-new-menu-control.php' );
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-post-collection-control.php' );
 
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-nav-menus-panel.php' );
 
@@ -1970,6 +1971,7 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
+		$this->register_control_type( 'WP_Customize_Post_Collection_Control' );
 
 		/* Themes */
 
@@ -2302,6 +2304,30 @@ final class WP_Customize_Manager {
 			'section' => 'static_front_page',
 			'type' => 'dropdown-pages',
 		) );
+
+		$this->add_setting( 'front_page_sections', array(
+			'type'              => 'option',
+			'capability'        => 'manage_options',
+			'sanitize_callback' => array( $this, 'sanitize_id_list' ),
+		) );
+
+		$this->add_control( new WP_Customize_Post_Collection_Control( $this, 'front_page_sections', array(
+			'label'              => __( 'Front page sections' ),
+			'description'        => '',
+			'section'            => 'static_front_page',
+			'settings'           => 'front_page_sections',
+			'post_types'         => apply_filters( 'front_page_sections_post_types', array( 'page' ) ),
+			'include_front_page' => true,
+			'labels'             => array(
+				'addPost'                => __( 'Add Section' ),
+				'addPosts'               => __( 'Add Sections' ),
+				'movedUp'                => __( 'Section moved up' ),
+				'movedDown'              => __( 'Section moved down' ),
+				'removePost'             => __( 'Remove Section' ),
+				'searchPosts'            => __( 'Search Sections' ),
+				'searchPostsPlaceholder' => __( 'Search sections&hellip;' ),
+			),
+		) ) );
 	}
 
 	/**
@@ -2380,5 +2406,17 @@ final class WP_Customize_Manager {
 	 */
 	public function _render_custom_logo_partial() {
 		return get_custom_logo();
+	}
+
+	/**
+	 * Sanitization callback for lists of IDs.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $value Setting value.
+	 * @return string Comma-separated list of IDs.
+	 */
+	public function sanitize_id_list( $value ) {
+		return implode( ',', array_unique( array_filter( wp_parse_id_list( $value ) ) ) );
 	}
 }

@@ -1285,8 +1285,9 @@ function get_sample_permalink($id, $title = null, $name = null) {
 
 		/** This filter is documented in wp-admin/edit-tag-form.php */
 		$uri = apply_filters( 'editable_slug', $uri, $post );
-		if ( !empty($uri) )
-			$uri .= '/';
+		if ( ! empty( $uri ) ) {
+			$uri .= is_front_page_section( $post->ID ) ? '.' : '/';
+		}
 		$permalink = str_replace('%pagename%', "{$uri}%pagename%", $permalink);
 	}
 

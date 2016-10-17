@@ -312,10 +312,11 @@ function get_post_permalink( $id = 0, $leavename = false, $sample = false ) {
 function get_page_link( $post = false, $leavename = false, $sample = false ) {
 	$post = get_post( $post );
 
-	if ( 'page' == get_option( 'show_on_front' ) && $post->ID == get_option( 'page_on_front' ) )
+	if ( 'page' == get_option( 'show_on_front' ) && $post->ID == get_option( 'page_on_front' ) ) {
 		$link = home_url('/');
-	else
+	} else {
 		$link = _get_page_link( $post, $leavename, $sample );
+	}
 
 	/**
 	 * Filters the permalink for a page.
@@ -359,8 +360,12 @@ function _get_page_link( $post = false, $leavename = false, $sample = false ) {
 			$link = str_replace('%pagename%', get_page_uri( $post ), $link);
 		}
 
-		$link = home_url($link);
-		$link = user_trailingslashit($link, 'page');
+		if ( is_front_page_section( $post->ID ) ) {
+			$link = home_url( '#' . str_replace( '/', '.', $link ) );
+		} else {
+			$link = home_url($link);
+			$link = user_trailingslashit($link, 'page');
+		}
 	} else {
 		$link = home_url( '?page_id=' . $post->ID );
 	}
