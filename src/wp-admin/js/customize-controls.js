@@ -4108,6 +4108,11 @@
 			/**
 			 * Save (and publish) the customizer changeset.
 			 *
+			 * Updates to the changeset are transactional. If any of the settings
+			 * are invalid then none of them will be written into the changeset.
+			 * A revision will be made for the changeset post if revisions support
+			 * has been added to the post type.
+			 *
 			 * @param {object} [args] Args.
 			 * @param {string} [args.status=publish] Status.
 			 * @param {string} [args.date] Date, in local time in MySQL format.

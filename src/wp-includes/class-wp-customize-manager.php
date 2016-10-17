@@ -1411,7 +1411,6 @@ final class WP_Customize_Manager {
 				continue;
 			}
 			if ( is_null( $unsanitized_value ) ) {
-				// @todo Should this be skipped or be invalid?
 				continue;
 			}
 			if ( $options['validate_capability'] && ! current_user_can( $setting->capability ) ) {
@@ -1472,10 +1471,10 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Save (update) changeset.
+	 * Handle customize_save WP Ajax request to save/update a changeset.
 	 *
 	 * @since 3.4.0
-	 * @since 4.7.0 The semantics of this method have changed to update a changeset, optionally to also change the status.
+	 * @since 4.7.0 The semantics of this method have changed to update a changeset, optionally to also change the status and other attributes.
 	 */
 	public function save() {
 		if ( ! is_user_logged_in() ) {
@@ -1559,13 +1558,17 @@ final class WP_Customize_Manager {
 			$now = gmdate( 'Y-m-d H:i:59' );
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
 			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
-				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // @todo This should be allowed in the future, when theme is a regular setting.
+				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
 			}
 			$will_remain_auto_draft = ( ! $changeset_status && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
 			if ( $changeset_date && $will_remain_auto_draft ) {
 				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
 			}
 		}
+
+		// The request was made via wp.customize.previewer.save().
+		$update_transactionally = ! empty( $changeset_status );
+		$allow_revision = ! empty( $changeset_status );
 
 		/**
 		 * Fires before save validation happens.
@@ -1594,14 +1597,10 @@ final class WP_Customize_Manager {
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		/*
-		 * Short-circuit if there are invalid settings and attempting to transition
-		 * the changeset to a new status (i.e. publish). When the changeset_status
-		 * is set then the request is considered transactional, where if any of the
-		 * setting are invalid then none of them will be saved.
-		 *
-		 * @todo Consider a separate 'transactional' argument which defaults to true if the $changeset_status is set.
+		 * Short-circuit if there are invalid settings the update is transactional.
+		 * A changeset update is transactional when a status is supplied in the request.
 		 */
-		if ( $changeset_status && $invalid_setting_count > 0 ) {
+		if ( $update_transactionally && $invalid_setting_count > 0 ) {
 			$response = array(
 				'setting_validities' => $exported_setting_validities,
 				'message' => sprintf( _n( 'There is %s invalid setting.', 'There are %s invalid settings.', $invalid_setting_count ), number_format_i18n( $invalid_setting_count ) ),
@@ -1719,11 +1718,9 @@ final class WP_Customize_Manager {
 			$post_array['post_date_gmt'] = get_gmt_from_date( $changeset_date );
 		}
 
-		// @todo Consider a separate 'revision' param which makes this explicit, versus looking at whether the status is provided.
-		$this->store_changeset_revision = ! empty( $changeset_status );
+		$this->store_changeset_revision = $allow_revision;
 		add_filter( 'wp_save_post_revision_post_has_changed', array( $this, '_filter_revision_post_has_changed' ), 5, 3 );
 
-		// @todo Add create revision arg for wp.customize.previewer.save() which defaults to true if status is provided.
 		// Update the changeset post. The publish_customize_changeset action will cause the settings in the changeset to be saved via WP_Customize_Setting::save().
 		$has_kses = ( false !== has_filter( 'content_save_pre', 'wp_filter_post_kses' ) );
 		if ( $has_kses ) {
@@ -1753,7 +1750,7 @@ final class WP_Customize_Manager {
 			wp_send_json_error( $response );
 		}
 
-		// Note that if the changeset status was publish, then it will get get set to trash if revisions are not supported.
+		// Note that if the changeset status was publish, then it will get set to trash if revisions are not supported.
 		if ( 'publish' === $changeset_status ) {
 			$response['changeset_status'] = $changeset_status;
 		} else {
