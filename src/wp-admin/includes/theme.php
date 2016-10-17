@@ -607,8 +607,7 @@ function wp_prepare_themes_for_js( $themes = null ) {
  * @since 4.2.0
  */
 function customize_themes_print_templates() {
-	$current_url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
-	$active_url  = esc_url( remove_query_arg( 'theme', $current_url ) );
+	$current_url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . wp_unslash( $_SERVER['REQUEST_URI'] ) );
 	$preview_url = esc_url( add_query_arg( 'theme', '__THEME__', $current_url ) ); // Token because esc_url() strips curly braces.
 	$preview_url = str_replace( '__THEME__', '{{ data.id }}', $preview_url );
 	?>
