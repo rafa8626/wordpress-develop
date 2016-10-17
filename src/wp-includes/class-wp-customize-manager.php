@@ -2477,6 +2477,15 @@ final class WP_Customize_Manager {
 				wp_send_json_error();
 			}
 
+			// This list matches the allowed tags in wp-admin/includes/theme-install.php.
+			$themes_allowedtags = array('a' => array('href' => array(), 'title' => array(), 'target' => array()),
+				'abbr' => array('title' => array()), 'acronym' => array('title' => array()),
+				'code' => array(), 'pre' => array(), 'em' => array(), 'strong' => array(),
+				'div' => array(), 'p' => array(), 'ul' => array(), 'ol' => array(), 'li' => array(),
+				'h1' => array(), 'h2' => array(), 'h3' => array(), 'h4' => array(), 'h5' => array(), 'h6' => array(),
+				'img' => array('src' => array(), 'class' => array(), 'alt' => array())
+			);
+
 			// Prepare a list of installed themes to check against before the loop.
 			$installed_themes = array();
 			$wp_themes = wp_get_themes();
