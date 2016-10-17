@@ -200,7 +200,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$css_validation_error = true;
 		}
 		if ( true === $css_validation_error && self::is_possible_content_error( $css ) ) {
-			$validity->add( 'css_validation_notice', __( 'Unbalanced/Unclosed character errors can be caused by strings within a <code>content: "";</code> declaration. You may need to remove this or add it a custom CSS file.' ) );
+			$validity->add( 'css_validation_notice', __( 'Unbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
 		}
 		return $validity;
 	}
