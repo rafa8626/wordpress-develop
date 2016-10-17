@@ -126,7 +126,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @todo Needs Expansion.
 	 *
 	 * @todo remove string literals before counting characters for cases where a
-	 * character is used in a "content:" string.
+	 * character is used in a "content:" string. This will remove the need for
+	 * the is_possible_content_error() check.
 	 *
 	 * Example:
 	 * .element::before {
@@ -256,7 +257,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$args['ID'] = $post->ID;
 
 			/*
-			 * Save the Post ID to theme_mod.
+			 * Save the Post ID to a theme_mod.
 			 *
 			 * Keep in mind that the Setting ID includes the theme name,
 			 * and that the Custom CSS Post Title matches the value
@@ -369,7 +370,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return bool
 	 */
 	public static function is_possible_content_error( $css ) {
-		if ( ! empty( preg_match( '/\bcontent\s*:/', $css ) ) ) {
+		$found = preg_match( '/\bcontent\s*:/', $css );
+		if ( ! empty( $found ) ) {
 			return true;
 		}
 		return false;
