@@ -558,4 +558,22 @@ jQuery( window ).load( function (){
 		equal( 1, controlsForSettings['fixture-setting'].length );
 		equal( wp.customize.control( controlId ), controlsForSettings['fixture-setting'][0] );
 	} );
+
+	module( 'Customize Controls wp.customize.dirtyValues' );
+	test( 'dirtyValues() returns expected values', function() {
+		wp.customize.each( function( setting ) {
+			setting._dirty = false;
+		} );
+		ok( _.isEmpty( wp.customize.dirtyValues() ) );
+		ok( _.isEmpty( wp.customize.dirtyValues( { unsaved: false } ) ) );
+
+		wp.customize( 'fixture-setting' )._dirty = true;
+		ok( ! _.isEmpty( wp.customize.dirtyValues() ) );
+		ok( _.isEmpty( wp.customize.dirtyValues( { unsaved: true } ) ) );
+
+		wp.customize( 'fixture-setting' ).set( 'Modified' );
+		ok( ! _.isEmpty( wp.customize.dirtyValues() ) );
+		ok( ! _.isEmpty( wp.customize.dirtyValues( { unsaved: true } ) ) );
+		equal( 'Modified', wp.customize.dirtyValues()['fixture-setting'] );
+	} );
 });

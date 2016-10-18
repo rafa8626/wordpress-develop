@@ -154,7 +154,7 @@ window._wpCustomizeSettings = {
 	},
 	timeouts: {
 		windowRefresh: 250,
-		changesetUpdate: 250,
+		changesetAutoSave: 60000,
 		keepAliveCheck: 2500,
 		reflowPaneContents: 100,
 		previewFrameSensitivity: 2000
