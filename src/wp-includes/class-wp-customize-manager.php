@@ -1223,7 +1223,8 @@ final class WP_Customize_Manager {
 		$setting_validities = $this->validate_setting_values( $post_values );
 		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
-		$self_url = home_url( empty( $_SERVER['REQUEST_URI'] ) ? '/' : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+		// Note that the REQUEST_URI is not passed into home_url() since this breaks subdirectory installs.
+		$self_url = empty( $_SERVER['REQUEST_URI'] ) ? home_url( '/' ) : esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 		$state_query_params = array(
 			'customize_theme',
 			'customize_changeset_uuid',
