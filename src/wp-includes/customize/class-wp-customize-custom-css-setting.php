@@ -23,36 +23,48 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @var string
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 */
 	public $type = 'custom_css';
 
 	/**
-	 * Used to determine if we're in the Preview.
-	 *
-	 * @var bool
-	 *
-	 * @access public
-	 * @since 4.7.0
-	 */
-	public $is_previewing;
-
-	/**
 	 * Setting Transport
 	 *
-	 * @var string
-	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @var string
 	 */
 	public $transport = 'postMessage';
 
 	/**
+	 * Capability required to edit this setting.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @var string
+	 */
+	public $capability = 'unfiltered_css';
+
+	/**
+	 * Stylesheet
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @var string
+	 */
+	public $stylesheet = '';
+
+	/**
 	 * WP_Customize_Custom_CSS_Setting constructor.
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @throws Exception If the setting ID does not match the pattern `custom_css[$stylesheet]`.
 	 *
 	 * @param WP_Customize_Manager $manager The Customize Manager class.
 	 * @param string               $id      An specific ID of the setting. Can be a
@@ -60,59 +72,63 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @param array                $args    Setting arguments.
 	 */
 	public function __construct( $manager, $id, $args = array() ) {
-		parent::__construct( $manager, $id, $args = array() );
-
-		add_filter( "customize_validate_{$this->id}", array( $this, 'validate_css' ), 10, 2 );
-		add_filter( "customize_sanitize_{$this->id}", array( $this, 'sanitize_css' ), 10, 2 );
-		add_action( "customize_preview_{$this->id}", array( $this, 'is_previewing' ) );
-
-		if ( ! has_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ) ) ) {
-			add_filter( "customize_value_{$this->id_data['base']}", array( $this, 'get_value' ), 10, 2 );
+		parent::__construct( $manager, $id, $args );
+		if ( 'custom_css' !== $this->id_data['base'] ) {
+			throw new Exception( 'Expected custom_css id_base.' );
 		}
-
-		if ( ! has_filter( "customize_update_{$this->type}", array( $this, 'update_setting' ) ) ) {
-			add_filter( "customize_update_{$this->type}", array( $this, 'update_setting' ) );
+		if ( 1 !== count( $this->id_data['keys'] ) ) {
+			throw new Exception( 'Expected single stylesheet key.' );
 		}
+		$this->stylesheet = $this->id_data['keys'][0];
 	}
 
 	/**
-	 * Set is_previewing to true.
+	 * Add filter to preview post value.
 	 *
-	 * @action customize_preview_{$this->id}
-	 *
+	 * @since 4.7.9
 	 * @access public
-	 * @since 4.7.0
+	 *
+	 * @return bool False when preview short-circuits due no change needing to be previewed.
 	 */
-	public function is_previewing() {
-		$this->is_previewing = true;
+	public function preview() {
+		if ( $this->is_previewed ) {
+			return false;
+		}
+		$this->is_previewed = true;
+		add_filter( 'wp_get_custom_css', array( $this, 'filter_previewed_wp_get_custom_css' ), 9, 2 );
+		return true;
+	}
+
+	/**
+	 * Filter wp_get_custom_css for applying customized value to return value.
+	 *
+	 * @since 4.7.9
+	 * @access public
+	 *
+	 * @param string $css        Original CSS.
+	 * @param string $stylesheet Current stylesheet.
+	 * @return string CSS.
+	 */
+	public function filter_previewed_wp_get_custom_css( $css, $stylesheet ) {
+		if ( $stylesheet === $this->stylesheet ) {
+			$customized_value = $this->post_value( null );
+			if ( ! is_null( $customized_value ) ) {
+				$css = $customized_value;
+			}
+		}
+		return $css;
 	}
 
 	/**
 	 * Fetch the value of the setting.
 	 *
-	 * @see WP_Customize_Setting::value()
-	 *
-	 * @filter customize_value_{$this->id_data['base']}
-	 *
-	 * @access public
 	 * @since 4.7.0
-	 *
-	 * @param string $value The value.
-	 * @param object $setting The Setting.
+	 * @access public
 	 *
 	 * @return string
 	 */
-	public function get_value( $value, $setting ) {
-		$value = $setting->post_value();
-		if ( $this->is_previewing && ! is_null( $value ) ) {
-			return $value;
-		}
-
-		$custom_css_post = wp_get_custom_css_by_theme_name();
-		if ( empty( $custom_css_post->post_content ) ) {
-			return '';
-		}
-		return $custom_css_post->post_content;
+	public function value() {
+		return wp_get_custom_css( $this->stylesheet );
 	}
 
 	/**
@@ -125,19 +141,15 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @todo remove string literals before validation.
 	 *
-	 * @see WP_Customize_Setting::validate()
-	 *
-	 * @filter customize_validate_{$this->id}
-	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
-	 * @param mixed  $validity WP_Error, else true.
 	 * @param string $css The input string.
-	 *
-	 * @return mixed true|WP_Error True if the input was validated, otherwise WP_Error.
+	 * @return true|WP_Error True if the input was validated, otherwise WP_Error.
 	 */
-	public function validate_css( $validity, $css ) {
+	public function validate( $css ) {
+		$validity = new WP_Error();
+
 		$css_validation_error = false;
 		// Make sure that there is a closing brace for each opening brace.
 		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
@@ -190,71 +202,76 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		if ( true === $css_validation_error && self::is_possible_content_error( $css ) ) {
 			$validity->add( 'css_validation_notice', __( 'Imbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
 		}
+
+		if ( empty( $validity->errors ) ) {
+			$validity = parent::validate( $css );
+		}
 		return $validity;
 	}
 
 	/**
 	 * Sanitize CSS.
 	 *
-	 * @filter customize_sanitize_{$this->id}
-	 *
 	 * @access public
 	 * @since 4.7.0
 	 *
-	 * @param string $css The input string.
+	 * @todo Is this necessary anymore?
 	 *
-	 * @return mixed
+	 * @param string $css The input string.
+	 * @return string Limited sanitized CSS.
 	 */
-	public function sanitize_css( $css ) {
-		return wp_sanitize_css( $css );
+	public function sanitize( $css ) {
+		return parent::sanitize( wp_sanitize_css( $css ) );
 	}
 
 	/**
 	 * Bypass the process of saving the value of the "Additional CSS"
 	 * customizer setting.
 	 *
-	 * This setting does not use "option" or "theme_mod," but
-	 * rather "custom_css" to trigger saving.  The value is
-	 * then saved to the custom_css CPT.
+	 * This setting does not use "option" or "theme_mod" but
+	 * rather the "custom_css" custom post type.
 	 *
-	 * This is already sanitized in the sanitize() method.
-	 *
-	 * @see WP_Customize_Setting::update()
-	 *
-	 * @action customize_update_{$this->type}
-	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param string $value The input value.
 	 *
-	 * @return int  The custom_css Post ID.
+	 * @return int|false The post ID or false if the value could not be saved.
 	 */
-	public function update_setting( $value ) {
-		$theme_name = get_stylesheet();
+	public function update( $value ) {
+		/*
+		 * If the theme associated with this setting is not the loaded theme
+		 * then the update must short-circuit because theme mods arne't set
+		 * for non-active themes.
+		 */
+		if ( $this->manager->get_stylesheet() !== $this->stylesheet ) {
+			return false;
+		}
+
 		$args = array(
 			'post_content' => ( null === $value ) ? '' : $value,
-			'post_title'   => $theme_name,
+			'post_title'   => $this->stylesheet,
+			'post_name'   => $this->stylesheet,
 			'post_type'    => 'custom_css',
 			'post_status'  => 'publish',
 		);
 
-		// Check to see if the post already exists.
-		$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
-		if ( ! empty( $post->ID ) ) {
+		// Update post if it already exists, otherwise create a new one.
+		$post_id = null;
+		$post = get_page_by_title( $this->stylesheet, OBJECT, 'custom_css' ); // @todo This needs to be looking up by post_name instead, since it is indexed.
+		if ( ! empty( $post ) ) {
 			$args['ID'] = $post->ID;
-
-			/*
-			 * Save the Post ID to a theme_mod.
-			 *
-			 * Keep in mind that the Setting ID includes the theme name,
-			 * and that the Custom CSS Post Title matches the value
-			 * of get_stylesheet().
-			 */
-			set_theme_mod( $this->id_data['base'], $post->ID );
+			$post_id = wp_update_post( wp_slash( $args ) );
+		} else {
+			$post_id = wp_insert_post( wp_slash( $args ) );
+		}
+		if ( ! $post_id ) {
+			return false;
 		}
 
-		$post_id = wp_insert_post( $args );
+		// Cache post ID in theme mod for performance.
+		set_theme_mod( 'custom_css_post_id', $post_id );
+
 		return $post_id;
 	}
 

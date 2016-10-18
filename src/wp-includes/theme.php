@@ -1422,16 +1422,36 @@ function wp_custom_css_cb() {
  *
  * @since 4.7.0
  *
- * @param string $theme_name Optional. A Theme object stylesheet name.  Defaults to the current theme.
+ * @param string $stylesheet Optional. A theme object stylesheet name. Defaults to the current theme.
  *
  * @return string The Custom CSS Post content.
  */
-function wp_get_custom_css( $theme_name = '' ) {
+function wp_get_custom_css( $stylesheet = '' ) {
 	$css = '';
-	$custom_css_post = wp_get_custom_css_by_theme_name( $theme_name );
 
-	if ( ! empty( $custom_css_post->post_content ) ) {
-		$css = $custom_css_post->post_content;
+	if ( empty( $stylesheet ) ) {
+		$stylesheet = get_stylesheet();
+	}
+
+	$post = null;
+	$post_id = null;
+	if ( get_stylesheet() === $stylesheet ) {
+		$post_id = get_theme_mod( 'custom_css_post_id' );
+		if ( ! $post_id ) {
+
+			// Cache value in the theme mod to eliminate a query with each request.
+			$post = get_page_by_title( $stylesheet, OBJECT, 'custom_css' ); // @todo This needs to look up by post_name instead since it is indexed.
+			set_theme_mod( 'custom_css_post_id', $post ? $post->ID : -1 );
+		} elseif ( $post_id > 0 ) {
+			$post = get_post( $post_id );
+		}
+	} else {
+		// Theme is not active, so the cached post ID cannot be sourced from the theme mods.
+		$post = get_page_by_title( $stylesheet, OBJECT, 'custom_css' ); // @todo This needs to look up by post_name instead since it is indexed.
+	}
+
+	if ( $post ) {
+		$css = $post->post_content;
 	}
 
 	/**
@@ -1439,40 +1459,12 @@ function wp_get_custom_css( $theme_name = '' ) {
 	 *
 	 * @since 4.7.0
 	 *
-	 * @param string $css CSS pulled in from the Custom CSS CPT.
+	 * @param string $css        CSS pulled in from the Custom CSS CPT.
+	 * @param string $stylesheet The theme stylesheet name.
 	 */
-	return apply_filters( 'wp_get_custom_css', $css );
-}
+	$css = apply_filters( 'wp_get_custom_css', $css, $stylesheet );
 
-
-/**
- * Find a Custom CSS Post Object.
- *
- * Defaults to finding the current theme's Custom CSS CPT post object.
- * Optionally, this can find a Custom CSS CPT post if a stylesheet
- * name (e.g., "twentyfifteen") is provided.
- *
- * @since 4.7.0
- *
- * @param string $theme_name Optional. A Theme stylesheet name. Defaults to the current theme.
- *
- * @return object|bool WP_Post Object, else false.
- */
-function wp_get_custom_css_by_theme_name( $theme_name = '' ) {
-	// By default, use the current theme.
-	if ( empty( $theme_name ) || ! is_string( $theme_name ) ) {
-		$theme_name = get_stylesheet();
-	}
-
-	$post = get_page_by_title( $theme_name, 'OBJECT', 'custom_css' );
-
-	if ( empty( $post->ID ) ) {
-		return false;
-	}
-
-	$post = get_post( $post->ID );
-
-	return $post;
+	return $css;
 }
 
 /**
@@ -1480,7 +1472,7 @@ function wp_get_custom_css_by_theme_name( $theme_name = '' ) {
  *
  * Currently runs a basic wp_kses check.
  *
- * @todo Needs Expansion.
+ * @todo Is this necessary anymore?
  *
  * @since 4.7.0
  *

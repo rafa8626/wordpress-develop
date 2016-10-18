@@ -3330,8 +3330,7 @@ final class WP_Customize_Manager {
 			),
 		) );
 
-		$theme_name = get_stylesheet();
-		$custom_css_setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'custom_css[%s]', $theme_name ), array(
+		$custom_css_setting = new WP_Customize_Custom_CSS_Setting( $this, sprintf( 'custom_css[%s]', get_stylesheet() ), array(
 			'capability' => 'unfiltered_css',
 		) );
 		$this->add_setting( $custom_css_setting );
