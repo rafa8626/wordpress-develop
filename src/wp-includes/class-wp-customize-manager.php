@@ -1591,10 +1591,6 @@ final class WP_Customize_Manager {
 		 */
 		$changeset_date_gmt = null;
 		if ( isset( $_POST['customize_changeset_date'] ) ) {
-			if ( ( 'publish' === $changeset_status || 'future' === $changeset_status ) && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
-				wp_send_json_error( 'changeset_publish_unauthorized', 403 );
-			}
-
 			$changeset_date = wp_unslash( $_POST['customize_changeset_date'] );
 			if ( preg_match( '/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/', $changeset_date ) ) {
 				$mm = substr( $changeset_date, 5, 2 );
@@ -1615,6 +1611,10 @@ final class WP_Customize_Manager {
 			$now = gmdate( 'Y-m-d H:i:59' );
 
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
+			if ( ! $is_future_dated ) {
+				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
+			}
+
 			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
 				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
 			}
