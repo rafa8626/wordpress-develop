@@ -123,17 +123,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * Notifications are rendered when the Preview
 	 * is saved.
 	 *
-	 * @todo remove string literals before counting characters for cases where a
-	 * character is used in a "content:" string. This will remove the need for
-	 * the is_possible_content_error() check.
-	 *
-	 * Example:
-	 * .element::before {
-	 *   content: "(\"";
-	 * }
-	 * .element::after {
-	 *   content: "\")";
-	 * }
+	 * @todo remove string literals before validation.
 	 *
 	 * @see WP_Customize_Setting::validate()
 	 *

@@ -754,17 +754,12 @@
 				if ( meta.hasClass( 'cannot-expand' ) ) {
 					return;
 				}
-
 				content = meta.find( '.customize-section-description:first' );
-				if ( meta.hasClass( 'open' ) ) {
-					meta.toggleClass( 'open' );
-					content.slideUp( section.defaultExpandedArguments.duration );
-					$( this ).attr( 'aria-expanded', false );
-				} else {
-					content.slideDown( section.defaultExpandedArguments.duration );
-					meta.toggleClass( 'open' );
-					$( this ).attr( 'aria-expanded', true );
-				}
+				content.toggleClass( 'open' );
+				content.slideToggle();
+				content.attr( 'aria-expanded', function ( i, attr ) {
+					return attr === 'true' ? 'false' : 'true';
+				});
 			});
 		},
 
