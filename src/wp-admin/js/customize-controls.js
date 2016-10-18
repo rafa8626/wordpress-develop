@@ -4399,7 +4399,8 @@
 				processing = state.create( 'processing' ),
 				paneVisible = state.create( 'paneVisible' ),
 				changesetStatus = state.create( 'changesetStatus' ),
-				previewerAlive = state.create( 'previewerAlive' );
+				previewerAlive = state.create( 'previewerAlive' ),
+				populateChangesetUuidParam;
 
 			state.bind( 'change', function() {
 				var canSave;
@@ -4456,29 +4457,36 @@
 				}
 			});
 
-			changesetStatus.bind( function( newStatus, oldStatus ) {
+			populateChangesetUuidParam = function( isIncluded ) {
 				var urlParser, queryParams;
-
-				if ( ! history.replaceState ) {
-					return;
-				}
-
-				// Abort if not a transition between existing and non-existing.
-				if ( newStatus && oldStatus ) {
-					return;
-				}
-
 				urlParser = document.createElement( 'a' );
 				urlParser.href = location.href;
 				queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
-				if ( '' === newStatus ) {
-					delete queryParams.changeset_uuid;
-				} else {
+				if ( isIncluded ) {
+					if ( queryParams.changeset_uuid === api.settings.changeset.uuid ) {
+						return;
+					}
 					queryParams.changeset_uuid = api.settings.changeset.uuid;
+				} else {
+					if ( ! queryParams.changeset_uuid ) {
+						return;
+					}
+					delete queryParams.changeset_uuid;
 				}
 				urlParser.search = $.param( queryParams );
 				history.replaceState( {}, document.title, urlParser.href );
-			} );
+			};
+
+			if ( history.replaceState ) {
+				saved.bind( function( isSaved ) {
+					if ( ! isSaved ) {
+						populateChangesetUuidParam( true );
+					}
+				} );
+				changesetStatus.bind( function( newStatus ) {
+					populateChangesetUuidParam( '' !== newStatus );
+				} );
+			}
 
 			// Expose states to the API.
 			api.state = state;
