@@ -3663,17 +3663,7 @@
 					return;
 				}
 
-				event.preventDefault();
-				api.section( control.section() ).loadThemePreview( control.params.theme.id );
-			});
-
-			control.container.on( 'click keydown', '.theme-actions .theme-details', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-
 				event.preventDefault(); // Keep this AFTER the key filter above
-
 				api.section( control.section() ).showDetails( control.params.theme );
 			});
 
