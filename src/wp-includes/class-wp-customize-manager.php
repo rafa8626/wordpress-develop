@@ -1701,8 +1701,8 @@ final class WP_Customize_Manager {
 		$changeset_post_id = $this->changeset_post_id();
 
 		// The request was made via wp.customize.previewer.save().
-		$update_transactionally = boolval( $args['status'] );
-		$allow_revision = boolval( $args['status'] );
+		$update_transactionally = (bool) $args['status'];
+		$allow_revision = (bool) $args['status'];
 
 		// Amend post values with any supplied data.
 		foreach ( $args['data'] as $setting_id => $setting_params ) {
