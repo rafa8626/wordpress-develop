@@ -118,12 +118,10 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Validate CSS.
 	 *
-	 * Checks for unbalanced braces, brackets and comments.
+	 * Checks for imbalanced braces, brackets and comments.
 	 *
 	 * Notifications are rendered when the Preview
 	 * is saved.
-	 *
-	 * @todo Needs Expansion.
 	 *
 	 * @todo remove string literals before counting characters for cases where a
 	 * character is used in a "content:" string. This will remove the need for
@@ -153,19 +151,19 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		$css_validation_error = false;
 		// Make sure that there is a closing brace for each opening brace.
 		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
-			$validity->add( 'unbalanced_braces', __( 'Your braces <code>{}</code> are unbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
+			$validity->add( 'imbalanced_curly_brackets', __( 'Your curly brackets <code>{}</code> are imbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
 			$css_validation_error = true;
 		}
 
 		// Ensure brackets are balanced.
 		if ( ! self::validate_balanced_characters( '[', ']', $css ) ) {
-			$validity->add( 'unbalanced_braces', __( 'Your brackets <code>[]</code> are unbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
+			$validity->add( 'imbalanced_braces', __( 'Your brackets <code>[]</code> are imbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
 			$css_validation_error = true;
 		}
 
 		// Ensure parentheses are balanced.
 		if ( ! self::validate_balanced_characters( '(', ')', $css ) ) {
-			$validity->add( 'unbalanced_braces', __( 'Your parentheses <code>()</code> are unbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
+			$validity->add( 'imbalanced_parentheses', __( 'Your parentheses <code>()</code> are imbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
 			$css_validation_error = true;
 		}
 
@@ -196,11 +194,11 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$validity->add( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
 			$css_validation_error = true;
 		} elseif ( ! self::validate_balanced_characters( '/*', '*/', $css ) ) {
-			$validity->add( 'unbalanced_comments', __( 'There is an extra <code>*/</code>, indicating an end to a comment.  Be sure that there is an opening <code>/*</code> for every closing <code>*/</code>.' ) );
+			$validity->add( 'imbalanced_comments', __( 'There is an extra <code>*/</code>, indicating an end to a comment.  Be sure that there is an opening <code>/*</code> for every closing <code>*/</code>.' ) );
 			$css_validation_error = true;
 		}
 		if ( true === $css_validation_error && self::is_possible_content_error( $css ) ) {
-			$validity->add( 'css_validation_notice', __( 'Unbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
+			$validity->add( 'css_validation_notice', __( 'Imbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
 		}
 		return $validity;
 	}
@@ -331,10 +329,12 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	public static function validate_count_unclosed_comments( $css ) {
 		$count = 0;
 		$comments = explode( '/*', $css );
-		if ( ! is_array( $comments ) || ( 2 < count( $comments ) ) ) {
+
+		if ( ! is_array( $comments ) || ( 1 >= count( $comments ) ) ) {
 			return $count;
 		}
-		unset( $comments[0] ); // The first array came before the first comment.
+
+		unset( $comments[0] ); // The first item is before the first comment.
 		foreach ( $comments as $comment ) {
 			if ( false === strpos( $comment, '*/' ) ) {
 				$count++;
@@ -346,7 +346,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Find "content:" within a string.
 	 *
-	 * Unbalanced/Unclosed validation errors may be caused
+	 * Imbalanced/Unclosed validation errors may be caused
 	 * when a character is used in a "content:" declaration.
 	 *
 	 * This function is used to detect if this is a possible
@@ -364,6 +364,9 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * Using ! empty() because strpos() may return non-boolean values
 	 * that evaluate to false. This would be problematic when
 	 * using a strict "false === strpos()" comparison.
+	 *
+	 * @access public
+	 * @since 4.7.0
 	 *
 	 * @param string $css The CSS input string.
 	 *
