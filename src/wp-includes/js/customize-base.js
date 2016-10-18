@@ -826,10 +826,19 @@ window.wp = window.wp || {};
 	api.utils.parseQueryString = function parseQueryString( queryString ) {
 		var queryParams = {};
 		_.each( queryString.split( '&' ), function( pair ) {
-			var parts = pair.split( '=', 2 );
-			if ( parts[0] ) {
-				queryParams[ decodeURIComponent( parts[0] ) ] = _.isUndefined( parts[1] ) ? null : decodeURIComponent( parts[1] );
+			var parts, key, value;
+			parts = pair.split( '=', 2 );
+			if ( ! parts[0] ) {
+				return;
 			}
+			key = decodeURIComponent( parts[0].replace( /\+/g, ' ' ) );
+			key = key.replace( / /g, '_' ); // What PHP does.
+			if ( _.isUndefined( parts[1] ) ) {
+				value = null;
+			} else {
+				value = decodeURIComponent( parts[1].replace( /\+/g, ' ' ) );
+			}
+			queryParams[ key ] = value;
 		} );
 		return queryParams;
 	};
