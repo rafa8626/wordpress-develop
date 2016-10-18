@@ -494,7 +494,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	 *
 	 * @ticket 30988
 	 */
-	function test_unsanitized_post_values() {
+	function test_unsanitized_post_values_from_input() {
 		wp_set_current_user( self::$admin_user_id );
 		$manager = $this->manager;
 
@@ -505,8 +505,117 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$_POST['customized'] = wp_slash( wp_json_encode( $customized ) );
 		$post_values = $manager->unsanitized_post_values();
 		$this->assertEquals( $customized, $post_values );
+		$this->assertEmpty( $manager->unsanitized_post_values( array( 'exclude_post_data' => true ) ) );
 
-		$this->markTestIncomplete( 'Need to check params and also changeset source.' );
+		$manager->set_post_value( 'foo', 'BAR' );
+		$post_values = $manager->unsanitized_post_values();
+		$this->assertEquals( 'BAR', $post_values['foo'] );
+		$this->assertEmpty( $manager->unsanitized_post_values( array( 'exclude_post_data' => true ) ) );
+
+		// If user is unprivileged, the post data is ignored.
+		wp_set_current_user( 0 );
+		$this->assertEmpty( $manager->unsanitized_post_values() );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::unsanitized_post_values().
+	 *
+	 * @ticket 30937
+	 * @covers WP_Customize_Manager::unsanitized_post_values()
+	 */
+	function test_unsanitized_post_values_with_changeset_and_stashed_theme_mods() {
+		wp_set_current_user( self::$admin_user_id );
+
+		$stashed_theme_mods = array(
+			'twentyfifteen' => array(
+				'background_color' => array(
+					'value' => '#000000',
+				),
+			),
+		);
+		$stashed_theme_mods[ get_stylesheet() ] = array(
+			'background_color' => array(
+				'value' => '#FFFFFF',
+			),
+		);
+		update_option( 'customize_stashed_theme_mods', $stashed_theme_mods );
+
+		$post_values = array(
+			'blogdescription' => 'Post Input Tagline',
+		);
+		$_POST['customized'] = wp_slash( wp_json_encode( $post_values ) );
+
+		$uuid = wp_generate_uuid4();
+		$changeset_data = array(
+			'blogname' => array(
+				'value' => 'Changeset Title',
+			),
+			'blogdescription' => array(
+				'value' => 'Changeset Tagline',
+			),
+		);
+		$this->factory()->post->create( array(
+			'post_type' => 'customize_changeset',
+			'post_status' => 'auto-draft',
+			'post_name' => $uuid,
+			'post_content' => wp_json_encode( $changeset_data ),
+		) );
+
+		$manager = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+		) );
+		$this->assertTrue( $manager->is_theme_active() );
+
+		$this->assertArrayNotHasKey( 'background_color', $manager->unsanitized_post_values() );
+
+		$this->assertEquals(
+			array(
+				'blogname' => 'Changeset Title',
+				'blogdescription' => 'Post Input Tagline',
+			),
+			$manager->unsanitized_post_values()
+		);
+		$this->assertEquals(
+			array(
+				'blogdescription' => 'Post Input Tagline',
+			),
+			$manager->unsanitized_post_values( array( 'exclude_changeset' => true ) )
+		);
+
+		$manager->set_post_value( 'blogdescription', 'Post Override Tagline' );
+		$this->assertEquals(
+			array(
+				'blogname' => 'Changeset Title',
+				'blogdescription' => 'Post Override Tagline',
+			),
+			$manager->unsanitized_post_values()
+		);
+
+		$this->assertEquals(
+			array(
+				'blogname' => 'Changeset Title',
+				'blogdescription' => 'Changeset Tagline',
+			),
+			$manager->unsanitized_post_values( array( 'exclude_post_data' => true ) )
+		);
+
+		$this->assertEmpty( $manager->unsanitized_post_values( array( 'exclude_post_data' => true, 'exclude_changeset' => true ) ) );
+
+		// Test unstashing theme mods.
+		$manager = new WP_Customize_Manager( array(
+			'changeset_uuid' => $uuid,
+			'theme' => 'twentyfifteen',
+		) );
+		$this->assertFalse( $manager->is_theme_active() );
+		$values = $manager->unsanitized_post_values( array( 'exclude_post_data' => true, 'exclude_changeset' => true ) );
+		$this->assertNotEmpty( $values );
+		$this->assertArrayHasKey( 'background_color', $values );
+		$this->assertEquals( '#000000', $values['background_color'] );
+
+		$values = $manager->unsanitized_post_values( array( 'exclude_post_data' => false, 'exclude_changeset' => false ) );
+		$this->assertArrayHasKey( 'background_color', $values );
+		$this->assertArrayHasKey( 'blogname', $values );
+		$this->assertArrayHasKey( 'blogdescription', $values );
 	}
 
 	/**
