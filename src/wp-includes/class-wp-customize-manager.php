@@ -1553,12 +1553,6 @@ final class WP_Customize_Manager {
 			if ( ! is_array( $input_changeset_data ) ) {
 				wp_send_json_error( 'invalid_customize_changeset_data' );
 			}
-			foreach ( $input_changeset_data as $setting_id => $setting_params ) {
-				if ( array_key_exists( 'value', $setting_params ) ) {
-					$this->set_post_value( $setting_id, $setting_params['value'] ); // Add to post values so that they can be validated and sanitized.
-				}
-			}
-			$this->add_dynamic_settings( array_keys( $input_changeset_data ) ); // Ensure settings get created even if they lack an input value.
 		} else {
 			$input_changeset_data = array();
 		}
@@ -1630,7 +1624,6 @@ final class WP_Customize_Manager {
 		}
 
 		$r = $this->save_changeset_post( array(
-			'uuid' => $this->changeset_uuid(),
 			'status' => $changeset_status,
 			'title' => $changeset_title,
 			'date_gmt' => $changeset_date_gmt,
@@ -1650,6 +1643,10 @@ final class WP_Customize_Manager {
 			if ( 'publish' === $response['changeset_status'] ) {
 				$response['next_changeset_uuid'] = wp_generate_uuid4();
 			}
+		}
+
+		if ( isset( $response['setting_validities'] ) ) {
+			$response['setting_validities'] = array_map( array( $this, 'prepare_setting_validity_for_js' ), $response['setting_validities'] );
 		}
 
 		/**
@@ -1673,7 +1670,7 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * Save a changeset post.
+	 * Save the post for the loaded changeset.
 	 *
 	 * @since 4.7.0
 	 * @access public
@@ -1681,20 +1678,18 @@ final class WP_Customize_Manager {
 	 * @param array $args {
 	 *     Args for changeset post.
 	 *
-	 *     @type string $uuid     Changeset UUID. This needn't match the loaded UUID.
-	 *     @type array  $data     Changeset data.
-	 *     @type string $status   Post status. Optional.
+	 *     @type array  $data     Optional additional changeset data. Values will be merged on top of any existing post values.
+	 *     @type string $status   Post status. Optional. If supplied, the save will be transactional and a post revision will be allowed.
 	 *     @type string $title    Post title. Optional.
 	 *     @type string $date_gmt Date in GMT. Optional.
 	 * }
 	 *
 	 * @return array|WP_Error Returns array on success and WP_Error with array data on error.
 	 */
-	function save_changeset_post( $args ) {
+	function save_changeset_post( $args = array() ) {
 
 		$args = array_merge(
 			array(
-				'uuid' => null,
 				'status' => null,
 				'title' => null,
 				'data' => array(),
@@ -1703,11 +1698,25 @@ final class WP_Customize_Manager {
 			$args
 		);
 
-		$changeset_post_id = $this->find_changeset_post_id( $args['uuid'] );
+		$changeset_post_id = $this->changeset_post_id();
 
 		// The request was made via wp.customize.previewer.save().
 		$update_transactionally = boolval( $args['status'] );
 		$allow_revision = boolval( $args['status'] );
+
+		// Amend post values with any supplied data.
+		foreach ( $args['data'] as $setting_id => $setting_params ) {
+			if ( array_key_exists( 'value', $setting_params ) ) {
+				$this->set_post_value( $setting_id, $setting_params['value'] ); // Add to post values so that they can be validated and sanitized.
+			}
+		}
+
+		// Note that in addition to post data, this will include any stashed theme mods.
+		$post_values = $this->unsanitized_post_values( array(
+			'exclude_changeset' => true,
+			'exclude_post_data' => false,
+		) );
+		$this->add_dynamic_settings( array_keys( $post_values ) ); // Ensure settings get created even if they lack an input value.
 
 		/**
 		 * Fires before save validation happens.
@@ -1723,17 +1732,11 @@ final class WP_Customize_Manager {
 		do_action( 'customize_save_validation_before', $this );
 
 		// Validate settings.
-		$post_values = $this->unsanitized_post_values( array(
-			'exclude_changeset' => true,
-			'exclude_post_data' => false,
-		) );
-		$this->add_dynamic_settings( array_keys( $post_values ) );
 		$setting_validities = $this->validate_setting_values( $post_values, array(
 			'validate_capability' => true,
 			'validate_existence' => true,
 		) );
 		$invalid_setting_count = count( array_filter( $setting_validities, 'is_wp_error' ) );
-		$exported_setting_validities = array_map( array( $this, 'prepare_setting_validity_for_js' ), $setting_validities );
 
 		/*
 		 * Short-circuit if there are invalid settings the update is transactional.
@@ -1741,14 +1744,14 @@ final class WP_Customize_Manager {
 		 */
 		if ( $update_transactionally && $invalid_setting_count > 0 ) {
 			$response = array(
-				'setting_validities' => $exported_setting_validities,
+				'setting_validities' => $setting_validities,
 				'message' => sprintf( _n( 'There is %s invalid setting.', 'There are %s invalid settings.', $invalid_setting_count ), number_format_i18n( $invalid_setting_count ) ),
 			);
 			return new WP_Error( 'transaction_fail', '', $response );
 		}
 
 		$response = array(
-			'setting_validities' => $exported_setting_validities,
+			'setting_validities' => $setting_validities,
 		);
 
 		// Obtain/merge data for changeset.
@@ -1757,6 +1760,17 @@ final class WP_Customize_Manager {
 		if ( is_wp_error( $data ) ) {
 			$data = array();
 		}
+
+		// Ensure that all post values are included in the changeset data.
+		foreach ( $post_values as $setting_id => $post_value ) {
+			if ( ! isset( $args['data'][ $setting_id ] ) ) {
+				$args['data'][ $setting_id ] = array();
+			}
+			if ( ! isset( $args['data'][ $setting_id ]['value'] ) ) {
+				$args['data'][ $setting_id ]['value'] = $post_value;
+			}
+		}
+
 		foreach ( $args['data'] as $setting_id => $setting_params ) {
 			$setting = $this->get_setting( $setting_id );
 			if ( ! $setting || ! $setting->check_capabilities() ) {
@@ -1790,7 +1804,8 @@ final class WP_Customize_Manager {
 		}
 
 		$filter_context = array(
-			'uuid' => $args['uuid'],
+			'uuid' => $this->changeset_uuid(),
+			'title' => $args['title'],
 			'status' => $args['status'],
 			'date_gmt' => $args['date_gmt'],
 			'post_id' => $changeset_post_id,
@@ -1845,7 +1860,7 @@ final class WP_Customize_Manager {
 			$post_array['ID'] = $changeset_post_id;
 		} else {
 			$post_array['post_type'] = 'customize_changeset';
-			$post_array['post_name'] = $args['uuid'];
+			$post_array['post_name'] = $this->changeset_uuid();
 			$post_array['post_status'] = 'auto-draft';
 		}
 		if ( $args['status'] ) {
@@ -1871,13 +1886,8 @@ final class WP_Customize_Manager {
 			$r = wp_update_post( wp_slash( $post_array ), true );
 		} else {
 			$r = wp_insert_post( wp_slash( $post_array ), true );
-			if ( ! is_wp_error( $changeset_post_id ) ) {
-				$changeset_post_id = $r;
-
-				// Update cached post ID for the loaded changeset.
-				if ( $args['uuid'] === $this->changeset_uuid() ) {
-					$this->_changeset_post_id = $changeset_post_id;
-				}
+			if ( ! is_wp_error( $r ) ) {
+				$this->_changeset_post_id = $r; // Update cached post ID for the loaded changeset.
 			}
 		}
 		if ( $has_kses ) {
@@ -2826,7 +2836,7 @@ final class WP_Customize_Manager {
 		// Prepare Customizer settings to pass to JavaScript.
 		$settings = array(
 			'changeset' => array(
-				'uuid' => $this->_changeset_uuid,
+				'uuid' => $this->changeset_uuid(),
 				'status' => $this->changeset_post_id() ? get_post_status( $this->changeset_post_id() ) : '',
 			),
 			'timeouts' => array(
