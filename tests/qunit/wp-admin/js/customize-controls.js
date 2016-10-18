@@ -576,4 +576,56 @@ jQuery( window ).load( function (){
 		ok( ! _.isEmpty( wp.customize.dirtyValues( { unsaved: true } ) ) );
 		equal( 'Modified', wp.customize.dirtyValues()['fixture-setting'] );
 	} );
+
+	module( 'Customize Controls: wp.customize.requestChangesetUpdate()' );
+	test( 'requestChangesetUpdate makes request and returns promise', function( assert ) {
+		var request, originalBeforeSetup = jQuery.ajaxSettings.beforeSend;
+
+		jQuery.ajaxSetup( {
+			beforeSend: function( e, data ) {
+				var queryParams, changesetData;
+				queryParams = wp.customize.utils.parseQueryString( data.data );
+
+				assert.equal( 'customize_save', queryParams.action );
+				assert.ok( ! _.isUndefined( queryParams.customize_changeset_data ) );
+				assert.ok( ! _.isUndefined( queryParams.nonce ) );
+				assert.ok( ! _.isUndefined( queryParams.customize_theme ) );
+				assert.equal( wp.customize.settings.changeset.uuid, queryParams.customize_changeset_uuid );
+				assert.equal( 'on', queryParams.wp_customize );
+
+				changesetData = JSON.parse( queryParams.customize_changeset_data );
+				assert.ok( ! _.isUndefined( changesetData.additionalSetting ) );
+				assert.ok( ! _.isUndefined( changesetData['fixture-setting'] ) );
+
+				assert.equal( 'additionalValue', changesetData.additionalSetting.value );
+				assert.equal( 'requestChangesetUpdate', changesetData['fixture-setting'].value );
+
+				// Prevent Ajax request from completing.
+				return false;
+			}
+		} );
+
+		wp.customize.each( function( setting ) {
+			setting._dirty = false;
+		} );
+
+		request = wp.customize.requestChangesetUpdate();
+		assert.equal( 'resolved', request.state());
+		request.done( function( data ) {
+			assert.ok( _.isEqual( {}, data ) );
+		} );
+
+		wp.customize( 'fixture-setting' ).set( 'requestChangesetUpdate' );
+
+		request = wp.customize.requestChangesetUpdate( {
+			additionalSetting: {
+				value: 'additionalValue'
+			}
+		} );
+
+		request.always( function( data ) {
+			assert.equal( 'canceled', data.statusText );
+			jQuery.ajaxSetup( { beforeSend: originalBeforeSetup } );
+		} );
+	} );
 });
