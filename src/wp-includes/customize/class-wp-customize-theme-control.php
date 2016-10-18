@@ -89,7 +89,7 @@ class WP_Customize_Theme_Control extends WP_Customize_Control {
 
 
 			<# if ( 'installed' === data.theme.type && data.theme.hasUpdate ) { #>
-				<div class="update-message notice inline notice-warning notice-alt" data-slug="{{ data.theme.id }}"><p><?php printf( __( 'New version available. %s' ), '<button class="button-link update-theme" type="button">' . __( 'Update now' ) . '</button>' ); ?></p></div>
+				<div class="update-message notice inline notice-warning notice-alt" data-slug="{{ data.theme.id }}"><p><?php _e( 'New version available. <button class="button-link update-theme" type="button">Update now</button>' ); ?></p></div>
 			<# } #>
 
 			<# if ( data.theme.active ) { #>
