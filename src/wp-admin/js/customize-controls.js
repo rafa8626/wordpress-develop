@@ -1172,7 +1172,7 @@
 				var themeId = $( this ).data( 'themeId' );
 
 				$( '.wp-full-overlay' ).addClass( 'customize-loading' );
-				section.loadThemePreview( themeId ).fail( function() {
+				api.panel( 'themes' ).loadThemePreview( themeId ).fail( function() {
 					$( '.wp-full-overlay' ).removeClass( 'customize-loading' );
 				} );
 			});
@@ -1711,57 +1711,6 @@
 		},
 
 		/**
-		 * Load theme preview.
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param {string} themeId Theme ID.
-		 * @returns {jQuery.promise} Promise.
-		 */
-		loadThemePreview: function( themeId ) {
-			var deferred = $.Deferred(), onceProcessingComplete, overlay, urlParser;
-
-			urlParser = document.createElement( 'a' );
-			urlParser.href = location.href;
-			urlParser.search = $.param( _.extend(
-				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
-				{
-					theme: themeId,
-					changeset_uuid: api.settings.changeset.uuid
-				}
-			) );
-
-			overlay = $( '.wp-full-overlay' );
-			overlay.addClass( 'customize-loading' );
-
-			onceProcessingComplete = function() {
-				var request;
-				if ( api.state( 'processing' ).get() > 0 ) {
-					return;
-				}
-
-				api.state( 'processing' ).unbind( onceProcessingComplete );
-
-				request = api.requestChangesetUpdate();
-				request.done( function() {
-					$( window ).off( 'beforeunload.customize-confirm' );
-					window.location.href = urlParser.href;
-				} );
-				request.fail( function() {
-					overlay.removeClass( 'customize-loading' );
-				} );
-			};
-
-			if ( 0 === api.state( 'processing' ).get() ) {
-				onceProcessingComplete();
-			} else {
-				api.state( 'processing' ).bind( onceProcessingComplete );
-			}
-
-			return deferred.promise();
-		},
-
-		/**
 		 * Render & show the theme details for a given theme model.
 		 *
 		 * @since 4.2.0
@@ -1790,7 +1739,7 @@
 				}
 				link.addClass( 'disabled' );
 
-				section.loadThemePreview( theme.id ).fail( function() {
+				api.panel( 'themes' ).loadThemePreview( theme.id ).fail( function() {
 					link.removeClass( 'disabled' );
 				} );
 			} );
@@ -2176,8 +2125,7 @@
 		 * @since 4.7.0
 		 */
 		installTheme: function( event ) {
-			var preview = false, previewUrl,
-			    slug = $( event.target ).data( 'slug' );
+			var panel = this, preview = false, slug = $( event.target ).data( 'slug' );
 
 			if ( -1 !== $.inArray( this.installingThemes, slug ) ) {
 				return; // Theme is already being installed.
@@ -2188,7 +2136,11 @@
 			$( document ).on( 'wp-theme-install-success', function( event, response ) {
 				var theme = false, customizeId, themeControl;
 				if ( preview ) {
-					window.parent.location = previewUrl;
+
+					panel.loadThemePreview( slug ).fail( function() {
+						$( '.wp-full-overlay' ).removeClass( 'customize-loading' );
+					} );
+
 				} else {
 					api.control.each( function( control ) {
 						if ( 'theme' === control.params.type && control.params.theme.id === response.slug ) {
@@ -2208,7 +2160,7 @@
 					themeControl = new api.controlConstructor.theme( customizeId, {
 						params: {
 							type: 'theme',
-							content: '<li id="customize-control-theme-installed_' + theme.id + '" class="customize-control customize-control-theme"></li>',
+							content: $( '<li class="customize-control customize-control-theme"></li>' ).attr( 'id', 'customize-control-theme-installed_' + theme.id ).prop( 'outerHTML' ),
 							section: 'installed_themes',
 							active: true,
 							theme: theme,
@@ -2233,15 +2185,65 @@
 
 			this.installingThemes.push( $( event.target ).data( 'slug' ) ); // Note: we don't remove elements from installingThemes, since they shouldn't be installed again.
 			wp.updates.installTheme( {
-				slug: $( event.target ).data( 'slug' )
+				slug: slug
 			} );
 
 			// Also preview the theme as the event is triggered on Install & Preview.
 			if ( $( event.target ).hasClass( 'preview' ) ) {
 				preview = true;
 				$( '.wp-full-overlay' ).addClass( 'customize-loading' );
-				previewUrl = $( event.target ).data( 'previewurl' );
 			}
+		},
+
+		/**
+		 * Load theme preview.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param {string} themeId Theme ID.
+		 * @returns {jQuery.promise} Promise.
+		 */
+		loadThemePreview: function( themeId ) {
+			var deferred = $.Deferred(), onceProcessingComplete, overlay, urlParser;
+
+			urlParser = document.createElement( 'a' );
+			urlParser.href = location.href;
+			urlParser.search = $.param( _.extend(
+				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
+				{
+					theme: themeId,
+					changeset_uuid: api.settings.changeset.uuid
+				}
+			) );
+
+			overlay = $( '.wp-full-overlay' );
+			overlay.addClass( 'customize-loading' );
+
+			onceProcessingComplete = function() {
+				var request;
+				if ( api.state( 'processing' ).get() > 0 ) {
+					return;
+				}
+
+				api.state( 'processing' ).unbind( onceProcessingComplete );
+
+				request = api.requestChangesetUpdate();
+				request.done( function() {
+					$( window ).off( 'beforeunload.customize-confirm' );
+					window.location.href = urlParser.href;
+				} );
+				request.fail( function() {
+					overlay.removeClass( 'customize-loading' );
+				} );
+			};
+
+			if ( 0 === api.state( 'processing' ).get() ) {
+				onceProcessingComplete();
+			} else {
+				api.state( 'processing' ).bind( onceProcessingComplete );
+			}
+
+			return deferred.promise();
 		},
 
 		/**

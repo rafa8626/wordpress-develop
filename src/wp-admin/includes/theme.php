@@ -669,10 +669,10 @@ function customize_themes_print_templates() {
 							<a href="{{{ data.actions['delete'] }}}" data-slug="{{ data.id }}" class="button button-secondary delete-theme"><?php _e( 'Delete' ); ?></a>
 						<# } #>
 					<?php } ?>
-					<button type="button" class="button button-primary preview-theme" data-preview-url="<?php echo esc_attr( $preview_url ); ?>"><?php _e( 'Live Preview' ); ?></span>
+					<button type="button" class="button button-primary preview-theme" data-slug="{{ data.id }}"><?php _e( 'Live Preview' ); ?></span>
 				<# } else { #>
 					<button type="button" class="button theme-install" data-slug="{{ data.id }}"><?php _e( 'Install' ); ?></button>
-					<button type="button" class="button button-primary theme-install preview" data-slug="{{ data.id }}" data-previewurl="<?php echo esc_attr( $preview_url ); ?>"><?php _e( 'Install & Preview' ); ?></button>
+					<button type="button" class="button button-primary theme-install preview" data-slug="{{ data.id }}"><?php _e( 'Install & Preview' ); ?></button>
 				<# } #>
 			</div>
 		</div>
