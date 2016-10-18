@@ -1535,7 +1535,7 @@ final class WP_Customize_Manager {
 		}
 
 		$changeset_post_id = $this->changeset_post_id();
-		if ( $changeset_post_id && 'publish' === get_post_status( $changeset_post_id ) ) {
+		if ( $changeset_post_id && in_array( get_post_status( $changeset_post_id ), array( 'publish', 'trash' ) ) ) {
 			wp_send_json_error( 'changeset_already_published' );
 		}
 
