@@ -1,4 +1,4 @@
-/* global wp, test, ok, equal, module */
+/* global JSON, wp, test, ok, equal, module */
 
 wp.customize.settingConstructor.abbreviation = wp.customize.Setting.extend({
 	validate: function( value ) {
