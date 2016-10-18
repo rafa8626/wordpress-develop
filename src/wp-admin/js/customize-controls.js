@@ -2106,18 +2106,6 @@
 				$( '.wp-full-overlay' ).toggleClass( 'showing-themes' );
 			});
 
-			// Hide unsaved changes notice on save.
-			api.bind( 'saved', function() {
-				panel.container.find( '.customize-themes-unsaved-changes' ).hide();
-			});
-
-			// Save & publish customized settings.
-			panel.contentContainer.on( 'click', '#customize-themes-save', function() {
-				$( '#save' ).click(); // Trigger customizer save.
-				panel.container.find( '.customize-themes-unsaved-changes' ).hide();
-				api.section( 'installed_themes' ).focus();
-			});
-
 			// Install (and maybe preview) a theme.
 			panel.contentContainer.on( 'click', '.theme-install', function( event ) {
 				panel.installTheme( event );
@@ -2168,12 +2156,9 @@
 				overlay = panel.headContainer.closest( '.wp-full-overlay' );
 
 			if ( expanded ) {
-				overlay.addClass( 'in-themes-panel' ).addClass( 'showing-themes' )
-				       .delay( 200 ).find( '.customize-themes-full-container' ).addClass( 'animate' );
-
-				if ( false === api.state( 'saved' ).get() ) {
-					panel.container.find( '.customize-themes-unsaved-changes' ).show();
-				}
+				overlay
+					.addClass( 'in-themes-panel' ).addClass( 'showing-themes' )
+					.delay( 200 ).find( '.customize-themes-full-container' ).addClass( 'animate' );
 
 				// Automatically open the installed themes section.
 				api.section( 'installed_themes' ).expand();

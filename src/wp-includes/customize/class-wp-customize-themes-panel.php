@@ -104,14 +104,7 @@ class WP_Customize_Themes_Panel extends WP_Customize_Panel {
 		</li>
 		<li id="customize-container"></li><?php // Used as a full-screen overlay transition after clicking to preview a theme. ?>
 		<li class="customize-themes-full-container-container">
-			<ul class="customize-themes-full-container">
-				<li class="customize-themes-notifications">
-					<div class="notice notice-warning customize-themes-unsaved-changes" style="display: none;"><p>
-						<?php _e( 'You have unsaved changes that will be lost if you preview a new theme.' ); ?>
-						<button type="button" id="customize-themes-save" class="button" ><?php _e( 'Save & Publish' ); ?></button>
-					</p></div>
-				</li>
-			</ul>
+			<ul class="customize-themes-full-container"></ul>
 		</li>
 		<?php
 	}
