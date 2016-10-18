@@ -62,10 +62,6 @@ class WP_Customize_Theme_Control extends WP_Customize_Control {
 	 * @access public
 	 */
 	public function content_template() {
-		$current_url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
-		$active_url  = esc_url( remove_query_arg( 'customize_theme', $current_url ) );
-		$preview_url = esc_url( add_query_arg( 'customize_theme', '__THEME__', $current_url ) ); // Token because esc_url() strips curly braces.
-		$preview_url = str_replace( '__THEME__', '{{ data.theme.id }}', $preview_url );
 		/* translators: %s: theme name */
 		$details_label = sprintf( __( 'Details for theme: %s' ), '{{ data.theme.name }}' );
 		/* translators: %s: theme name */
@@ -89,7 +85,7 @@ class WP_Customize_Theme_Control extends WP_Customize_Control {
 				<div class="theme-screenshot blank"></div>
 			<# } #>
 
-			<span class="more-details theme-details" id="{{ data.section }}-{{ data.theme.id }}-action" aria-label="<?php echo $details_label; ?>"><?php _e( 'Theme Details' ); ?></span>
+			<span class="more-details theme-details" id="{{ data.section }}-{{ data.theme.id }}-action" aria-label="<?php echo esc_attr( $details_label ); ?>"><?php _e( 'Theme Details' ); ?></span>
 
 
 			<# if ( 'installed' === data.theme.type && data.theme.hasUpdate ) { #>
@@ -104,21 +100,21 @@ class WP_Customize_Theme_Control extends WP_Customize_Control {
 					?>
 				</h3>
 				<div class="theme-actions">
-					<button type="button" class="button button-primary customize-theme" aria-label="<?php echo $customize_label; ?>"><?php _e( 'Customize' ); ?></button>
+					<button type="button" class="button button-primary customize-theme" aria-label="<?php echo esc_attr( $customize_label ); ?>"><?php _e( 'Customize' ); ?></button>
 				</div>
 				<div class="notice notice-success notice-alt"><p><?php _e( 'Installed' ); ?></p></div>
 			<# } else if ( 'installed' === data.theme.type ) { #>
 				<h3 class="theme-name" id="{{ data.section }}-{{ data.theme.id }}-name">{{ data.theme.name }}</h3>
 				<div class="theme-actions">
-					<button type="button" class="button button-primary preview-theme" aria-label="<?php echo $preview_label; ?>" data-preview-url="<?php echo esc_attr( $preview_url ); ?>"><?php _e( 'Live Preview' ); ?></span>
+					<button type="button" class="button button-primary preview-theme" aria-label="<?php echo esc_attr( $preview_label ); ?>" data-theme-id="{{ data.theme.id }}"><?php _e( 'Live Preview' ); ?></span>
 				</div>
 				<div class="notice notice-success notice-alt"><p><?php _e( 'Installed' ); ?></p></div>
 			<# } else { #>
 				<h3 class="theme-name" id="{{ data.section }}-{{ data.theme.id }}-name">{{ data.theme.name }}</h3>
 				<div class="theme-actions">
-					<button type="button" class="button button-primary theme-install preview" aria-label="<?php echo $install_label; ?>" data-slug="{{ data.theme.id }}" data-name="{{ data.theme.name }}" data-previewurl="<?php echo esc_attr( $preview_url ); ?>"><?php _e( 'Install & Preview' ); ?></button>
+					<button type="button" class="button button-primary theme-install preview" aria-label="<?php echo esc_attr( $install_label ); ?>" data-slug="{{ data.theme.id }}" data-name="{{ data.theme.name }}" data-theme-id="{{ data.theme.id }}"><?php _e( 'Install & Preview' ); ?></button>
 				</div>
-			<# } #>			
+			<# } #>
 		</div>
 	<?php
 	}

@@ -1169,11 +1169,12 @@
 
 			// Preview installed themes.
 			section.container.on( 'click', '.theme-actions .preview-theme', function() {
-				var previewUrl = $( this ).data( 'previewUrl' );
+				var themeId = $( this ).data( 'themeId' );
 
 				$( '.wp-full-overlay' ).addClass( 'customize-loading' );
-
-				window.parent.location = previewUrl;
+				section.loadThemePreview( themeId ).fail( function() {
+					$( '.wp-full-overlay' ).removeClass( 'customize-loading' );
+				} );
 			});
 
 			// Theme navigation in details view.
