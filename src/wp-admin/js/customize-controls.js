@@ -5153,7 +5153,9 @@
 			overlay.toggleClass( 'preview-only' );
 		});
 
-		// Sticky header functionality.
+		/*
+		 * Sticky header feature.
+		 */
 		(function() {
 			var parentContainer = $( '.wp-full-overlay-sidebar-content' ),
 				changeContainer, getHeaderDimensions, releaseStickyHeader, resetStickyHeader, positionStickyHeader,
@@ -5191,7 +5193,8 @@
 						parent: headerElement.closest( '.customize-pane-child' ),
 						top: headerDimensions.top,
 						width: headerDimensions.width,
-						height: headerDimensions.height
+						height: headerDimensions.height,
+						totalHeight: headerDimensions.totalHeight
 					};
 					if ( expandedSection ) {
 						resetStickyHeader( activeHeader.element, activeHeader.parent );
@@ -5223,14 +5226,14 @@
 				}
 				headerElement
 					.removeClass( 'is-sticky' )
-					.addClass( 'was-sticky' )
+					.addClass( 'maybe-sticky is-in-view' )
 					.css( 'top', parentContainer.scrollTop() + 'px' );
 			};
 
 			// Reset position of the sticky header.
 			resetStickyHeader = function( headerElement, headerParent ) {
 				headerElement
-					.removeClass( 'maybe-sticky was-sticky is-sticky' )
+					.removeClass( 'maybe-sticky is-in-view' )
 					.css( {
 						width: '',
 						top: ''
@@ -5241,15 +5244,18 @@
 			// Get header top position and height.
 			getHeaderDimensions = function( headerElement ) {
 				var dimensions = {
-					height: headerElement.data( 'headerHeight' ),
-					width: headerElement.data( 'headerWidth' )
+					width:       headerElement.data( 'headerWidth' ),
+					height:      headerElement.data( 'headerHeight' ),
+					totalHeight: headerElement.data( 'headerTotalHeight' )
 				};
-				if ( ! dimensions.height || ! dimensions.width ) {
-					dimensions.height = headerElement.height();
-					dimensions.width = headerElement.width();
+				if ( ! dimensions.height || ! dimensions.width || ! dimensions.totalHeight ) {
+					dimensions.width       = headerElement.outerWidth();
+					dimensions.height      = headerElement.outerHeight();
+					dimensions.totalHeight = dimensions.height + parseInt( headerElement.css( 'margin-top' ), 10 ) + parseInt( headerElement.css( 'margin-bottom' ), 10 );
 					headerElement.data( {
+						headerWidth:  dimensions.width,
 						headerHeight: dimensions.height,
-						headerWidth: dimensions.width
+						totalHeight:  dimensions.totalHeight
 					} );
 				}
 				return dimensions;
@@ -5259,51 +5265,68 @@
 			positionStickyHeader = function( header, scrollTop, isScrollingUp ) {
 				var headerElement = header.element,
 					headerParent = header.parent,
-					headerHeight = header.height,
 					headerWidth = header.width,
-					headerTop = headerElement.data( 'top' ),
-					maybeSticky, wasSticky, headerSiblingTop;
+					headerHeight = header.height,
+					headerTotalHeight = header.totalHeight,
+					headerTop = parseInt( headerElement.css( 'top' ), 10 ),
+					maybeSticky, isSticky, isInView;
 
-				// If in base position, then reset.
-				if ( 0 === scrollTop ) {
-					resetStickyHeader( headerElement, headerParent );
+				isSticky = headerElement.hasClass( 'is-sticky' );
+				isInView = headerElement.hasClass( 'is-in-view' );
+
+				// When scrolling down, gradually hide sticky header.
+				if ( ! isScrollingUp ) {
+					if ( isSticky ) {
+						headerTop = scrollTop;
+						headerElement
+							.removeClass( 'is-sticky' )
+							.css( {
+								top:   headerTop + 'px',
+								width: ''
+							} );
+					}
+					if ( isInView && scrollTop > headerTop + headerHeight ) {
+						headerElement.removeClass( 'is-in-view' );
+						headerParent.css( 'padding-top', '' );
+					}
 					return;
 				}
 
+				// Scrolling up.
 				maybeSticky = headerElement.hasClass( 'maybe-sticky' );
-				wasSticky = headerElement.hasClass( 'was-sticky' );
 
-				// Scrolled past the header height - element may become sticky now.
 				if ( ! maybeSticky && scrollTop >= headerHeight ) {
-					headerSiblingTop = headerParent.children( ':nth-child(2)' ).position().top;
-					headerParent.css( 'padding-top', headerSiblingTop + 'px' );
+					maybeSticky = true;
+					headerElement.addClass( 'maybe-sticky' );
+				} else if ( 0 === scrollTop ) {
+					// Reset header in base position.
 					headerElement
-						.addClass( 'maybe-sticky' )
-						.css( 'width', headerWidth + 'px' );
+						.removeClass( 'maybe-sticky is-in-view is-sticky' )
+						.css( {
+							top:   '',
+							width: ''
+						} );
+					headerParent.css( 'padding-top', '' );
+					return;
 				}
 
-				if ( isScrollingUp ) {
-					headerElement.css( 'top', '' );
-					if ( ! wasSticky ) {
-						headerElement.addClass( 'is-sticky' );
-					} else if ( wasSticky && headerTop >= scrollTop ) {
+				if ( isInView && ! isSticky ) {
+					// Header is in the view but is not yet sticky.
+					if ( headerTop >= scrollTop ) {
+						// Header is fully visible.
 						headerElement
 							.addClass( 'is-sticky' )
-							.removeClass( 'was-sticky' );
+							.css( {
+								top:   '',
+								width: headerWidth + 'px'
+							} );
 					}
-				} else {
-					if ( wasSticky ) {
-						if ( scrollTop >= headerHeight + headerTop ) {
-							headerElement.removeClass( 'was-sticky' );
-							headerElement.css( 'top', '' );
-						}
-					} else if ( headerElement.hasClass( 'is-sticky' ) ) {
-						headerElement
-							.removeClass( 'is-sticky' )
-							.addClass( 'was-sticky' )
-							.css( 'top', scrollTop + 'px' )
-							.data( 'top', scrollTop );
-					}
+				} else if ( maybeSticky && ! isInView ) {
+					// Header is out of the view.
+					headerElement
+						.addClass( 'is-in-view' )
+						.css( 'top', ( scrollTop - headerHeight ) + 'px' );
+					headerParent.css( 'padding-top', headerTotalHeight + 'px' );
 				}
 			};
 		}());
