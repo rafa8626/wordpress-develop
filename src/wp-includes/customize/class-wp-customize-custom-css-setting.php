@@ -214,34 +214,39 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Bypass the process of saving the value of the "Additional CSS"
-	 * customizer setting.
-	 *
-	 * This setting does not use "option" or "theme_mod" but
-	 * rather the "custom_css" custom post type.
+	 * Store the CSS setting value in the custom_css custom post type for the stylesheet.
 	 *
 	 * @since 4.7.0
 	 * @access public
 	 *
-	 * @param string $value The input value.
-	 *
+	 * @param string $css The input value.
 	 * @return int|false The post ID or false if the value could not be saved.
 	 */
-	public function update( $value ) {
+	public function update( $css ) {
 
 		$args = array(
-			'post_content' => ( null === $value ) ? '' : $value,
-			'post_title'   => $this->stylesheet,
-			'post_name'   => $this->stylesheet,
-			'post_type'    => 'custom_css',
-			'post_status'  => 'publish',
+			'post_content' => $css ? $css : '',
+			'post_title' => $this->stylesheet,
+			'post_name' => sanitize_title( $this->stylesheet ),
+			'post_type' => 'custom_css',
+			'post_status' => 'publish',
 		);
 
 		// Update post if it already exists, otherwise create a new one.
 		$post_id = null;
-		$post = get_page_by_title( $this->stylesheet, OBJECT, 'custom_css' ); // @todo This needs to be looking up by post_name instead, since it is indexed.
-		if ( ! empty( $post ) ) {
-			$args['ID'] = $post->ID;
+		$query = new WP_Query( array(
+			'post_type' => 'custom_css',
+			'post_status' => get_post_stati(),
+			'name' => sanitize_title( $this->stylesheet ),
+			'number' => 1,
+			'no_found_rows' => true,
+			'cache_results' => true,
+			'update_post_meta_cache' => false,
+			'update_term_meta_cache' => false,
+			'suppress_filters' => true,
+		) );
+		if ( ! empty( $query->post ) ) {
+			$args['ID'] = $query->post->ID;
 			$post_id = wp_update_post( wp_slash( $args ) );
 		} else {
 			$post_id = wp_insert_post( wp_slash( $args ) );

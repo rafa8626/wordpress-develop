@@ -1404,6 +1404,7 @@ body.custom-background { <?php echo trim( $style ); ?> }
  * Render the Custom CSS style element.
  *
  * @since 4.7.0
+ * @access public
  */
 function wp_custom_css_cb() {
 	$styles = wp_get_custom_css();
@@ -1434,21 +1435,35 @@ function wp_get_custom_css( $stylesheet = '' ) {
 		$stylesheet = get_stylesheet();
 	}
 
+	$custom_css_query_vars = array(
+		'post_type' => 'custom_css',
+		'post_status' => get_post_stati(),
+		'name' => sanitize_title( $stylesheet ),
+		'number' => 1,
+		'no_found_rows' => true,
+		'cache_results' => true,
+		'update_post_meta_cache' => false,
+		'update_term_meta_cache' => false,
+	);
+
 	$post = null;
-	$post_id = null;
 	if ( get_stylesheet() === $stylesheet ) {
 		$post_id = get_theme_mod( 'custom_css_post_id' );
 		if ( ! $post_id ) {
+			$query = new WP_Query( $custom_css_query_vars );
+			$post = $query->post;
 
-			// Cache value in the theme mod to eliminate a query with each request.
-			$post = get_page_by_title( $stylesheet, OBJECT, 'custom_css' ); // @todo This needs to look up by post_name instead since it is indexed.
+			/*
+			 * Cache the lookup. See WP_Customize_Custom_CSS_Setting::update().
+			 * @todo This should get cleared if a custom_css post is added/removed.
+			 */
 			set_theme_mod( 'custom_css_post_id', $post ? $post->ID : -1 );
 		} elseif ( $post_id > 0 ) {
 			$post = get_post( $post_id );
 		}
 	} else {
-		// Theme is not active, so the cached post ID cannot be sourced from the theme mods.
-		$post = get_page_by_title( $stylesheet, OBJECT, 'custom_css' ); // @todo This needs to look up by post_name instead since it is indexed.
+		$query = new WP_Query( $custom_css_query_vars );
+		$post = $query->post;
 	}
 
 	if ( $post ) {
