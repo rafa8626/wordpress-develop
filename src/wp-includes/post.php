@@ -123,7 +123,7 @@ function create_initial_post_types() {
 		'delete_with_user' => false,
 		'can_export'       => true,
 		'_builtin'         => true, /* internal use only. don't use this when registering your own post type. */
-		'supports'         => array( 'title', 'revisions' ),
+		'supports'         => array( 'title' ),
 		'capabilities'     => array(
 			'delete_posts'           => 'edit_theme_options',
 			'delete_post'            => 'edit_theme_options',
