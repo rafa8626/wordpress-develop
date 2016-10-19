@@ -2,8 +2,6 @@
 (function( exports, $ ){
 	var Container, focus, normalizedTransitionendEventName, api = wp.customize;
 
-	window.pagenow = 'customize'; // Needed for updates.js to function properly.
-
 	/**
 	 * A Customizer Setting.
 	 *
