@@ -228,14 +228,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return int|false The post ID or false if the value could not be saved.
 	 */
 	public function update( $value ) {
-		/*
-		 * If the theme associated with this setting is not the loaded theme
-		 * then the update must short-circuit because theme mods arne't set
-		 * for non-active themes.
-		 */
-		if ( $this->manager->get_stylesheet() !== $this->stylesheet ) {
-			return false;
-		}
 
 		$args = array(
 			'post_content' => ( null === $value ) ? '' : $value,
@@ -258,8 +250,10 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			return false;
 		}
 
-		// Cache post ID in theme mod for performance.
-		set_theme_mod( 'custom_css_post_id', $post_id );
+		// Cache post ID in theme mod for performance to avoid additional DB query.
+		if ( $this->manager->get_stylesheet() === $this->stylesheet ) {
+			set_theme_mod( 'custom_css_post_id', $post_id );
+		}
 
 		return $post_id;
 	}
