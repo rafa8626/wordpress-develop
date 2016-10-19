@@ -102,8 +102,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Filter wp_get_custom_css for applying customized value to return value.
 	 *
-	 * @since 4.7.9
-	 * @access public
+	 * @since 4.7.0
+	 * @access private
 	 *
 	 * @param string $css        Original CSS.
 	 * @param string $stylesheet Current stylesheet.
@@ -134,12 +134,10 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	/**
 	 * Validate CSS.
 	 *
-	 * Checks for imbalanced braces, brackets and comments.
+	 * Checks for imbalanced braces, brackets, and comments.
+	 * Notifications are rendered when the customizer state is saved.
 	 *
-	 * Notifications are rendered when the Preview
-	 * is saved.
-	 *
-	 * @todo remove string literals before validation.
+	 * @todo There are cases where valid CSS can be incorrectly marked as invalid when strings or comments include balancing characters. To fix, CSS tokenization needs to be used.
 	 *
 	 * @since 4.7.0
 	 * @access public
@@ -154,35 +152,35 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$validity->add( 'illegal_markup', __( 'Markup is not allowed in CSS.' ) );
 		}
 
-		$css_validation_error = false;
+		$imbalanced = false;
 		// Make sure that there is a closing brace for each opening brace.
-		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
+		if ( ! $this->validate_balanced_characters( '{', '}', $css ) ) {
 			$validity->add( 'imbalanced_curly_brackets', __( 'Your curly brackets <code>{}</code> are imbalanced. Make sure there is a closing <code>}</code> for every opening <code>{</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
 
 		// Ensure brackets are balanced.
-		if ( ! self::validate_balanced_characters( '[', ']', $css ) ) {
+		if ( ! $this->validate_balanced_characters( '[', ']', $css ) ) {
 			$validity->add( 'imbalanced_braces', __( 'Your brackets <code>[]</code> are imbalanced. Make sure there is a closing <code>]</code> for every opening <code>[</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
 
 		// Ensure parentheses are balanced.
-		if ( ! self::validate_balanced_characters( '(', ')', $css ) ) {
+		if ( ! $this->validate_balanced_characters( '(', ')', $css ) ) {
 			$validity->add( 'imbalanced_parentheses', __( 'Your parentheses <code>()</code> are imbalanced. Make sure there is a closing <code>)</code> for every opening <code>(</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
 
 		// Ensure single quotes are equal.
-		if ( ! self::validate_equal_characters( '\'', $css ) ) {
+		if ( ! $this->validate_equal_characters( '\'', $css ) ) {
 			$validity->add( 'unequal_single_quotes', __( 'Your single quotes <code>\'</code> are uneven. Make sure there is a closing <code>\'</code> for every opening <code>\'</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
 
 		// Ensure single quotes are equal.
-		if ( ! self::validate_equal_characters( '"', $css ) ) {
+		if ( ! $this->validate_equal_characters( '"', $css ) ) {
 			$validity->add( 'unequal_double_quotes', __( 'Your double quotes <code>"</code> are uneven. Make sure there is a closing <code>"</code> for every opening <code>"</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
 
 		/*
@@ -195,16 +193,16 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		 * Although it may initially appear redundant, we use the first method
 		 * to give more specific feedback to the user.
 		 */
-		$unclosed_comment_count = self::validate_count_unclosed_comments( $css );
+		$unclosed_comment_count = $this->validate_count_unclosed_comments( $css );
 		if ( 0 < $unclosed_comment_count ) {
 			$validity->add( 'unclosed_comment', sprintf( _n( 'There is %s unclosed code comment. Close each comment with <code>*/</code>.', 'There are %s unclosed code comments. Close each comment with <code>*/</code>.', $unclosed_comment_count ), $unclosed_comment_count ) );
-			$css_validation_error = true;
-		} elseif ( ! self::validate_balanced_characters( '/*', '*/', $css ) ) {
+			$imbalanced = true;
+		} elseif ( ! $this->validate_balanced_characters( '/*', '*/', $css ) ) {
 			$validity->add( 'imbalanced_comments', __( 'There is an extra <code>*/</code>, indicating an end to a comment.  Be sure that there is an opening <code>/*</code> for every closing <code>*/</code>.' ) );
-			$css_validation_error = true;
+			$imbalanced = true;
 		}
-		if ( true === $css_validation_error && self::is_possible_content_error( $css ) ) {
-			$validity->add( 'css_validation_notice', __( 'Imbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
+		if ( $imbalanced && $this->is_possible_content_error( $css ) ) {
+			$validity->add( 'possible_false_positive', __( 'Imbalanced/Unclosed character errors can be caused <code>content: "";</code> declarations. You may need to remove this or add it a custom CSS file.' ) );
 		}
 
 		if ( empty( $validity->errors ) ) {
@@ -273,7 +271,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * in the CSS.
 	 *
 	 * @since 4.7.0
-	 * @access public
+	 * @access private
 	 *
 	 * @param string $opening_char The opening character.
 	 * @param string $closing_char The closing character.
@@ -281,7 +279,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @return bool
 	 */
-	public static function validate_balanced_characters( $opening_char, $closing_char, $css ) {
+	private function validate_balanced_characters( $opening_char, $closing_char, $css ) {
 		return substr_count( $css, $opening_char ) === substr_count( $css, $closing_char );
 	}
 
@@ -295,14 +293,13 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * in the CSS.
 	 *
 	 * @since 4.7.0
-	 * @access public
+	 * @access private
 	 *
 	 * @param string $char A character.
 	 * @param string $css The CSS input string.
-	 *
-	 * @return bool
+	 * @return bool Equality.
 	 */
-	public static function validate_equal_characters( $char, $css ) {
+	private function validate_equal_characters( $char, $css ) {
 		$char_count = substr_count( $css, $char );
 		return ( 0 === $char_count % 2 );
 	}
@@ -315,13 +312,12 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @see self::validate()
 	 *
 	 * @since 4.7.0
-	 * @access public
+	 * @access private
 	 *
 	 * @param string $css The CSS input string.
-	 *
-	 * @return int
+	 * @return int Count.
 	 */
-	public static function validate_count_unclosed_comments( $css ) {
+	private function validate_count_unclosed_comments( $css ) {
 		$count = 0;
 		$comments = explode( '/*', $css );
 
@@ -361,13 +357,12 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * using a strict "false === strpos()" comparison.
 	 *
 	 * @since 4.7.0
-	 * @access public
+	 * @access private
 	 *
 	 * @param string $css The CSS input string.
-	 *
 	 * @return bool
 	 */
-	public static function is_possible_content_error( $css ) {
+	private function is_possible_content_error( $css ) {
 		$found = preg_match( '/\bcontent\s*:/', $css );
 		if ( ! empty( $found ) ) {
 			return true;

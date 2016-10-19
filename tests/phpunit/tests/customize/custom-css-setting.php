@@ -127,15 +127,6 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test WP_Customize_Custom_CSS_Setting::sanitize().
-	 *
-	 * @covers WP_Customize_Custom_CSS_Setting::sanitize()
-	 */
-	function test_sanitize() {
-		$this->markTestIncomplete();
-	}
-
-	/**
 	 * Tests that validation errors are caught appropriately.
 	 *
 	 * Note that the $validity \WP_Error object must be reset each time
@@ -214,145 +205,27 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 		$content_declaration = $basic_css . ' a:before { content: "["; display: block; }';
 		$result = $this->setting->validate( $content_declaration );
 		$this->assertTrue( array_key_exists( 'imbalanced_braces', $result->errors ) );
-		$this->assertTrue( array_key_exists( 'css_validation_notice', $result->errors ) );
-	}
+		$this->assertTrue( array_key_exists( 'possible_false_positive', $result->errors ) );
 
-	/**
-	 * Tests that balanced characters are found appropriately.
-	 *
-	 * @see WP_Customize_Custom_CSS_Setting::validate_balanced_characters()
-	 */
-	function test_validate_balanced_characters() {
-		// Tests that should return true.
-		$valid_css = 'body { background: #f00; } h1.site-title { font-size: 36px; } a:hover { text-decoration: none; } input[type="text"] { padding: 1em; } /* This is a comment */';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '/*', '*/', $valid_css );
-		$this->assertTrue( $result, 'Imbalanced CSS comment characters should not be found in the test string.' );
+		$css = 'body { background: #f00; } h1.site-title { font-size: 36px; } a:hover { text-decoration: none; } input[type="text"] { padding: 1em; } /* This is a comment */';
+		$this->assertTrue( $this->setting->validate( $css ) );
 
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '{', '}', $valid_css );
-		$this->assertTrue( $result, 'Imbalanced Curly Braces should not be found in the test string.' );
+		$validity = $this->setting->validate( $css . ' /* This is another comment.' );
+		$this->assertInstanceOf( 'WP_Error', $validity );
+		$this->assertContains( 'unclosed code comment', join( ' ', $validity->get_error_messages() ) );
 
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '[',  ']', $valid_css );
-		$this->assertTrue( $result, 'Imbalanced Braces should not be found in the test string.' );
+		$css = '/* This is comment one. */  /* This is comment two. */';
+		$this->assertTrue( $this->setting->validate( $css ) );
 
-		// Tests that should return false.
-		$css = $valid_css . ' /* This is another comment.';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '/*', '*/', $css );
-		$this->assertEquals( false, $result, 'Imbalanced CSS comment characters should be found in the test string.' );
-
-		$css = $valid_css . ' This is another comment. */';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '/*', '*/', $css );
-		$this->assertEquals( false, $result, 'Imbalanced CSS comment characters should be found in the test string.' );
-
-		$css = $valid_css . ' textarea.focus { outline: none ';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '{', '}', $css );
-		$this->assertEquals( false, $result, 'Imbalanced Curly Braces should have be in the test string.' );
-
-		$css = $valid_css . ' textarea.focus  outline: none }';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '{', '}', $css );
-		$this->assertEquals( false, $result, 'Imbalanced Curly Braces should be found in the test string.' );
-
-		$css = $valid_css . ' inputtype="submit"] { color: #f00; }';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '[',  ']', $css );
-		$this->assertEquals( false, $result, 'Imbalanced Braces should have be in the test string.' );
-
-		$css = $valid_css . ' input[type="submit" { color: #f00; }';
-		$result = WP_Customize_Custom_CSS_Setting::validate_balanced_characters( '[',  ']', $css );
-		$this->assertEquals( false, $result, 'Imbalanced Braces should have be in the test string.' );
-	}
-
-	/**
-	 * Tests that an equal number of characters are found in a string.
-	 *
-	 * @see WP_Customize_Custom_CSS_Setting::validate_equal_characters()
-	 */
-	function test_validate_equal_characters() {
-		// Should return true.
-		$string = '"This is a test string with an equal number of double quotes."';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '"', $string );
-		$this->assertTrue( $result, 'An equal number of Double Quotes should be found in the test string.' );
-
-		$string = "'This is a test string with an equal number of double quotes.'";
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( "'", $string );
-		$this->assertTrue( $result, 'An equal number of Single Quotes should be found in the test string.' );
-
-		$string = 'This is a string with two asterisks **';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '*', $string );
-		$this->assertTrue( $result, 'An equal number of Asterisks should be found in the test string.' );
-
-		$string = '1234567891';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '1', $string );
-		$this->assertTrue( $result, 'An equal number of Digits ("1") should be found in the test string.' );
-
-		// Should return false.
-		$string = '"This is a test string with an unequal number of double quotes.';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '"', $string );
-		$this->assertEquals( false, $result, 'An equal number of Double Quotes should not be found in the test string.' );
-
-		$string = "'This is a test string with an unequal number of single quotes.";
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( "'", $string );
-		$this->assertEquals( false, $result, 'An equal number of Single Quotes should not be found in the test string.' );
-
-		$string = 'This is a string with only one asterisk *';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '*', $string );
-		$this->assertEquals( false, $result, 'An equal number of Asterisks should not be found in the test string.' );
-
-		$string = '1234567890';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '1', $string );
-		$this->assertEquals( false, $result, 'An equal number of Digits ("1") should not be found in the test string.' );
-
-		// Three occurrences.
-		$string = '1231567891';
-		$result = WP_Customize_Custom_CSS_Setting::validate_equal_characters( '1', $string );
-		$this->assertEquals( $result, false, 'An equal number of Digits ("1") should be found in the test string.  There were three.' );
-	}
-
-	/**
-	 * Tests the number of times unclosed comments are found.
-	 *
-	 * @see WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments()
-	 */
-	function test_validate_count_unclosed_comments() {
-		$string = '/* This is comment one. */  /* This is comment two. */';
-		$result = WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments( $string );
-		$this->assertEquals( 0, $result );
-
-		$string = '/* This is comment one.  This is comment two. */';
-		$result = WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments( $string );
-		$this->assertEquals( 0, $result );
-
-		// Remember, we're searching for unclosed -- not unbalanced -- comments.
-		$string = 'This is comment one.  This is comment two. */';
-		$result = WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments( $string );
-		$this->assertEquals( 0 , $result );
-
-		$string = '/* This is comment one. */  /* This is comment two.';
-		$result = WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments( $string );
-		$this->assertEquals( 1, $result );
-
-		$string = '/* This is comment one.  /* This is comment two.';
-		$result = WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments( $string );
-		$this->assertEquals( 2, $result );
-	}
-
-	/**
-	 * Tests if "content:" is found in a string.
-	 *
-	 * @see WP_Customize_Custom_CSS_Setting::validate_count_unclosed_comments()
-	 */
-	function test_is_possible_content_error() {
-		// Declaration "content:" does not exist.  Should return false.
 		$basic_css = 'body { background: #f00; } h1.site-title { font-size: 36px; } a:hover { text-decoration: none; } input[type="text"] { padding: 1em; }';
-		$result = WP_Customize_Custom_CSS_Setting::is_possible_content_error( $basic_css );
-		$this->assertEquals( false, $result );
+		$this->assertTrue( $this->setting->validate( $basic_css ) );
 
-		// Should return true.
 		$css = $basic_css . ' .link:before { content: "*"; display: block; }';
-		$result = WP_Customize_Custom_CSS_Setting::is_possible_content_error( $css );
-		$this->assertTrue( $result );
+		$this->assertTrue( $this->setting->validate( $css ) );
 
-		// Add a space before the semicolon. Should still return true.
-		$css = $basic_css . ' .link:before { content : "*"; display: block; }';
-		$result = WP_Customize_Custom_CSS_Setting::is_possible_content_error( $css );
-		$this->assertTrue( $result );
+		$css .= ' ( trailing';
+		$validity = $this->setting->validate( $css );
+		$this->assertWPError( $validity );
+		$this->assertNotEmpty( $result->get_error_message( 'possible_false_positive' ) );
 	}
 }
