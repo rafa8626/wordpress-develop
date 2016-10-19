@@ -285,13 +285,17 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 
 	// test the tests
 	function test_single_and_multisite_cap_tests_match() {
-		$single = $this->_getSingleSitePrimitiveCaps();
-		$multi  = $this->_getMultiSitePrimitiveCaps();
-		$this->assertEquals( array_keys( $single ), array_keys( $multi ) );
+		$single_primitive = array_keys( $this->_getSingleSitePrimitiveCaps() );
+		$multi_primitive  = array_keys( $this->_getMultiSitePrimitiveCaps() );
+		sort( $single_primitive );
+		sort( $multi_primitive );
+		$this->assertEquals( $single_primitive, $multi_primitive );
 
-		$single = $this->_getSingleSiteMetaCaps();
-		$multi  = $this->_getMultiSiteMetaCaps();
-		$this->assertEquals( array_keys( $single ), array_keys( $multi ) );
+		$single_meta = array_keys( $this->_getSingleSiteMetaCaps() );
+		$multi_meta  = array_keys( $this->_getMultiSiteMetaCaps() );
+		sort( $single_meta );
+		sort( $multi_meta );
+		$this->assertEquals( $single_meta, $multi_meta );
 	}
 
 	// test the tests
@@ -457,9 +461,11 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 
 		}
 
+		$this->assertFalse( $user->has_cap( 'start_a_fire' ), "User with the {$role} role should not have a custom capability" );
+		$this->assertFalse( user_can( $user, 'start_a_fire' ), "User with the {$role} role should not have a custom capability" );
+
 		$this->assertFalse( $user->has_cap( 'do_not_allow' ), "User with the {$role} role should not have the do_not_allow capability" );
 		$this->assertFalse( user_can( $user, 'do_not_allow' ), "User with the {$role} role should not have the do_not_allow capability" );
-
 	}
 
 	// special case for the link manager
@@ -526,6 +532,9 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 			$this->assertTrue( $user->has_cap( $cap ), "Super Admins should have the {$cap} capability" );
 			$this->assertTrue( user_can( $user, $cap ), "Super Admins should have the {$cap} capability" );
 		}
+
+		$this->assertTrue( $user->has_cap( 'start_a_fire' ), "Super admins should have all custom capabilities" );
+		$this->assertTrue( user_can( $user, 'start_a_fire' ), "Super admins should have all custom capabilities" );
 
 		$this->assertFalse( $user->has_cap( 'do_not_allow' ), 'Super Admins should not have the do_not_allow capability' );
 		$this->assertFalse( user_can( $user, 'do_not_allow' ), 'Super Admins should not have the do_not_allow capability' );
@@ -1479,6 +1488,7 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 			$this->assertFalse( current_user_can( $cap ), "Non-logged-in user should not have the {$cap} capability" );
 		}
 
+		$this->assertFalse( current_user_can( 'start_a_fire' ), "Non-logged-in user should not have a custom capability" );
 		$this->assertFalse( current_user_can( 'do_not_allow' ), "Non-logged-in user should not have the do_not_allow capability" );
 	}
 
