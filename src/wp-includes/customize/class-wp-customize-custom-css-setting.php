@@ -150,6 +150,10 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	public function validate( $css ) {
 		$validity = new WP_Error();
 
+		if ( preg_match( '#</?\w+#', $css ) ) {
+			$validity->add( 'illegal_markup', __( 'Markup is not allowed in CSS.' ) );
+		}
+
 		$css_validation_error = false;
 		// Make sure that there is a closing brace for each opening brace.
 		if ( ! self::validate_balanced_characters( '{', '}', $css ) ) {
@@ -207,21 +211,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$validity = parent::validate( $css );
 		}
 		return $validity;
-	}
-
-	/**
-	 * Sanitize CSS.
-	 *
-	 * @access public
-	 * @since 4.7.0
-	 *
-	 * @todo Is this necessary anymore?
-	 *
-	 * @param string $css The input string.
-	 * @return string Limited sanitized CSS.
-	 */
-	public function sanitize( $css ) {
-		return parent::sanitize( wp_sanitize_css( $css ) );
 	}
 
 	/**
@@ -284,8 +273,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * For instance, there should be an equal number of braces ("{", "}")
 	 * in the CSS.
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param string $opening_char The opening character.
 	 * @param string $closing_char The closing character.
@@ -306,8 +295,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * For instance, there should be an even number of double quotes
 	 * in the CSS.
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param string $char A character.
 	 * @param string $css The CSS input string.
@@ -326,8 +315,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @see self::validate()
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param string $css The CSS input string.
 	 *
@@ -372,8 +361,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * that evaluate to false. This would be problematic when
 	 * using a strict "false === strpos()" comparison.
 	 *
-	 * @access public
 	 * @since 4.7.0
+	 * @access public
 	 *
 	 * @param string $css The CSS input string.
 	 *

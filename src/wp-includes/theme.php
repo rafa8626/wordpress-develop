@@ -1409,7 +1409,7 @@ function wp_custom_css_cb() {
 	$styles = wp_get_custom_css();
 	if ( $styles || is_customize_preview() ) : ?>
 		<style type="text/css" id="wp-custom-css">
-			<?php echo esc_html( $styles ); ?>
+			<?php echo strip_tags( $styles ); // Note that esc_html() cannot be used because `div &gt; span` is not interpreted properly. ?>
 		</style>
 	<?php endif;
 }
@@ -1421,6 +1421,7 @@ function wp_custom_css_cb() {
  * current theme.
  *
  * @since 4.7.0
+ * @access public
  *
  * @param string $stylesheet Optional. A theme object stylesheet name. Defaults to the current theme.
  *
@@ -1465,23 +1466,6 @@ function wp_get_custom_css( $stylesheet = '' ) {
 	$css = apply_filters( 'wp_get_custom_css', $css, $stylesheet );
 
 	return $css;
-}
-
-/**
- * Sanitize CSS.
- *
- * Currently runs a basic wp_kses check.
- *
- * @todo Is this necessary anymore?
- *
- * @since 4.7.0
- *
- * @param string $css The input string.
- *
- * @return mixed
- */
-function wp_sanitize_css( $css ) {
-	return wp_kses( $css, array( '\'', '\"', '>', '<', '+' ) );
 }
 
 /**
