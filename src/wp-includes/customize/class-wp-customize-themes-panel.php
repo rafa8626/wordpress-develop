@@ -104,7 +104,9 @@ class WP_Customize_Themes_Panel extends WP_Customize_Panel {
 		</li>
 		<li id="customize-container"></li><?php // Used as a full-screen overlay transition after clicking to preview a theme. ?>
 		<li class="customize-themes-full-container-container">
-			<ul class="customize-themes-full-container"></ul>
+			<ul class="customize-themes-full-container">
+				<li class="customize-themes-notifications"></li>
+			</ul>
 		</li>
 		<?php
 	}
