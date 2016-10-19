@@ -76,7 +76,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		if ( 'custom_css' !== $this->id_data['base'] ) {
 			throw new Exception( 'Expected custom_css id_base.' );
 		}
-		if ( 1 !== count( $this->id_data['keys'] ) ) {
+		if ( 1 !== count( $this->id_data['keys'] ) || empty( $this->id_data['keys'][0] ) ) {
 			throw new Exception( 'Expected single stylesheet key.' );
 		}
 		$this->stylesheet = $this->id_data['keys'][0];
