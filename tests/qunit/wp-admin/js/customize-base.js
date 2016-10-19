@@ -184,4 +184,27 @@ jQuery( function( $ ) {
 		assert.equal( 'error', notification.type );
 		assert.equal( null, notification.data );
 	} );
+
+	module( 'Customize Base: notifications collection' );
+	test( 'Notifications collection exists', function() {
+		ok( wp.customize.notifications );
+		equal( wp.customize.notifications.defaultConstructor, wp.customize.Notification );
+	} );
+
+	test( 'Notification objects are rendered as part of notifications collection', function () {
+		var $mockContainer = $( '<div id="customize-controls"></div>' );
+		var notification = new wp.customize.Notification( 'mycode', {
+			'message': 'Hello World',
+			'type': 'update',
+			'setting': 'blogname',
+			'fromServer': true,
+			'data': { 'foo': 'bar' }
+		} );
+
+		wp.customize.notifications.container = $mockContainer;
+		wp.customize.notifications.add( 'mycode', notification );
+
+		equal( $mockContainer.children().length, 1 );
+
+	} );
 });

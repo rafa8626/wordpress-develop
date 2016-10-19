@@ -2938,6 +2938,9 @@
 	api.section = new api.Values({ defaultConstructor: api.Section });
 	api.panel = new api.Values({ defaultConstructor: api.Panel });
 
+	// Create the collection for global Notifications.
+	api.notifications = new api.Notifications();
+
 	/**
 	 * An object that fetches a preview in the background of the document, which
 	 * allows for seamless replacement of an existing preview.

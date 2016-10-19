@@ -789,6 +789,35 @@ window.wp = window.wp || {};
 		}
 	});
 
+	/**
+	 * A collection of observable notifications.
+	 *
+	 * @class
+	 * @augments wp.customize.Values
+	 */
+	api.Notifications = api.Values.extend({
+
+		/**
+		 * The default constructor for items of the collection.
+		 *
+		 * @type {object}
+		 */
+		defaultConstructor: api.Notification,
+
+		initialize: function( options ) {
+			var self = this;
+
+			$.extend( this, options || {} );
+			api.Values.prototype.initialize.call( self, null, options );
+
+			self.bind( 'add', self.render );
+		},
+
+		render: function() {
+			window.console.log( this.get() );
+		}
+	});
+
 	// The main API object is also a collection of all customizer settings.
 	api = $.extend( new api.Values(), api );
 
