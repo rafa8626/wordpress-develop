@@ -791,7 +791,7 @@
 
 		api( 'custom_css[' + api.settings.theme.stylesheet + ']', function( value ) {
 			value.bind( function( to ) {
-				$( '#wp-custom-css' ).html( to );
+				$( '#wp-custom-css' ).text( to );
 			} );
 		} );
 
