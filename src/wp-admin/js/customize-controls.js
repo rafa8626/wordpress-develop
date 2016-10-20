@@ -5158,7 +5158,7 @@
 		 */
 		(function() {
 			var parentContainer = $( '.wp-full-overlay-sidebar-content' ),
-				changeContainer, getHeaderDimensions, releaseStickyHeader, resetStickyHeader, positionStickyHeader,
+				changeContainer, getHeaderHeight, releaseStickyHeader, resetStickyHeader, positionStickyHeader,
 				activeHeader, lastScrollTop;
 
 			// Determine which panel or section is currently expanded.
@@ -5166,7 +5166,7 @@
 				var newInstance = container,
 					expandedSection = api.state( 'expandedSection' ).get(),
 					expandedPanel = api.state( 'expandedPanel' ).get(),
-					headerElement, headerDimensions;
+					headerElement;
 
 				// Release previously active header element.
 				if ( activeHeader && activeHeader.element ) {
@@ -5186,15 +5186,11 @@
 
 				headerElement = newInstance.contentContainer.find( '.customize-section-title, .panel-meta' ).first();
 				if ( headerElement.length ) {
-					headerDimensions = getHeaderDimensions( headerElement );
 					activeHeader = {
 						instance: newInstance,
-						element: headerElement,
-						parent: headerElement.closest( '.customize-pane-child' ),
-						top: headerDimensions.top,
-						width: headerDimensions.width,
-						height: headerDimensions.height,
-						totalHeight: headerDimensions.totalHeight
+						element:  headerElement,
+						parent:   headerElement.closest( '.customize-pane-child' ),
+						height:   getHeaderHeight( headerElement )
 					};
 					if ( expandedSection ) {
 						resetStickyHeader( activeHeader.element, activeHeader.parent );
@@ -5241,38 +5237,25 @@
 				headerParent.css( 'padding-top', '' );
 			};
 
-			// Get header top position and height.
-			getHeaderDimensions = function( headerElement ) {
-				var dimensions = {
-					width:       headerElement.data( 'headerWidth' ),
-					height:      headerElement.data( 'headerHeight' ),
-					totalHeight: headerElement.data( 'headerTotalHeight' )
-				};
-				if ( ! dimensions.height || ! dimensions.width || ! dimensions.totalHeight ) {
-					dimensions.width       = headerElement.outerWidth();
-					dimensions.height      = headerElement.outerHeight();
-					dimensions.totalHeight = dimensions.height + parseInt( headerElement.css( 'margin-top' ), 10 ) + parseInt( headerElement.css( 'margin-bottom' ), 10 );
-					headerElement.data( {
-						headerWidth:  dimensions.width,
-						headerHeight: dimensions.height,
-						totalHeight:  dimensions.totalHeight
-					} );
+			// Get header height.
+			getHeaderHeight = function( headerElement ) {
+				var height = headerElement.data( 'height' );
+				if ( ! height ) {
+					height = headerElement.outerHeight();
+					headerElement.data( 'height', height );
 				}
-				return dimensions;
+				return height;
 			};
 
 			// Reposition header on throttled `scroll` event.
 			positionStickyHeader = function( header, scrollTop, isScrollingUp ) {
 				var headerElement = header.element,
 					headerParent = header.parent,
-					headerWidth = header.width,
 					headerHeight = header.height,
-					headerTotalHeight = header.totalHeight,
 					headerTop = parseInt( headerElement.css( 'top' ), 10 ),
-					maybeSticky, isSticky, isInView;
-
-				isSticky = headerElement.hasClass( 'is-sticky' );
-				isInView = headerElement.hasClass( 'is-in-view' );
+					maybeSticky = headerElement.hasClass( 'maybe-sticky' ),
+					isSticky = headerElement.hasClass( 'is-sticky' ),
+					isInView = headerElement.hasClass( 'is-in-view' );
 
 				// When scrolling down, gradually hide sticky header.
 				if ( ! isScrollingUp ) {
@@ -5293,8 +5276,6 @@
 				}
 
 				// Scrolling up.
-				maybeSticky = headerElement.hasClass( 'maybe-sticky' );
-
 				if ( ! maybeSticky && scrollTop >= headerHeight ) {
 					maybeSticky = true;
 					headerElement.addClass( 'maybe-sticky' );
@@ -5318,7 +5299,7 @@
 							.addClass( 'is-sticky' )
 							.css( {
 								top:   '',
-								width: headerWidth + 'px'
+								width: headerParent.outerWidth() + 'px'
 							} );
 					}
 				} else if ( maybeSticky && ! isInView ) {
@@ -5326,7 +5307,7 @@
 					headerElement
 						.addClass( 'is-in-view' )
 						.css( 'top', ( scrollTop - headerHeight ) + 'px' );
-					headerParent.css( 'padding-top', headerTotalHeight + 'px' );
+					headerParent.css( 'padding-top', headerHeight + 'px' );
 				}
 			};
 		}());

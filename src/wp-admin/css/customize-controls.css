@@ -65,6 +65,10 @@ body {
 	margin-top: 0;
 }
 
+#customize-controls .customize-info.is-in-view + .accordion-section {
+	margin-top: 15px;
+}
+
 #customize-controls .customize-info.is-sticky,
 #customize-controls .customize-section-title.is-sticky {
 	position: fixed;
@@ -329,6 +333,10 @@ body {
 
 #customize-theme-controls .customize-pane-child.accordion-section-content {
 	padding: 12px;
+}
+
+#customize-theme-controls .customize-pane-child.menu li {
+	position: static;
 }
 
 .customize-section-description-container {
