@@ -33,6 +33,9 @@ function create_initial_post_types() {
 		'query_var' => false,
 		'delete_with_user' => true,
 		'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats' ),
+		'show_in_rest' => true,
+		'rest_base' => 'posts',
+		'rest_controller_class' => 'WP_REST_Posts_Controller',
 	) );
 
 	register_post_type( 'page', array(
@@ -51,6 +54,9 @@ function create_initial_post_types() {
 		'query_var' => false,
 		'delete_with_user' => true,
 		'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'page-attributes', 'custom-fields', 'comments', 'revisions' ),
+		'show_in_rest' => true,
+		'rest_base' => 'pages',
+		'rest_controller_class' => 'WP_REST_Posts_Controller',
 	) );
 
 	register_post_type( 'attachment', array(
@@ -76,6 +82,9 @@ function create_initial_post_types() {
 		'show_in_nav_menus' => false,
 		'delete_with_user' => true,
 		'supports' => array( 'title', 'author', 'comments' ),
+		'show_in_rest' => true,
+		'rest_base' => 'media',
+		'rest_controller_class' => 'WP_REST_Attachments_Controller',
 	) );
 	add_post_type_support( 'attachment:audio', 'thumbnail' );
 	add_post_type_support( 'attachment:video', 'thumbnail' );
@@ -109,6 +118,35 @@ function create_initial_post_types() {
 		'rewrite' => false,
 		'delete_with_user' => false,
 		'query_var' => false,
+	) );
+
+	register_post_type( 'custom_css', array(
+		'labels' => array(
+			'name'          => __( 'Custom CSS' ),
+			'singular_name' => __( 'Custom CSS' ),
+		),
+		'public'           => false,
+		'hierarchical'     => false,
+		'rewrite'          => false,
+		'query_var'        => false,
+		'delete_with_user' => false,
+		'can_export'       => true,
+		'_builtin'         => true, /* internal use only. don't use this when registering your own post type. */
+		'supports'         => array( 'title' ),
+		'capabilities'     => array(
+			'delete_posts'           => 'edit_theme_options',
+			'delete_post'            => 'edit_theme_options',
+			'delete_published_posts' => 'edit_theme_options',
+			'delete_private_posts'   => 'edit_theme_options',
+			'delete_others_posts'    => 'edit_theme_options',
+			'edit_post'              => 'unfiltered_css',
+			'edit_posts'             => 'unfiltered_css',
+			'edit_others_posts'      => 'unfiltered_css',
+			'edit_published_posts'   => 'unfiltered_css',
+			'read_post'              => 'read',
+			'read_private_posts'     => 'read',
+			'publish_posts'          => 'edit_theme_options',
+		),
 	) );
 
 	register_post_type( 'customize_changeset', array(

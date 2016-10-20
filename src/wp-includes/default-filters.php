@@ -245,6 +245,7 @@ add_action( 'wp_head',             'wp_print_head_scripts',            9    );
 add_action( 'wp_head',             'wp_generator'                           );
 add_action( 'wp_head',             'rel_canonical'                          );
 add_action( 'wp_head',             'wp_shortlink_wp_head',            10, 0 );
+add_action( 'wp_head',             'wp_custom_css_cb',                11    );
 add_action( 'wp_head',             'wp_site_icon',                    99    );
 add_action( 'wp_footer',           'wp_print_footer_scripts',         20    );
 add_action( 'template_redirect',   'wp_shortlink_header',             11, 0 );
@@ -373,7 +374,9 @@ add_action( 'edit_user_created_user', 'wp_send_new_user_notifications', 10, 2 );
 
 // REST API actions.
 add_action( 'init',          'rest_api_init' );
-add_action( 'rest_api_init', 'rest_api_default_filters', 10, 1 );
+add_action( 'rest_api_init', 'rest_api_default_filters',   10, 1 );
+add_action( 'rest_api_init', 'register_initial_settings',  10 );
+add_action( 'rest_api_init', 'create_initial_rest_routes', 99 );
 add_action( 'parse_request', 'rest_api_loaded' );
 
 /**

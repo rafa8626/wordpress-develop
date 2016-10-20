@@ -312,7 +312,9 @@ module.exports = function(grunt) {
 					'twenty*/**/*.js',
 					'!twenty{eleven,twelve,thirteen}/**',
 					// Third party scripts
-					'!twenty{fourteen,fifteen,sixteen}/js/html5.js'
+					'!twenty{fourteen,fifteen,sixteen}/js/html5.js',
+					'!twentyseventeen/assets/js/html5.js',
+					'!twentyseventeen/assets/js/jquery.scrollTo.js'
 				]
 			},
 			media: {
@@ -438,11 +440,6 @@ module.exports = function(grunt) {
 				cmd: 'phpunit',
 				args: ['-c', 'phpunit.xml.dist', '--group', 'external-http']
 			}
-			//,
-			//'external-oembed': {
-			//	cmd: 'phpunit',
-			//	args: ['-c', 'phpunit.xml.dist', '--group', 'external-oembed']
-			//}
 		},
 		uglify: {
 			options: {
