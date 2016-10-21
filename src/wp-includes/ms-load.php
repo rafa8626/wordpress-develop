@@ -97,7 +97,7 @@ function ms_site_check() {
 		if ( file_exists( WP_CONTENT_DIR . '/blog-inactive.php' ) ) {
 			return WP_CONTENT_DIR . '/blog-inactive.php';
 		} else {
-			$admin_email = str_replace( '@', ' AT ', get_site_option( 'admin_email', 'support@' . get_current_site()->domain ) );
+			$admin_email = str_replace( '@', ' AT ', get_site_option( 'admin_email', 'support@' . get_network()->domain ) );
 			wp_die(
 				/* translators: %s: admin email link */
 				sprintf( __( 'This site has not been activated yet. If you are having problems activating your site, please contact %s.' ),
@@ -134,7 +134,14 @@ function get_network_by_path( $domain, $path, $segments = null ) {
 }
 
 /**
- * Retrieve a site object by its domain and path.
+ * Retrieves the closest matching site object by its domain and path.
+ * 
+ * This will not necessarily return an exact match for a domain and path. Instead, it
+ * breaks the domain and path into pieces that are then used to match the closest
+ * possibility from a query.
+ *
+ * The intent of this method is to match a site object during bootstrap for a
+ * requested site address
  *
  * @since 3.9.0
  * @since 4.7.0 Updated to always return a `WP_Site` object.

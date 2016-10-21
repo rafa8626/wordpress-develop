@@ -783,8 +783,11 @@ function get_bloginfo( $show = '', $filter = 'raw' ) {
  * @return string Site Icon URL.
  */
 function get_site_icon_url( $size = 512, $url = '', $blog_id = 0 ) {
-	if ( is_multisite() && (int) $blog_id !== get_current_blog_id() ) {
+	$switched_blog = false;
+
+	if ( is_multisite() && ! empty( $blog_id ) && (int) $blog_id !== get_current_blog_id() ) {
 		switch_to_blog( $blog_id );
+		$switched_blog = true;
 	}
 
 	$site_icon_id = get_option( 'site_icon' );
@@ -798,7 +801,7 @@ function get_site_icon_url( $size = 512, $url = '', $blog_id = 0 ) {
 		$url = wp_get_attachment_image_url( $site_icon_id, $size_data );
 	}
 
-	if ( is_multisite() && ms_is_switched() ) {
+	if ( $switched_blog ) {
 		restore_current_blog();
 	}
 
@@ -848,13 +851,16 @@ function has_site_icon( $blog_id = 0 ) {
  * @return bool Whether the site has a custom logo or not.
  */
 function has_custom_logo( $blog_id = 0 ) {
-	if ( is_multisite() && (int) $blog_id !== get_current_blog_id() ) {
+	$switched_blog = false;
+
+	if ( is_multisite() && ! empty( $blog_id ) && (int) $blog_id !== get_current_blog_id() ) {
 		switch_to_blog( $blog_id );
+		$switched_blog = true;
 	}
 
 	$custom_logo_id = get_theme_mod( 'custom_logo' );
 
-	if ( is_multisite() && ms_is_switched() ) {
+	if ( $switched_blog ) {
 		restore_current_blog();
 	}
 
@@ -871,9 +877,11 @@ function has_custom_logo( $blog_id = 0 ) {
  */
 function get_custom_logo( $blog_id = 0 ) {
 	$html = '';
+	$switched_blog = false;
 
-	if ( is_multisite() && (int) $blog_id !== get_current_blog_id() ) {
+	if ( is_multisite() && ! empty( $blog_id ) && (int) $blog_id !== get_current_blog_id() ) {
 		switch_to_blog( $blog_id );
+		$switched_blog = true;
 	}
 
 	$custom_logo_id = get_theme_mod( 'custom_logo' );
@@ -896,7 +904,7 @@ function get_custom_logo( $blog_id = 0 ) {
 		);
 	}
 
-	if ( is_multisite() && ms_is_switched() ) {
+	if ( $switched_blog ) {
 		restore_current_blog();
 	}
 
@@ -1705,11 +1713,7 @@ function wp_get_archives( $args = '' ) {
 
 	$output = '';
 
-	$last_changed = wp_cache_get( 'last_changed', 'posts' );
-	if ( ! $last_changed ) {
-		$last_changed = microtime();
-		wp_cache_set( 'last_changed', $last_changed, 'posts' );
-	}
+	$last_changed = wp_cache_get_last_changed( 'posts' );
 
 	$limit = $r['limit'];
 
@@ -2822,6 +2826,8 @@ function wp_resource_hints() {
 	$hints['dns-prefetch'][] = apply_filters( 'emoji_svg_url', 'https://s.w.org/images/core/emoji/2.2.1/svg/' );
 
 	foreach ( $hints as $relation_type => $urls ) {
+		$unique_urls = array();
+
 		/**
 		 * Filters domains and URLs for resource hints of relation type.
 		 *
@@ -2833,16 +2839,31 @@ function wp_resource_hints() {
 		$urls = apply_filters( 'wp_resource_hints', $urls, $relation_type );
 
 		foreach ( $urls as $key => $url ) {
+			$atts = array();
+
+			if ( is_array( $url ) ) {
+				if ( isset( $url['href'] ) ) {
+					$atts = $url;
+					$url  = $url['href'];
+				} else {
+					continue;
+				}
+			}
+
 			$url = esc_url( $url, array( 'http', 'https' ) );
+
 			if ( ! $url ) {
-				unset( $urls[ $key ] );
+				continue;
+			}
+
+			if ( isset( $unique_urls[ $url ] ) ) {
 				continue;
 			}
 
 			if ( in_array( $relation_type, array( 'preconnect', 'dns-prefetch' ) ) ) {
 				$parsed = wp_parse_url( $url );
+
 				if ( empty( $parsed['host'] ) ) {
-					unset( $urls[ $key ] );
 					continue;
 				}
 
@@ -2854,13 +2875,34 @@ function wp_resource_hints() {
 				}
 			}
 
-			$urls[ $key ] = $url;
+			$atts['rel'] = $relation_type;
+			$atts['href'] = $url;
+
+			$unique_urls[ $url ] = $atts;
 		}
 
-		$urls = array_unique( $urls );
+		foreach ( $unique_urls as $atts ) {
+			$html = '';
 
-		foreach ( $urls as $url ) {
-			printf( "<link rel='%s' href='%s' />\n", $relation_type, $url );
+			foreach ( $atts as $attr => $value ) {
+				if ( ! is_scalar( $value ) ||
+				     ( ! in_array( $attr, array( 'as', 'crossorigin', 'href', 'pr', 'rel', 'type' ), true ) && ! is_numeric( $attr ))
+				) {
+					continue;
+				}
+
+				$value = ( 'href' === $attr ) ? esc_url( $value ) : esc_attr( $value );
+
+				if ( ! is_string( $attr ) ) {
+					$html .= " $value";
+				} else {
+					$html .= " $attr='$value'";
+				}
+			}
+
+			$html = trim( $html );
+
+			echo "<link $html />\n";
 		}
 	}
 }

@@ -378,7 +378,11 @@ $can_install = current_user_can( 'install_themes' );
 	<# } #>
 
 	<# if ( data.hasUpdate ) { #>
-		<div class="update-message notice inline notice-warning notice-alt"><p><?php _e( 'New version available. <button class="button-link" type="button">Update now</button>' ); ?></p></div>
+		<# if ( data.hasPackage ) { #>
+			<div class="update-message notice inline notice-warning notice-alt"><p><?php _e( 'New version available. <button class="button-link" type="button">Update now</button>' ); ?></p></div>
+		<# } else { #>
+			<div class="update-message notice inline notice-warning notice-alt"><p><?php _e( 'New version available.' ); ?></p></div>
+		<# } #>
 	<# } #>
 
 	<span class="more-details" id="{{ data.id }}-action"><?php _e( 'Theme Details' ); ?></span>
@@ -485,5 +489,9 @@ $can_install = current_user_can( 'install_themes' );
 wp_print_request_filesystem_credentials_modal();
 wp_print_admin_notice_templates();
 wp_print_update_row_templates();
+
+wp_localize_script( 'updates', '_wpUpdatesItemCounts', array(
+	'totals'  => wp_get_update_data(),
+) );
 
 require( ABSPATH . 'wp-admin/admin-footer.php' );

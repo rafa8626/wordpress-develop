@@ -673,11 +673,7 @@ class WP_Term_Query {
 
 		// $args can be anything. Only use the args defined in defaults to compute the key.
 		$key = md5( serialize( wp_array_slice_assoc( $args, array_keys( $this->query_var_defaults ) ) ) . serialize( $taxonomies ) . $this->request );
-		$last_changed = wp_cache_get( 'last_changed', 'terms' );
-		if ( ! $last_changed ) {
-			$last_changed = microtime();
-			wp_cache_set( 'last_changed', $last_changed, 'terms' );
-		}
+		$last_changed = wp_cache_get_last_changed( 'terms' );
 		$cache_key = "get_terms:$key:$last_changed";
 		$cache = wp_cache_get( $cache_key, 'terms' );
 		if ( false !== $cache ) {
@@ -690,7 +686,9 @@ class WP_Term_Query {
 		}
 
 		if ( 'count' == $_fields ) {
-			return $wpdb->get_var( $this->request );
+			$count = $wpdb->get_var( $this->request );
+			wp_cache_set( $cache_key, $count, 'terms' );
+			return $count;
 		}
 
 		$terms = $wpdb->get_results( $this->request );
