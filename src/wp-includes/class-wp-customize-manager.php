@@ -2139,7 +2139,7 @@ final class WP_Customize_Manager {
 	 * @since 4.7.0
 	 * @access public
 	 */
-	public function render_comon_templates() {
+	public function render_common_templates() {
 		?>
 		<script type="text/html" id="tmpl-customize-notifications">
 			<ul class="{{ ( data.listClass ) ? data.listClass : '' }}">
