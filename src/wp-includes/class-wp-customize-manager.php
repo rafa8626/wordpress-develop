@@ -357,7 +357,8 @@ final class WP_Customize_Manager {
 		add_action( 'customize_controls_init',            array( $this, 'prepare_controls' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_control_scripts' ) );
 
-		// Render Panel, Section, and Control templates.
+		// Render Common, Panel, Section, and Control templates.
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_common_templates' ), 1 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_panel_templates' ), 1 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_section_templates' ), 1 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'render_control_templates' ), 1 );
@@ -2130,6 +2131,29 @@ final class WP_Customize_Manager {
 		}
 
 		wp_send_json_success( $this->get_nonces() );
+	}
+
+	/**
+	 * Render JS templates for all common elements.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 */
+	public function render_comon_templates() {
+		?>
+		<script type="text/html" id="tmpl-customize-notifications">
+			<ul class="{{ ( data.listClass ) ? data.listClass : '' }}">
+				<# _.each( data.notifications, function( notification ) { #>
+					<li class="notice notice-{{ notification.type || 'info' }} {{ data.altNotice ? 'notice-alt' : '' }}" data-code="{{ notification.code }}" data-type="{{ notification.type }}">
+						{{ notification.message || notification.code }}
+						<# if ( notification.isDismissable ) { #>
+							<button type="button" class="customize-notification-dismiss dashicons dashicons-dismiss"><span class="screen-reader-text">Dismiss</span></button>
+						<# } #>
+					</li>
+				<# } ); #>
+			</ul>
+		</script>
+		<?php
 	}
 
 	/**

@@ -794,6 +794,7 @@ window.wp = window.wp || {};
 	/**
 	 * A collection of observable notifications.
 	 *
+	 * @since 4.7.0
 	 * @class
 	 * @augments wp.customize.Values
 	 */
@@ -802,21 +803,108 @@ window.wp = window.wp || {};
 		/**
 		 * The default constructor for items of the collection.
 		 *
+		 * @since 4.7.0
 		 * @type {object}
 		 */
 		defaultConstructor: api.Notification,
 
+		/**
+		 * The default template name for the notifications area.
+		 *
+		 * @since 4.7.0
+		 * @type {string}
+		 */
+		defaultTemplateName: 'customize-notifications',
+
+		/**
+		 * The default notifications area container selector.
+		 *
+		 * @since 4.7.0
+		 * @type {string}
+		 */
+		defaultContainerSelector: '#customize-theme-controls',
+
+		/**
+		 * Initialize notifications area.
+		 *
+		 * @since 4.7.0
+		 * @constructor
+		 * @param options
+		 * @this {wp.customize.notifications}
+		 */
 		initialize: function( options ) {
 			var self = this;
 
 			$.extend( this, options || {} );
 			api.Values.prototype.initialize.call( self, null, options );
 
+			_.bindAll( self, 'dismissNotification' );
 			self.bind( 'add', self.render );
+			self.bind( 'remove', self.render );
 		},
 
+		/**
+		 * Find and return notifications area container element.
+		 *
+		 * @since 4.7.0
+		 * @returns {jQuery} Container jQuery element or an empty DIV.
+		 * @this {wp.customize.notifications}
+		 */
+		getContainer: function() {
+			var self = this;
+
+			if ( ! self.container ) {
+				self.container = $( self.defaultContainerSelector );
+
+				if ( ! self.container || ! self.container.length ) {
+					self.container = $( '<div></div>' );
+				}
+
+				self.container.on( 'click', '.customize-notification-dismiss', self.dismissNotification );
+			}
+
+			return self.container;
+		},
+
+		/**
+		 * Render notifications area.
+		 *
+		 * @since 4.7.0
+		 * @this {wp.customize.notifications}
+		 */
 		render: function() {
-			window.console.log( this.get() );
+			var self = this,
+				container = self.getContainer(),
+				template = wp.template( self.defaultTemplateName ),
+				notifications;
+
+			notifications = [];
+			self.each( function( notification ) {
+				notifications.push( notification );
+			} );
+
+			container.empty().append( $.trim(
+				template( {
+					notifications: notifications,
+					listClass: 'customize-notifications-area'
+				} )
+			) );
+		},
+
+		/**
+		 * Remove notification from the collection on user request.
+		 *
+		 * @since 4.7.0
+		 * @param {Event} e
+		 * @this {wp.customize.notifications}
+		 */
+		dismissNotification: function( e ) {
+			var self = this,
+				code = $( e.currentTarget ).closest( '[data-code]' ).data( 'code' );
+
+			if ( code && self.has( code ) ) {
+				self.remove( code );
+			}
 		}
 	});
 

@@ -211,19 +211,30 @@ jQuery( function( $ ) {
 	} );
 
 	test( 'Notification objects are rendered as part of notifications collection', function () {
-		var $mockContainer = $( '<div id="customize-controls"></div>' );
-		var notification = new wp.customize.Notification( 'mycode', {
-			'message': 'Hello World',
-			'type': 'update',
-			'setting': 'blogname',
-			'fromServer': true,
-			'data': { 'foo': 'bar' }
-		} );
+		var container = wp.customize.notifications.getContainer(),
+			items;
 
-		wp.customize.notifications.container = $mockContainer;
-		wp.customize.notifications.add( 'mycode', notification );
+		wp.customize.notifications.add( 'mycode-1', new wp.customize.Notification( 'mycode-1' ) );
+		items = container.find( 'li' );
+		equal( items.length, 1 );
+		equal( items.first().data( 'code' ), 'mycode-1' );
 
-		equal( $mockContainer.children().length, 1 );
+		wp.customize.notifications.add( 'mycode-2', new wp.customize.Notification( 'mycode-2', {
+			isDismissable: true
+		} ) );
+		items = container.find( 'li' );
+		equal( items.length, 2 );
+		equal( items.first().data( 'code' ), 'mycode-1' );
+		equal( items.last().data( 'code' ), 'mycode-2' );
 
+		equal( items.first().find( '.customize-notification-dismiss' ).length, 0 );
+		equal( items.last().find( '.customize-notification-dismiss' ).length, 1 );
+
+		ok( container.find( 'ul' ).is( '.customize-notifications-area' ) );
+
+		items.last().find( '.customize-notification-dismiss' ).trigger( 'click' );
+		items = container.find( 'li' );
+		equal( items.length, 1 );
+		equal( items.first().data( 'code' ), 'mycode-1' );
 	} );
 });

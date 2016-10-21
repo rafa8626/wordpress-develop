@@ -134,6 +134,18 @@
 				<# } #>
 			</li>
 		</script>
+		<script type="text/html" id="tmpl-customize-notifications">
+			<ul class="{{ ( data.listClass ) ? data.listClass : '' }}">
+				<# _.each( data.notifications, function( notification ) { #>
+					<li data-code="{{ notification.code }}" data-type="{{ notification.type }}">
+						{{ notification.message || notification.code }}
+						<# if ( notification.isDismissable ) { #>
+							<button type="button" class="customize-notification-dismiss"><span class="screen-reader-text">Dismiss</span></button>
+						<# } #>
+					</li>
+				<# } ); #>
+			</ul>
+		</script>
 		<script type="text/html" id="tmpl-customize-control-notifications">
 			<ul>
 				<# _.each( data.notifications, function( notification ) { #>
