@@ -4055,9 +4055,10 @@
 			// ssl certs.
 
 			previewer.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
-				var result, urlParser, newPreviewUrl, schemeMatchingPreviewUrl, queryParams;
+				var matchesAllowedUrl, urlParser, queryParams;
 				urlParser = document.createElement( 'a' );
 				urlParser.href = to;
+				urlParser.protocol = previewer.scheme.get() + ':';
 
 				// Abort if URL is for admin or (static) files in wp-includes or wp-content.
 				if ( /\/wp-(admin|includes|content)(\/|$)/.test( urlParser.pathname ) ) {
@@ -4077,31 +4078,15 @@
 					}
 				}
 
-				newPreviewUrl = urlParser.href;
-				urlParser.protocol = previewer.scheme.get() + ':';
-				schemeMatchingPreviewUrl = urlParser.href;
-
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
-				$.each( [ schemeMatchingPreviewUrl, newPreviewUrl ], function( i, url ) {
-					$.each( previewer.allowedUrls, function( i, allowed ) {
-						var path;
+				matchesAllowedUrl = ! _.isUndefined( _.find( previewer.allowedUrls, function( allowedUrl ) {
+					var parsedAllowedUrl = document.createElement( 'a' );
+					parsedAllowedUrl.href = allowedUrl;
+					return urlParser.protocol === parsedAllowedUrl.protocol && urlParser.host === parsedAllowedUrl.host && 0 === parsedAllowedUrl.pathname.indexOf( urlParser.pathname );
+				}) );
 
-						allowed = allowed.replace( /\/+$/, '' );
-						path = url.replace( allowed, '' );
-
-						if ( 0 === url.indexOf( allowed ) && /^([/#?]|$)/.test( path ) ) {
-							result = url;
-							return false;
-						}
-					});
-					if ( result ) {
-						return false;
-					}
-				});
-
-				// If we found a matching result, return it. If not, bail.
-				return result ? result : null;
+				return matchesAllowedUrl ? urlParser.href : null;
 			});
 
 			previewer.bind( 'ready', previewer.ready );
