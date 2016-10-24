@@ -116,18 +116,25 @@ window.wp = window.wp || {};
 
 		onHistoryChange: function onHistoryChange( data ) {
 			var urlParser, state;
-			if ( data.queryParams && ( 'replaceState' === data.method || 'pushState' === data.method ) ) {
-				urlParser = document.createElement( 'a' );
-				urlParser.href = location.href;
-				if ( Loader.changesetUuid ) {
-					data.queryParams.changeset_uuid = Loader.changesetUuid;
-				}
-				urlParser.search = $.param( data.queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
+			if ( ! data.queryParams ) {
+				return;
+			}
+			urlParser = document.createElement( 'a' );
+			urlParser.href = location.href;
+			if ( Loader.changesetUuid ) {
+				data.queryParams.changeset_uuid = Loader.changesetUuid;
+			}
+			urlParser.search = $.param( data.queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
 
-				state = {
-					customize: urlParser.href
-				};
-				history[ data.method ]( state, '', urlParser.href );
+			state = {
+				customize: urlParser.href
+			};
+			if ( 'pushState' === data.method ) {
+				history.pushState( state, '', urlParser.href );
+			} else if ( 'replaceState' === data.method ) {
+				history.pushState( state, '', urlParser.href );
+			} else {
+				location.href = urlParser.href;
 			}
 		},
 

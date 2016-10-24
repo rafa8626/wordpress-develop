@@ -2225,17 +2225,7 @@
 		 * @returns {jQuery.promise} Promise.
 		 */
 		loadThemePreview: function( themeId ) {
-			var deferred = $.Deferred(), onceProcessingComplete, overlay, urlParser;
-
-			urlParser = document.createElement( 'a' );
-			urlParser.href = location.href;
-			urlParser.search = $.param( _.extend(
-				api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
-				{
-					theme: themeId,
-					changeset_uuid: api.settings.changeset.uuid
-				}
-			) );
+			var deferred = $.Deferred(), onceProcessingComplete, overlay;
 
 			overlay = $( '.wp-full-overlay' );
 			overlay.addClass( 'customize-loading' );
@@ -2250,8 +2240,28 @@
 
 				request = api.requestChangesetUpdate();
 				request.done( function() {
+					var urlParser, oldQueryParams, newQueryParams;
+					urlParser = document.createElement( 'a' );
+					oldQueryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+					urlParser.href = location.href;
+					newQueryParams = _.extend(
+						api.browserHistory.getStateQueryParams( oldQueryParams ),
+						{
+							theme: themeId
+						}
+					);
+
 					$( window ).off( 'beforeunload.customize-confirm' );
-					window.location.href = urlParser.href;
+
+					if ( top === window ) {
+						urlParser.search = $.param( newQueryParams );
+						window.location.href = urlParser.href;
+					} else {
+						api.browserHistory.parentMessenger.send( 'history-change', {
+							queryParams: newQueryParams,
+							method: 'navigate'
+						} );
+					}
 				} );
 				request.fail( function() {
 					overlay.removeClass( 'customize-loading' );
@@ -5587,7 +5597,7 @@
 			 * @param {string} url URL.
 			 * @returns {object} Query params.
 			 */
-			browserHistory.getQueryParams = function getQueryParams( url ) {
+			browserHistory.getUrlQueryParams = function getUrlQueryParams( url ) {
 				var urlParser, queryParams, queryString;
 				urlParser = document.createElement( 'a' );
 				urlParser.href = url;
@@ -5610,12 +5620,56 @@
 			};
 
 			/**
+			 * Get the query params for the current/expected state.
+			 *
+			 * @param {object} [oldQueryParams] Old/existing query params.
+			 * @returns {object} New query params.
+			 */
+			browserHistory.getStateQueryParams = function getStateQueryParams( oldQueryParams ) {
+				var newQueryParams = {}, values, changesetStatus;
+				values = {
+					'url': api.previewer.previewUrl,
+					'autofocus[panel]': browserHistory.expandedPanel,
+					'autofocus[section]': browserHistory.expandedSection,
+					'autofocus[control]': browserHistory.expandedControl,
+					'device': api.previewedDevice,
+					'scroll': browserHistory.previewScrollPosition
+				};
+
+				// Preserve extra vars.
+				if ( oldQueryParams ) {
+					_.each( _.keys( oldQueryParams ), function( key ) {
+						if ( 'undefined' === typeof values[ key ] ) {
+							newQueryParams[ key ] = oldQueryParams[ key ];
+						}
+					} );
+				}
+
+				// Collect new query params.
+				_.each( values, function( valueObj, key ) {
+					var value = valueObj.get();
+					if ( null !== value ) {
+						newQueryParams[ key ] = value;
+					}
+				} );
+
+				// Set the changeset_uuid query param.
+				changesetStatus = api.state( 'changesetStatus' ).get();
+				if ( '' !== changesetStatus && 'publish' !== changesetStatus ) {
+					newQueryParams.changeset_uuid = api.settings.changeset.uuid;
+				} else {
+					delete newQueryParams.changeset_uuid;
+				}
+				return newQueryParams;
+			};
+
+			/**
 			 * Update the URL state with the current Customizer state, using pushState for url changes and replaceState for other changes.
 			 *
 			 * @returns {void}
 			 */
 			browserHistory.updateWindowLocation = _.debounce( function updateWindowLocation() {
-				var expandedPanel = '', expandedSection = '', expandedControl = '', values, urlParser, oldQueryParams, newQueryParams, setQueryParams, urlChanged, changesetStatus;
+				var expandedPanel = '', expandedSection = '', expandedControl = '', urlParser, oldQueryParams, newQueryParams, setQueryParams, urlChanged;
 
 				api.panel.each( function( panel ) {
 					if ( panel.active() && panel.expanded() ) {
@@ -5641,42 +5695,11 @@
 				browserHistory.previewScrollPosition.set( api.previewer.scroll );
 
 				if ( top === window ) {
-					oldQueryParams = browserHistory.getQueryParams( location.href );
+					oldQueryParams = browserHistory.getUrlQueryParams( location.href );
 				} else {
 					oldQueryParams = browserHistory.previousQueryParams;
 				}
-				newQueryParams = {};
-				values = {
-					'url': api.previewer.previewUrl,
-					'autofocus[panel]': browserHistory.expandedPanel,
-					'autofocus[section]': browserHistory.expandedSection,
-					'autofocus[control]': browserHistory.expandedControl,
-					'device': api.previewedDevice,
-					'scroll': browserHistory.previewScrollPosition
-				};
-
-				// Preserve extra vars.
-				_.each( _.keys( oldQueryParams ), function( key ) {
-					if ( 'undefined' === typeof values[ key ] ) {
-						newQueryParams[ key ] = oldQueryParams[ key ];
-					}
-				} );
-
-				// Collect new query params.
-				_.each( values, function( valueObj, key ) {
-					var value = valueObj.get();
-					if ( null !== value ) {
-						newQueryParams[ key ] = value;
-					}
-				} );
-
-				// Set the changeset_uuid query param.
-				changesetStatus = api.state( 'changesetStatus' ).get();
-				if ( '' !== changesetStatus && 'publish' !== changesetStatus ) {
-					newQueryParams.changeset_uuid = api.settings.changeset.uuid;
-				} else {
-					delete newQueryParams.changeset_uuid;
-				}
+				newQueryParams = browserHistory.getStateQueryParams( oldQueryParams );
 
 				if ( ! _.isEqual( newQueryParams, oldQueryParams ) ) {
 					setQueryParams = {};
@@ -5783,7 +5806,7 @@
 			 * @returns {void}
 			 */
 			browserHistory.startUpdatingWindowLocation = function startUpdatingWindowLocation() {
-				var currentQueryParams = browserHistory.getQueryParams( location.href );
+				var currentQueryParams = browserHistory.getUrlQueryParams( location.href );
 
 				if ( currentQueryParams.scroll ) {
 					browserHistory.previewScrollPosition.set( currentQueryParams.scroll );
