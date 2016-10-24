@@ -4055,10 +4055,9 @@
 			// ssl certs.
 
 			previewer.add( 'previewUrl', params.previewUrl ).setter( function( to ) {
-				var matchesAllowedUrl, urlParser, queryParams;
+				var result = null, urlParser, queryParams, parsedAllowedUrl, parsedCandidateUrls = [];
 				urlParser = document.createElement( 'a' );
 				urlParser.href = to;
-				urlParser.protocol = previewer.scheme.get() + ':';
 
 				// Abort if URL is for admin or (static) files in wp-includes or wp-content.
 				if ( /\/wp-(admin|includes|content)(\/|$)/.test( urlParser.pathname ) ) {
@@ -4078,15 +4077,30 @@
 					}
 				}
 
+				parsedCandidateUrls.push( urlParser );
+
+				// Prepend list with URL that matches the scheme/protocol of the iframe.
+				if ( previewer.scheme.get() + ':' !== urlParser.protocol ) {
+					urlParser = document.createElement( 'a' );
+					urlParser.href = parsedCandidateUrls[0].href;
+					urlParser.protocol = previewer.scheme.get() + ':';
+					parsedCandidateUrls.unshift( urlParser );
+				}
+
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
-				matchesAllowedUrl = ! _.isUndefined( _.find( previewer.allowedUrls, function( allowedUrl ) {
-					var parsedAllowedUrl = document.createElement( 'a' );
-					parsedAllowedUrl.href = allowedUrl;
-					return urlParser.protocol === parsedAllowedUrl.protocol && urlParser.host === parsedAllowedUrl.host && 0 === parsedAllowedUrl.pathname.indexOf( urlParser.pathname );
-				}) );
+				parsedAllowedUrl = document.createElement( 'a' );
+				_.find( parsedCandidateUrls, function( parsedCandidateUrl ) {
+					return ! _.isUndefined( _.find( previewer.allowedUrls, function( allowedUrl ) {
+						parsedAllowedUrl.href = allowedUrl;
+						if ( urlParser.protocol === parsedAllowedUrl.protocol && urlParser.host === parsedAllowedUrl.host && 0 === parsedAllowedUrl.pathname.indexOf( urlParser.pathname ) ) {
+							result = parsedCandidateUrl.href;
+							return true;
+						}
+					} ) );
+				} );
 
-				return matchesAllowedUrl ? urlParser.href : null;
+				return result;
 			});
 
 			previewer.bind( 'ready', previewer.ready );
