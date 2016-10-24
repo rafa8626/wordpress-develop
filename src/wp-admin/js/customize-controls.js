@@ -5571,6 +5571,314 @@
 			} );
 		} ());
 
+		api.browserHistory = (function() {
+			var browserHistory = {
+				defaultQueryParamValues: {},
+				previousQueryParams: {},
+				expandedPanel: new api.Value(), // @todo This can re-use api.state( 'expandedPanel' ).
+				expandedSection: new api.Value(), // @todo This can re-use api.state( 'expandedSection' ).
+				expandedControl: new api.Value(), // @todo Add this to api.state()?
+				previewScrollPosition: new api.Value( 0 )
+			};
+
+			/**
+			 * Get current query params.
+			 *
+			 * @param {string} url URL.
+			 * @returns {object} Query params.
+			 */
+			browserHistory.getQueryParams = function getQueryParams( url ) {
+				var urlParser, queryParams, queryString;
+				urlParser = document.createElement( 'a' );
+				urlParser.href = url;
+				queryParams = {};
+
+				queryString = urlParser.search.substr( 1 );
+				if ( queryString ) {
+					queryParams = api.utils.parseQueryString( queryString );
+				}
+
+				// Cast scroll to integer.
+				if ( ! _.isUndefined( queryParams.scroll ) ) {
+					queryParams.scroll = parseInt( queryParams.scroll, 10 );
+					if ( isNaN( queryParams.scroll ) ) {
+						delete queryParams.scroll;
+					}
+				}
+
+				return queryParams;
+			};
+
+			/**
+			 * Update the URL state with the current Customizer state, using pushState for url changes and replaceState for other changes.
+			 *
+			 * @returns {void}
+			 */
+			browserHistory.updateWindowLocation = _.debounce( function updateWindowLocation() {
+				var expandedPanel = '', expandedSection = '', expandedControl = '', values, urlParser, oldQueryParams, newQueryParams, setQueryParams, urlChanged, changesetStatus;
+
+				api.panel.each( function( panel ) {
+					if ( panel.active() && panel.expanded() ) {
+						expandedPanel = panel.id;
+					}
+				} );
+				api.section.each( function( section ) {
+					if ( section.active() && section.expanded() ) {
+						expandedSection = section.id;
+					}
+				} );
+				if ( expandedSection ) {
+					api.control.each( function( control ) {
+						if ( expandedSection && control.section() === expandedSection && control.active() && control.expanded && control.expanded() ) {
+							expandedControl = control.id;
+						}
+					} );
+				}
+
+				browserHistory.expandedPanel.set( expandedPanel );
+				browserHistory.expandedSection.set( expandedSection );
+				browserHistory.expandedControl.set( expandedControl );
+				browserHistory.previewScrollPosition.set( api.previewer.scroll );
+
+				if ( top === window ) {
+					oldQueryParams = browserHistory.getQueryParams( location.href );
+				} else {
+					oldQueryParams = browserHistory.previousQueryParams;
+				}
+				newQueryParams = {};
+				values = {
+					'url': api.previewer.previewUrl,
+					'autofocus[panel]': browserHistory.expandedPanel,
+					'autofocus[section]': browserHistory.expandedSection,
+					'autofocus[control]': browserHistory.expandedControl,
+					'device': api.previewedDevice,
+					'scroll': browserHistory.previewScrollPosition
+				};
+
+				// Preserve extra vars.
+				_.each( _.keys( oldQueryParams ), function( key ) {
+					if ( 'undefined' === typeof values[ key ] ) {
+						newQueryParams[ key ] = oldQueryParams[ key ];
+					}
+				} );
+
+				// Collect new query params.
+				_.each( values, function( valueObj, key ) {
+					var value = valueObj.get();
+					if ( null !== value ) {
+						newQueryParams[ key ] = value;
+					}
+				} );
+
+				// Set the changeset_uuid query param.
+				changesetStatus = api.state( 'changesetStatus' ).get();
+				if ( '' !== changesetStatus && 'publish' !== changesetStatus ) {
+					newQueryParams.changeset_uuid = api.settings.changeset.uuid;
+				} else {
+					delete newQueryParams.changeset_uuid;
+				}
+
+				if ( ! _.isEqual( newQueryParams, oldQueryParams ) ) {
+					setQueryParams = {};
+					_.each( newQueryParams, function( value, key ) {
+						if ( value !== browserHistory.defaultQueryParamValues[ key ] ) {
+							setQueryParams[ key ] = value;
+						}
+					} );
+
+					urlParser = document.createElement( 'a' );
+					urlParser.href = location.href;
+					urlParser.search = _.map( setQueryParams, function( value, key ) {
+						var pair = encodeURIComponent( key );
+						if ( null !== value ) {
+							pair += '=' + encodeURIComponent( value );
+						}
+						pair = pair.replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
+						return pair;
+					} ).join( '&' );
+
+					urlChanged = ( newQueryParams.url ) !== ( oldQueryParams.url || browserHistory.defaultQueryParamValues.url );
+
+					// Send the state to the parent window.
+					if ( top === window ) {
+						if ( urlChanged ) {
+							history.pushState( {}, '', urlParser.href );
+						} else {
+							history.replaceState( {}, '', urlParser.href );
+						}
+					} else {
+						browserHistory.parentMessenger.send( 'history-change', {
+							queryParams: newQueryParams,
+							method: urlChanged ? 'pushState' : 'replaceState'
+						} );
+					}
+					browserHistory.previousQueryParams = newQueryParams;
+				}
+			} );
+
+			/**
+			 * On history popstate, set the URL to match.
+			 *
+			 * @param {object} queryParams Query params.
+			 * @returns {void}
+			 */
+			browserHistory.updatePreviewUrl = function updatePreviewUrl( queryParams ) {
+				var url = null;
+
+				// Preserve the old scroll position.
+				if ( queryParams.scroll ) {
+					api.previewer.scroll = queryParams.scroll;
+				} else {
+					api.previewer.scroll = 0;
+				}
+
+				// Update the url.
+				if ( queryParams.url ) {
+					url = queryParams.url;
+				} else {
+					url = api.settings.url.preview; // On pop to initial state, the state is null.
+				}
+				api.previewer.previewUrl.set( url );
+			};
+
+			/**
+			 * Watch for changes to a construct's active and expanded states.
+			 *
+			 * @param {wp.customize.Panel|wp.customize.Section|wp.customize.Control} construct Construct.
+			 * @returns {void}
+			 */
+			browserHistory.watchExpandedChange = function watchExpandedChange( construct ) {
+				if ( construct.active ) {
+					construct.active.bind( browserHistory.updateWindowLocation );
+				}
+				if ( construct.expanded ) {
+					construct.expanded.bind( browserHistory.updateWindowLocation );
+				}
+				browserHistory.updateWindowLocation();
+			};
+
+			/**
+			 * Unwatch for changes to a construct's active and expanded states.
+			 *
+			 * @param {wp.customize.Panel|wp.customize.Section|wp.customize.Control} construct Construct.
+			 * @returns {void}
+			 */
+			browserHistory.unwatchExpandedChange = function unwatchExpandedChange( construct ) {
+				if ( construct.active ) {
+					construct.active.unbind( browserHistory.updateWindowLocation );
+				}
+				if ( construct.expanded ) {
+					construct.expanded.unbind( browserHistory.updateWindowLocation );
+				}
+
+				// Because 'remove' event is triggered before the construct is removed. See #37269.
+				_.delay( function() {
+					browserHistory.updateWindowLocation();
+				} );
+			};
+
+			/**
+			 * Update window.location to sync with customizer state.
+			 *
+			 * @returns {void}
+			 */
+			browserHistory.startUpdatingWindowLocation = function startUpdatingWindowLocation() {
+				var currentQueryParams = browserHistory.getQueryParams( location.href );
+
+				if ( currentQueryParams.scroll ) {
+					browserHistory.previewScrollPosition.set( currentQueryParams.scroll );
+					api.previewer.scroll = browserHistory.previewScrollPosition.get();
+				}
+
+				browserHistory.defaultQueryParamValues = {
+					'device': (function() {
+						var defaultPreviewedDevice = null;
+						_.find( api.settings.previewableDevices, function checkDefaultPreviewedDevice( params, device ) {
+							if ( true === params['default'] ) {
+								defaultPreviewedDevice = device;
+								return true;
+							}
+							return false;
+						} );
+						return defaultPreviewedDevice;
+					} )(),
+					'scroll': 0,
+					'url': api.settings.url.preview,
+					'autofocus[panel]': '',
+					'autofocus[section]': '',
+					'autofocus[control]': ''
+				};
+
+				browserHistory.previousQueryParams = _.extend( {}, currentQueryParams );
+
+				if ( top === window ) {
+					$( window ).on( 'popstate', function onPopState( event ) {
+						var urlParser, queryParams;
+						urlParser = document.createElement( 'a' );
+						urlParser.href = location.href;
+						queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+
+						browserHistory.updatePreviewUrl( queryParams );
+
+						// Make sure the current changeset_uuid is in the URL.
+						if ( queryParams.changeset_uuid !== api.settings.changeset.uuid ) {
+							queryParams.changeset_uuid = api.settings.changeset.uuid;
+							urlParser.search = $.param( queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
+							history.replaceState( event.originalEvent.state, '', urlParser.href );
+						}
+					} );
+				} else {
+					browserHistory.parentMessenger.bind( 'history-change', function( data ) {
+						browserHistory.previousQueryParams.url = data.queryParams.url; // Prevent pushState from happening.
+						browserHistory.updatePreviewUrl( data.queryParams || {} );
+					} );
+				}
+
+				browserHistory.expandedPanel.set( api.settings.autofocus.panel || '' );
+				browserHistory.expandedSection.set( api.settings.autofocus.section || '' );
+				browserHistory.expandedControl.set( api.settings.autofocus.control || '' );
+
+				api.control.each( browserHistory.watchExpandedChange );
+				api.section.each( browserHistory.watchExpandedChange );
+				api.panel.each( browserHistory.watchExpandedChange );
+
+				api.control.bind( 'add', browserHistory.watchExpandedChange );
+				api.section.bind( 'add', browserHistory.watchExpandedChange );
+				api.panel.bind( 'add', browserHistory.watchExpandedChange );
+
+				api.control.bind( 'remove', browserHistory.unwatchExpandedChange );
+				api.section.bind( 'remove', browserHistory.unwatchExpandedChange );
+				api.panel.bind( 'remove', browserHistory.unwatchExpandedChange );
+
+				api.previewedDevice.bind( browserHistory.updateWindowLocation );
+				api.previewer.previewUrl.bind( browserHistory.updateWindowLocation );
+				api.previewer.bind( 'scroll', browserHistory.updateWindowLocation );
+				browserHistory.previewScrollPosition.bind( browserHistory.updateWindowLocation );
+				api.state( 'saved' ).bind( browserHistory.updateWindowLocation );
+
+				browserHistory.updateWindowLocation();
+			};
+
+			api.bind( 'ready', function onCustomizeReady() {
+
+				// Short-circuit if not supported.
+				if ( ! history.replaceState || ! history.pushState ) {
+					return;
+				}
+
+				browserHistory.parentMessenger = parent;
+
+				/*
+				 * Start syncing state once the preview loads so that the active panels/sections/controls
+				 * have been set to prevent the URL from being momentarily having autofocus params removed.
+				 */
+				api.previewer.deferred.active.done( browserHistory.startUpdatingWindowLocation );
+			} );
+
+			return browserHistory;
+
+		})();
+
 		api.trigger( 'ready' );
 	});
 

@@ -2983,6 +2983,13 @@ final class WP_Customize_Manager {
 		 */
 		$devices = apply_filters( 'customize_previewable_devices', $devices );
 
+		// @todo Eliminate use of global.
+		if ( isset( $_GET['device'] ) && isset( $devices[ $_GET['device'] ] ) ) {
+			foreach ( $devices as $device_name => &$params ) {
+				$params['default'] = ( $device_name === $_GET['device'] );
+			}
+		}
+
 		return $devices;
 	}
 

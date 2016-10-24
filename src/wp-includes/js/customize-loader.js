@@ -25,6 +25,9 @@ window.wp = window.wp || {};
 	 * @augments wp.customize.Events
 	 */
 	Loader = $.extend( {}, api.Events, {
+
+		changesetUuid: null,
+
 		/**
 		 * Setup the Loader; triggered on document#ready.
 		 */
@@ -66,10 +69,28 @@ window.wp = window.wp || {};
 			}
 		},
 
-		popstate: function( e ) {
-			var state = e.originalEvent.state;
+		popstate: function( event ) {
+			var state = event.originalEvent.state, urlParser, queryParams;
+
+			urlParser = document.createElement( 'a' );
+			urlParser.href = location.href;
+			queryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
+
 			if ( state && state.customize ) {
-				Loader.open( state.customize );
+				if ( ! Loader.active ) {
+					Loader.open( state.customize );
+				} else {
+					Loader.messenger.send( 'history-change', {
+						queryParams: queryParams
+					} );
+				}
+
+				// Make sure the current UUID is persisted.
+				if ( queryParams.changeset_uuid !== Loader.changesetUuid ) {
+					queryParams.changeset_uuid = Loader.changesetUuid;
+					urlParser.search = $.param( queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
+					history.replaceState( state, '', urlParser.href );
+				}
 			} else if ( Loader.active ) {
 				Loader.close();
 			}
@@ -93,10 +114,27 @@ window.wp = window.wp || {};
 			}
 		},
 
+		onHistoryChange: function onHistoryChange( data ) {
+			var urlParser, state;
+			if ( data.queryParams && ( 'replaceState' === data.method || 'pushState' === data.method ) ) {
+				urlParser = document.createElement( 'a' );
+				urlParser.href = location.href;
+				if ( Loader.changesetUuid ) {
+					data.queryParams.changeset_uuid = Loader.changesetUuid;
+				}
+				urlParser.search = $.param( data.queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
+
+				state = {
+					customize: urlParser.href
+				};
+				history[ data.method ]( state, '', urlParser.href );
+			}
+		},
+
 		/**
 		 * Open the Customizer overlay for a specific URL.
 		 *
-		 * @param  string src URL to load in the Customizer.
+		 * @param {string} src URL to load in the Customizer.
 		 */
 		open: function( src ) {
 
@@ -132,33 +170,33 @@ window.wp = window.wp || {};
 				targetWindow: this.iframe[0].contentWindow
 			});
 
-			// Expose the changeset UUID on the parent window's URL so that the customized state can survive a refresh.
-			if ( history.replaceState ) {
-				this.messenger.bind( 'changeset-uuid', function( changesetUuid ) {
-					var urlParser = document.createElement( 'a' );
-					urlParser.href = location.href;
-					urlParser.search = $.param( _.extend(
-						api.utils.parseQueryString( urlParser.search.substr( 1 ) ),
-						{ changeset_uuid: changesetUuid }
-					) );
-					history.replaceState( { customize: urlParser.href }, '', urlParser.href );
-				} );
-			}
-
 			// Wait for the connection from the iframe before sending any postMessage events.
 			this.messenger.bind( 'ready', function() {
 				Loader.messenger.send( 'back' );
 			});
 
+			this.messenger.bind( 'changeset-uuid', function( changesetUuid ) {
+				Loader.changesetUuid = changesetUuid;
+			} );
+
 			this.messenger.bind( 'close', function() {
+				var onPopState;
 				if ( $.support.history ) {
+					onPopState = function( event ) {
+						if ( null !== event.originalEvent.state ) {
+							history.back();
+						} else {
+							$( window ).off( 'popstate.customize-loader', onPopState );
+						}
+					};
+					$( window ).on( 'popstate.customize-loader', onPopState );
 					history.back();
 				} else if ( $.support.hashchange ) {
 					window.location.hash = '';
 				} else {
 					Loader.close();
 				}
-			});
+			} );
 
 			// Prompt AYS dialog when navigating away
 			$( window ).on( 'beforeunload', this.beforeunload );
@@ -173,6 +211,8 @@ window.wp = window.wp || {};
 			this.messenger.bind( 'title', function( newTitle ){
 				window.document.title = newTitle;
 			});
+
+			this.messenger.bind( 'history-change', this.onHistoryChange );
 
 			this.pushState( src );
 
@@ -189,7 +229,10 @@ window.wp = window.wp || {};
 				window.location.hash = 'wp_customize=on&' + hash;
 			}
 
-			this.trigger( 'open' );
+			// @todo Only trigger open if not active.
+			if ( ! this.active ) {
+				this.trigger( 'open' );
+			}
 		},
 
 		/**
@@ -228,8 +271,12 @@ window.wp = window.wp || {};
 		 * Callback after the Customizer has been closed.
 		 */
 		closed: function() {
-			Loader.iframe.remove();
-			Loader.messenger.destroy();
+			if ( Loader.iframe ) {
+				Loader.iframe.remove();
+			}
+			if ( Loader.messenger ) {
+				Loader.messenger.destroy();
+			}
 			Loader.iframe    = null;
 			Loader.messenger = null;
 			Loader.saved     = null;
