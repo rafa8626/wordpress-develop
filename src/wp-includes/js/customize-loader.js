@@ -134,6 +134,7 @@ window.wp = window.wp || {};
 			} else if ( 'replaceState' === data.method ) {
 				history.pushState( state, '', urlParser.href );
 			} else {
+				$( window ).off( 'beforeunload.customize-confirm' );
 				location.href = urlParser.href;
 			}
 		},
@@ -206,7 +207,7 @@ window.wp = window.wp || {};
 			} );
 
 			// Prompt AYS dialog when navigating away
-			$( window ).on( 'beforeunload', this.beforeunload );
+			$( window ).on( 'beforeunload.customize-confirm', this.beforeunload );
 
 			this.messenger.bind( 'saved', function () {
 				Loader.saved( true );
@@ -288,7 +289,7 @@ window.wp = window.wp || {};
 			Loader.messenger = null;
 			Loader.saved     = null;
 			Loader.body.removeClass( 'customize-active full-overlay-active' ).removeClass( 'customize-loading' );
-			$( window ).off( 'beforeunload', Loader.beforeunload );
+			$( window ).off( 'beforeunload.customize-confirm', Loader.beforeunload );
 			/*
 			 * Return focus to the link that opened the Customizer overlay after
 			 * the body element visibility is restored.

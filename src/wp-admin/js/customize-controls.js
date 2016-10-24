@@ -2242,8 +2242,8 @@
 				request.done( function() {
 					var urlParser, oldQueryParams, newQueryParams;
 					urlParser = document.createElement( 'a' );
-					oldQueryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
 					urlParser.href = location.href;
+					oldQueryParams = api.utils.parseQueryString( urlParser.search.substr( 1 ) );
 					newQueryParams = _.extend(
 						api.browserHistory.getStateQueryParams( oldQueryParams ),
 						{
