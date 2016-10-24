@@ -86,7 +86,7 @@ window.wp = window.wp || {};
 				}
 
 				// Make sure the current UUID is persisted.
-				if ( queryParams.changeset_uuid !== Loader.changesetUuid ) {
+				if ( queryParams.changeset_uuid !== Loader.changesetUuid && /wp-admin\/customize\.php$/.test( urlParser.pathname ) ) {
 					queryParams.changeset_uuid = Loader.changesetUuid;
 					urlParser.search = $.param( queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
 					history.replaceState( state, '', urlParser.href );
@@ -132,7 +132,7 @@ window.wp = window.wp || {};
 			if ( 'pushState' === data.method ) {
 				history.pushState( state, '', urlParser.href );
 			} else if ( 'replaceState' === data.method ) {
-				history.pushState( state, '', urlParser.href );
+				history.replaceState( state, '', urlParser.href );
 			} else {
 				$( window ).off( 'beforeunload.customize-confirm' );
 				location.href = urlParser.href;
