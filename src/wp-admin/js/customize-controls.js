@@ -2251,6 +2251,13 @@
 						}
 					);
 
+					// Prevent re-expanding the themes panel after a theme switch.
+					if ( api.panel( 'themes' ).expanded() ) {
+						delete newQueryParams['autofocus[panel]'];
+						delete newQueryParams['autofocus[section]'];
+						delete newQueryParams['autofocus[control]'];
+					}
+
 					$( window ).off( 'beforeunload.customize-confirm' );
 
 					if ( top === window ) {
