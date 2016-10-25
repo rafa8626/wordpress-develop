@@ -23,19 +23,6 @@ class WP_Customize_Background_Position_Control extends WP_Customize_Control {
 	public $type = 'background_position';
 
 	/**
-	 * Refresh the parameters passed to the JavaScript via JSON.
-	 *
-	 * @since 4.7.0
-	 * @uses WP_Customize_Control::to_json()
-	 */
-	public function to_json() {
-		parent::to_json();
-
-		$this->json['value'] = $this->settings[0]->value() . ' ' . $this->settings[1]->value();
-		$this->json['defaultValue'] = $this->settings[0]->default . ' ' . $this->settings[1]->default;
-	}
-
-	/**
 	 * Don't render the control content from PHP, as it's rendered via JS on load.
 	 *
 	 * @since 4.7.0
@@ -66,11 +53,6 @@ class WP_Customize_Background_Position_Control extends WP_Customize_Control {
 			),
 		);
 		?>
-		<# var value = data.defaultValue;
-
-		if ( data.value ) {
-			value = data.value;
-		} #>
 		<# if ( data.label ) { #>
 			<span class="customize-control-title">{{{ data.label }}}</span>
 		<# } #>
@@ -85,7 +67,7 @@ class WP_Customize_Background_Position_Control extends WP_Customize_Control {
 					<div class="button-group">
 					<?php foreach ( $group as $value => $input ) : ?>
 						<label>
-							<input class="screen-reader-text" name="background-position" type="radio" value="<?php echo esc_attr( $value ); ?>"<# if ( <?php echo wp_json_encode( $value ); ?> === value ) { #>checked<# } #>>
+							<input class="screen-reader-text" name="background-position" type="radio" value="<?php echo esc_attr( $value ); ?>">
 							<span class="button display-options position"><span class="<?php echo esc_attr( $input['icon'] ); ?>" aria-hidden="true"></span></span>
 							<span class="screen-reader-text"><?php echo $input['label']; ?></span>
 						</label>

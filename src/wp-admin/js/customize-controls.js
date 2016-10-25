@@ -3166,17 +3166,26 @@
 	 */
 	api.BackgroundPositionControl = api.Control.extend( {
 		ready: function() {
-			var control = this,
-				value,
-				position;
+			var control = this, updateRadios;
 
 			control.container.on( 'change', 'input[name="background-position"]', function() {
-				value = $( this ).val();
-				position = value.split( ' ' );
-
+				var position = $( this ).val().split( ' ' );
 				control.settings.x( position[0] );
 				control.settings.y( position[1] );
 			} );
+
+			updateRadios = _.debounce( function() {
+				var x, y, radioInput, inputValue;
+				x = control.settings.x.get();
+				y = control.settings.y.get();
+				inputValue = String( x ) + ' ' + String( y );
+				radioInput = control.container.find( 'input[name="background-position"][value="' + inputValue + '"]' );
+				radioInput.click();
+			} );
+			control.settings.x.bind( updateRadios );
+			control.settings.y.bind( updateRadios );
+
+			updateRadios(); // Set initial UI.
 		}
 	} );
 
