@@ -3136,6 +3136,29 @@
 	});
 
 	/**
+	 * A control for positioning a background image.
+	 *
+	 * @class
+	 * @augments wp.customize.Control
+	 * @augments wp.customize.Class
+	 */
+	api.BackgroundPositionControl = api.Control.extend( {
+		ready: function() {
+			var control = this,
+				value,
+				position;
+
+			control.container.on( 'change', 'input[name="background-position"]', function() {
+				value = $( this ).val();
+				position = value.split( ' ' );
+
+				control.settings[0]( position[0] );
+				control.settings[1]( position[1] );
+			} );
+		}
+	} );
+
+	/**
 	 * A control for selecting and cropping an image.
 	 *
 	 * @class
@@ -4485,15 +4508,16 @@
 
 	api.settingConstructor = {};
 	api.controlConstructor = {
-		color:         api.ColorControl,
-		media:         api.MediaControl,
-		upload:        api.UploadControl,
-		image:         api.ImageControl,
-		cropped_image: api.CroppedImageControl,
-		site_icon:     api.SiteIconControl,
-		header:        api.HeaderControl,
-		background:    api.BackgroundControl,
-		theme:         api.ThemeControl
+		color:               api.ColorControl,
+		media:               api.MediaControl,
+		upload:              api.UploadControl,
+		image:               api.ImageControl,
+		cropped_image:       api.CroppedImageControl,
+		site_icon:           api.SiteIconControl,
+		header:              api.HeaderControl,
+		background:          api.BackgroundControl,
+		background_position: api.BackgroundPositionControl,
+		theme:               api.ThemeControl
 	};
 	api.panelConstructor = {
 		themes: api.ThemesPanel
@@ -4618,7 +4642,7 @@
 			if ( 'themes' === panel.id ) {
 				return; // Don't reflow theme sections, as doing so moves them after the themes container.
 			}
-			
+
 			var sections = panel.sections(),
 				sectionHeadContainers = _.pluck( sections, 'headContainer' );
 			rootNodes.push( panel );
@@ -5509,7 +5533,7 @@
 		// Control visibility for default controls
 		$.each({
 			'background_image': {
-				controls: [ 'background_repeat', 'background_position_x', 'background_attachment' ],
+				controls: [ 'background_preset', 'background_position', 'background_size', 'background_repeat', 'background_attachment' ],
 				callback: function( to ) { return !! to; }
 			},
 			'show_on_front': {
@@ -5534,6 +5558,93 @@
 				});
 			});
 		});
+
+		api.control( 'background_preset', function( control ) {
+			var visibility = { // position, size, repeat, attachment
+				'default': [ false, false, false, false ],
+				'fill': [ true, false, false, false ],
+				'fit': [ true, false, true, false ],
+				'repeat': [ true, false, false, true ],
+				'custom': [ true, true, true, true ],
+			};
+
+			var defaultValues = [
+				_wpCustomizeBackground.defaults['default-position-x'],
+				_wpCustomizeBackground.defaults['default-position-y'],
+				_wpCustomizeBackground.defaults['default-size'],
+				_wpCustomizeBackground.defaults['default-repeat'],
+				_wpCustomizeBackground.defaults['default-attachment'],
+			];
+
+			var values = { // position_x, position_y, size, repeat, attachment
+				'default': defaultValues,
+				'fill': [ 'left', 'top', 'cover', 'no-repeat', 'fixed' ],
+				'fit': [ 'left', 'top', 'contain', 'no-repeat', 'fixed' ],
+				'repeat': [ 'left', 'top', 'auto', 'repeat', 'scroll' ],
+			};
+
+			var toggleVisibility = function( preset ) {
+				api.control( 'background_position' ).container.toggle( visibility[ preset ][0] );
+				api.control( 'background_size' ).container.toggle( visibility[ preset ][1] );
+				api.control( 'background_repeat' ).container.toggle( visibility[ preset ][2] );
+				api.control( 'background_attachment' ).container.toggle( visibility[ preset ][3] );
+			};
+
+			var updateSettings = function( preset ) {
+				api( 'background_position_x' ).set( values[ preset ][0] );
+				api( 'background_position_y' ).set( values[ preset ][1] );
+
+				api.control( 'background_position' ).container.find( 'input[name="background-position"]' ).val( [ values[ preset ][0] + ' ' + values[ preset ][1] ] );
+
+				api( 'background_size' ).set( values[ preset ][2] );
+				api( 'background_repeat' ).set( values[ preset ][3] );
+				api( 'background_attachment' ).set( values[ preset ][4] );
+			};
+
+			var preset = control.setting.get();
+
+			toggleVisibility( preset );
+
+			control.setting.bind( 'change', function( preset ) {
+				toggleVisibility( preset );
+
+				if ( 'custom' === preset ) {
+					return;
+				}
+
+				updateSettings( preset );
+			} );
+		} );
+
+		api.control( 'background_repeat', function( control ) {
+			control.elements[0].unsync( api( 'background_repeat' ) );
+
+			control.element = new api.Element( control.container.find( 'input' ) );
+			control.element.set( 'no-repeat' !== control.setting() );
+
+			control.element.bind( function( to ) {
+				control.setting.set( to ? 'repeat' : 'no-repeat' );
+			} );
+
+			control.setting.bind( function( to ) {
+				control.element.set( 'no-repeat' !== to );
+			} );
+		} );
+
+		api.control( 'background_attachment', function( control ) {
+			control.elements[0].unsync( api( 'background_attachment' ) );
+
+			control.element = new api.Element( control.container.find( 'input' ) );
+			control.element.set( 'fixed' !== control.setting() );
+
+			control.element.bind( function( to ) {
+				control.setting.set( to ? 'scroll' : 'fixed' );
+			} );
+
+			control.setting.bind( function( to ) {
+				control.element.set( 'fixed' !== to );
+			} );
+		} );
 
 		// Juggle the two controls that use header_textcolor
 		api.control( 'display_header_text', function( control ) {

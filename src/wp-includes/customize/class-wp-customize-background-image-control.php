@@ -41,6 +41,7 @@ class WP_Customize_Background_Image_Control extends WP_Customize_Image_Control {
 		parent::enqueue();
 
 		wp_localize_script( 'customize-controls', '_wpCustomizeBackground', array(
+			'defaults' => get_theme_support( 'custom-background' )[0],
 			'nonces' => array(
 				'add' => wp_create_nonce( 'background-add' ),
 			),

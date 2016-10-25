@@ -279,6 +279,7 @@ final class WP_Customize_Manager {
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-upload-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-image-control.php' );
+		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-background-position-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-cropped-image-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-site-icon-control.php' );
 		require_once( ABSPATH . WPINC . '/customize/class-wp-customize-header-image-control.php' );
@@ -3004,6 +3005,7 @@ final class WP_Customize_Manager {
 		$this->register_control_type( 'WP_Customize_Upload_Control' );
 		$this->register_control_type( 'WP_Customize_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Background_Image_Control' );
+		$this->register_control_type( 'WP_Customize_Background_Position_Control' );
 		$this->register_control_type( 'WP_Customize_Cropped_Image_Control' );
 		$this->register_control_type( 'WP_Customize_Site_Icon_Control' );
 		$this->register_control_type( 'WP_Customize_Theme_Control' );
@@ -3262,20 +3264,21 @@ final class WP_Customize_Manager {
 
 		$this->add_control( new WP_Customize_Background_Image_Control( $this ) );
 
-		$this->add_setting( 'background_repeat', array(
-			'default'        => get_theme_support( 'custom-background', 'default-repeat' ),
+		$this->add_setting( 'background_preset', array(
+			'default'        => get_theme_support( 'custom-background', 'default-preset' ),
 			'theme_supports' => 'custom-background',
 		) );
 
-		$this->add_control( 'background_repeat', array(
-			'label'      => __( 'Background Repeat' ),
+		$this->add_control( 'background_preset', array(
+			'label'      => _x( 'Preset', 'Background Preset' ),
 			'section'    => 'background_image',
-			'type'       => 'radio',
+			'type'       => 'select',
 			'choices'    => array(
-				'no-repeat'  => __('No Repeat'),
-				'repeat'     => __('Tile'),
-				'repeat-x'   => __('Tile Horizontally'),
-				'repeat-y'   => __('Tile Vertically'),
+				'default' => _x( 'Default', 'Default Preset' ),
+				'fill'    => __( 'Fill Screen' ),
+				'fit'     => __( 'Fit to Screen' ),
+				'repeat'  => _x( 'Repeat', 'Repeat Image' ),
+				'custom'  => _x( 'Custom', 'Custom Preset' ),
 			),
 		) );
 
@@ -3284,36 +3287,62 @@ final class WP_Customize_Manager {
 			'theme_supports' => 'custom-background',
 		) );
 
-		$this->add_control( 'background_position_x', array(
-			'label'      => __( 'Background Position' ),
-			'section'    => 'background_image',
-			'type'       => 'radio',
-			'choices'    => array(
-				'left'       => __('Left'),
-				'center'     => __('Center'),
-				'right'      => __('Right'),
-			),
-		) );
-
-		$this->add_setting( 'background_attachment', array(
-			'default'        => get_theme_support( 'custom-background', 'default-attachment' ),
+		$this->add_setting( 'background_position_y', array(
+			'default'        => get_theme_support( 'custom-background', 'default-position-y' ),
 			'theme_supports' => 'custom-background',
 		) );
 
-		$this->add_control( 'background_attachment', array(
-			'label'      => __( 'Background Attachment' ),
+		$this->add_control( new WP_Customize_Background_Position_Control( $this, 'background_position', array(
+			'label'    => __( 'Image Position' ),
+			'section'  => 'background_image',
+			'settings' => array( 'background_position_x', 'background_position_y' ),
+		) ) );
+
+		$this->add_setting( 'background_size', array(
+			'default'        => get_theme_support( 'custom-background', 'default-size' ),
+			'theme_supports' => 'custom-background',
+		) );
+
+		$this->add_control( 'background_size', array(
+			'label'      => __( 'Image Size' ),
 			'section'    => 'background_image',
-			'type'       => 'radio',
+			'type'       => 'select',
 			'choices'    => array(
-				'scroll'     => __('Scroll'),
-				'fixed'      => __('Fixed'),
+				'auto'    => __( 'Original' ),
+				'contain' => __( 'Fit to Screen' ),
+				'cover'   => __( 'Fill Screen' ),
 			),
 		) );
+
+		$this->add_setting( 'background_repeat', array(
+			'default'           => get_theme_support( 'custom-background', 'default-repeat' ),
+			'sanitize_callback' => array( $this, '_sanitize_background_repeat' ),
+			'theme_supports'    => 'custom-background',
+		) );
+
+		$this->add_control( 'background_repeat', array(
+			'label'    => __( 'Repeat Background Image' ),
+			'section'  => 'background_image',
+			'type'     => 'checkbox',
+		) );
+
+		$this->add_setting( 'background_attachment', array(
+			'default'           => get_theme_support( 'custom-background', 'default-attachment' ),
+			'sanitize_callback' => array( $this, '_sanitize_background_attachment' ),
+			'theme_supports'    => 'custom-background',
+		) );
+
+		$this->add_control( 'background_attachment', array(
+			'label'    => __( 'Scroll with Page' ),
+			'section'  => 'background_image',
+			'type'     => 'checkbox',
+		) );
+
 
 		// If the theme is using the default background callback, we can update
 		// the background CSS using postMessage.
 		if ( get_theme_support( 'custom-background', 'wp-head-callback' ) === '_custom_background_cb' ) {
-			foreach ( array( 'color', 'image', 'position_x', 'repeat', 'attachment' ) as $prop ) {
+			foreach ( array( 'color', 'image', 'preset', 'position_x', 'position_y', 'size', 'repeat', 'attachment' ) as $prop ) {
 				$this->get_setting( 'background_' . $prop )->transport = 'postMessage';
 			}
 		}
@@ -3596,6 +3625,38 @@ final class WP_Customize_Manager {
 			$color = get_theme_support( 'custom-header', 'default-text-color' );
 
 		return $color;
+	}
+
+	/**
+	 * Callback for validating the background_repeat value.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $repeat
+	 * @return string Background repeat.
+	 */
+	public function _sanitize_background_repeat( $repeat ) {
+		if ( 'no-repeat' !== $repeat ) {
+			$repeat = 'repeat';
+		}
+
+		return $repeat;
+	}
+
+	/**
+	 * Callback for validating the background_attachment value.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param string $attachment
+	 * @return string Background attachment.
+	 */
+	public function _sanitize_background_attachment( $attachment ) {
+		if ( 'fixed' !== $attachment ) {
+			$attachment = 'scroll';
+		}
+
+		return $attachment;
 	}
 
 	/**
