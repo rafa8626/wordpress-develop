@@ -2761,6 +2761,7 @@
 		 * Add a new page to a dropdown-pages control reusing menus code for this.
 		 *
 		 * @since 4.7.0
+		 * @access private
 		 * @returns {void}
 		 */
 		addNewPage: function () {

@@ -117,6 +117,7 @@ class WP_Customize_Control {
 	/**
 	 * Show UI for adding new content, currently only used for the dropdown-pages control.
 	 *
+	 * @since 4.7.0
 	 * @access public
 	 * @var array
 	 */
