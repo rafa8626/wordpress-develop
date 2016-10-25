@@ -2808,7 +2808,6 @@
 				// Focus the select control.
 				select.focus();
 				control.setting.set( String( data.post_id ) ); // Triggers a preview refresh and updates the setting.
-				select.val( String( data.post_id ) );
 
 				// Reset the create page form.
 				container.slideUp( 180 );
