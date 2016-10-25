@@ -2142,12 +2142,12 @@ final class WP_Customize_Manager {
 	public function render_common_templates() {
 		?>
 		<script type="text/html" id="tmpl-customize-notifications">
-			<ul class="{{ ( data.listClass ) ? data.listClass : '' }}">
+			<ul>
 				<# _.each( data.notifications, function( notification ) { #>
-					<li class="notice notice-{{ notification.type || 'info' }} {{ data.altNotice ? 'notice-alt' : '' }}" data-code="{{ notification.code }}" data-type="{{ notification.type }}">
-						{{ notification.message || notification.code }}
-						<# if ( notification.isDismissable ) { #>
-							<button type="button" class="customize-notification-dismiss dashicons dashicons-dismiss"><span class="screen-reader-text">Dismiss</span></button>
+					<li class="notice notice-{{ notification.type || 'info' }} {{ data.altNotice ? 'notice-alt' : '' }} {{ notification.isDismissible ? 'is-dismissible' : '' }}" data-code="{{ notification.code }}" data-type="{{ notification.type }}">
+						<p>{{ notification.message || notification.code }}</p>
+						<# if ( notification.isDismissible ) { #>
+							<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss</span></button>
 						<# } #>
 					</li>
 				<# } ); #>

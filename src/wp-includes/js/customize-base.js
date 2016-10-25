@@ -817,12 +817,12 @@ window.wp = window.wp || {};
 		defaultTemplateName: 'customize-notifications',
 
 		/**
-		 * The default notifications area container selector.
+		 * The notifications area parent container selector.
 		 *
 		 * @since 4.7.0
 		 * @type {string}
 		 */
-		defaultContainerSelector: '#customize-theme-controls',
+		parentSelector: '#widgets-right',
 
 		/**
 		 * Initialize notifications area.
@@ -864,19 +864,36 @@ window.wp = window.wp || {};
 		 * @this {wp.customize.notifications}
 		 */
 		getContainer: function() {
-			var self = this;
+			var self = this,
+				parent;
 
 			if ( ! self.container ) {
-				self.container = $( self.defaultContainerSelector );
+				parent = $( self.parentSelector );
 
-				if ( ! self.container || ! self.container.length ) {
-					self.container = $( '<div></div>' );
+				if ( ! parent || ! parent.length ) {
+					parent = $( '<div></div>' );
 				}
+				self.container = $( '<div></div>', {
+					id: 'customize-notifications-area'
+				} );
+				parent.prepend( self.container );
 
-				self.container.on( 'click', '.customize-notification-dismiss', self.dismissNotification );
+				self.container.on( 'click', '.notice-dismiss', self.dismissNotification );
 			}
 
 			return self.container;
+		},
+
+		/**
+		 * Remove notifications area from the DOM.
+		 *
+		 * @since 4.7.0
+		 * @this {wp.customize.notifications}
+		 */
+		destroy: function() {
+			this.container.next().css( 'margin-top', '' );
+			this.container.remove();
+			this.container = null;
 		},
 
 		/**
@@ -889,19 +906,22 @@ window.wp = window.wp || {};
 			var self = this,
 				container = self.getContainer(),
 				template = wp.template( self.defaultTemplateName ),
-				notifications;
+				notifications, marginTop;
 
 			notifications = [];
 			self.each( function( notification ) {
 				notifications.push( notification );
 			} );
 
-			container.empty().append( $.trim(
-				template( {
-					notifications: notifications,
-					listClass: 'customize-notifications-area'
-				} )
-			) );
+			if ( _.isEmpty( notifications ) ) {
+				self.destroy();
+			} else {
+				container.empty().append( $.trim(
+					template( { notifications: notifications } )
+				) );
+				marginTop = container.height() + parseInt( container.css( 'margin-bottom' ), 10 );
+				container.next().css( 'margin-top', marginTop + 'px' );
+			}
 		},
 
 		/**

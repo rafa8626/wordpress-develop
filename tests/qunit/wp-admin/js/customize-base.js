@@ -221,7 +221,7 @@ jQuery( function( $ ) {
 		equal( items.first().data( 'code' ), 'mycode-1' );
 
 		wp.customize.notifications.add( 'mycode-2', new wp.customize.Notification( 'mycode-2', {
-			isDismissable: true
+			isDismissible: true
 		} ) );
 		wp.customize.notifications.render();
 		items = container.find( 'li' );
@@ -229,14 +229,17 @@ jQuery( function( $ ) {
 		equal( items.first().data( 'code' ), 'mycode-1' );
 		equal( items.last().data( 'code' ), 'mycode-2' );
 
-		equal( items.first().find( '.customize-notification-dismiss' ).length, 0 );
-		equal( items.last().find( '.customize-notification-dismiss' ).length, 1 );
-		ok( container.find( 'ul' ).is( '.customize-notifications-area' ) );
+		equal( items.first().find( '.notice-dismiss' ).length, 0 );
+		equal( items.last().find( '.notice-dismiss' ).length, 1 );
 
 		wp.customize.notifications.remove( 'mycode-2' );
 		wp.customize.notifications.render();
 		items = container.find( 'li' );
 		equal( items.length, 1 );
 		equal( items.first().data( 'code' ), 'mycode-1' );
+
+		wp.customize.notifications.remove( 'mycode-1' );
+		wp.customize.notifications.render();
+		equal( container.parent().length, 0, 'Notifications area is removed from DOM if the collection is empty.' );
 	} );
 });

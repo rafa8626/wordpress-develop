@@ -264,6 +264,25 @@ body {
 	box-sizing: border-box;
 }
 
+#customize-notifications-area {
+	position: absolute;
+	top: 46px;
+	width: 100%;
+	max-height: 210px;
+	margin-bottom: 15px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-bottom: 1px solid #ddd;
+}
+
+#customize-notifications-area > ul {
+	margin: 0;
+}
+
+#customize-notifications-area .notice {
+	margin: 1px 0 0;
+}
+
 #customize-info,
 #customize-theme-controls .customize-pane-parent,
 #customize-theme-controls .customize-pane-child {
