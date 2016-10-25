@@ -563,8 +563,8 @@ p.customize-section-description {
 }
 
 .customize-control select {
-	min-width: 50%;
-	max-width: 100%;
+	width: 100%;
+	max-width: 300px;
 	height: 28px;
 	line-height: 28px;
 }
@@ -690,7 +690,8 @@ p.customize-section-description {
 }
 
 .customize-control-dropdown-pages .new-content-item {
-	width: 98%;
+	width: 100%;
+	max-width: 300px;
 	padding: 5px 0 5px 1px;
 	position: relative;
 }
