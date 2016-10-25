@@ -2759,11 +2759,12 @@
 		 * @since 4.7.0
 		 */
 		addNewPage: function () {
+			var control = this, promise, toggle, container, input, title, select;
+
 			if ( 'dropdown-pages' !== this.params.type || ! api.Menus ) {
 				return;
 			}
 
-			var control = this, promise, toggle, container, input, title, select;
 			toggle = control.container.find( '.add-new-toggle' );
 			container = control.container.find( '.new-content-item' );
 			input = control.container.find( '.create-item-input' );
