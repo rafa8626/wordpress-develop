@@ -115,10 +115,12 @@ class WP_Customize_Control {
 	public $input_attrs = array();
 
 	/**
+	 * Show UI for adding new content, currently only used for the dropdown-pages control.
+	 *
 	 * @access public
 	 * @var array
 	 */
-	public $add_new = false;
+	public $allow_addition = false;
 
 	/**
 	 * @deprecated It is better to just call the json() method
@@ -563,7 +565,7 @@ class WP_Customize_Control {
 				echo $dropdown;
 				?>
 				</label>
-				<?php if ( $this->add_new && current_user_can( 'publish_pages' ) && current_user_can( 'edit_theme_options' ) ) : // Currently tied to menus functionality. ?>
+				<?php if ( $this->allow_addition && current_user_can( 'publish_pages' ) && current_user_can( 'edit_theme_options' ) ) : // Currently tied to menus functionality. ?>
 					<button type="button" class="button add-new-toggle"><?php echo get_post_type_object( 'page' )->labels->add_new_item; ?></button>
 					<div class="new-content-item">
 						<label for="create-input-<?php echo $this->id; ?>"><span class="screen-reader-text"><?php _e( 'New page title' ); ?></span></label>
