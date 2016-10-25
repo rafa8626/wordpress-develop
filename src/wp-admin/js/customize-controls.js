@@ -2521,6 +2521,8 @@
 				newItem.hide(); // Hide in JS to preserve flex display when showing.
 				control.container.on( 'click', '.add-new-toggle', function( e ) {
 					$( e.currentTarget ).slideUp( 180 );
+					newItem.slideDown( 180 );
+					newItem.find( '.create-item-input' ).focus();
 				});
 				control.container.on( 'click', '.add-content', function() {
 					control.addNewPage();
