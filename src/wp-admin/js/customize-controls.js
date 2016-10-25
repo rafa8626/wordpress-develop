@@ -2512,12 +2512,12 @@
 		/**
 		 * Triggered when the control's markup has been injected into the DOM.
 		 *
-		 * @abstract
+		 * @returns {void}
 		 */
 		ready: function() {
-			if ( 'dropdown-pages' === this.params.type && this.params.allow_addition ) {
-				var control = this,
-				    newItem = control.container.find( '.new-content-item' );
+			var control = this, newItem;
+			if ( 'dropdown-pages' === control.params.type && control.params.allow_addition ) {
+				newItem = control.container.find( '.new-content-item' );
 				newItem.hide(); // Hide in JS to preserve flex display when showing.
 				control.container.on( 'click', '.add-new-toggle', function( e ) {
 					$( e.currentTarget ).slideUp( 180 );
@@ -2757,11 +2757,12 @@
 		 * Add a new page to a dropdown-pages control reusing menus code for this.
 		 *
 		 * @since 4.7.0
+		 * @returns {void}
 		 */
 		addNewPage: function () {
 			var control = this, promise, toggle, container, input, title, select;
 
-			if ( 'dropdown-pages' !== this.params.type || ! this.params.allow_addition || ! api.Menus ) {
+			if ( 'dropdown-pages' !== control.params.type || ! control.params.allow_addition || ! api.Menus ) {
 				return;
 			}
 
