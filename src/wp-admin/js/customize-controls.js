@@ -2516,12 +2516,11 @@
 		 */
 		ready: function() {
 			if ( 'dropdown-pages' === this.params.type ) {
-				var control = this;
-				control.container.find( '.new-content-item' ).hide(); // Hide in JS to preserve flex display when showing.
+				var control = this,
+				    newItem = control.container.find( '.new-content-item' );
+				newItem.hide(); // Hide in JS to preserve flex display when showing.
 				control.container.on( 'click', '.add-new-toggle', function( e ) {
 					$( e.currentTarget ).slideUp( 180 );
-					control.container.find( '.new-content-item' ).slideDown( 180 )
-					                                             .find( '.create-item-input' ).focus();
 				});
 				control.container.on( 'click', '.add-content', function() {
 					control.addNewPage();
