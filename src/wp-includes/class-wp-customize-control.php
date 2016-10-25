@@ -566,6 +566,23 @@ class WP_Customize_Control {
 
 				// Hackily add in the data link parameter.
 				$dropdown = str_replace( '<select', '<select ' . $this->get_link(), $dropdown );
+
+				// Even more hacikly add auto-draft page stubs.
+				// @todo Eventually this should be removed in favor of the pages being injected into the underlying get_pages() call. See <https://github.com/xwp/wp-customize-posts/pull/250>.
+				$nav_menus_created_posts_setting = $this->manager->get_setting( 'nav_menus_created_posts' );
+				if ( $nav_menus_created_posts_setting && current_user_can( 'publish_pages' ) ) {
+					$auto_draft_page_options = '';
+					foreach ( $nav_menus_created_posts_setting->value() as $auto_draft_page_id ) {
+						$post = get_post( $auto_draft_page_id );
+						if ( $post && 'page' === $post->post_type ) {
+							$auto_draft_page_options .= sprintf( '<option value="%1$s">%2$s</option>', esc_attr( $post->ID ), esc_html( $post->post_title ) );
+						}
+					}
+					if ( $auto_draft_page_options ) {
+						$dropdown = str_replace( '</select>', $auto_draft_page_options . '</select>', $dropdown );
+					}
+				}
+
 				echo $dropdown;
 				?>
 				</label>
