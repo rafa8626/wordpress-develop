@@ -215,6 +215,7 @@ jQuery( function( $ ) {
 			items;
 
 		wp.customize.notifications.add( 'mycode-1', new wp.customize.Notification( 'mycode-1' ) );
+		wp.customize.notifications.render();
 		items = container.find( 'li' );
 		equal( items.length, 1 );
 		equal( items.first().data( 'code' ), 'mycode-1' );
@@ -222,6 +223,7 @@ jQuery( function( $ ) {
 		wp.customize.notifications.add( 'mycode-2', new wp.customize.Notification( 'mycode-2', {
 			isDismissable: true
 		} ) );
+		wp.customize.notifications.render();
 		items = container.find( 'li' );
 		equal( items.length, 2 );
 		equal( items.first().data( 'code' ), 'mycode-1' );
@@ -229,10 +231,10 @@ jQuery( function( $ ) {
 
 		equal( items.first().find( '.customize-notification-dismiss' ).length, 0 );
 		equal( items.last().find( '.customize-notification-dismiss' ).length, 1 );
-
 		ok( container.find( 'ul' ).is( '.customize-notifications-area' ) );
 
-		items.last().find( '.customize-notification-dismiss' ).trigger( 'click' );
+		wp.customize.notifications.remove( 'mycode-2' );
+		wp.customize.notifications.render();
 		items = container.find( 'li' );
 		equal( items.length, 1 );
 		equal( items.first().data( 'code' ), 'mycode-1' );

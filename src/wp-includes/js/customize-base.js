@@ -833,14 +833,27 @@ window.wp = window.wp || {};
 		 * @this {wp.customize.notifications}
 		 */
 		initialize: function( options ) {
-			var self = this;
+			var self = this,
+				debouncedRenderNotification;
 
 			$.extend( this, options || {} );
 			api.Values.prototype.initialize.call( self, null, options );
 
 			_.bindAll( self, 'dismissNotification' );
-			self.bind( 'add', self.render );
-			self.bind( 'remove', self.render );
+
+			/*
+			 * Note that this debounced/deferred rendering is needed because the 'remove' event
+			 * is triggered just _before_ the notification is actually removed.
+			 * Refer to: https://core.trac.wordpress.org/ticket/37269
+			 */
+			debouncedRenderNotifications = _.debounce( function() {
+				self.render();
+			} );
+			self.bind( 'add', function( notification ) {
+				wp.a11y.speak( notification.message, 'assertive' );
+				debouncedRenderNotifications();
+			} );
+			self.bind( 'remove', debouncedRenderNotifications );
 		},
 
 		/**
