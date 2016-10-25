@@ -2358,7 +2358,7 @@
 
 		initialize: function( id, options ) {
 			var control = this,
-				nodes, radios, settings;
+				nodes, radios, deferredSettingIds = [];
 
 			control.params = {};
 			$.extend( control, options || {} );
@@ -2377,6 +2377,87 @@
 			control.notifications = new api.Values({ defaultConstructor: api.Notification });
 
 			control.elements = [];
+
+			control.active.bind( function ( active ) {
+				var args = control.activeArgumentsQueue.shift();
+				args = $.extend( {}, control.defaultActiveArguments, args );
+				control.onChangeActive( active, args );
+			} );
+
+			control.section.set( control.params.section );
+			control.priority.set( isNaN( control.params.priority ) ? 10 : control.params.priority );
+			control.active.set( control.params.active );
+
+			api.utils.bubbleChildValueChanges( control, [ 'section', 'priority', 'active' ] );
+
+			control.settings = {};
+
+			/*
+			 * After all settings related to the control are available,
+			 * make them available on the control and embed the control into the page.
+			 */
+			_.each( control.params.settings, function( setting, key ) {
+				if ( _.isObject( setting ) ) {
+					control.settings[ key ] = setting;
+				} else {
+					deferredSettingIds.push( setting );
+				}
+			} );
+			control.setting = control.settings['default'] || null;
+
+			if ( _.isEmpty( control.params.settings ) ) {
+				control.setting = null;
+				control.embed();
+			} else if ( _.isEmpty( deferredSettingIds ) ) {
+				control._linkElements();
+				control._linkNotifications();
+				control.embed();
+			} else {
+				api.apply( api, deferredSettingIds.concat( function() {
+					var key;
+
+					_.each( control.params.settings, function( settingId, key ) {
+						if ( _.isString( settingId ) ) {
+							control.settings[ key ] = api( settingId );
+						}
+					} );
+
+					control.setting = control.settings['default'] || null;
+
+					control._linkElements();
+					control._linkNotifications();
+					control.embed();
+				}) );
+			}
+
+			// After the control is embedded on the page, invoke the "ready" method.
+			control.deferred.embedded.done( function () {
+				/*
+				 * Note that this debounced/deferred rendering is needed for two reasons:
+				 * 1) The 'remove' event is triggered just _before_ the notification is actually removed.
+				 * 2) Improve performance when adding/removing multiple notifications at a time.
+				 */
+				var debouncedRenderNotifications = _.debounce( function renderNotifications() {
+					control.renderNotifications();
+				} );
+				control.notifications.bind( 'add', function( notification ) {
+					wp.a11y.speak( notification.message, 'assertive' );
+					debouncedRenderNotifications();
+				} );
+				control.notifications.bind( 'remove', debouncedRenderNotifications );
+				control.renderNotifications();
+
+				control.ready();
+			});
+		},
+
+		/**
+		 * Link elements.
+		 *
+		 * @private
+		 */
+		_linkElements: function() {
+			var control = this, nodes, radios;
 
 			nodes  = control.container.find('[data-customize-setting-link]');
 			radios = {};
@@ -2402,85 +2483,34 @@
 					element.set( setting() );
 				});
 			});
+		},
 
-			control.active.bind( function ( active ) {
-				var args = control.activeArgumentsQueue.shift();
-				args = $.extend( {}, control.defaultActiveArguments, args );
-				control.onChangeActive( active, args );
+		/**
+		 * Add setting notifications to the control notification.
+		 *
+		 * @private
+		 */
+		_linkNotifications: function() {
+			var control = this;
+
+			_.each( control.settings, function( setting ) {
+				setting.notifications.bind( 'add', function( settingNotification ) {
+					var controlNotification, code, params;
+					code = setting.id + ':' + settingNotification.code;
+					params = _.extend(
+						{},
+						settingNotification,
+						{
+							setting: setting.id
+						}
+					);
+					controlNotification = new api.Notification( code, params );
+					control.notifications.add( controlNotification.code, controlNotification );
+				} );
+				setting.notifications.bind( 'remove', function( settingNotification ) {
+					control.notifications.remove( setting.id + ':' + settingNotification.code );
+				} );
 			} );
-
-			control.section.set( control.params.section );
-			control.priority.set( isNaN( control.params.priority ) ? 10 : control.params.priority );
-			control.active.set( control.params.active );
-
-			api.utils.bubbleChildValueChanges( control, [ 'section', 'priority', 'active' ] );
-
-			/*
-			 * After all settings related to the control are available,
-			 * make them available on the control and embed the control into the page.
-			 */
-			settings = $.map( control.params.settings, function( value ) {
-				return value;
-			});
-
-			if ( 0 === settings.length ) {
-				control.setting = null;
-				control.settings = {};
-				control.embed();
-			} else {
-				api.apply( api, settings.concat( function() {
-					var key;
-
-					control.settings = {};
-					for ( key in control.params.settings ) {
-						control.settings[ key ] = api( control.params.settings[ key ] );
-					}
-
-					control.setting = control.settings['default'] || null;
-
-					// Add setting notifications to the control notification.
-					_.each( control.settings, function( setting ) {
-						setting.notifications.bind( 'add', function( settingNotification ) {
-							var controlNotification, code, params;
-							code = setting.id + ':' + settingNotification.code;
-							params = _.extend(
-								{},
-								settingNotification,
-								{
-									setting: setting.id
-								}
-							);
-							controlNotification = new api.Notification( code, params );
-							control.notifications.add( controlNotification.code, controlNotification );
-						} );
-						setting.notifications.bind( 'remove', function( settingNotification ) {
-							control.notifications.remove( setting.id + ':' + settingNotification.code );
-						} );
-					} );
-
-					control.embed();
-				}) );
-			}
-
-			// After the control is embedded on the page, invoke the "ready" method.
-			control.deferred.embedded.done( function () {
-				/*
-				 * Note that this debounced/deferred rendering is needed for two reasons:
-				 * 1) The 'remove' event is triggered just _before_ the notification is actually removed.
-				 * 2) Improve performance when adding/removing multiple notifications at a time.
-				 */
-				var debouncedRenderNotifications = _.debounce( function renderNotifications() {
-					control.renderNotifications();
-				} );
-				control.notifications.bind( 'add', function( notification ) {
-					wp.a11y.speak( notification.message, 'assertive' );
-					debouncedRenderNotifications();
-				} );
-				control.notifications.bind( 'remove', debouncedRenderNotifications );
-				control.renderNotifications();
-
-				control.ready();
-			});
 		},
 
 		/**
