@@ -2762,12 +2762,12 @@
 				return;
 			}
 
-			var control = this, promise,
-			    toggle = control.container.find( '.add-new-toggle' ),
-			    container = control.container.find( '.new-content-item' ),
-			    input = control.container.find( '.create-item-input' ),
-			    title = input.val();
-			    select = control.container.find( 'select' );
+			var control = this, promise, toggle, container, input, title, select;
+			toggle = control.container.find( '.add-new-toggle' );
+			container = control.container.find( '.new-content-item' );
+			input = control.container.find( '.create-item-input' );
+			title = input.val();
+			select = control.container.find( 'select' );
 
 			if ( ! title ) {
 				input.addClass( 'invalid' );
