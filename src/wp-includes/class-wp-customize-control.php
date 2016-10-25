@@ -564,7 +564,7 @@ class WP_Customize_Control {
 				?>
 				</label>
 				<?php if ( $this->add_new && current_user_can( 'publish_pages' ) && current_user_can( 'edit_theme_options' ) ) : // Currently tied to menus functionality. ?>
-					<button type="button" class="button add-new-toggle"><?php _e( 'Add new page' ); ?></button>
+					<button type="button" class="button add-new-toggle"><?php echo get_post_type_object( 'page' )->labels->add_new_item; ?></button>
 					<div class="new-content-item">
 						<label for="create-input-<?php echo $this->id; ?>"><span class="screen-reader-text"><?php _e( 'New page title' ); ?></span></label>
 						<input type="text" id="create-input-<?php echo $this->id; ?>" class="create-item-input" placeholder="<?php esc_attr_e( 'New page title&hellip;' ); ?>">
