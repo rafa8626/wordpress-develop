@@ -77,22 +77,22 @@ class WP_Customize_Background_Position_Control extends WP_Customize_Control {
 			<span class="description customize-control-description">{{{ data.description }}}</span>
 		<# } #>
 		<div class="customize-control-content">
-		<fieldset>
-		<legend class="screen-reader-text"><span><?php _e( 'Image Position' ); ?></span></legend>
-		<div class="background-position-control">
-		<?php foreach ( $options as $group ) : ?>
-			<div class="button-group">
-			<?php foreach ( $group as $value => $input ) : ?>
-				<label>
-					<input class="screen-reader-text" name="background-position" type="radio" value="<?php echo $value; ?>"<# if ( '<?php echo $value; ?>' === value ) { #>checked<# } #>>
-					<span class="button display-options position"><span class="<?php echo $input['icon']; ?>" aria-hidden="true"></span></span>
-					<span class="screen-reader-text"><?php echo $input['label']; ?></span>
-				</label>
-			<?php endforeach; ?>
-			</div>
-		<?php endforeach; ?>
-		</div>
-		</fieldset>
+			<fieldset>
+				<legend class="screen-reader-text"><span><?php _e( 'Image Position' ); ?></span></legend>
+				<div class="background-position-control">
+				<?php foreach ( $options as $group ) : ?>
+					<div class="button-group">
+					<?php foreach ( $group as $value => $input ) : ?>
+						<label>
+							<input class="screen-reader-text" name="background-position" type="radio" value="<?php echo esc_attr( $value ); ?>"<# if ( <?php echo wp_json_encode( $value ); ?> === value ) { #>checked<# } #>>
+							<span class="button display-options position"><span class="<?php echo esc_attr( $input['icon'] ); ?>" aria-hidden="true"></span></span>
+							<span class="screen-reader-text"><?php echo $input['label']; ?></span>
+						</label>
+					<?php endforeach; ?>
+					</div>
+				<?php endforeach; ?>
+				</div>
+			</fieldset>
 		</div>
 		<?php
 	}
