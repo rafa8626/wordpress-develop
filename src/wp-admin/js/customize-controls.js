@@ -906,6 +906,10 @@
 		attachEvents: function () {
 			var meta, content, section = this;
 
+			if ( section.container.hasClass( 'cannot-expand' ) ) {
+				return;
+			}
+
 			// Expand/Collapse accordion sections on click.
 			section.container.find( '.accordion-section-title, .customize-section-back' ).on( 'click keydown', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
@@ -3414,7 +3418,7 @@
 		 * @param {object} attachment
 		 */
 		setImageFromAttachment: function( attachment ) {
-			var sizes = [ 'site_icon-32', 'thumbnail', 'full' ],
+			var sizes = [ 'site_icon-32', 'thumbnail', 'full' ], link,
 				icon;
 
 			_.each( sizes, function( size ) {
@@ -3428,8 +3432,13 @@
 			// Set the Customizer setting; the callback takes care of rendering.
 			this.setting( attachment.id );
 
+			if ( ! icon ) {
+				return;
+			}
+
 			// Update the icon in-browser.
-			$( 'link[sizes="32x32"]' ).attr( 'href', icon.url );
+			link = $( 'link[rel="icon"][sizes="32x32"]' );
+			link.attr( 'href', icon.url );
 		},
 
 		/**
@@ -3446,7 +3455,7 @@
 			this.params.attachment = {};
 			this.setting( '' );
 			this.renderContent(); // Not bound to setting change when emptying.
-			$( 'link[rel="icon"]' ).attr( 'href', '' );
+			$( 'link[rel="icon"][sizes="32x32"]' ).attr( 'href', '/favicon.ico' ); // Set to default.
 		}
 	});
 
