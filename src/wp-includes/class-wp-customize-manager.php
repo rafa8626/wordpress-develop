@@ -3317,7 +3317,10 @@ final class WP_Customize_Manager {
 		$this->add_control( new WP_Customize_Background_Position_Control( $this, 'background_position', array(
 			'label'    => __( 'Image Position' ),
 			'section'  => 'background_image',
-			'settings' => array( 'background_position_x', 'background_position_y' ),
+			'settings' => array(
+				'x' => 'background_position_x',
+				'y' => 'background_position_y',
+			),
 		) ) );
 
 		$this->add_setting( 'background_size', array(

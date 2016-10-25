@@ -3174,8 +3174,8 @@
 				value = $( this ).val();
 				position = value.split( ' ' );
 
-				control.settings[0]( position[0] );
-				control.settings[1]( position[1] );
+				control.settings.x( position[0] );
+				control.settings.y( position[1] );
 			} );
 		}
 	} );

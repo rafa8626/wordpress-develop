@@ -15,6 +15,7 @@
  * @see WP_Customize_Control
  */
 class WP_Customize_Background_Position_Control extends WP_Customize_Control {
+
 	/**
 	 * @access public
 	 * @var string
