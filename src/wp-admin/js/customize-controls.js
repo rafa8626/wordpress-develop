@@ -2357,8 +2357,7 @@
 		defaultActiveArguments: { duration: 'fast', completeCallback: $.noop },
 
 		initialize: function( id, options ) {
-			var control = this,
-				nodes, radios, deferredSettingIds = [];
+			var control = this, deferredSettingIds = [];
 
 			control.params = {};
 			$.extend( control, options || {} );
