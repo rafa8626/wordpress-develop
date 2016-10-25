@@ -5587,7 +5587,7 @@
 				'fill': [ true, false, false, false ],
 				'fit': [ true, false, true, false ],
 				'repeat': [ true, false, false, true ],
-				'custom': [ true, true, true, true ],
+				'custom': [ true, true, true, true ]
 			};
 
 			var defaultValues = [
@@ -5595,14 +5595,14 @@
 				_wpCustomizeBackground.defaults['default-position-y'],
 				_wpCustomizeBackground.defaults['default-size'],
 				_wpCustomizeBackground.defaults['default-repeat'],
-				_wpCustomizeBackground.defaults['default-attachment'],
+				_wpCustomizeBackground.defaults['default-attachment']
 			];
 
 			var values = { // position_x, position_y, size, repeat, attachment
 				'default': defaultValues,
 				'fill': [ 'left', 'top', 'cover', 'no-repeat', 'fixed' ],
 				'fit': [ 'left', 'top', 'contain', 'no-repeat', 'fixed' ],
-				'repeat': [ 'left', 'top', 'auto', 'repeat', 'scroll' ],
+				'repeat': [ 'left', 'top', 'auto', 'repeat', 'scroll' ]
 			};
 
 			var toggleVisibility = function( preset ) {
