@@ -2515,7 +2515,7 @@
 		 * @abstract
 		 */
 		ready: function() {
-			if ( 'dropdown-pages' === this.params.type ) {
+			if ( 'dropdown-pages' === this.params.type && this.params.allow_addition ) {
 				var control = this,
 				    newItem = control.container.find( '.new-content-item' );
 				newItem.hide(); // Hide in JS to preserve flex display when showing.
@@ -2761,7 +2761,7 @@
 		addNewPage: function () {
 			var control = this, promise, toggle, container, input, title, select;
 
-			if ( 'dropdown-pages' !== this.params.type || ! api.Menus ) {
+			if ( 'dropdown-pages' !== this.params.type || ! this.params.allow_addition || ! api.Menus ) {
 				return;
 			}
 

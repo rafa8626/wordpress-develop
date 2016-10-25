@@ -304,6 +304,10 @@ class WP_Customize_Control {
 		$this->json['label'] = $this->label;
 		$this->json['description'] = $this->description;
 		$this->json['instanceNumber'] = $this->instance_number;
+
+		if ( 'dropdown-pages' === $this->type ) {
+			$this->json['allow_addition'] = $this->allow_addition;
+		}
 	}
 
 	/**
