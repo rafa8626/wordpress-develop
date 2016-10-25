@@ -115,6 +115,12 @@ class WP_Customize_Control {
 	public $input_attrs = array();
 
 	/**
+	 * @access public
+	 * @var array
+	 */
+	public $add_new = false;
+
+	/**
 	 * @deprecated It is better to just call the json() method
 	 * @access public
 	 * @var array
@@ -557,7 +563,14 @@ class WP_Customize_Control {
 				echo $dropdown;
 				?>
 				</label>
-				<?php
+				<?php if ( $this->add_new && current_user_can( 'publish_pages' ) && current_user_can( 'edit_theme_options' ) ) : // Currently tied to menus functionality. ?>
+					<button type="button" class="button add-new-toggle"><?php _e( 'Add new page' ); ?></button>
+					<div class="new-content-item">
+						<label for="create-input-<?php echo $this->id; ?>"><span class="screen-reader-text"><?php _e( 'New page title' ); ?></span></label>
+						<input type="text" id="create-input-<?php echo $this->id; ?>" class="create-item-input" placeholder="<?php esc_attr_e( 'New page title&hellip;' ); ?>">
+						<button type="button" class="button add-content"><?php _e( 'Add' ); ?></button>
+					</div>
+				<?php endif;
 				break;
 			default:
 				?>
