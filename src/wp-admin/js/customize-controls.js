@@ -2406,15 +2406,14 @@
 
 			if ( _.isEmpty( control.params.settings ) ) {
 				control.setting = null;
+				control.setupNotifications();
 				control.embed();
 			} else if ( _.isEmpty( deferredSettingIds ) ) {
-				control._linkElements();
-				control._linkNotifications();
+				control.linkElements();
+				control.setupNotifications();
 				control.embed();
 			} else {
 				api.apply( api, deferredSettingIds.concat( function() {
-					var key;
-
 					_.each( control.params.settings, function( settingId, key ) {
 						if ( _.isString( settingId ) ) {
 							control.settings[ key ] = api( settingId );
@@ -2423,47 +2422,39 @@
 
 					control.setting = control.settings['default'] || null;
 
-					control._linkElements();
-					control._linkNotifications();
+					control.linkElements();
+					control.setupNotifications();
 					control.embed();
 				}) );
 			}
 
 			// After the control is embedded on the page, invoke the "ready" method.
 			control.deferred.embedded.done( function () {
-				/*
-				 * Note that this debounced/deferred rendering is needed for two reasons:
-				 * 1) The 'remove' event is triggered just _before_ the notification is actually removed.
-				 * 2) Improve performance when adding/removing multiple notifications at a time.
-				 */
-				var debouncedRenderNotifications = _.debounce( function renderNotifications() {
-					control.renderNotifications();
-				} );
-				control.notifications.bind( 'add', function( notification ) {
-					wp.a11y.speak( notification.message, 'assertive' );
-					debouncedRenderNotifications();
-				} );
-				control.notifications.bind( 'remove', debouncedRenderNotifications );
-				control.renderNotifications();
-
 				control.ready();
 			});
 		},
 
 		/**
-		 * Link elements.
+		 * Link elements between settings and inputs.
 		 *
-		 * @private
+		 * @since 4.7.0
+		 * @access public
+		 *
+		 * @returns {void}
 		 */
-		_linkElements: function() {
+		linkElements: function() {
 			var control = this, nodes, radios;
 
-			nodes  = control.container.find('[data-customize-setting-link]');
+			nodes = control.container.find( '[data-customize-setting-link]' );
 			radios = {};
 
 			nodes.each( function() {
-				var node = $( this ),
-					name;
+				var node = $( this ), name;
+
+				if ( node.data( 'customizeSettingLinked' ) ) {
+					return;
+				}
+				node.data( 'customizeSettingLinked', true ); // Prevent re-linking element.
 
 				if ( node.is( ':radio' ) ) {
 					name = node.prop( 'name' );
@@ -2485,31 +2476,47 @@
 		},
 
 		/**
-		 * Add setting notifications to the control notification.
+		 * Sync setting notifications to the control notifications and render when notifications are aded/removed.
 		 *
-		 * @private
+		 * @since 4.7.0
+		 * @returns {void}
 		 */
-		_linkNotifications: function() {
-			var control = this;
+		setupNotifications: function() {
+			var control = this, debouncedRenderNotifications;
 
-			_.each( control.settings, function( setting ) {
+			_.each( control.settings, function( setting, settingKey ) {
 				setting.notifications.bind( 'add', function( settingNotification ) {
 					var controlNotification, code, params;
-					code = setting.id + ':' + settingNotification.code;
+					code = ( setting.id || settingKey ) + ':' + settingNotification.code;
 					params = _.extend(
 						{},
 						settingNotification,
 						{
-							setting: setting.id
+							setting: setting.id || null // @todo Let this be the setting object itself?
 						}
 					);
 					controlNotification = new api.Notification( code, params );
 					control.notifications.add( controlNotification.code, controlNotification );
 				} );
 				setting.notifications.bind( 'remove', function( settingNotification ) {
-					control.notifications.remove( setting.id + ':' + settingNotification.code );
+					control.notifications.remove( ( setting.id || settingKey ) + ':' + settingNotification.code );
 				} );
 			} );
+
+			/*
+			 * Note that this debounced/deferred rendering is needed for two reasons:
+			 * 1) The 'remove' event is triggered just _before_ the notification is actually removed.
+			 * 2) Improve performance when adding/removing multiple notifications at a time.
+			 */
+			debouncedRenderNotifications = _.debounce( function renderNotifications() {
+				control.renderNotifications();
+			} );
+			control.notifications.bind( 'add', function( notification ) {
+				wp.a11y.speak( notification.message, 'assertive' );
+				debouncedRenderNotifications();
+			} );
+			control.notifications.bind( 'remove', debouncedRenderNotifications );
+			control.renderNotifications();
 		},
 
 		/**
