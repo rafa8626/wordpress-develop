@@ -2402,17 +2402,8 @@
 					deferredSettingIds.push( setting );
 				}
 			} );
-			control.setting = control.settings['default'] || null;
 
-			if ( _.isEmpty( control.params.settings ) ) {
-				control.setting = null;
-				control.setupNotifications();
-				control.embed();
-			} else if ( _.isEmpty( deferredSettingIds ) ) {
-				control.linkElements();
-				control.setupNotifications();
-				control.embed();
-			} else {
+			if ( deferredSettingIds.length > 0 ) {
 				api.apply( api, deferredSettingIds.concat( function() {
 					_.each( control.params.settings, function( settingId, key ) {
 						if ( _.isString( settingId ) ) {
@@ -2421,15 +2412,17 @@
 					} );
 
 					control.setting = control.settings['default'] || null;
-
-					control.linkElements();
-					control.setupNotifications();
 					control.embed();
 				}) );
+			} else {
+				control.setting = control.settings['default'] || null;
+				control.embed();
 			}
 
 			// After the control is embedded on the page, invoke the "ready" method.
 			control.deferred.embedded.done( function () {
+				control.linkElements();
+				control.setupNotifications();
 				control.ready();
 			});
 		},
@@ -2443,13 +2436,13 @@
 		 * @returns {void}
 		 */
 		linkElements: function() {
-			var control = this, nodes, radios;
+			var control = this, nodes, radios, element;
 
-			nodes = control.container.find( '[data-customize-setting-link]' );
+			nodes = control.container.find( '[data-customize-setting-link], [data-customize-value-link]' );
 			radios = {};
 
 			nodes.each( function() {
-				var node = $( this ), name;
+				var node = $( this ), name, setting;
 
 				if ( node.data( 'customizeSettingLinked' ) ) {
 					return;
@@ -2466,12 +2459,20 @@
 					node = nodes.filter( '[name="' + name + '"]' );
 				}
 
-				api( node.data( 'customizeSettingLink' ), function( setting ) {
-					var element = new api.Element( node );
+				// Let link by default refer to setting ID. If it doesn't exist, fallback to looking up by setting key.
+				if ( node.data( 'customizeSettingLink' ) ) {
+					setting = api( node.data( 'customizeSettingLink' ) );
+				}
+				if ( ! setting ) {
+					setting = control.settings[ node.data( 'customizeValueLink' ) ];
+				}
+
+				if ( setting ) {
+					element = new api.Element( node );
 					control.elements.push( element );
 					element.sync( setting );
 					element.set( setting() );
-				});
+				}
 			});
 		},
 
