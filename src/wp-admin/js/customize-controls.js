@@ -3160,11 +3160,19 @@
 	/**
 	 * A control for positioning a background image.
 	 *
+	 * @since 4.7.0
+	 *
 	 * @class
 	 * @augments wp.customize.Control
 	 * @augments wp.customize.Class
 	 */
 	api.BackgroundPositionControl = api.Control.extend( {
+
+		/**
+		 * Set up control UI once embedded in DOM and settings are created.
+		 *
+		 * @since 4.7.0
+		 */
 		ready: function() {
 			var control = this, updateRadios;
 
