@@ -5624,6 +5624,7 @@
 				'repeat': [ 'left', 'top', 'auto', 'repeat', 'scroll' ]
 			};
 
+			// @todo These should actually toggle the active state, but without the preview overriding the state in data.activeControls.
 			toggleVisibility = function( preset ) {
 				api.control( 'background_position' ).container.toggle( visibility[ preset ][0] );
 				api.control( 'background_size' ).container.toggle( visibility[ preset ][1] );
@@ -5644,12 +5645,9 @@
 
 			control.setting.bind( 'change', function( preset ) {
 				toggleVisibility( preset );
-
-				if ( 'custom' === preset ) {
-					return;
+				if ( 'custom' !== preset ) {
+					updateSettings( preset );
 				}
-
-				updateSettings( preset );
 			} );
 		} );
 
