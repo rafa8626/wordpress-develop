@@ -1376,39 +1376,39 @@ function _custom_background_cb() {
 	if ( $background ) {
 		$image = " background-image: url('$background');";
 
-		// Background Position
+		// Background Position.
 		$position_x = get_theme_mod( 'background_position_x', get_theme_support( 'custom-background', 'default-position-x' ) );
 		$position_y = get_theme_mod( 'background_position_y', get_theme_support( 'custom-background', 'default-position-y' ) );
 
-		if ( ! in_array( $position_x, array( 'left', 'center', 'right' ) ) ) {
-			$position = 'left';
+		if ( ! in_array( $position_x, array( 'left', 'center', 'right' ), true ) ) {
+			$position_x = 'left';
 		}
 
-		if ( ! in_array( $position_y, array( 'top', 'center', 'bottom' ) ) ) {
-			$position = 'top';
+		if ( ! in_array( $position_y, array( 'top', 'center', 'bottom' ), true ) ) {
+			$position_y = 'top';
 		}
 
 		$position = " background-position: $position_x $position_y;";
 
-		// Background Size
+		// Background Size.
 		$size = get_theme_mod( 'background_size', get_theme_support( 'custom-background', 'default-size' ) );
 
-		if ( ! in_array( $size, array( 'auto', 'contain', 'cover' ) ) ) {
+		if ( ! in_array( $size, array( 'auto', 'contain', 'cover' ), true ) ) {
 			$size = 'auto';
 		}
 
 		$size = " background-size: $size;";
 
-		// Background Repeat
+		// Background Repeat.
 		$repeat = get_theme_mod( 'background_repeat', get_theme_support( 'custom-background', 'default-repeat' ) );
 
-		if ( ! in_array( $repeat, array( 'repeat-x', 'repeat-y', 'repeat', 'no-repeat' ) ) ) {
+		if ( ! in_array( $repeat, array( 'repeat-x', 'repeat-y', 'repeat', 'no-repeat' ), true ) ) {
 			$repeat = 'repeat';
 		}
 
 		$repeat = " background-repeat: $repeat;";
 
-		// Background Scroll
+		// Background Scroll.
 		$attachment = get_theme_mod( 'background_attachment', get_theme_support( 'custom-background', 'default-attachment' ) );
 
 		if ( 'fixed' !== $attachment ) {
