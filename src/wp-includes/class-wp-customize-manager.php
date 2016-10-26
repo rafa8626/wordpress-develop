@@ -3659,8 +3659,9 @@ final class WP_Customize_Manager {
 	 * Callback for validating the background_repeat value.
 	 *
 	 * @since 4.7.0
+	 * @access private
 	 *
-	 * @param string $repeat
+	 * @param string $repeat Repeat value.
 	 * @return string Background repeat.
 	 */
 	public function _sanitize_background_repeat( $repeat ) {
@@ -3675,8 +3676,9 @@ final class WP_Customize_Manager {
 	 * Callback for validating the background_attachment value.
 	 *
 	 * @since 4.7.0
+	 * @access private
 	 *
-	 * @param string $attachment
+	 * @param string $attachment Background attachment value.
 	 * @return string Background attachment.
 	 */
 	public function _sanitize_background_attachment( $attachment ) {

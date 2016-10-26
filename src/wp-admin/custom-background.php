@@ -136,7 +136,7 @@ class Custom_Background {
 		if ( isset( $_POST['background-preset'] ) ) {
 			check_admin_referer( 'custom-background' );
 
-			if ( in_array( $_POST['background-preset'], array( 'default', 'fill', 'fit', 'repeat', 'custom' ) ) ) {
+			if ( in_array( $_POST['background-preset'], array( 'default', 'fill', 'fit', 'repeat', 'custom' ), true ) ) {
 				$preset = $_POST['background-preset'];
 			} else {
 				$preset = 'default';
@@ -150,13 +150,13 @@ class Custom_Background {
 
 			$position = explode( ' ', $_POST['background-position'] );
 
-			if ( in_array( $position[0], array( 'left', 'center', 'right' ) ) ) {
+			if ( in_array( $position[0], array( 'left', 'center', 'right' ), true ) ) {
 				$position_x = $position[0];
 			} else {
 				$position_x = 'left';
 			}
 
-			if ( in_array( $position[1], array( 'top', 'center', 'bottom' ) ) ) {
+			if ( in_array( $position[1], array( 'top', 'center', 'bottom' ), true ) ) {
 				$position_y = $position[1];
 			} else {
 				$position_y = 'top';
@@ -169,7 +169,7 @@ class Custom_Background {
 		if ( isset( $_POST['background-size'] ) ) {
 			check_admin_referer( 'custom-background' );
 
-			if ( in_array( $_POST['background-size'], array( 'auto', 'contain', 'cover' ) ) ) {
+			if ( in_array( $_POST['background-size'], array( 'auto', 'contain', 'cover' ), true ) ) {
 				$size = $_POST['background-size'];
 			} else {
 				$size = 'auto';
