@@ -5599,7 +5599,9 @@
 		});
 
 		api.control( 'background_preset', function( control ) {
-			var visibility = { // position, size, repeat, attachment
+			var visibility, defaultValues, values, toggleVisibility, updateSettings, preset;
+
+			visibility = { // position, size, repeat, attachment
 				'default': [ false, false, false, false ],
 				'fill': [ true, false, false, false ],
 				'fit': [ true, false, true, false ],
@@ -5607,7 +5609,7 @@
 				'custom': [ true, true, true, true ]
 			};
 
-			var defaultValues = [
+			defaultValues = [
 				_wpCustomizeBackground.defaults['default-position-x'],
 				_wpCustomizeBackground.defaults['default-position-y'],
 				_wpCustomizeBackground.defaults['default-size'],
@@ -5615,33 +5617,29 @@
 				_wpCustomizeBackground.defaults['default-attachment']
 			];
 
-			var values = { // position_x, position_y, size, repeat, attachment
+			values = { // position_x, position_y, size, repeat, attachment
 				'default': defaultValues,
 				'fill': [ 'left', 'top', 'cover', 'no-repeat', 'fixed' ],
 				'fit': [ 'left', 'top', 'contain', 'no-repeat', 'fixed' ],
 				'repeat': [ 'left', 'top', 'auto', 'repeat', 'scroll' ]
 			};
 
-			var toggleVisibility = function( preset ) {
+			toggleVisibility = function( preset ) {
 				api.control( 'background_position' ).container.toggle( visibility[ preset ][0] );
 				api.control( 'background_size' ).container.toggle( visibility[ preset ][1] );
 				api.control( 'background_repeat' ).container.toggle( visibility[ preset ][2] );
 				api.control( 'background_attachment' ).container.toggle( visibility[ preset ][3] );
 			};
 
-			var updateSettings = function( preset ) {
+			updateSettings = function( preset ) {
 				api( 'background_position_x' ).set( values[ preset ][0] );
 				api( 'background_position_y' ).set( values[ preset ][1] );
-
-				api.control( 'background_position' ).container.find( 'input[name="background-position"]' ).val( [ values[ preset ][0] + ' ' + values[ preset ][1] ] );
-
 				api( 'background_size' ).set( values[ preset ][2] );
 				api( 'background_repeat' ).set( values[ preset ][3] );
 				api( 'background_attachment' ).set( values[ preset ][4] );
 			};
 
-			var preset = control.setting.get();
-
+			preset = control.setting.get();
 			toggleVisibility( preset );
 
 			control.setting.bind( 'change', function( preset ) {
