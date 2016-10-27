@@ -1623,110 +1623,6 @@ function get_editor_stylesheets() {
 }
 
 /**
- * Expand a theme's starter content configuration using core-provided data.
- *
- * @since 4.7.0
- *
- * @return array Array of starter content.
- */
-function get_theme_starter_content() {
-	$config = get_theme_support( 'starter-content' );
-
-	if ( empty( $config ) ) {
-		return false;
-	}
-
-	$core_content = array(
-		'sidebars_widgets' => array(
-			'text_business_info' => array(
-				'type' => 'WP_Widget_Text',
-				'title' => __( 'Find Us' ),
-				'text' => '<p><strong>' . __( 'Address' ) . '</strong><br />' .
-					__( '123 Main Street' ) . '<br />' . __( 'New York, NY 10001' ) . '</p>' .
-					'<p><strong>' . __( 'Hours' ) . '</strong><br />' .
-					__( 'Monday&mndash;Friday: 9:00AM&ndash;5:00PM' ) . '<br />' . __( 'Saturday &amp; Sunday: 11:00AM&ndash;3:00PM' ) . '</p>',
-			),
-		),
-		'nav_menus' => array(
-			'link_yelp' => 'https://www.yelp.com',
-			'link_facebook' => 'https://www.facebook.com/wordpress',
-			'link_twitter' => 'https://twitter.com/wordpress',
-			'link_instagram' => 'https://www.instagram.com/explore/tags/wordcamp/',
-			'link_email' => 'mailto:wordpress@example.com',
-		),
-		'posts' => array(
-			'homepage_section' => array(
-				'post_type' => 'page',
-				'post_title' => __( 'This homepage has sections' ),
-				'post_content' => __( 'Sections of a homepage are managed by doing X thing and appear when Y.' ),
-			),
-		),
-	);
-
-	$content = array();
-
-	foreach ( $config as $type => $args ) {
-		switch( $type ) {
-			// Use options and theme_mods as-is
-			case 'options' :
-			case 'theme_modes' :
-				$content[ $type ] = $config[ $type ];
-				break;
-
-			// Widgets are an extra level down due to groupings
-			case 'sidebars_widgets' :
-				foreach( $config[ $type ] as $group => $items ) {
-					foreach ( $items as $id ) {
-						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
-							$content[ $type ][ $group ][ $id ] = $core_content[ $type ][ $id ];
-						}
-					}
-				}
-				break;
-
-			// And nav menus are yet another level down 
-			case 'nav_menus' :
-				foreach( $config[ $type ] as $group => $args ) {
-					// Menu groups need a name
-					if ( empty( $args['name'] ) ) {
-						$args['name'] = $group;
-					}
-
-					$content[ $type ][ $group ]['name'] = $args['name'];
-
-					// Do we need to check if this is empty?
-					foreach ( $args['items'] as $id ) {
-						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
-							$content[ $type ][ $group ]['items'][ $id ] = $core_content[ $type ][ $id ];
-						}
-					}
-				}
-				break;
-
-
-			// Everything else should map at the next level
-			default :
-				foreach( $config[ $type ] as $id ) {
-					if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
-						$content[ $type ][ $id ] = $core_content[ $type ][ $id ];
-					}
-				}
-				break;
-		}
-	}
-
-	/**
-	 * Filters the expanded array of starter content.
-	 *
-	 * @since 4.7.0
-	 *
-	 * @param array $content Array of starter content.
-	 * @param array $config  Array of theme-specific starter content configuration.
-	 */
-	return apply_filters( 'get_theme_starter_content', $content, $config );
-}
-
-/**
  * Registers theme support for a given feature.
  *
  * Must be called in the theme's functions.php file to work.
@@ -1738,13 +1634,12 @@ function get_theme_starter_content() {
  * @since 3.9.0 The `html5` feature now also accepts 'gallery' and 'caption'
  * @since 4.1.0 The `title-tag` feature was added
  * @since 4.5.0 The `customize-selective-refresh-widgets` feature was added
- * @since 4.7.0 The `starter-content` feature was added
  *
  * @global array $_wp_theme_features
  *
  * @param string $feature  The feature being added. Likely core values include 'post-formats',
  *                         'post-thumbnails', 'html5', 'custom-logo', 'custom-header-uploads',
- *                         'custom-header', 'custom-background', 'title-tag', 'starter-content', etc.
+ *                         'custom-header', 'custom-background', 'title-tag', etc.
  * @param mixed  $args,... Optional extra arguments to pass along with certain features.
  * @return void|bool False on failure, void otherwise.
  */
@@ -2175,8 +2070,7 @@ function current_theme_supports( $feature ) {
 	 *
 	 * The dynamic portion of the hook name, `$feature`, refers to the specific theme
 	 * feature. Possible values include 'post-formats', 'post-thumbnails', 'custom-background',
-	 * 'custom-header', 'menus', 'automatic-feed-links', 'html5',
-	 * 'starter-content', and 'customize-selective-refresh-widgets'.
+	 * 'custom-header', 'menus', 'automatic-feed-links', 'html5', and `customize-selective-refresh-widgets`.
 	 *
 	 * @since 3.4.0
 	 *
