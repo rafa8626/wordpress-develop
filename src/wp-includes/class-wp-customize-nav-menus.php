@@ -850,7 +850,7 @@ final class WP_Customize_Nav_Menus {
 		<script type="text/html" id="tmpl-available-menu-item">
 			<li id="menu-item-tpl-{{ data.id }}" class="menu-item-tpl" data-menu-item-id="{{ data.id }}">
 				<div class="menu-item-bar">
-					<div class="menu-item-handle">
+					<div class="menu-item-handle<# if ( true === data.is_new_item ) { #> item-added<# } #>">
 						<span class="item-type" aria-hidden="true">{{ data.type_label }}</span>
 						<span class="item-title" aria-hidden="true">
 							<span class="menu-item-title<# if ( ! data.title ) { #> no-title<# } #>">{{ data.title || wp.customize.Menus.data.l10n.untitled }}</span>

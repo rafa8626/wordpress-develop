@@ -585,7 +585,8 @@
 					'type_label': itemTypeLabel,
 					'object': itemObject,
 					'object_id': data.post_id,
-					'url': data.url
+					'url': data.url,
+					'is_new_item': true
 				} );
 
 				// Add new item to menu.
