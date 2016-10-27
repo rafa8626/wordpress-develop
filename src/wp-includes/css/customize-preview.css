@@ -34,7 +34,7 @@
 }
 
 /* Styles for the actual shortcut */
-.customize-partial-edit-shortcut:before {
+.customize-partial-edit-shortcut-click-target {
 	position: absolute;
 	left: -36px;
 	color: #fff;
@@ -65,27 +65,27 @@
 	             -1px 0 1px #006799;
 }
 
-.customize-partial-edit-shortcut:hover:before,
-.customize-partial-edit-shortcut:focus:before {
+.customize-partial-edit-shortcut-click-target:hover,
+.customize-partial-edit-shortcut-click-target:focus {
     background: #008ec2; /* matches primary buttons */
 	border-color: #191e23; /* provides visual focus style with 4.5 contrast against background color */
 }
 
-body.customize-partial-edit-shortcuts-shown .customize-partial-edit-shortcut:before {
+body.customize-partial-edit-shortcuts-shown .customize-partial-edit-shortcut-click-target {
 	animation-name: customize-partial-edit-shortcut-bounce-appear;
 	pointer-events: auto;
 }
-body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut:before {
+body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut-click-target {
 	animation-name: customize-partial-edit-shortcut-bounce-disappear;
 	pointer-events: none;
 }
 
-.page-sidebar-collapsed .customize-partial-edit-shortcut:before,
-.customize-partial-edit-shortcut-hidden:before {
+.page-sidebar-collapsed .customize-partial-edit-shortcut-click-target ,
+.customize-partial-edit-shortcut-hidden .customize-partial-edit-shortcut-click-target {
 	visibility: hidden;
 }
 
-.customize-partial-edit-shortcut-left-margin:before {
+.customize-partial-edit-shortcut-left-margin .customize-partial-edit-shortcut-click-target {
 	left: 0;
 }
 
@@ -144,7 +144,7 @@ body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut:be
 }
 
 @media screen and (max-width:800px) {
-	.customize-partial-edit-shortcut:before {
+	.customize-partial-edit-shortcut-click-target {
 		left: -18px; /* Assume there will be less of a margin available on smaller screens */
 	}
 }
