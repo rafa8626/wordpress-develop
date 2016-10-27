@@ -28,12 +28,13 @@
 	z-index: 5;
 }
 
-.customize-partial-edit-shortcut:active {
-	padding: 0;
+.customize-partial-edit-shortcut-click-target:active {
+	padding: 15px;
 	border: 0;
 }
 
 /* Styles for the actual shortcut */
+.widget button.customize-partial-edit-shortcut-click-target,
 .customize-partial-edit-shortcut-click-target {
 	position: absolute;
 	left: -36px;
@@ -41,10 +42,9 @@
 	width: 30px;
 	height: 30px;
 	font-size: 18px;
-	font-family: dashicons;
-	content: '\f464';
 	z-index: 5;
 	background-color: #0085ba;
+	background: #0085ba;
 	border-radius: 50%;
 	border: 2px solid #fff;
 	box-shadow: 0 2px 1px rgba(46,68,83,0.15);
@@ -54,7 +54,7 @@
 	justify-content: center;
 	align-items: center;
 	cursor: pointer;
-	padding: 0;
+	padding: 15px;
 	animation-fill-mode: both;
 	animation-duration: .4s;
 	opacity: 0;

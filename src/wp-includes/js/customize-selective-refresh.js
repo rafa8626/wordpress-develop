@@ -217,12 +217,11 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 			var partial = this, shortcutTitle, $button, $clickTarget;
 			shortcutTitle = partial.getEditShortcutTitle();
 			$button = $( '<span>', {
-				'aria-label': shortcutTitle,
-				'title': shortcutTitle,
-				'type': 'button',
 				'class': 'customize-partial-edit-shortcut ' + partial.getEditShortcutClassName()
 			} );
 			$clickTarget = $( '<button>', {
+				'aria-label': shortcutTitle,
+				'title': shortcutTitle,
 				'class': 'customize-partial-edit-shortcut-click-target dashicons dashicons-edit',
 			} )
 			$button.append( $clickTarget );
