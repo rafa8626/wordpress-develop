@@ -5200,7 +5200,7 @@
 					}
 					delete queryParams.changeset_uuid;
 				}
-				urlParser.search = $.param( queryParams );
+				urlParser.search = $.param( queryParams ).replace( /%5B/g, '[' ).replace( /%5D/g, ']' ).replace( /%2F/g, '/' ).replace( /%3A/g, ':' );
 				history.replaceState( {}, document.title, urlParser.href );
 			};
 
