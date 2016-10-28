@@ -1314,6 +1314,7 @@ a:hover .nav-title,
 	border-top: 1px solid #eee;
 	font-size: 16px;
 	font-size: 1rem;
+	position: relative;
 }
 
 .navigation-top .wrap {
@@ -1555,8 +1556,10 @@ body {
 
 .site-branding {
 	padding: 1em 0;
+	position: relative;
 	-webkit-transition: margin-bottom 0.2s;
 	transition: margin-bottom 0.2s;
+	z-index: 3;
 }
 
 .site-branding a {
@@ -1650,15 +1653,13 @@ body:not(.title-tagline-hidden) .site-branding-text {
 }
 
 .custom-header-image {
-	background-position: center center;
-	background-repeat: no-repeat;
-	-webkit-background-size: cover;
-	background-size: cover;
 	bottom: 0;
 	left: 0;
+	overflow: hidden;
 	position: absolute;
 	right: 0;
 	top: 0;
+	width: 100%;
 }
 
 .custom-header-image:before {
@@ -1674,10 +1675,35 @@ body:not(.title-tagline-hidden) .site-branding-text {
 	left: 0;
 	position: absolute;
 	right: 0;
+	z-index: 2;
 }
 
-.has-header-image:not(.twentyseventeen-front-page):not(.home) .custom-header-image {
-	background-position: center bottom;
+.has-header-image .custom-header-image img,
+.has-header-image .custom-header-image video,
+.has-header-image .custom-header-image iframe {
+	position: fixed;
+	height: auto;
+	left: 50%;
+	max-width: 1000%;
+	min-height: 100%;
+	min-width: 100%;
+	min-width: 100vw; /* vw prevents 1px gap on left that 100% has */
+	width: auto;
+	top: 50%;
+	-ms-transform: translateX(-50%) translateY(-50%);
+	-moz-transform: translateX(-50%) translateY(-50%);
+	-webkit-transform: translateX(-50%) translateY(-50%);
+	transform: translateX(-50%) translateY(-50%);
+}
+
+.has-header-image:not(.twentyseventeen-front-page):not(.home) .custom-header-image img {
+	bottom: 0;
+	position: absolute;
+	top: auto;
+	-ms-transform: translateX(-50%) translateY(0);
+	-moz-transform: translateX(-50%) translateY(0);
+	-webkit-transform: translateX(-50%) translateY(0);
+	transform: translateX(-50%) translateY(0);
 }
 
 body:not(.has-header-image) .custom-header-image {
@@ -1776,6 +1802,11 @@ body:not(.has-header-image) .custom-header-image {
 /*--------------------------------------------------------------
 ## Regular Content
 --------------------------------------------------------------*/
+
+.site-content-contain {
+	background-color: #fff;
+	position: relative;
+}
 
 .site-content {
 	padding: 2.5em 0 0;
@@ -2642,7 +2673,8 @@ h2.widget-title {
 # Media
 --------------------------------------------------------------*/
 
-img {
+img,
+video {
 	height: auto; /* Make sure images are scaled correctly. */
 	max-width: 100%; /* Adhere to container width. */
 }
@@ -2903,18 +2935,13 @@ object {
 # Customizer
 --------------------------------------------------------------*/
 
-/* Hide this until we're in the Customizer */
-
-.twentyseventeen-panel-title {
+/* Hide placeholders until we're in the front page sections section */
+.panel-placeholder {
 	display: none;
 }
 
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel {
-	/* Colour-code all panels (add 1 to account for #twentyseventeen-hero, so 2 is actually panel 1)*/
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:after {
-	border: 2px dashed;
+.highlight-front-sections.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:after {
+	border: 2px dashed #0085ba; /* Matches visible edit shortcuts. */
 	bottom: 1em;
 	content: "";
 	display: block;
@@ -2922,122 +2949,58 @@ object {
 	position: absolute;
 	right: 1em;
 	top: 1em;
+	z-index: 1;
 }
 
+.highlight-front-sections.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel .panel-content {
+	z-index: 2; /* Prevent :after from preventing interactions within the section */
+}
+
+/* Used for placeholder text */
 .twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel .twentyseventeen-panel-title {
-	color: #fff;
-	display: inline-block;
+	display: block;
 	font-size: 14px;
 	font-size: 0.875rem;
 	font-weight: 700;
 	letter-spacing: 1px;
-	padding: 5px 10px;
-	position: absolute;
-	right: 3.2em;
+	padding: 3em;
 	text-transform: uppercase;
-	top: 3.2em;
-	-webkit-transform: translate(3px, -3px);
-	-ms-transform: translate(3px, -3px);
-	transform: translate(3px, -3px);
-	z-index: 3;
+	text-align: center;
 }
 
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(1):after {
+/* Show borders on the custom page panels only when the front page sections are being edited */
+.highlight-front-sections.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(1):after {
 	border: none;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(2) .twentyseventeen-panel-title {
-	background: #b569a2;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(2):after {
-	border-color: #b569a2;
-	color: #b569a2;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(3) .twentyseventeen-panel-title {
-	background: #8f68bd;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(3):after {
-	border-color: #8f68bd;
-	color: #8f68bd;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(4) .twentyseventeen-panel-title {
-	background: #575ebd;
-}
-
-.twentyseventeen-customizer.twentyseventeen-front-page .twentyseventeen-panel:nth-of-type(4):after {
-	border-color: #575ebd;
-	color: #575ebd;
-}
-
-/* Add a highlight class to improve Customizer behaviour */
-
-@-webkit-keyframes flash {
-
-	0%,
-	20%,
-	40%,
-	60%,
-	80%,
-	100% {
-		opacity: 1;
-	}
-
-	10%,
-	30%,
-	50%,
-	70%,
-	90% {
-		opacity: 0;
-	}
-}
-
-@keyframes flash {
-
-	0%,
-	20%,
-	40%,
-	60%,
-	80%,
-	100% {
-		opacity: 1;
-	}
-
-	10%,
-	30%,
-	50%,
-	70%,
-	90% {
-		opacity: 0;
-	}
-}
-
-article.panel-placeholder {
-	display: none;
 }
 
 .twentyseventeen-front-page.twentyseventeen-customizer #primary article.panel-placeholder {
 	border: 0;
 }
 
-.twentyseventeen-customizer .panel-placeholder.twentyseventeen-highlight {
-	display: block;
-	height: 112px;
+/* Add some space around the visual edit shortcut buttons. */
+.twentyseventeen-panel .customize-partial-edit-shortcut:before {
+	top: 30px;
+	left: 30px;
 }
 
-.twentyseventeen-highlight:after {
-	-webkit-animation-duration: 2s;
-	animation-duration: 2s;
-	-webkit-animation-name: flash;
-	animation-name: flash;
-	-webkit-animation-timing-function: ease-in-out;
-	animation-timing-function: ease-in-out;
-	-webkit-animation-fill-mode: both;
-	animation-fill-mode: both;
+/* Prevent color schemes from showing 1px dots everywhere. */
+.customize-partial-edit-shortcut {
+	background: transparent !important;
 }
+
+/* Ensure that placeholder icons are visible. */
+.twentyseventeen-panel .customize-partial-edit-shortcut-hidden:before {
+	visibility: visible;
+}
+
+/* Prevent icon colors from clashing with color schemes. */
+.colors-custom .customize-partial-edit-shortcut:before {
+	text-shadow: 0 -1px 1px rgba(0,0,0,.2),
+	             1px 0 1px rgba(0,0,0,.2),
+	             0 1px 1px rgba(0,0,0,.2),
+	            -1px 0 1px rgba(0,0,0,.2);
+}
+
 
 /*--------------------------------------------------------------
 ## SVGs Fallbacks
@@ -3287,12 +3250,17 @@ article.panel-placeholder {
 
 	.has-header-image.twentyseventeen-front-page .custom-header,
 	.has-header-image.home.blog .custom-header {
-		display: block;
 		min-height: 0;
 	}
 
 	.custom-header-image {
 		height: 165px;
+		position: relative;
+	}
+
+	.twentyseventeen-front-page.has-header-image .custom-header-image,
+	.home.blog.has-header-image .custom-header-image {
+		height: 0;
 		position: relative;
 	}
 
@@ -3303,13 +3271,6 @@ article.panel-placeholder {
 		position: absolute;
 		right: 0;
 		top: 0;
-	}
-
-	.twentyseventeen-front-page.has-header-image .custom-header-image,
-	.home.blog.has-header-image .custom-header-image {
-		height: 0;
-		padding-top: 66%;
-		position: relative;
 	}
 
 	.custom-logo-link {
@@ -3591,7 +3552,8 @@ article.panel-placeholder {
 		height: 1200px;
 		height: 100vh;
 		max-height: 100%;
-		padding: 10% 0;
+		overflow: hidden;
+		/* padding: 10% 0; */
 	}
 
 	.twentyseventeen-front-page.has-header-image .custom-header-image:before,
@@ -3937,11 +3899,6 @@ article.panel-placeholder {
 }
 
 @media screen and ( min-width: 55em ) {
-
-	.twentyseventeen-front-page.has-header-image .custom-header-image,
-	.home.blog.has-header-image .custom-header-image {
-		background-attachment: fixed;
-	}
 
 	.panel-image {
 		background-attachment: fixed;
