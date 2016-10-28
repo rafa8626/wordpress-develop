@@ -1630,14 +1630,15 @@ function get_editor_stylesheets() {
  * @return array Array of starter content.
  */
 function get_theme_starter_content() {
-	$config = get_theme_support( 'starter-content' );
-
-	if ( empty( $config ) ) {
-		return false;
+	$theme_support = get_theme_support( 'starter-content' );
+	if ( ! empty( $theme_support ) ) {
+		$config = $theme_support[0];
+	} else {
+		$config = array();
 	}
 
 	$core_content = array (
-		'sidebars_widgets' => array (
+		'widgets' => array(
 			'text_business_info' => array ( 'text', array (
 				'title' => __( 'Find Us' ),
 				'text' => join( '', array (
@@ -1656,11 +1657,47 @@ function get_theme_starter_content() {
 			) ),
 		),
 		'nav_menus' => array (
-			'link_yelp' => 'https://www.yelp.com',
-			'link_facebook' => 'https://www.facebook.com/wordpress',
-			'link_twitter' => 'https://twitter.com/wordpress',
-			'link_instagram' => 'https://www.instagram.com/explore/tags/wordcamp/',
-			'link_email' => 'mailto:wordpress@example.com',
+			'page_home' => array(
+				'type' => 'post_type',
+				'object' => 'page',
+				'object_id' => '{{home}}',
+			),
+			'page_about' => array(
+				'type' => 'post_type',
+				'object' => 'page',
+				'object_id' => '{{about-us}}',
+			),
+			'page_blog' => array(
+				'type' => 'post_type',
+				'object' => 'page',
+				'object_id' => '{{blog}}',
+			),
+			'page_contact' => array(
+				'type' => 'post_type',
+				'object' => 'page',
+				'object_id' => '{{contact-us}}',
+			),
+
+			'link_yelp' => array(
+				'title' => __( 'Yelp' ),
+				'url' => 'https://www.yelp.com',
+			),
+			'link_facebook' => array(
+				'title' => __( 'Facebook' ),
+				'url' => 'https://www.facebook.com/wordpress',
+			),
+			'link_twitter' => array(
+				'title' => __( 'Twitter' ),
+				'url' => 'https://twitter.com/wordpress',
+			),
+			'link_instagram' => array(
+				'title' => __( 'Instagram' ),
+				'url' => 'https://www.instagram.com/explore/tags/wordcamp/',
+			),
+			'link_email' => array(
+				'title' => __( 'Email' ),
+				'url' => 'mailto:wordpress@example.com',
+			),
 		),
 		'posts' => array(
 			'home' => array(
@@ -1697,18 +1734,16 @@ function get_theme_starter_content() {
 		switch( $type ) {
 			// Use options and theme_mods as-is
 			case 'options' :
-			case 'theme_modes' :
+			case 'theme_mods' :
 				$content[ $type ] = $config[ $type ];
 				break;
 
 			// Widgets are an extra level down due to groupings
-			case 'sidebars_widgets' :
-				foreach( $config[ $type ] as $group => $items ) {
-					foreach ( $items as $id => $item ) {
-						$id = $item[1];
+			case 'widgets' :
+				foreach ( $config[ $type ] as $group => $items ) {
+					foreach ( $items as $id ) {
 						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
-							$content[ $type ][ $group ][ $id ][] = $item[0];
-							$content[ $type ][ $group ][ $id ][] = $core_content[ $type ][ $id ];
+							$content[ $type ][ $group ][ $id ] = $core_content[ $type ][ $id ];
 						}
 					}
 				}
@@ -1716,16 +1751,16 @@ function get_theme_starter_content() {
 
 			// And nav menus are yet another level down 
 			case 'nav_menus' :
-				foreach( $config[ $type ] as $group => $args ) {
+				foreach ( $config[ $type ] as $group => $args2 ) {
 					// Menu groups need a name
 					if ( empty( $args['name'] ) ) {
-						$args['name'] = $group;
+						$args2['name'] = $group;
 					}
 
-					$content[ $type ][ $group ]['name'] = $args['name'];
+					$content[ $type ][ $group ]['name'] = $args2['name'];
 
 					// Do we need to check if this is empty?
-					foreach ( $args['items'] as $id ) {
+					foreach ( $args2['items'] as $id ) {
 						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
 							$content[ $type ][ $group ]['items'][ $id ] = $core_content[ $type ][ $id ];
 						}

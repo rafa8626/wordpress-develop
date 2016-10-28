@@ -530,7 +530,7 @@ final class WP_Customize_Manager {
 
 		// Import theme starter content for fresh installs when landing in the customizer and no existing changeset loaded.
 		if ( get_option( 'fresh_site' ) && 'customize.php' === $pagenow && ! $this->changeset_post_id() ) {
-			$this->import_theme_starter_content( get_theme_starter_content() );
+			add_action( 'after_setup_theme', array( $this, 'import_theme_starter_content' ), 100 );
 		}
 
 		$this->start_previewing_theme();
@@ -895,9 +895,13 @@ final class WP_Customize_Manager {
 	 * @since 4.7.0
 	 * @access public
 	 *
-	 * @param array $starter_content Theme starter content.
+	 * @param array $starter_content Starter content. Defaults to `get_theme_starter_content()`.
 	 */
-	function import_theme_starter_content( $starter_content ) {
+	function import_theme_starter_content( $starter_content = array() ) {
+		if ( empty( $starter_content ) ) {
+			$starter_content = get_theme_starter_content();
+		}
+
 		$sidebars_widgets = isset( $starter_content['widgets'] ) && ! empty( $this->widgets ) ? $starter_content['widgets'] : array();
 		$posts = isset( $starter_content['posts'] ) && ! empty( $this->nav_menus ) ? $starter_content['posts'] : array();
 		$options = isset( $starter_content['options'] ) ? $starter_content['options'] : array();
