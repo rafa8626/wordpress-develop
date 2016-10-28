@@ -5166,7 +5166,15 @@
 			});
 
 			// Set default states.
+			changesetStatus( api.settings.changeset.status );
 			saved( true );
+			if ( '' === changesetStatus() ) { // Handle case for loading starter content.
+				api.each( function( setting ) {
+					if ( setting._dirty ) {
+						saved( false );
+					}
+				} );
+			}
 			saving( false );
 			activated( api.settings.theme.active );
 			processing( 0 );
@@ -5175,7 +5183,6 @@
 			expandedSection( false );
 			previewerAlive( true );
 			editShortcutVisibility( 'initial' );
-			changesetStatus( api.settings.changeset.status );
 
 			api.bind( 'change', function() {
 				state('saved').set( false );
