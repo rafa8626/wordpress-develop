@@ -1875,14 +1875,14 @@ function get_theme_starter_content() {
 			case 'widgets' :
 				foreach ( $config[ $type ] as $group => $items ) {
 					foreach ( $items as $id ) {
-						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
+						if ( ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
 							$content[ $type ][ $group ][ $id ] = $core_content[ $type ][ $id ];
 						}
 					}
 				}
 				break;
 
-			// And nav menus are yet another level down 
+			// And nav menus are yet another level down
 			case 'nav_menus' :
 				foreach ( $config[ $type ] as $group => $args2 ) {
 					// Menu groups need a name
@@ -1894,7 +1894,7 @@ function get_theme_starter_content() {
 
 					// Do we need to check if this is empty?
 					foreach ( $args2['items'] as $id ) {
-						if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
+						if ( ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
 							$content[ $type ][ $group ]['items'][ $id ] = $core_content[ $type ][ $id ];
 						}
 					}
@@ -1905,7 +1905,7 @@ function get_theme_starter_content() {
 			// Everything else should map at the next level
 			default :
 				foreach( $config[ $type ] as $id ) {
-					if ( ! empty( $core_content[ $type ] && ! empty( $core_content[ $type ][ $id ] ) ) ) {
+					if ( ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
 						$content[ $type ][ $id ] = $core_content[ $type ][ $id ];
 					}
 				}

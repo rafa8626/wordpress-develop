@@ -1019,8 +1019,6 @@ final class WP_Customize_Manager {
 			}
 			$this->set_post_value( $name, $value );
 		}
-
-		// @todo do_action( 'customize_import_theme_starter_content', $starter_content, $this ); To support importing other kinds of settings???
 	}
 
 	/**
