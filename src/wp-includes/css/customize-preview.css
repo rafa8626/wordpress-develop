@@ -29,7 +29,7 @@
 }
 
 .customize-partial-edit-shortcut-click-target:active {
-	padding: 15px;
+	padding: 0;
 	border: 0;
 }
 
@@ -39,8 +39,8 @@
 	position: absolute;
 	left: -36px;
 	color: #fff;
-	width: 30px;
-	height: 30px;
+	min-width: 30px;
+	min-height: 30px;
 	font-size: 18px;
 	z-index: 5;
 	background-color: #0085ba;
@@ -54,7 +54,7 @@
 	justify-content: center;
 	align-items: center;
 	cursor: pointer;
-	padding: 15px;
+	padding: 0;
 	animation-fill-mode: both;
 	animation-duration: .4s;
 	opacity: 0;
@@ -63,6 +63,12 @@
 	             1px 0 1px #006799,
 	             0 1px 1px #006799,
 	             -1px 0 1px #006799;
+}
+
+.customize-partial-edit-shortcut-click-target svg {
+	fill: #fff;
+	min-width: 20px;
+	min-height: 20px;
 }
 
 .customize-partial-edit-shortcut-click-target:hover,
