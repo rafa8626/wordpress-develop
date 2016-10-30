@@ -355,33 +355,30 @@
 
 		// Render the individual items.
 		initList: function() {
-			var self = this,
-			itemTypes = [];
+			var self = this;
 
 			// Render the template for each item by type.
 			_.each( api.Menus.data.itemTypes, function( itemType ) {
 				self.pages[ itemType.type + ':' + itemType.object ] = 0;
-				itemTypes.push({
-					type: itemType.type,
-					object: itemType.object
-					});
 			} );
-			self.loadItems( itemTypes, self.pages.menu || 0 ); // @todo we need to combine these Ajax requests.
+			self.loadItems( api.Menus.data.itemTypes, self.pages.menu || 0 );
 		},
 
 		// Load available menu items.
 		loadItems: function( itemTypes, page ) {
-			var self = this, params, request, itemTemplate, availableMenuItemContainer = [];
+			var self = this, params, request, itemTemplate, availableMenuItemContainers = {};
 			itemTemplate = wp.template( 'available-menu-item' );
 			_.each( itemTypes, function( itemType, index ) {
-				var type = itemType.type,
-				object = itemType.object
+				var type, object, container;
+				type = itemType.type;
+				object = itemType.object;
 
 				if ( -1 === self.pages[ type + ':' + object ] ) {
-					itemTypes.splice(index)
+					itemTypes.splice( index );
 				} else {
-					availableMenuItemContainer[type + ':' + object] = $( '#available-menu-items-' + type + '-' + object );
-					availableMenuItemContainer[type + ':' + object].find( '.accordion-section-title' ).addClass( 'loading' );
+					container = $( '#available-menu-items-' + type + '-' + object );
+					container.find( '.accordion-section-title' ).addClass( 'loading' );
+					availableMenuItemContainers[ type + ':' + object ] = container;
 				}
 
 			} );
@@ -399,13 +396,14 @@
 				items = data.items;
 
 				_.each( items, function( item, name ){
-				var nameArr = name.split(':'),
-					type = nameArr[0],
-					object = nameArr[1]
+					var nameArr, type, object;
+					nameArr = name.split( ':' );
+					type = nameArr[0];
+					object = nameArr[1];
 
 					if ( 0 === items.length ) {
 						if ( 0 === self.pages[ type + ':' + object ] ) {
-							availableMenuItemContainer[type + ':' + object].find( '.accordion-section-title' )
+							availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-title' )
 								.addClass( 'cannot-expand' )
 								.removeClass( 'loading' )
 								.find( '.accordion-section-title > button' )
@@ -416,14 +414,12 @@
 					}
 					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
 					self.collection.add( item.models );
-					typeInner = availableMenuItemContainer[type + ':' + object].find( '.accordion-section-content' );
-					item.each(function( menuItem ) {
+					typeInner = availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-content' );
+					item.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
-					});
+					} );
 					self.pages[ type + ':' + object ] += 1;
-
-				})
-
+				});
 			});
 			request.fail(function( data ) {
 				if ( typeof console !== 'undefined' && console.error ) {
@@ -431,9 +427,9 @@
 				}
 			});
 			request.always(function() {
-				for (var key in availableMenuItemContainer ) {
-					availableMenuItemContainer[key].find( '.accordion-section-title' ).removeClass( 'loading' );
-				}
+				_.each( availableMenuItemContainers, function( container ) {
+					container.find( '.accordion-section-title' ).removeClass( 'loading' );
+				} );
 				self.loading = false;
 			});
 		},
