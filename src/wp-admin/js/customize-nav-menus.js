@@ -414,7 +414,7 @@
 					}
 					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
 					self.collection.add( item.models );
-					typeInner = availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-content' );
+					typeInner = availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-content .available-menu-items-list' );
 					item.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
 					} );
