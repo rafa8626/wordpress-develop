@@ -395,30 +395,27 @@
 				var items, typeInner;
 				items = data.items;
 
-				_.each( items, function( item, name ){
-					var nameArr, type, object;
-					nameArr = name.split( ':' );
-					type = nameArr[0];
-					object = nameArr[1];
-
+				_.each( items, function( item, name ) {
 					if ( 0 === items.length ) {
-						if ( 0 === self.pages[ type + ':' + object ] ) {
-							availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-title' )
+						if ( 0 === self.pages[ name ] ) {
+							availableMenuItemContainers[ name ].find( '.accordion-section-title' )
 								.addClass( 'cannot-expand' )
 								.removeClass( 'loading' )
 								.find( '.accordion-section-title > button' )
 								.prop( 'tabIndex', -1 );
 						}
-						self.pages[ type + ':' + object ] = -1;
+						self.pages[ name ] = -1;
 						return;
+					} else if ( ( 'post_type:page' === name ) && ( ! availableMenuItemContainers[ name ].hasClass( 'open' ) ) ) {
+						availableMenuItemContainers[ name ].find( '.accordion-section-title > button' ).click();
 					}
 					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
 					self.collection.add( item.models );
-					typeInner = availableMenuItemContainers[ type + ':' + object ].find( '.accordion-section-content .available-menu-items-list' );
+					typeInner = availableMenuItemContainers[ name ].find( '.available-menu-items-list' );
 					item.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
 					} );
-					self.pages[ type + ':' + object ] += 1;
+					self.pages[ name ] += 1;
 				});
 			});
 			request.fail(function( data ) {
