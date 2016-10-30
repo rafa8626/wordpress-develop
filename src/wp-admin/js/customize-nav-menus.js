@@ -386,7 +386,7 @@
 			params = {
 				'customize-menus-nonce': api.settings.nonce['customize-menus'],
 				'wp_customize': 'on',
-				'itemTypes': itemTypes,
+				'item_types': itemTypes,
 				'page': page
 			};
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );

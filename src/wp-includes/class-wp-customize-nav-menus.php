@@ -100,18 +100,18 @@ final class WP_Customize_Nav_Menus {
 			wp_die( -1 );
 		}
 
-		if ( empty( $_POST['itemTypes'] ) ) {
+		if ( empty( $_POST['item_types'] ) ) {
 			wp_send_json_error( 'nav_menus_missing_post_types_parameter' );
 		} else {
 			$all_items = [];
-			foreach ( $_POST['itemTypes'] as $itemType ) {
+			foreach ( $_POST['item_types'] as $item_types ) {
 
-				if ( empty( $itemType['type'] ) || empty( $itemType['object'] ) ) {
+				if ( empty( $item_types['type'] ) || empty( $item_types['object'] ) ) {
 					wp_send_json_error( 'nav_menus_missing_post_or_object_parameter' );
 				}
 
-				$type = sanitize_key( $itemType['type'] );
-				$object = sanitize_key( $itemType['object'] );
+				$type = sanitize_key( $item_types['type'] );
+				$object = sanitize_key( $item_types['object'] );
 
 				$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
 				$items = $this->load_available_items_query( $type, $object, $page );
@@ -119,7 +119,7 @@ final class WP_Customize_Nav_Menus {
 					wp_send_json_error( $items->get_error_code() );
 					wp_die( -1 );
 				}
-				$all_items[$itemType['type'] . ":" . $itemType['object']] = $items;
+				$all_items[ $item_types['type'] . ":" . $item_types['object'] ] = $items;
 			}
 			wp_send_json_success( array( 'items' => $all_items ) );
 		}
