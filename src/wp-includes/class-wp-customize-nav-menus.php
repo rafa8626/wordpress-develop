@@ -100,19 +100,28 @@ final class WP_Customize_Nav_Menus {
 			wp_die( -1 );
 		}
 
-		if ( empty( $_POST['type'] ) || empty( $_POST['object'] ) ) {
-			wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
-		}
-
-		$type = sanitize_key( $_POST['type'] );
-		$object = sanitize_key( $_POST['object'] );
-		$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
-		$items = $this->load_available_items_query( $type, $object, $page );
-
-		if ( is_wp_error( $items ) ) {
-			wp_send_json_error( $items->get_error_code() );
+		if ( empty( $_POST['itemTypes'] ) ) {
+			wp_send_json_error( 'nav_menus_missing_post_types_parameter' );
 		} else {
-			wp_send_json_success( array( 'items' => $items ) );
+			$all_items = [];
+			foreach ( $_POST['itemTypes'] as $itemType ) {
+
+				if ( empty( $itemType['type'] ) || empty( $itemType['object'] ) ) {
+					wp_send_json_error( 'nav_menus_missing_post_or_object_parameter' );
+				}
+
+				$type = sanitize_key( $itemType['type'] );
+				$object = sanitize_key( $itemType['object'] );
+
+				$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
+				$items = $this->load_available_items_query( $type, $object, $page );
+				if ( is_wp_error( $items ) ) {
+					wp_send_json_error( $items->get_error_code() );
+					wp_die( -1 );
+				}
+				$all_items[$itemType['type'] . ":" . $itemType['object']] = $items;
+			}
+			wp_send_json_success( array( 'items' => $all_items ) );
 		}
 	}
 

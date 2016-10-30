@@ -355,58 +355,75 @@
 
 		// Render the individual items.
 		initList: function() {
-			var self = this;
+			var self = this,
+			itemTypes = [];
 
 			// Render the template for each item by type.
 			_.each( api.Menus.data.itemTypes, function( itemType ) {
 				self.pages[ itemType.type + ':' + itemType.object ] = 0;
-				self.loadItems( itemType.type, itemType.object ); // @todo we need to combine these Ajax requests.
+				itemTypes.push({
+					type: itemType.type,
+					object: itemType.object
+					});
 			} );
+			self.loadItems( itemTypes, self.pages.menu || 0 ); // @todo we need to combine these Ajax requests.
 		},
 
 		// Load available menu items.
-		loadItems: function( type, object ) {
-			var self = this, params, request, itemTemplate, availableMenuItemContainer;
+		loadItems: function( itemTypes, page ) {
+			var self = this, params, request, itemTemplate, availableMenuItemContainer = [];
 			itemTemplate = wp.template( 'available-menu-item' );
+			_.each( itemTypes, function( itemType, index ) {
+				var type = itemType.type,
+				object = itemType.object
 
-			if ( -1 === self.pages[ type + ':' + object ] ) {
-				return;
-			}
-			availableMenuItemContainer = $( '#available-menu-items-' + type + '-' + object );
-			availableMenuItemContainer.find( '.accordion-section-title' ).addClass( 'loading' );
+				if ( -1 === self.pages[ type + ':' + object ] ) {
+					itemTypes.splice(index)
+				} else {
+					availableMenuItemContainer[type + ':' + object] = $( '#available-menu-items-' + type + '-' + object );
+					availableMenuItemContainer[type + ':' + object].find( '.accordion-section-title' ).addClass( 'loading' );
+				}
+
+			} );
 			self.loading = true;
 			params = {
 				'customize-menus-nonce': api.settings.nonce['customize-menus'],
 				'wp_customize': 'on',
-				'type': type,
-				'object': object,
-				'page': self.pages[ type + ':' + object ]
+				'itemTypes': itemTypes,
+				'page': page
 			};
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
 			request.done(function( data ) {
 				var items, typeInner;
 				items = data.items;
-				if ( 0 === items.length ) {
-					if ( 0 === self.pages[ type + ':' + object ] ) {
-						availableMenuItemContainer
-							.addClass( 'cannot-expand' )
-							.removeClass( 'loading' )
-							.find( '.accordion-section-title > button' )
-							.prop( 'tabIndex', -1 );
+
+				_.each( items, function( item, name ){
+				var nameArr = name.split(':'),
+					type = nameArr[0],
+					object = nameArr[1]
+
+					if ( 0 === items.length ) {
+						if ( 0 === self.pages[ type + ':' + object ] ) {
+							availableMenuItemContainer[type + ':' + object].find( '.accordion-section-title' )
+								.addClass( 'cannot-expand' )
+								.removeClass( 'loading' )
+								.find( '.accordion-section-title > button' )
+								.prop( 'tabIndex', -1 );
+						}
+						self.pages[ type + ':' + object ] = -1;
+						return;
 					}
-					self.pages[ type + ':' + object ] = -1;
-					return;
-				} else if ( ( 'page' === object ) && ( ! availableMenuItemContainer.hasClass( 'open' ) ) ) {
-					availableMenuItemContainer.find( '.accordion-section-title > button' ).click();
-				}
-				items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
-				self.collection.add( items.models );
-				typeInner = availableMenuItemContainer.find( '.available-menu-items-list' );
-				items.each(function( menuItem ) {
-					typeInner.append( itemTemplate( menuItem.attributes ) );
-				});
-				self.pages[ type + ':' + object ] += 1;
+					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
+					self.collection.add( item.models );
+					typeInner = availableMenuItemContainer[type + ':' + object].find( '.accordion-section-content' );
+					item.each(function( menuItem ) {
+						typeInner.append( itemTemplate( menuItem.attributes ) );
+					});
+					self.pages[ type + ':' + object ] += 1;
+
+				})
+
 			});
 			request.fail(function( data ) {
 				if ( typeof console !== 'undefined' && console.error ) {
@@ -414,7 +431,9 @@
 				}
 			});
 			request.always(function() {
-				availableMenuItemContainer.find( '.accordion-section-title' ).removeClass( 'loading' );
+				for (var key in availableMenuItemContainer ) {
+					availableMenuItemContainer[key].find( '.accordion-section-title' ).removeClass( 'loading' );
+				}
 				self.loading = false;
 			});
 		},
