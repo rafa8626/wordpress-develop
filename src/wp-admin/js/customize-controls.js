@@ -5413,7 +5413,7 @@
 
 			parentContainer.on( 'customize:sidebar:updateLayout', function() {
 				if ( activeHeader && activeHeader.element.hasClass( 'is-sticky' ) ) {
-					activeHeader.element.css( 'top', parseInt( parentContainer.css( 'top' ), 10 ) + 'px' );
+					activeHeader.element.css( 'top', parentContainer.css( 'top' ) );
 				}
 			} );
 
@@ -5424,20 +5424,20 @@
 						.removeClass( 'is-sticky' )
 						.addClass( 'maybe-sticky is-in-view' )
 						.css( 'top', parentContainer.scrollTop() + 'px' );
-				} else if ( headerElement.hasClass( 'is-in-view' ) ) {
-					headerElement.css( 'top', parentContainer.scrollTop() + 'px' );
 				}
 			};
 
 			// Reset position of the sticky header.
 			resetStickyHeader = function( headerElement, headerParent ) {
-				headerElement
-					.removeClass( 'maybe-sticky is-in-view' )
-					.css( {
-						width: '',
-						top: ''
-					} );
-				headerParent.css( 'padding-top', '' );
+				if ( headerElement.hasClass( 'is-in-view' ) ) {
+					headerElement
+						.removeClass( 'maybe-sticky is-in-view' )
+						.css( {
+							width: '',
+							top:   ''
+						} );
+					headerParent.css( 'padding-top', '' );
+				}
 			};
 
 			// Get header height.
