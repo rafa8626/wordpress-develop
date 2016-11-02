@@ -38,6 +38,7 @@ else
 
 $profile_help = '<p>' . __('Your profile contains information about you (your &#8220;account&#8221;) as well as some personal options related to using WordPress.') . '</p>' .
 	'<p>' . __('You can change your password, turn on keyboard shortcuts, change the color scheme of your WordPress administration screens, and turn off the WYSIWYG (Visual) editor, among other things. You can hide the Toolbar (formerly called the Admin Bar) from the front end of your site, however it cannot be disabled on the admin screens.') . '</p>' .
+	'<p>' . __( 'You can select the language you wish to use while using the WordPress administration screen without affecting the language site visitors see.' ) . '</p>' .
 	'<p>' . __('Your username cannot be changed, but you can use other fields to enter your real name or a nickname, and change which name to display on your posts.') . '</p>' .
 	'<p>' . __( 'You can log out of other devices, such as your phone or a public computer, by clicking the Log Out Everywhere Else button.' ) . '</p>' .
 	'<p>' . __('Required fields are indicated; the rest are optional. Profile information will only be displayed if your theme is set up to do so.') . '</p>' .
@@ -275,13 +276,14 @@ $languages = get_available_languages();
 if ( $languages ) : ?>
 <tr class="user-language-wrap">
 	<th scope="row">
-		<label for="site_language"><?php _e( 'Site Language' ); ?></label>
+		<?php /* translators: The user language selection field label */ ?>
+		<label for="locale"><?php _e( 'Language' ); ?></label>
 	</th>
 	<td>
 		<?php
-		$user_locale = get_user_option( 'locale', $profileuser->ID );
+		$user_locale = $profileuser->locale;
 
-		if ( 'en_US' === $user_locale ) { // en_US
+		if ( 'en_US' === $user_locale ) {
 			$user_locale = false;
 		} elseif ( ! in_array( $user_locale, $languages, true ) ) {
 			$user_locale = get_locale();

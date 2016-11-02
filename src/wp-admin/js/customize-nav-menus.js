@@ -101,7 +101,6 @@
 
 		request.done( function( response ) {
 			if ( response.post_id ) {
-				deferred.resolve( response );
 				api.Menus.insertedAutoDrafts.push( response.post_id );
 				api( 'nav_menus_created_posts' ).set( _.clone( api.Menus.insertedAutoDrafts ) );
 
@@ -121,6 +120,7 @@
 						}
 					} );
 				}
+				deferred.resolve( response );
 			}
 		} );
 
@@ -577,7 +577,7 @@
 				post_type: itemObject
 			} );
 			promise.done( function( data ) {
-				var availableItem, $content, itemTemplate;
+				var availableItem, $content, itemElement;
 				availableItem = new api.Menus.AvailableItemModel( {
 					'id': 'post-' + data.post_id, // Used for available menu item Backbone models.
 					'title': itemName.val(),
@@ -594,8 +594,9 @@
 				// Add the new item to the list of available items.
 				api.Menus.availableMenuItemsPanel.collection.add( availableItem );
 				$content = container.find( '.available-menu-items-list' );
-				itemTemplate = wp.template( 'available-menu-item' );
-				$content.prepend( itemTemplate( availableItem.attributes ) );
+				itemElement = $( wp.template( 'available-menu-item' )( availableItem.attributes ) );
+				itemElement.find( '.menu-item-handle:first' ).addClass( 'item-added' );
+				$content.prepend( itemElement );
 				$content.scrollTop();
 
 				// Reset the create content form.
