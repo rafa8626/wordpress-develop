@@ -360,28 +360,59 @@
 			// Render the template for each item by type.
 			_.each( api.Menus.data.itemTypes, function( itemType ) {
 				self.pages[ itemType.type + ':' + itemType.object ] = 0;
-				self.loadItems( itemType.type, itemType.object ); // @todo we need to combine these Ajax requests.
 			} );
+			self.loadItems( api.Menus.data.itemTypes );
 		},
 
 		// Load available menu items.
 		loadItems: function( type, object ) {
-			var self = this, params, request, itemTemplate, availableMenuItemContainer;
+			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {};
 			itemTemplate = wp.template( 'available-menu-item' );
 
-			if ( -1 === self.pages[ type + ':' + object ] ) {
-				return;
+			if ( type instanceof Array ) {
+
+ 				_.each( type, function( itemType, index ) {
+ 					var type, object, container;
+ 					type = itemType.type;
+ 					object = itemType.object;
+
+ 					if ( -1 === self.pages[ type + ':' + object ] ) {
+ 						itemTypes.splice( index );
+ 					}  else {
+ 						var container = $( '#available-menu-items-' + type + '-' + object );
+ 						container.find( '.accordion-section-title' ).addClass( 'loading' );
+ 						availableMenuItemContainers[ type + ':' + object ] = container;
+ 					}
+
+ 				} );
+
+ 				requestParams = {
+ 					'item_types': type
+ 				};
+
+ 			} else {
+
+ 			 	 if ( -1 === self.pages[ type + ':' + object ] ) {
+ 					return;
+ 				}
+
+ 				var container = $( '#available-menu-items-' + type + '-' + object );
+ 				container.find( '.accordion-section-title' ).addClass( 'loading' );
+ 				availableMenuItemContainers[ type + ':' + object ] = container;
+
+ 				requestParams = {
+ 					'type': type,
+ 					'object': object,
+ 					'page': self.pages[ type + ':' + object ]
+ 				};
 			}
-			availableMenuItemContainer = $( '#available-menu-items-' + type + '-' + object );
-			availableMenuItemContainer.find( '.accordion-section-title' ).addClass( 'loading' );
+
 			self.loading = true;
 			params = {
 				'customize-menus-nonce': api.settings.nonce['customize-menus'],
-				'wp_customize': 'on',
-				'type': type,
-				'object': object,
-				'page': self.pages[ type + ':' + object ]
+				'wp_customize': 'on'
 			};
+			_.extend( params, requestParams )
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
 			request.done(function( data ) {
