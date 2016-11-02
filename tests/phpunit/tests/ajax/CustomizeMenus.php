@@ -174,8 +174,8 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 			// Testing empty obj_type.
 			array(
 				array(
-					'type'     => '',
-					'object'   => 'post',
+					'type'     => 'post_type',
+					'object'   => '',
 				),
 				array(
 					'success'  => false,
