@@ -226,11 +226,11 @@ jQuery( function( $ ) {
 		wp.customize.notifications.render();
 		items = container.find( 'li' );
 		equal( items.length, 2 );
-		equal( items.first().data( 'code' ), 'mycode-1' );
-		equal( items.last().data( 'code' ), 'mycode-2' );
+		equal( items.first().data( 'code' ), 'mycode-2' );
+		equal( items.last().data( 'code' ), 'mycode-1' );
 
-		equal( items.first().find( '.notice-dismiss' ).length, 0 );
-		equal( items.last().find( '.notice-dismiss' ).length, 1 );
+		equal( items.first().find( '.notice-dismiss' ).length, 1 );
+		equal( items.last().find( '.notice-dismiss' ).length, 0 );
 
 		wp.customize.notifications.remove( 'mycode-2' );
 		wp.customize.notifications.render();

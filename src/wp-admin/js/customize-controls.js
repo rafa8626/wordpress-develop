@@ -5227,21 +5227,39 @@
 				}
 
 				var scrollTop = parentContainer.scrollTop(),
-					isScrollingUp = ( lastScrollTop ) ? scrollTop <= lastScrollTop : true;
+					scrollDirection;
 
+				if ( ! lastScrollTop ) {
+					scrollDirection = 1;
+				} else {
+					if ( scrollTop === lastScrollTop ) {
+						scrollDirection = 0;
+					} else if ( scrollTop > lastScrollTop ) {
+						scrollDirection = 1;
+					} else {
+						scrollDirection = -1;
+					}
+				}
 				lastScrollTop = scrollTop;
-				positionStickyHeader( activeHeader, scrollTop, isScrollingUp );
+				positionStickyHeader( activeHeader, scrollTop, scrollDirection );
 			}, 8 ) );
+
+			parentContainer.on( 'customize:sidebar:updateLayout', function() {
+				if ( activeHeader && activeHeader.element.hasClass( 'is-sticky' ) ) {
+					activeHeader.element.css( 'top', parseInt( parentContainer.css( 'top' ), 10 ) + 'px' );
+				}
+			} );
 
 			// Release header element if it is sticky.
 			releaseStickyHeader = function( headerElement ) {
-				if ( ! headerElement.hasClass( 'is-sticky' ) ) {
-					return;
+				if ( headerElement.hasClass( 'is-sticky' ) ) {
+					headerElement
+						.removeClass( 'is-sticky' )
+						.addClass( 'maybe-sticky is-in-view' )
+						.css( 'top', parentContainer.scrollTop() + 'px' );
+				} else if ( headerElement.hasClass( 'is-in-view' ) ) {
+					headerElement.css( 'top', parentContainer.scrollTop() + 'px' );
 				}
-				headerElement
-					.removeClass( 'is-sticky' )
-					.addClass( 'maybe-sticky is-in-view' )
-					.css( 'top', parentContainer.scrollTop() + 'px' );
 			};
 
 			// Reset position of the sticky header.
@@ -5266,14 +5284,20 @@
 			};
 
 			// Reposition header on throttled `scroll` event.
-			positionStickyHeader = function( header, scrollTop, isScrollingUp ) {
+			positionStickyHeader = function( header, scrollTop, scrollDirection ) {
+				if ( 0 === scrollDirection ) {
+					return;
+				}
+
 				var headerElement = header.element,
 					headerParent = header.parent,
 					headerHeight = header.height,
 					headerTop = parseInt( headerElement.css( 'top' ), 10 ),
 					maybeSticky = headerElement.hasClass( 'maybe-sticky' ),
 					isSticky = headerElement.hasClass( 'is-sticky' ),
-					isInView = headerElement.hasClass( 'is-in-view' );
+					isInView = headerElement.hasClass( 'is-in-view' ),
+					isScrollingUp = ( -1 === scrollDirection );
+
 
 				// When scrolling down, gradually hide sticky header.
 				if ( ! isScrollingUp ) {
@@ -5316,7 +5340,7 @@
 						headerElement
 							.addClass( 'is-sticky' )
 							.css( {
-								top:   '',
+								top:   parseInt( parentContainer.css( 'top' ), 10 ) + 'px',
 								width: headerParent.outerWidth() + 'px'
 							} );
 					}

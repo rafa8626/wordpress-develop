@@ -794,7 +794,7 @@ window.wp = window.wp || {};
 	/**
 	 * A collection of observable notifications.
 	 *
-	 * @since 4.7.0
+	 * @since 4.8.0
 	 * @class
 	 * @augments wp.customize.Values
 	 */
@@ -803,7 +803,7 @@ window.wp = window.wp || {};
 		/**
 		 * The default constructor for items of the collection.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @type {object}
 		 */
 		defaultConstructor: api.Notification,
@@ -811,7 +811,7 @@ window.wp = window.wp || {};
 		/**
 		 * The default template name for the notifications area.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @type {string}
 		 */
 		defaultTemplateName: 'customize-notifications',
@@ -819,7 +819,7 @@ window.wp = window.wp || {};
 		/**
 		 * The notifications area parent container selector.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @type {string}
 		 */
 		parentSelector: '#widgets-right',
@@ -827,7 +827,7 @@ window.wp = window.wp || {};
 		/**
 		 * Initialize notifications area.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @constructor
 		 * @param options
 		 * @this {wp.customize.notifications}
@@ -859,7 +859,7 @@ window.wp = window.wp || {};
 		/**
 		 * Find and return notifications area container element.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @returns {jQuery} Container jQuery element or an empty DIV.
 		 * @this {wp.customize.notifications}
 		 */
@@ -887,11 +887,13 @@ window.wp = window.wp || {};
 		/**
 		 * Remove notifications area from the DOM.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @this {wp.customize.notifications}
 		 */
 		destroy: function() {
-			this.container.next().css( 'margin-top', '' );
+			this.container.next()
+				.css( 'top', '' )
+				.trigger( 'customize:sidebar:updateLayout' );
 			this.container.remove();
 			this.container = null;
 		},
@@ -899,18 +901,19 @@ window.wp = window.wp || {};
 		/**
 		 * Render notifications area.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @this {wp.customize.notifications}
 		 */
 		render: function() {
 			var self = this,
 				container = self.getContainer(),
+				sidebar = container.next(),
 				template = wp.template( self.defaultTemplateName ),
-				notifications, marginTop;
+				notifications, containerHeight, containerInitialTop;
 
 			notifications = [];
 			self.each( function( notification ) {
-				notifications.push( notification );
+				notifications.unshift( notification );
 			} );
 
 			if ( _.isEmpty( notifications ) ) {
@@ -919,15 +922,19 @@ window.wp = window.wp || {};
 				container.empty().append( $.trim(
 					template( { notifications: notifications } )
 				) );
-				marginTop = container.height() + parseInt( container.css( 'margin-bottom' ), 10 );
-				container.next().css( 'margin-top', marginTop + 'px' );
+				sidebar.css( 'top', '' );
+				containerHeight = container.outerHeight() + 1;
+				containerInitialTop = parseInt( sidebar.css( 'top' ), 10 );
+				sidebar
+					.css( 'top', containerInitialTop + containerHeight + 'px' )
+					.trigger( 'customize:sidebar:updateLayout' );
 			}
 		},
 
 		/**
 		 * Remove notification from the collection on user request.
 		 *
-		 * @since 4.7.0
+		 * @since 4.8.0
 		 * @param {Event} e
 		 * @this {wp.customize.notifications}
 		 */
