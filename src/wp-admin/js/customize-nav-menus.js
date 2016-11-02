@@ -418,26 +418,28 @@
 			request.done(function( data ) {
 				var items, typeInner;
 				items = data.items;
-				if ( 0 === items.length ) {
-					if ( 0 === self.pages[ type + ':' + object ] ) {
-						availableMenuItemContainer
-							.addClass( 'cannot-expand' )
-							.removeClass( 'loading' )
-							.find( '.accordion-section-title > button' )
-							.prop( 'tabIndex', -1 );
-					}
-					self.pages[ type + ':' + object ] = -1;
-					return;
-				} else if ( ( 'page' === object ) && ( ! availableMenuItemContainer.hasClass( 'open' ) ) ) {
-					availableMenuItemContainer.find( '.accordion-section-title > button' ).click();
-				}
-				items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
-				self.collection.add( items.models );
-				typeInner = availableMenuItemContainer.find( '.available-menu-items-list' );
-				items.each(function( menuItem ) {
-					typeInner.append( itemTemplate( menuItem.attributes ) );
-				});
-				self.pages[ type + ':' + object ] += 1;
+				_.each( items, function( item, name ) {
+						if ( 0 === item.length ) {
+							if ( 0 === self.pages[ name ] ) {
+								availableMenuItemContainers[ name ].find( '.accordion-section-title' )
+									.addClass( 'cannot-expand' )
+									.removeClass( 'loading' )
+									.find( '.accordion-section-title > button' )
+									.prop( 'tabIndex', -1 );
+							}
+							self.pages[ name ] = -1;
+							return;
+						} else if ( ( 'post_type:page' === name ) && ( ! availableMenuItemContainers[ name ].hasClass( 'open' ) ) ) {
+							availableMenuItemContainers[ name ].find( '.accordion-section-title > button' ).click();
+						}
+						item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
+						self.collection.add( item.models );
+						typeInner = availableMenuItemContainers[ name ].find( '.available-menu-items-list' );
+						item.each( function( menuItem ) {
+							typeInner.append( itemTemplate( menuItem.attributes ) );
+						} );
+						self.pages[ name ] += 1;
+					});
 			});
 			request.fail(function( data ) {
 				if ( typeof console !== 'undefined' && console.error ) {
@@ -445,7 +447,9 @@
 				}
 			});
 			request.always(function() {
-				availableMenuItemContainer.find( '.accordion-section-title' ).removeClass( 'loading' );
+				_.each( availableMenuItemContainers, function( container ) {
+					container.find( '.accordion-section-title' ).removeClass( 'loading' );
+				} );
 				self.loading = false;
 			});
 		},
