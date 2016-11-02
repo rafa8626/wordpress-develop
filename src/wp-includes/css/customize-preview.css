@@ -12,7 +12,7 @@
 }
 
 /* Make shortcut buttons essentially invisible */
-.widget button.customize-partial-edit-shortcut,
+.widget .customize-partial-edit-shortcut,
 .customize-partial-edit-shortcut {
 	position: relative;
 	float: left;
@@ -28,14 +28,15 @@
 	z-index: 5;
 }
 
-.customize-partial-edit-shortcut-click-target:active {
+.widget .customize-partial-edit-shortcut button:active,
+.customize-partial-edit-shortcut button:active {
 	padding: 0;
 	border: 0;
 }
 
 /* Styles for the actual shortcut */
-.widget button.customize-partial-edit-shortcut-click-target,
-.customize-partial-edit-shortcut-click-target {
+.widget .customize-partial-edit-shortcut button,
+.customize-partial-edit-shortcut button {
 	position: absolute;
 	left: -36px;
 	color: #fff;
@@ -65,33 +66,33 @@
 	             -1px 0 1px #006799;
 }
 
-.customize-partial-edit-shortcut-click-target svg {
+.customize-partial-edit-shortcut button svg {
 	fill: #fff;
 	min-width: 20px;
 	min-height: 20px;
 }
 
-.customize-partial-edit-shortcut-click-target:hover,
-.customize-partial-edit-shortcut-click-target:focus {
+.customize-partial-edit-shortcut button:hover,
+.customize-partial-edit-shortcut button:focus {
     background: #008ec2; /* matches primary buttons */
 	border-color: #191e23; /* provides visual focus style with 4.5 contrast against background color */
 }
 
-body.customize-partial-edit-shortcuts-shown .customize-partial-edit-shortcut-click-target {
+body.customize-partial-edit-shortcuts-shown .customize-partial-edit-shortcut button {
 	animation-name: customize-partial-edit-shortcut-bounce-appear;
 	pointer-events: auto;
 }
-body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut-click-target {
+body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut button {
 	animation-name: customize-partial-edit-shortcut-bounce-disappear;
 	pointer-events: none;
 }
 
-.page-sidebar-collapsed .customize-partial-edit-shortcut-click-target ,
-.customize-partial-edit-shortcut-hidden .customize-partial-edit-shortcut-click-target {
+.page-sidebar-collapsed .customize-partial-edit-shortcut button,
+.customize-partial-edit-shortcut-hidden .customize-partial-edit-shortcut button {
 	visibility: hidden;
 }
 
-.customize-partial-edit-shortcut-left-margin .customize-partial-edit-shortcut-click-target {
+.customize-partial-edit-shortcut-left-margin .customize-partial-edit-shortcut button {
 	left: 0;
 }
 
@@ -150,7 +151,7 @@ body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut-cl
 }
 
 @media screen and (max-width:800px) {
-	.customize-partial-edit-shortcut-click-target {
+	.customize-partial-edit-shortcut button {
 		left: -18px; /* Assume there will be less of a margin available on smaller screens */
 	}
 }
