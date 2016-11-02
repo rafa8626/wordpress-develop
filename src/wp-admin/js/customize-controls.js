@@ -5509,7 +5509,7 @@
 						headerElement
 							.addClass( 'is-sticky' )
 							.css( {
-								top:   parseInt( parentContainer.css( 'top' ), 10 ) + 'px',
+								top:   parentContainer.css( 'top' ),
 								width: headerParent.outerWidth() + 'px'
 							} );
 					}
