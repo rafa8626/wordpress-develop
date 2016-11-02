@@ -5420,12 +5420,13 @@
 
 			// Release header element if it is sticky.
 			releaseStickyHeader = function( headerElement ) {
-				if ( headerElement.hasClass( 'is-sticky' ) ) {
-					headerElement
-						.removeClass( 'is-sticky' )
-						.addClass( 'maybe-sticky is-in-view' )
-						.css( 'top', parentContainer.scrollTop() + 'px' );
+				if ( ! headerElement.hasClass( 'is-sticky' ) ) {
+					return;
 				}
+				headerElement
+					.removeClass( 'is-sticky' )
+					.addClass( 'maybe-sticky is-in-view' )
+					.css( 'top', parentContainer.scrollTop() + 'px' );
 			};
 
 			// Reset position of the sticky header.
