@@ -835,7 +835,7 @@ window.wp = window.wp || {};
 		 */
 		initialize: function( options ) {
 			var self = this,
-				debouncedRenderNotification;
+				debouncedRenderNotifications;
 
 			$.extend( this, options || {} );
 			api.Values.prototype.initialize.call( self, null, options );

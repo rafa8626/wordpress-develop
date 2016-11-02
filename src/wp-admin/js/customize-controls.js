@@ -5411,6 +5411,7 @@
 				positionStickyHeader( activeHeader, scrollTop, scrollDirection );
 			}, 8 ) );
 
+			// Update header position on sidebar layout change.
 			parentContainer.on( 'customize:sidebar:updateLayout', function() {
 				if ( activeHeader && activeHeader.element.hasClass( 'is-sticky' ) ) {
 					activeHeader.element.css( 'top', parentContainer.css( 'top' ) );
