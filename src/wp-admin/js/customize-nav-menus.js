@@ -361,62 +361,85 @@
 			_.each( api.Menus.data.itemTypes, function( itemType ) {
 				self.pages[ itemType.type + ':' + itemType.object ] = 0;
 			} );
-			self.loadItems( api.Menus.data.itemTypes, self.pages.menu || 0 );
+			self.loadItems( api.Menus.data.itemTypes );
 		},
 
 		// Load available menu items.
-		loadItems: function( itemTypes, page ) {
-			var self = this, params, request, itemTemplate, availableMenuItemContainers = {};
+		loadItems: function( type, object ) {
+			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {};
 			itemTemplate = wp.template( 'available-menu-item' );
-			_.each( itemTypes, function( itemType, index ) {
-				var type, object, container;
-				type = itemType.type;
-				object = itemType.object;
 
-				if ( -1 === self.pages[ type + ':' + object ] ) {
-					itemTypes.splice( index );
-				} else {
-					container = $( '#available-menu-items-' + type + '-' + object );
-					container.find( '.accordion-section-title' ).addClass( 'loading' );
-					availableMenuItemContainers[ type + ':' + object ] = container;
-				}
+			if ( type instanceof Array ) {
 
-			} );
+ 				_.each( type, function( itemType, index ) {
+ 					var type, object, container;
+ 					type = itemType.type;
+ 					object = itemType.object;
+
+ 					if ( -1 === self.pages[ type + ':' + object ] ) {
+ 						type.splice( index );
+ 					}  else {
+ 						container = $( '#available-menu-items-' + type + '-' + object );
+ 						container.find( '.accordion-section-title' ).addClass( 'loading' );
+ 						availableMenuItemContainers[ type + ':' + object ] = container;
+ 					}
+
+ 				} );
+
+ 				requestParams = {
+ 					'item_types': type
+ 				};
+
+ 			} else {
+
+ 			 	 if ( -1 === self.pages[ type + ':' + object ] ) {
+ 					return;
+ 				}
+
+ 				var container = $( '#available-menu-items-' + type + '-' + object );
+ 				container.find( '.accordion-section-title' ).addClass( 'loading' );
+ 				availableMenuItemContainers[ type + ':' + object ] = container;
+
+ 				requestParams = {
+ 					'type': type,
+ 					'object': object,
+ 					'page': self.pages[ type + ':' + object ]
+ 				};
+			}
+
 			self.loading = true;
 			params = {
 				'customize-menus-nonce': api.settings.nonce['customize-menus'],
-				'wp_customize': 'on',
-				'item_types': itemTypes,
-				'page': page
+				'wp_customize': 'on'
 			};
+			_.extend( params, requestParams );
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
 			request.done(function( data ) {
 				var items, typeInner;
 				items = data.items;
-
 				_.each( items, function( item, name ) {
-					if ( 0 === items.length ) {
-						if ( 0 === self.pages[ name ] ) {
-							availableMenuItemContainers[ name ].find( '.accordion-section-title' )
-								.addClass( 'cannot-expand' )
-								.removeClass( 'loading' )
-								.find( '.accordion-section-title > button' )
-								.prop( 'tabIndex', -1 );
+						if ( 0 === item.length ) {
+							if ( 0 === self.pages[ name ] ) {
+								availableMenuItemContainers[ name ].find( '.accordion-section-title' )
+									.addClass( 'cannot-expand' )
+									.removeClass( 'loading' )
+									.find( '.accordion-section-title > button' )
+									.prop( 'tabIndex', -1 );
+							}
+							self.pages[ name ] = -1;
+							return;
+						} else if ( ( 'post_type:page' === name ) && ( ! availableMenuItemContainers[ name ].hasClass( 'open' ) ) ) {
+							availableMenuItemContainers[ name ].find( '.accordion-section-title > button' ).click();
 						}
-						self.pages[ name ] = -1;
-						return;
-					} else if ( ( 'post_type:page' === name ) && ( ! availableMenuItemContainers[ name ].hasClass( 'open' ) ) ) {
-						availableMenuItemContainers[ name ].find( '.accordion-section-title > button' ).click();
-					}
-					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
-					self.collection.add( item.models );
-					typeInner = availableMenuItemContainers[ name ].find( '.available-menu-items-list' );
-					item.each( function( menuItem ) {
-						typeInner.append( itemTemplate( menuItem.attributes ) );
-					} );
-					self.pages[ name ] += 1;
-				});
+						item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
+						self.collection.add( item.models );
+						typeInner = availableMenuItemContainers[ name ].find( '.available-menu-items-list' );
+						item.each( function( menuItem ) {
+							typeInner.append( itemTemplate( menuItem.attributes ) );
+						} );
+						self.pages[ name ] += 1;
+					});
 			});
 			request.fail(function( data ) {
 				if ( typeof console !== 'undefined' && console.error ) {

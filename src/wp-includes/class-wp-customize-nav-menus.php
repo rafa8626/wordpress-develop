@@ -100,29 +100,38 @@ final class WP_Customize_Nav_Menus {
 			wp_die( -1 );
 		}
 
-		if ( empty( $_POST['item_types'] ) ) {
-			wp_send_json_error( 'nav_menus_missing_post_types_parameter' );
+		$all_items = array();
+
+		if ( isset( $_POST['item_types'] ) ) {
+			$item_types = $_POST['item_types'];
+		} else if ( isset( $_POST['type'] ) && isset( $_POST['object'] ) ) {
+			$type = sanitize_key( $_POST['type'] );
+			$object = sanitize_key( $_POST['object'] );
+			$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
+			$item_types[0] = array(
+				'type' => $type,
+				'object' => $object,
+				'page' => $page
+			);
 		} else {
-			$all_items = [];
-			foreach ( $_POST['item_types'] as $item_types ) {
-
-				if ( empty( $item_types['type'] ) || empty( $item_types['object'] ) ) {
-					wp_send_json_error( 'nav_menus_missing_post_or_object_parameter' );
-				}
-
-				$type = sanitize_key( $item_types['type'] );
-				$object = sanitize_key( $item_types['object'] );
-
-				$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
-				$items = $this->load_available_items_query( $type, $object, $page );
-				if ( is_wp_error( $items ) ) {
-					wp_send_json_error( $items->get_error_code() );
-					wp_die( -1 );
-				}
-				$all_items[ $item_types['type'] . ":" . $item_types['object'] ] = $items;
-			}
-			wp_send_json_success( array( 'items' => $all_items ) );
+			wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
 		}
+
+		foreach ( $item_types as $item_type ) {
+			if ( empty( $item_type['type'] ) || empty( $item_type['object'] ) ) {
+				wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
+			}
+			$type = sanitize_key( $item_type['type'] );
+			$object = sanitize_key( $item_type['object'] );
+			$page = empty( $item_type['page'] ) ? 0 : absint( $item_type['page'] );
+			$items = $this->load_available_items_query( $type, $object, $page );
+			if ( is_wp_error( $items ) ) {
+				wp_send_json_error( $items->get_error_code() );
+			}
+			$all_items[ $item_type['type'] . ":" . $item_type['object'] ] = $items;
+		}
+
+		wp_send_json_success( array( 'items' => $all_items ) );
 	}
 
 	/**
