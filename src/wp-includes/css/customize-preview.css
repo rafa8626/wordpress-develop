@@ -14,7 +14,7 @@
 /* Make shortcut buttons essentially invisible */
 .widget .customize-partial-edit-shortcut,
 .customize-partial-edit-shortcut {
-	position: relative;
+	position: absolute;
 	float: left;
 	width: 1px; /* required to have a size to be focusable in Safari */
 	height: 1px;
