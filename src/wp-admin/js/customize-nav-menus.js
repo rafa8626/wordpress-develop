@@ -377,9 +377,9 @@
  					object = itemType.object;
 
  					if ( -1 === self.pages[ type + ':' + object ] ) {
- 						itemTypes.splice( index );
+ 						type.splice( index );
  					}  else {
- 						var container = $( '#available-menu-items-' + type + '-' + object );
+ 						container = $( '#available-menu-items-' + type + '-' + object );
  						container.find( '.accordion-section-title' ).addClass( 'loading' );
  						availableMenuItemContainers[ type + ':' + object ] = container;
  					}
@@ -412,7 +412,7 @@
 				'customize-menus-nonce': api.settings.nonce['customize-menus'],
 				'wp_customize': 'on'
 			};
-			_.extend( params, requestParams )
+			_.extend( params, requestParams );
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
 			request.done(function( data ) {
