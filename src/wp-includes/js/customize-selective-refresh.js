@@ -138,12 +138,13 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 		 * @returns {void}
 		 */
 		positionEditShortcut: function( placement, $editShortcut ) {
-			var $placementContainer = $( placement.container );
+			var $placementContainer = $( placement.container ), $editButton;
 			$placementContainer.prepend( $editShortcut );
 			if ( ! $placementContainer.is( ':visible' ) || 'none' === $placementContainer.css( 'display' ) ) {
 				$editShortcut.addClass( 'customize-partial-edit-shortcut-hidden' );
 			}
-			$editShortcut.toggleClass( 'customize-partial-edit-shortcut-left-margin', $editShortcut.offset().left < 1 );
+			$editButton = $editShortcut.find( 'button' );
+			$editShortcut.toggleClass( 'customize-partial-edit-shortcut-left-margin', $editButton.offset().left < 2 );
 		},
 
 		/**

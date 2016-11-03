@@ -97,7 +97,7 @@ body.customize-partial-edit-shortcuts-hidden .customize-partial-edit-shortcut bu
 	visibility: hidden;
 }
 
-.customize-partial-edit-shortcut-left-margin .customize-partial-edit-shortcut button {
+.customize-partial-edit-shortcut-left-margin.customize-partial-edit-shortcut button {
 	left: 0;
 }
 
