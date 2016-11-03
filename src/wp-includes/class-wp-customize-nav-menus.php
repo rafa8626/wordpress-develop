@@ -104,7 +104,7 @@ final class WP_Customize_Nav_Menus {
 
 		if ( isset( $_POST['item_types'] ) ) {
 			$item_types = $_POST['item_types'];
-		} else {
+		} else if ( isset( $_POST['type'] ) && isset( $_POST['object'] ) ) {
 			$type = sanitize_key( $_POST['type'] );
 			$object = sanitize_key( $_POST['object'] );
 			$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
@@ -113,6 +113,8 @@ final class WP_Customize_Nav_Menus {
 				'object' => $object,
 				'page' => $page
 			);
+		} else {
+			wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
 		}
 
 		foreach ( $item_types as $item_type ) {
