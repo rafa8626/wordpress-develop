@@ -117,7 +117,7 @@ final class WP_Customize_Nav_Menus {
 
 		foreach ( $item_types as $item_type ) {
 			if ( empty( $item_type['type'] ) || empty( $item_type['object'] ) ) {
-				wp_send_json_error( 'nav_menus_item_type_missing_post_or_object_parameter' );
+				wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
 			}
 			$type = sanitize_key( $item_type['type'] );
 			$object = sanitize_key( $item_type['object'] );
