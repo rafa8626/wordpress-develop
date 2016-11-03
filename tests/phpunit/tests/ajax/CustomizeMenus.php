@@ -348,10 +348,10 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 		// Get the results.
 		$response = json_decode( $this->_last_response, true );
 
-		$this->assertNotEmpty( $response['data']['items'] );
+		$this->assertNotEmpty( current( $response['data']['items'] ) );
 
 		// Get the second index to avoid the home page edge case.
-		$test_item = current($response['data']['items'])[1];
+		$test_item = current( $response['data']['items'] )[1];
 
 		foreach ( $expected_keys as $key ) {
 			$this->assertArrayHasKey( $key, $test_item );
@@ -360,7 +360,7 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 
 		// Special test for the home page.
 		if ( 'page' === $test_item['object'] ) {
-			$home = current($response['data']['items'])[0];
+			$home = current( $response['data']['items'] )[0];
 			foreach ( $expected_keys as $key ) {
 				if ( 'object_id' !== $key ) {
 					$this->assertArrayHasKey( $key, $home );
