@@ -85,6 +85,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 				'permission_callback' => array( $this, 'delete_item_permissions_check' ),
 				'args'                => array(
 					'force'    => array(
+						'type'        => 'boolean',
 						'default'     => false,
 						'description' => __( 'Required to be true, as resource does not support trashing.' ),
 					),
@@ -95,10 +96,31 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		) );
 
 		register_rest_route( $this->namespace, '/' . $this->rest_base . '/me', array(
-			'methods'  => WP_REST_Server::READABLE,
-			'callback' => array( $this, 'get_current_item' ),
-			'args'     => array(
-				'context' => array(),
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_current_item' ),
+				'args'                => array(
+					'context'          => array(),
+				),
+			),
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_current_item' ),
+				'permission_callback' => array( $this, 'update_current_item_permissions_check' ),
+				'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::EDITABLE ),
+			),
+			array(
+				'methods'             => WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'delete_current_item' ),
+				'permission_callback' => array( $this, 'delete_current_item_permissions_check' ),
+				'args'                => array(
+					'force'    => array(
+						'type'        => 'boolean',
+						'default'     => false,
+						'description' => __( 'Required to be true, as resource does not support trashing.' ),
+					),
+					'reassign' => array(),
+				),
 			),
 			'schema' => array( $this, 'get_public_item_schema' ),
 		));
@@ -343,8 +365,6 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		$response = $this->prepare_item_for_response( $user, $request );
 		$response = rest_ensure_response( $response );
 
-		$response->header( 'Location', rest_url( sprintf( '%s/%s/%d', $this->namespace, $this->rest_base, $current_user_id ) ) );
-		$response->set_status( 302 );
 
 		return $response;
 	}
@@ -570,6 +590,36 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 	}
 
 	/**
+	 * Checks if a given request has access to update the current user.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return true|WP_Error True if the request has access to update the item, WP_Error object otherwise.
+	 */
+	public function update_current_item_permissions_check( $request ) {
+		$request['id'] = get_current_user_id();
+
+		return $this->update_item_permissions_check( $request );
+	}
+
+	/**
+	 * Updates the current user.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	function update_current_item( $request ) {
+		$request['id'] = get_current_user_id();
+
+		return $this->update_item( $request );
+	}
+
+	/**
 	 * Checks if a given request has access delete a user.
 	 *
 	 * @since 4.7.0
@@ -605,7 +655,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 
 		// We don't support trashing for this type, error out.
 		if ( ! $force ) {
-			return new WP_Error( 'rest_trash_not_supported', __( 'Users do not support trashing.' ), array( 'status' => 501 ) );
+			return new WP_Error( 'rest_trash_not_supported', __( 'Users do not support trashing. Set force=true to delete.' ), array( 'status' => 501 ) );
 		}
 
 		$user = get_userdata( $id );
@@ -622,7 +672,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 
 		$request->set_param( 'context', 'edit' );
 
-		$response = $this->prepare_item_for_response( $user, $request );
+		$previous = $this->prepare_item_for_response( $user, $request );
 
 		/** Include admin user functions to get access to wp_delete_user() */
 		require_once ABSPATH . 'wp-admin/includes/user.php';
@@ -632,6 +682,9 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		if ( ! $result ) {
 			return new WP_Error( 'rest_cannot_delete', __( 'The resource cannot be deleted.' ), array( 'status' => 500 ) );
 		}
+
+		$response = new WP_REST_Response();
+		$response->set_data( array( 'deleted' => true, 'previous' => $previous->get_data() ) );
 
 		/**
 		 * Fires immediately after a user is deleted via the REST API.
@@ -645,6 +698,36 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		do_action( 'rest_delete_user', $user, $response, $request );
 
 		return $response;
+	}
+
+	/**
+	 * Checks if a given request has access to delete the current user.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return true|WP_Error True if the request has access to delete the item, WP_Error object otherwise.
+	 */
+	public function delete_current_item_permissions_check( $request ) {
+		$request['id'] = get_current_user_id();
+
+		return $this->delete_item_permissions_check( $request );
+	}
+
+	/**
+	 * Deletes the current user.
+	 *
+	 * @since 4.7.0
+	 * @access public
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	function delete_current_item( $request ) {
+		$request['id'] = get_current_user_id();
+
+		return $this->delete_item( $request );
 	}
 
 	/**
@@ -696,6 +779,10 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 
 		if ( ! empty( $schema['properties']['link'] ) ) {
 			$data['link'] = get_author_posts_url( $user->ID, $user->user_nicename );
+		}
+
+		if ( ! empty( $schema['properties']['locale'] ) ) {
+			$data['locale'] = get_user_locale( $user );
 		}
 
 		if ( ! empty( $schema['properties']['nickname'] ) ) {
@@ -835,6 +922,10 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 			$prepared_user->user_url = $request['url'];
 		}
 
+		if ( isset( $request['locale'] ) && ! empty( $schema['properties']['locale'] ) ) {
+			$prepared_user->locale = $request['locale'];
+		}
+
 		// setting roles will be handled outside of this function.
 		if ( isset( $request['roles'] ) ) {
 			$prepared_user->role = false;
@@ -909,7 +1000,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 	 */
 	public function get_item_schema() {
 		$schema = array(
-			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'$schema'    => 'http://json-schema.org/schema#',
 			'title'      => 'user',
 			'type'       => 'object',
 			'properties' => array(
@@ -980,6 +1071,12 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 					'context'     => array( 'embed', 'view', 'edit' ),
 					'readonly'    => true,
 				),
+				'locale'    => array(
+					'description' => __( 'Locale for the resource.' ),
+					'type'        => 'string',
+					'enum'        => array_merge( array( 'en_US' ), get_available_languages() ),
+					'context'     => array( 'edit' ),
+				),
 				'nickname'    => array(
 					'description' => __( 'The nickname for the resource.' ),
 					'type'        => 'string',
@@ -1010,9 +1107,6 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 						'type'    => 'string',
 					),
 					'context'     => array( 'edit' ),
-					'arg_options' => array(
-						'sanitize_callback' => 'wp_parse_slug_list',
-					),
 				),
 				'password'        => array(
 					'description' => __( 'Password for the resource (never included).' ),
@@ -1079,31 +1173,31 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		$query_params['exclude'] = array(
 			'description'        => __( 'Ensure result set excludes specific ids.' ),
 			'type'               => 'array',
+			'items'              => array(
+				'type'           => 'integer',
+			),
 			'default'            => array(),
-			'sanitize_callback'  => 'wp_parse_id_list',
 		);
 
 		$query_params['include'] = array(
 			'description'        => __( 'Limit result set to specific ids.' ),
 			'type'               => 'array',
+			'items'              => array(
+				'type'           => 'integer',
+			),
 			'default'            => array(),
-			'sanitize_callback'  => 'wp_parse_id_list',
 		);
 
 		$query_params['offset'] = array(
 			'description'        => __( 'Offset the result set by a specific number of items.' ),
 			'type'               => 'integer',
-			'sanitize_callback'  => 'absint',
-			'validate_callback'  => 'rest_validate_request_arg',
 		);
 
 		$query_params['order'] = array(
 			'default'            => 'asc',
 			'description'        => __( 'Order sort attribute ascending or descending.' ),
 			'enum'               => array( 'asc', 'desc' ),
-			'sanitize_callback'  => 'sanitize_key',
 			'type'               => 'string',
-			'validate_callback'  => 'rest_validate_request_arg',
 		);
 
 		$query_params['orderby'] = array(
@@ -1118,21 +1212,20 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 				'email',
 				'url',
 			),
-			'sanitize_callback'  => 'sanitize_key',
 			'type'               => 'string',
-			'validate_callback'  => 'rest_validate_request_arg',
 		);
 
 		$query_params['slug']    = array(
 			'description'        => __( 'Limit result set to resources with a specific slug.' ),
 			'type'               => 'string',
-			'validate_callback'  => 'rest_validate_request_arg',
 		);
 
 		$query_params['roles']   = array(
 			'description'        => __( 'Limit result set to resources matching at least one specific role provided. Accepts csv list or single role.' ),
 			'type'               => 'array',
-			'sanitize_callback'  => 'wp_parse_slug_list',
+			'items'              => array(
+				'type'           => 'string',
+			),
 		);
 
 		return $query_params;

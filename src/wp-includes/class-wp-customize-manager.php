@@ -928,8 +928,12 @@ final class WP_Customize_Manager {
 
 					// Find the max widget number for this type.
 					$widget_numbers = array_keys( $settings );
-					$widget_numbers[] = 1;
-					$max_widget_numbers[ $id_base ] = call_user_func_array( 'max', $widget_numbers );
+					if ( count( $widget_numbers ) > 0 ) {
+						$widget_numbers[] = 1;
+						$max_widget_numbers[ $id_base ] = call_user_func_array( 'max', $widget_numbers );
+					} else {
+						$max_widget_numbers[ $id_base ] = 1;
+					}
 				}
 				$max_widget_numbers[ $id_base ] += 1;
 
@@ -1228,6 +1232,7 @@ final class WP_Customize_Manager {
 		wp_enqueue_script( 'customize-preview' );
 		add_action( 'wp_head', array( $this, 'customize_preview_loading_style' ) );
 		add_action( 'wp_footer', array( $this, 'customize_preview_settings' ), 20 );
+		add_filter( 'get_edit_post_link', '__return_empty_string' );
 
 		/**
 		 * Fires once the Customizer preview has initialized and JavaScript
@@ -3435,12 +3440,11 @@ final class WP_Customize_Manager {
 		) );
 
 		$this->add_setting( new WP_Customize_Filter_Setting( $this, 'header_image', array(
-			'default'        => get_theme_support( 'custom-header', 'default-image' ),
+			'default'        => sprintf( get_theme_support( 'custom-header', 'default-image' ), get_template_directory_uri(), get_stylesheet_directory_uri() ),
 			'theme_supports' => 'custom-header',
 		) ) );
 
 		$this->add_setting( new WP_Customize_Header_Image_Setting( $this, 'header_image_data', array(
-			// 'default'        => get_theme_support( 'custom-header', 'default-image' ),
 			'theme_supports' => 'custom-header',
 		) ) );
 
@@ -3455,7 +3459,7 @@ final class WP_Customize_Manager {
 		$this->add_control( 'external_header_video', array(
 			'theme_supports' => array( 'custom-header', 'video' ),
 			'type'           => 'url',
-			'description'    => __( 'Or, enter a YouTube or Vimeo URL:' ),
+			'description'    => __( 'Or, enter a YouTube URL:' ),
 			'section'        => 'header_image',
 		) );
 
