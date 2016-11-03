@@ -100,7 +100,7 @@ final class WP_Customize_Nav_Menus {
 			wp_die( -1 );
 		}
 
-		$all_items = [];
+		$all_items = array();
 
 		if ( isset( $_POST['item_types'] ) ) {
 			$item_types = $_POST['item_types'];

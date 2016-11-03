@@ -351,7 +351,8 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 		$this->assertNotEmpty( current( $response['data']['items'] ) );
 
 		// Get the second index to avoid the home page edge case.
-		$test_item = current( $response['data']['items'] )[1];
+		$first_prop = current( $response['data']['items'] );
+		$test_item = $first_prop[1];
 
 		foreach ( $expected_keys as $key ) {
 			$this->assertArrayHasKey( $key, $test_item );
@@ -360,7 +361,8 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 
 		// Special test for the home page.
 		if ( 'page' === $test_item['object'] ) {
-			$home = current( $response['data']['items'] )[0];
+			$first_prop = current( $response['data']['items'] );
+			$home = $first_prop[0];
 			foreach ( $expected_keys as $key ) {
 				if ( 'object_id' !== $key ) {
 					$this->assertArrayHasKey( $key, $home );
