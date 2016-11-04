@@ -371,40 +371,40 @@
 
 			if ( type instanceof Array ) {
 
- 				_.each( type, function( itemType, index ) {
- 					var type, object, container;
- 					type = itemType.type;
- 					object = itemType.object;
+				_.each( type, function( itemType, index ) {
+					var type, object, container;
+					type = itemType.type;
+					object = itemType.object;
 
- 					if ( -1 === self.pages[ type + ':' + object ] ) {
- 						type.splice( index );
- 					}  else {
- 						container = $( '#available-menu-items-' + type + '-' + object );
- 						container.find( '.accordion-section-title' ).addClass( 'loading' );
- 						availableMenuItemContainers[ type + ':' + object ] = container;
- 					}
+					if ( -1 === self.pages[ type + ':' + object ] ) {
+						type.splice( index );
+					}  else {
+						container = $( '#available-menu-items-' + type + '-' + object );
+						container.find( '.accordion-section-title' ).addClass( 'loading' );
+						availableMenuItemContainers[ type + ':' + object ] = container;
+					}
 
- 				} );
+				} );
 
- 				requestParams = {
- 					'item_types': type
- 				};
+				requestParams = {
+					'item_types': type
+				};
 
- 			} else {
+			} else {
 
- 			 	 if ( -1 === self.pages[ type + ':' + object ] ) {
- 					return;
- 				}
+				if ( -1 === self.pages[ type + ':' + object ] ) {
+					return;
+				}
 
- 				var container = $( '#available-menu-items-' + type + '-' + object );
- 				container.find( '.accordion-section-title' ).addClass( 'loading' );
- 				availableMenuItemContainers[ type + ':' + object ] = container;
+				var container = $( '#available-menu-items-' + type + '-' + object );
+				container.find( '.accordion-section-title' ).addClass( 'loading' );
+				availableMenuItemContainers[ type + ':' + object ] = container;
 
- 				requestParams = {
- 					'type': type,
- 					'object': object,
- 					'page': self.pages[ type + ':' + object ]
- 				};
+				requestParams = {
+					'type': type,
+					'object': object,
+					'page': self.pages[ type + ':' + object ]
+				};
 			}
 
 			self.loading = true;
