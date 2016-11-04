@@ -438,6 +438,7 @@ window.wp = window.wp || {};
 
 			delete this._value[ id ];
 			delete this._deferreds[ id ];
+			this.trigger( 'removed', value );
 		},
 
 		/**

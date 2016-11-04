@@ -2,7 +2,7 @@
 
 jQuery( function( $ ) {
 	var FooSuperClass, BarSubClass, foo, bar, ConstructorTestClass, newConstructor, constructorTest, $mockElement, mockString,
-	firstInitialValue, firstValueInstance, wasCallbackFired, mockValueCallback;
+	firstInitialValue, firstValueInstance, valuesInstance, wasCallbackFired, mockValueCallback;
 
 	module( 'Customize Base: Class' );
 
@@ -157,6 +157,42 @@ jQuery( function( $ ) {
 		firstValueInstance.bind( mockValueCallback );
 		firstValueInstance.set( 'newValue' );
 		ok( wasCallbackFired );
+	});
+
+	module( 'Customize Base: Values Class' );
+
+	valuesInstance = new wp.customize.Values();
+
+	test( 'Correct events are triggered when adding to or removing from Values collection' , function() {
+		var hasFooOnAdd = false,
+			hasFooOnRemove = false,
+			hasFooOnRemoved = true,
+			valuePassedToAdd = false,
+			valuePassedToRemove = false,
+			valuePassedToRemoved = false,
+			fooValue = new wp.customize.Value( 'foo' );
+
+		valuesInstance.bind( 'add', function( value ) {
+			hasFooOnAdd = valuesInstance.has( 'foo' );
+			valuePassedToAdd = value;
+		} );
+		valuesInstance.add( 'foo', fooValue );
+		ok( hasFooOnAdd );
+		equal( valuePassedToAdd.get(), fooValue.get() );
+
+		valuesInstance.bind( 'remove', function( value ) {
+			hasFooOnRemove = valuesInstance.has( 'foo' );
+			valuePassedToRemove = value;
+		} );
+		valuesInstance.bind( 'removed', function( value ) {
+			hasFooOnRemoved = valuesInstance.has( 'foo' );
+			valuePassedToRemoved = value;
+		} );
+		valuesInstance.remove( 'foo' );
+		ok( hasFooOnRemove );
+		equal( valuePassedToRemove.get(), fooValue.get() );
+		ok( ! hasFooOnRemoved );
+		equal( valuePassedToRemoved.get(), fooValue.get() );
 	});
 
 	module( 'Customize Base: Notification' );
