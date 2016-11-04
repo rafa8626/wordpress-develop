@@ -235,7 +235,9 @@
 							self.doSearch( self.pages.search );
 						}
 					} else {
-						self.loadItems( type, object );
+						self.loadItems( [
+							{ type: type, object: object }
+						] );
 					}
 				}
 			});
@@ -364,48 +366,50 @@
 			self.loadItems( api.Menus.data.itemTypes );
 		},
 
-		// Load available menu items.
-		loadItems: function( type, object ) {
-			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {}, container;
+		/**
+		 * Load available nav menu items.
+		 *
+		 * @since 4.3.0
+		 * @since 4.7.0 Changed function signature to take list of item types instead of single type/object.
+		 * @access private
+		 *
+		 * @param {Array.<object>} itemTypes List of objects containing type and key.
+		 * @param {string} deprecated Formerly the object parameter.
+		 * @returns {void}
+		 */
+		loadItems: function( itemTypes, deprecated ) {
+			var self = this, _itemTypes, requestItemTypes = [], params, request, requestParams, itemTemplate, availableMenuItemContainers = {};
 			itemTemplate = wp.template( 'available-menu-item' );
 
-			if ( _.isArray( type ) ) {
-
-				_.each( type, function( itemType, index ) {
-					var type, object, container;
-					type = itemType.type;
-					object = itemType.object;
-
-					if ( -1 === self.pages[ type + ':' + object ] ) {
-						type.splice( index );
-					}  else {
-						container = $( '#available-menu-items-' + type + '-' + object );
-						container.find( '.accordion-section-title' ).addClass( 'loading' );
-						availableMenuItemContainers[ type + ':' + object ] = container;
-					}
-
-				} );
-
-				requestParams = {
-					'item_types': type
-				};
-
+			if ( _.isString( itemTypes ) && _.isString( deprecated ) ) {
+				_itemTypes = [ { type: itemTypes, object: deprecated } ];
 			} else {
-
-				if ( -1 === self.pages[ type + ':' + object ] ) {
-					return;
-				}
-
-				container = $( '#available-menu-items-' + type + '-' + object );
-				container.find( '.accordion-section-title' ).addClass( 'loading' );
-				availableMenuItemContainers[ type + ':' + object ] = container;
-
-				requestParams = {
-					'type': type,
-					'object': object,
-					'page': self.pages[ type + ':' + object ]
-				};
+				_itemTypes = itemTypes;
 			}
+
+			_.each( _itemTypes, function( itemType ) {
+				var container, name = itemType.type + ':' + itemType.object;
+				if ( -1 === self.pages[ name ] ) {
+					return; // Skip types for which there are no more results.
+				}
+				container = $( '#available-menu-items-' + itemType.type + '-' + itemType.object );
+				container.find( '.accordion-section-title' ).addClass( 'loading' );
+				availableMenuItemContainers[ name ] = container;
+
+				requestItemTypes.push( {
+					object: itemType.object,
+					type: itemType.type,
+					page: self.pages[ name ]
+				} );
+			} );
+
+			if ( 0 === requestItemTypes.length ) {
+				return;
+			}
+
+			requestParams = {
+				'item_types': requestItemTypes
+			};
 
 			self.loading = true;
 			params = {
@@ -416,10 +420,9 @@
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
 			request.done(function( data ) {
-				var items, typeInner;
-				items = data.items;
-				_.each( items, function( item, name ) {
-					if ( 0 === item.length ) {
+				var typeInner;
+				_.each( data.items, function( typeItems, name ) {
+					if ( 0 === typeItems.length ) {
 						if ( 0 === self.pages[ name ] ) {
 							availableMenuItemContainers[ name ].find( '.accordion-section-title' )
 								.addClass( 'cannot-expand' )
@@ -432,10 +435,10 @@
 					} else if ( ( 'post_type:page' === name ) && ( ! availableMenuItemContainers[ name ].hasClass( 'open' ) ) ) {
 						availableMenuItemContainers[ name ].find( '.accordion-section-title > button' ).click();
 					}
-					item = new api.Menus.AvailableItemCollection( item ); // @todo Why is this collection created and then thrown away?
-					self.collection.add( item.models );
+					typeItems = new api.Menus.AvailableItemCollection( typeItems ); // @todo Why is this collection created and then thrown away?
+					self.collection.add( typeItems.models );
 					typeInner = availableMenuItemContainers[ name ].find( '.available-menu-items-list' );
-					item.each( function( menuItem ) {
+					typeItems.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
 					} );
 					self.pages[ name ] += 1;
