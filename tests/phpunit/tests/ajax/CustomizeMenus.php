@@ -193,7 +193,7 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 					'data'     => 'nav_menus_missing_type_or_object_parameter',
 				),
 			),
-			//Testing empty type of a bulk request
+			// Testing empty type of a bulk request.
 			array(
 				array(
 					'item_types' => array(
@@ -204,7 +204,7 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 						array(
 							'type'     => 'post_type',
 							'object'   => '',
-						)
+						),
 					),
 				),
 				array(
@@ -295,7 +295,7 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 				),
 				true,
 			),
-			//Testing a bulk request
+			// Testing a bulk request.
 			array(
 				array(
 					'item_types' => array(
@@ -306,7 +306,7 @@ class Tests_Ajax_CustomizeMenus extends WP_Ajax_UnitTestCase {
 						array(
 							'type'     => 'post_type',
 							'object'   => 'page',
-						)
+						),
 					),
 				),
 				true,

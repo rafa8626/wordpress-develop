@@ -102,16 +102,17 @@ final class WP_Customize_Nav_Menus {
 
 		$all_items = array();
 
+		$item_types = array();
 		if ( isset( $_POST['item_types'] ) ) {
 			$item_types = $_POST['item_types'];
-		} else if ( isset( $_POST['type'] ) && isset( $_POST['object'] ) ) {
+		} elseif ( isset( $_POST['type'] ) && isset( $_POST['object'] ) ) {
 			$type = sanitize_key( $_POST['type'] );
 			$object = sanitize_key( $_POST['object'] );
 			$page = empty( $_POST['page'] ) ? 0 : absint( $_POST['page'] );
 			$item_types[0] = array(
 				'type' => $type,
 				'object' => $object,
-				'page' => $page
+				'page' => $page,
 			);
 		} else {
 			wp_send_json_error( 'nav_menus_missing_type_or_object_parameter' );
@@ -128,7 +129,7 @@ final class WP_Customize_Nav_Menus {
 			if ( is_wp_error( $items ) ) {
 				wp_send_json_error( $items->get_error_code() );
 			}
-			$all_items[ $item_type['type'] . ":" . $item_type['object'] ] = $items;
+			$all_items[ $item_type['type'] . ':' . $item_type['object'] ] = $items;
 		}
 
 		wp_send_json_success( array( 'items' => $all_items ) );
