@@ -366,7 +366,7 @@
 
 		// Load available menu items.
 		loadItems: function( type, object ) {
-			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {};
+			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {}, container;
 			itemTemplate = wp.template( 'available-menu-item' );
 
 			if ( type instanceof Array ) {
@@ -396,7 +396,7 @@
 					return;
 				}
 
-				var container = $( '#available-menu-items-' + type + '-' + object );
+				container = $( '#available-menu-items-' + type + '-' + object );
 				container.find( '.accordion-section-title' ).addClass( 'loading' );
 				availableMenuItemContainers[ type + ':' + object ] = container;
 
