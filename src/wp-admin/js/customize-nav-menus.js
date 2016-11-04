@@ -369,7 +369,7 @@
 			var self = this, params, request, requestParams, itemTemplate, availableMenuItemContainers = {}, container;
 			itemTemplate = wp.template( 'available-menu-item' );
 
-			if ( type instanceof Array ) {
+			if ( _.isArray( type ) ) {
 
 				_.each( type, function( itemType, index ) {
 					var type, object, container;
