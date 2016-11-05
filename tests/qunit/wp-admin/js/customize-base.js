@@ -170,8 +170,10 @@ jQuery( function( $ ) {
 			valuePassedToAdd = false,
 			valuePassedToRemove = false,
 			valuePassedToRemoved = false,
+			wasEventFiredOnRemoval = false,
 			fooValue = new wp.customize.Value( 'foo' );
 
+		// Test events when adding new value.
 		valuesInstance.bind( 'add', function( value ) {
 			hasFooOnAdd = valuesInstance.has( 'foo' );
 			valuePassedToAdd = value;
@@ -180,19 +182,27 @@ jQuery( function( $ ) {
 		ok( hasFooOnAdd );
 		equal( valuePassedToAdd.get(), fooValue.get() );
 
+		// Test events when removing the value.
 		valuesInstance.bind( 'remove', function( value ) {
 			hasFooOnRemove = valuesInstance.has( 'foo' );
 			valuePassedToRemove = value;
+			wasEventFiredOnRemoval = true;
 		} );
 		valuesInstance.bind( 'removed', function( value ) {
 			hasFooOnRemoved = valuesInstance.has( 'foo' );
 			valuePassedToRemoved = value;
+			wasEventFiredOnRemoval = true;
 		} );
 		valuesInstance.remove( 'foo' );
 		ok( hasFooOnRemove );
 		equal( valuePassedToRemove.get(), fooValue.get() );
 		ok( ! hasFooOnRemoved );
 		equal( valuePassedToRemoved.get(), fooValue.get() );
+
+		// Confirm no events are fired when nonexistent value is removed.
+		wasEventFiredOnRemoval = false;
+		valuesInstance.remove( 'bar' );
+		ok( ! wasEventFiredOnRemoval );
 	});
 
 	module( 'Customize Base: Notification' );
