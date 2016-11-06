@@ -1827,6 +1827,7 @@ final class WP_Customize_Manager {
 	 *     @type string $status   Post status. Optional. If supplied, the save will be transactional and a post revision will be allowed.
 	 *     @type string $title    Post title. Optional.
 	 *     @type string $date_gmt Date in GMT. Optional.
+	 *     @type int    $user_id  ID for user who is saving the changeset. Optional, defaults to the current user ID.
 	 * }
 	 *
 	 * @return array|WP_Error Returns array on success and WP_Error with array data on error.
@@ -1839,6 +1840,7 @@ final class WP_Customize_Manager {
 				'title' => null,
 				'data' => array(),
 				'date_gmt' => null,
+				'user_id' => get_current_user_id(),
 			),
 			$args
 		);
@@ -1943,7 +1945,10 @@ final class WP_Customize_Manager {
 				$data[ $changeset_setting_id ] = array_merge(
 					$data[ $changeset_setting_id ],
 					$setting_params,
-					array( 'type' => $setting->type )
+					array(
+						'type' => $setting->type,
+						'user_id' => $args['user_id'],
+					)
 				);
 			}
 		}
@@ -2164,6 +2169,15 @@ final class WP_Customize_Manager {
 		 */
 		do_action( 'customize_save', $this );
 
+//		$setting_user_ids = wp_list_pluck( $this->_changeset_data, 'user_id' );
+		$setting_user_ids = array();
+		foreach ( $this->_changeset_data as $raw_setting_id => $setting_params ) {
+			// @todo Account for $raw_setting_id having stylesheet prefix.
+			if ( isset( $setting_params['user_id'] ) ) {
+				$setting_user_ids[ $raw_setting_id ] = ;$setting_params['user_id'];
+			}
+		}
+
 		/*
 		 * Ensure that all settings will allow themselves to be saved. Note that
 		 * this is safe because the setting would have checked the capability
@@ -2173,18 +2187,28 @@ final class WP_Customize_Manager {
 		$original_setting_capabilities = array();
 		foreach ( $changeset_setting_ids as $setting_id ) {
 			$setting = $this->get_setting( $setting_id );
-			if ( $setting ) {
+			if ( $setting && ! isset( $setting_user_ids[ $setting_id ] ) ) {
 				$original_setting_capabilities[ $setting->id ] = $setting->capability;
 				$setting->capability = 'exist';
 			}
 		}
 
+		$original_user_id = get_current_user_id();
 		foreach ( $changeset_setting_ids as $setting_id ) {
 			$setting = $this->get_setting( $setting_id );
 			if ( $setting ) {
+
+				// Set the current user to match the user who pushed the value into the changeset.
+				if ( isset( $setting_user_ids[ $setting_id ] ) ) {
+					wp_set_current_user( $setting_user_ids[ $setting_id ] );
+				} else {
+					wp_set_current_user( $original_user_id );
+				}
+
 				$setting->save();
 			}
 		}
+		wp_set_current_user( $original_user_id );
 
 		// Update the stashed theme mod settings, removing the active theme's stashed settings, if activated.
 		if ( did_action( 'switch_theme' ) ) {
