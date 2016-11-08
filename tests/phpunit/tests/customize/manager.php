@@ -802,33 +802,65 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertTrue( user_can( self::$admin_user_id, 'unfiltered_html' ) );
 		$this->assertFalse( user_can( self::$subscriber_user_id, 'unfiltered_html' ) );
 		wp_set_current_user( 0 );
-		$setting_args = array(
-			'type' => 'option',
-			'capability' => 'exist',
-			'sanitize_callback' => array( $this, 'filter_sanitize_scratchpad' ),
-		);
+		add_action( 'customize_register', array( $this, 'register_scratchpad_setting' ) );
 
 		// Attempt scratchpad with user who has unfiltered_html.
+		update_option( 'scratchpad', '' );
 		$wp_customize = new WP_Customize_Manager();
-		$wp_customize->add_setting( 'scratchpad', $setting_args );
+		do_action( 'customize_register', $wp_customize );
 		$wp_customize->set_post_value( 'scratchpad', 'Unfiltered<script>evil</script>' );
 		$wp_customize->save_changeset_post( array(
 			'status' => 'auto-draft',
 			'user_id' => self::$admin_user_id,
 		) );
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $wp_customize->changeset_uuid() ) );
+		do_action( 'customize_register', $wp_customize );
 		$wp_customize->save_changeset_post( array( 'status' => 'publish' ) );
 		$this->assertEquals( 'Unfiltered<script>evil</script>', get_option( 'scratchpad' ) );
 
 		// Attempt scratchpad with user who doesn't have unfiltered_html.
+		update_option( 'scratchpad', '' );
 		$wp_customize = new WP_Customize_Manager();
-		$wp_customize->add_setting( 'scratchpad', $setting_args );
+		do_action( 'customize_register', $wp_customize );
 		$wp_customize->set_post_value( 'scratchpad', 'Unfiltered<script>evil</script>' );
 		$wp_customize->save_changeset_post( array(
 			'status' => 'auto-draft',
 			'user_id' => self::$subscriber_user_id,
 		) );
+		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $wp_customize->changeset_uuid() ) );
+		do_action( 'customize_register', $wp_customize );
 		$wp_customize->save_changeset_post( array( 'status' => 'publish' ) );
 		$this->assertEquals( 'Unfilteredevil', get_option( 'scratchpad' ) );
+
+		// Attempt publishing scratchpad as anonymous user when changeset was set by privileged user.
+		update_option( 'scratchpad', '' );
+		$wp_customize = new WP_Customize_Manager();
+		do_action( 'customize_register', $wp_customize );
+		$wp_customize->set_post_value( 'scratchpad', 'Unfiltered<script>evil</script>' );
+		$wp_customize->save_changeset_post( array(
+			'status' => 'auto-draft',
+			'user_id' => self::$admin_user_id,
+		) );
+		$changeset_post_id = $wp_customize->changeset_post_id();
+		wp_set_current_user( 0 );
+		$wp_customize = null;
+		unset( $GLOBALS['wp_actions']['customize_register'] );
+		$this->assertEquals( 'Unfilteredevil', apply_filters( 'content_save_pre', 'Unfiltered<script>evil</script>' ) );
+		wp_publish_post( $changeset_post_id ); // @todo If wp_update_post() is used here, then kses will corrupt the post_content.
+		$this->assertEquals( 'Unfiltered<script>evil</script>', get_option( 'scratchpad' ) );
+	}
+
+	/**
+	 * Register scratchpad setting.
+	 *
+	 * @param WP_Customize_Manager $wp_customize Manager.
+	 */
+	function register_scratchpad_setting( WP_Customize_Manager $wp_customize ) {
+		$wp_customize->add_setting( 'scratchpad', array(
+			'type' => 'option',
+			'capability' => 'exist',
+			'sanitize_callback' => array( $this, 'filter_sanitize_scratchpad' ),
+		) );
 	}
 
 	/**
