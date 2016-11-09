@@ -434,6 +434,8 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 			if ( is_wp_error( $user_id ) ) {
 				return $user_id;
 			}
+
+			add_user_to_blog( get_site()->id, $user_id, '' );
 		} else {
 			$user_id = wp_insert_user( $user );
 
@@ -557,6 +559,10 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		}
 
 		$user = get_user_by( 'id', $id );
+
+		if ( is_multisite() && ! is_user_member_of_blog( $id ) ) {
+			add_user_to_blog( get_current_blog_id(), $id, '' );
+		}
 
 		if ( ! empty( $request['roles'] ) ) {
 			array_map( array( $user, 'add_role' ), $request['roles'] );
@@ -1074,7 +1080,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 				'locale'    => array(
 					'description' => __( 'Locale for the resource.' ),
 					'type'        => 'string',
-					'enum'        => array_merge( array( 'en_US' ), get_available_languages() ),
+					'enum'        => array_merge( array( '', 'en_US' ), get_available_languages() ),
 					'context'     => array( 'edit' ),
 				),
 				'nickname'    => array(
