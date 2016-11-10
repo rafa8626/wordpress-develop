@@ -16,7 +16,7 @@
  *
  * @see WP_Customize_Setting
  */
-final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
+class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 	/**
 	 * The setting type.
@@ -100,10 +100,13 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Filter wp_get_custom_css for applying customized value to return value.
+	 * Filter `wp_get_custom_css` for applying the customized value.
+	 *
+	 * This is used in the preview when `wp_get_custom_css()` is called for rendering the styles.
 	 *
 	 * @since 4.7.0
 	 * @access private
+	 * @see wp_get_custom_css()
 	 *
 	 * @param string $css        Original CSS.
 	 * @param string $stylesheet Current stylesheet.
@@ -120,7 +123,7 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	}
 
 	/**
-	 * Fetch the value of the setting.
+	 * Fetch the value of the setting. Will return the previewed value when `preview()` is called.
 	 *
 	 * @since 4.7.0
 	 * @access public
@@ -128,7 +131,14 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return string
 	 */
 	public function value() {
-		$value = wp_get_custom_css( $this->stylesheet );
+		if ( $this->is_previewed && null !== $this->post_value( null ) ) {
+			return $this->post_value();
+		}
+		$value = '';
+		$post = wp_get_custom_css_post( $this->stylesheet );
+		if ( $post ) {
+			$value = $post->post_content;
+		}
 		if ( empty( $value ) ) {
 			$value = $this->default;
 		}
