@@ -16,7 +16,7 @@
  *
  * @see WP_Customize_Setting
  */
-class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
+final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 
 	/**
 	 * The setting type.
@@ -127,10 +127,12 @@ class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 *
 	 * @since 4.7.0
 	 * @access public
+	 * @see WP_Customize_Setting::value()
 	 *
 	 * @return string
 	 */
 	public function value() {
+		$id_base = $this->id_data['base'];
 		if ( $this->is_previewed && null !== $this->post_value( null ) ) {
 			return $this->post_value();
 		}
@@ -142,6 +144,10 @@ class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		if ( empty( $value ) ) {
 			$value = $this->default;
 		}
+
+		/** This filter is documented in wp-includes/class-wp-customize-setting.php */
+		$value = apply_filters( "customize_value_{$id_base}", $value, $this );
+
 		return $value;
 	}
 
@@ -236,13 +242,56 @@ class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return int|false The post ID or false if the value could not be saved.
 	 */
 	public function update( $css ) {
+		$setting = $this;
+
+		if ( empty( $css ) ) {
+			$css = '';
+		}
 
 		$args = array(
-			'post_content' => $css ? $css : '',
-			'post_title' => $this->stylesheet,
-			'post_name' => sanitize_title( $this->stylesheet ),
-			'post_type' => 'custom_css',
-			'post_status' => 'publish',
+			'post_content' => $css,
+			'post_content_filtered' => '',
+		);
+
+		/**
+		 * Filters the `post_content` and `post_content_filtered` args for a `custom_css` post being updated.
+		 *
+		 * This filter can be used by plugin that offer CSS pre-processors, to store the original
+		 * pre-processed CSS in `post_content_filtered` and then store processed CSS in `post_content`.
+		 * When used in this way, the `post_content_filtered` should be supplied as the setting value
+		 * instead of `post_content` via a the `customize_value_custom_css` filter, for example:
+		 *
+		 * <code>
+		 * add_filter( 'customize_value_custom_css', function( $value, $setting ) {
+		 *     $post = wp_get_custom_css_post( $setting->stylesheet );
+		 *     if ( $post && ! empty( $post->post_content_filtered ) ) {
+		 *         $css = $post->post_content_filtered;
+		 *     }
+		 *     return $css;
+		 * }
+		 * </code>
+		 *
+		 * @since 4.7.0
+		 * @param array  $args {
+		 *     Content post args (unslashed) for wp_update_post()/wp_insert_post().
+		 *
+		 *     @type string $post_content          CSS.
+		 *     @type string $post_content_filtered Pre-processed CSS. Normally empty string.
+		 * }
+		 * @param string                          $css     Original CSS being updated.
+		 * @param WP_Customize_Custom_CSS_Setting $setting Custom CSS Setting.
+		 */
+		$args = apply_filters( 'customize_update_custom_css_post_content_args', $args, $css, $setting );
+		$args = wp_array_slice_assoc( $args, array( 'post_content', 'post_content_filtered' ) );
+
+		$args = array_merge(
+			$args,
+			array(
+				'post_title' => $this->stylesheet,
+				'post_name' => sanitize_title( $this->stylesheet ),
+				'post_type' => 'custom_css',
+				'post_status' => 'publish',
+			)
 		);
 
 		// Update post if it already exists, otherwise create a new one.
