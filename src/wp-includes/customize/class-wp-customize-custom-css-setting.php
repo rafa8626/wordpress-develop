@@ -268,12 +268,12 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		 *         $css = $post->post_content_filtered;
 		 *     }
 		 *     return $css;
-		 * }
+		 * }, 10, 2 );
 		 * </code>
 		 *
 		 * @since 4.7.0
 		 * @param array  $args {
-		 *     Content post args (unslashed) for wp_update_post()/wp_insert_post().
+		 *     Content post args (unslashed) for `wp_update_post()`/`wp_insert_post()`.
 		 *
 		 *     @type string $post_content          CSS.
 		 *     @type string $post_content_filtered Pre-processed CSS. Normally empty string.
