@@ -1138,9 +1138,12 @@ p.customize-section-description {
  * Modifications to the Section Container to
  * make the textarea full-width.
  */
+#customize-control-custom_css {
+	margin-bottom: 0;
+}
+
 #customize-theme-controls #sub-accordion-section-custom_css {
-	padding-left: 0;
-	padding-right: 0;
+	padding: 0;
 }
 
 #customize-theme-controls #sub-accordion-section-custom_css .customize-section-title {
@@ -1163,12 +1166,21 @@ p.customize-section-description {
 }
 
 #sub-accordion-section-custom_css textarea {
+	display: block;
 	border-right: 0;
 	border-left: 0;
 	font-family: Consolas, Monaco, monospace;
 	font-size: 12px;
 	padding: 6px 8px;
-	height: 553px;
+	height: 500px;
+	height: calc( 100vh - 185px );
+	resize: none;
+}
+
+@media screen and ( max-width: 640px ) {
+	#sub-accordion-section-custom_css textarea {
+		height: calc( 100vh - 135px );
+	}
 }
 
 /**
