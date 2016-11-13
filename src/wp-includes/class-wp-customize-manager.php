@@ -523,10 +523,8 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		// Import theme starter content for fresh installs when landing in the customizer and no existing changeset loaded.
+		// Import theme starter content for fresh installs when landing in the customizer.
 		if ( get_option( 'fresh_site' ) && 'customize.php' === $pagenow ) {
-			// && ! $this->changeset_post_id()
-
 			add_action( 'after_setup_theme', array( $this, 'import_theme_starter_content' ), 100 );
 		}
 
