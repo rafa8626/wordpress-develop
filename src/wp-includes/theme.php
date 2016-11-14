@@ -1434,7 +1434,7 @@ function get_custom_header_markup() {
  *
  * @since 4.7.0
  */
-function the_custom_header_markup( $args = array() ) {
+function the_custom_header_markup() {
 	$custom_header = get_custom_header_markup();
 	if ( empty( $custom_header ) ) {
 		return;
