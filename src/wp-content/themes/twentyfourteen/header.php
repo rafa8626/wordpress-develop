@@ -32,7 +32,7 @@
 
 <body <?php body_class(); ?>>
 <div id="page" class="hfeed site">
-	<?php if ( function_exists( 'has_header_video' ) && has_header_video() ) : ?>
+	<?php if ( is_front_page() && function_exists( 'has_header_video' ) && has_header_video() ) : ?>
 		<div id="site-header">
 			<?php the_custom_header_markup(); ?>
 		</div>
