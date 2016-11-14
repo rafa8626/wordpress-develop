@@ -523,7 +523,11 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		// Import theme starter content for fresh installs when landing in the customizer.
+		/*
+		 * Import theme starter content for fresh installs when landing in the customizer.
+		 * Import starter content at after_setup_theme:100 so that any
+		 * add_theme_support( 'starter-content' ) calls will have been made.
+		 */
 		if ( get_option( 'fresh_site' ) && 'customize.php' === $pagenow ) {
 			add_action( 'after_setup_theme', array( $this, 'import_theme_starter_content' ), 100 );
 		}
@@ -894,7 +898,7 @@ final class WP_Customize_Manager {
 	protected $starter_content_settings_ids = array();
 
 	/**
-	 * Import theme starter content into post values.
+	 * Import theme starter content into the customized state.
 	 *
 	 * @since 4.7.0
 	 * @access public
@@ -946,29 +950,17 @@ final class WP_Customize_Manager {
 				$widget_id = sprintf( '%s-%d', $id_base, $max_widget_numbers[ $id_base ] );
 				$setting_id = sprintf( 'widget_%s[%d]', $id_base, $max_widget_numbers[ $id_base ] );
 
-				$class = 'WP_Customize_Setting';
-
-				/** This filter is documented in wp-includes/class-wp-customize-manager.php */
-				$args = apply_filters( 'customize_dynamic_setting_args', false, $setting_id );
-
-				if ( false !== $args ) {
-
-					/** This filter is documented in wp-includes/class-wp-customize-manager.php */
-					$class = apply_filters( 'customize_dynamic_setting_class', $class, $setting_id, $args );
-
-					$setting = new $class( $this, $setting_id, $args );
-					$setting_value = call_user_func( $setting->sanitize_js_callback, $instance, $setting );
-					if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
-						$this->set_post_value( $setting_id, $setting_value ); // $changeset_data[ $setting_id ]['value'] = $setting_value;
-						$this->starter_content_settings_ids[] = $setting_id;
-					}
-					$sidebar_widget_ids[] = $widget_id;
+				$setting_value = $this->widgets->sanitize_widget_js_instance( $instance );
+				if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
+					$this->set_post_value( $setting_id, $setting_value );
+					$this->starter_content_settings_ids[] = $setting_id;
 				}
+				$sidebar_widget_ids[] = $widget_id;
 			}
 
 			$setting_id = sprintf( 'sidebars_widgets[%s]', $sidebar_id );
 			if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
-				$this->set_post_value( $setting_id, $sidebar_widget_ids ); // $changeset_data[ $setting_id ]['value'] = $sidebar_widget_ids;
+				$this->set_post_value( $setting_id, $sidebar_widget_ids );
 				$this->starter_content_settings_ids[] = $setting_id;
 			}
 		}
@@ -1022,7 +1014,7 @@ final class WP_Customize_Manager {
 			$setting_id = 'nav_menus_created_posts';
 			if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
 				$nav_menus_created_posts = array_unique( array_merge( $nav_menus_created_posts, wp_list_pluck( $posts, 'ID' ) ) );
-				$this->set_post_value( $setting_id, $nav_menus_created_posts ); // $changeset_data[ $setting_id ]['value'] = $nav_menus_created_posts;
+				$this->set_post_value( $setting_id, $nav_menus_created_posts );
 				$this->starter_content_settings_ids[] = $setting_id;
 			}
 		}
@@ -1037,7 +1029,7 @@ final class WP_Customize_Manager {
 			if ( empty( $changeset_data[ $nav_menu_setting_id ] ) || ! empty( $changeset_data[ $nav_menu_setting_id ]['starter_content'] ) ) {
 				$this->set_post_value( $nav_menu_setting_id, array(
 					'name' => isset( $nav_menu['name'] ) ? $nav_menu['name'] : $nav_menu_location,
-				) ); // $changeset_data[ $nav_menu_setting_id ]['value']
+				) );
 				$this->starter_content_settings_ids[] = $nav_menu_setting_id;
 			}
 
@@ -1065,14 +1057,14 @@ final class WP_Customize_Manager {
 				}
 
 				if ( empty( $changeset_data[ $nav_menu_item_setting_id ] ) || ! empty( $changeset_data[ $nav_menu_item_setting_id ]['starter_content'] ) ) {
-					$this->set_post_value( $nav_menu_item_setting_id, $nav_menu_item ); // $changeset_data[ $nav_menu_item_setting_id ]['value'] = $nav_menu_item;
+					$this->set_post_value( $nav_menu_item_setting_id, $nav_menu_item );
 					$this->starter_content_settings_ids[] = $nav_menu_item_setting_id;
 				}
 			}
 
 			$setting_id = sprintf( 'nav_menu_locations[%s]', $nav_menu_location );
 			if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
-				$this->set_post_value( $setting_id, $nav_menu_term_id ); // $changeset_data[ $setting_id ]['value'] = $nav_menu_term_id;
+				$this->set_post_value( $setting_id, $nav_menu_term_id );
 				$this->starter_content_settings_ids[] = $setting_id;
 			}
 		}
@@ -1084,7 +1076,7 @@ final class WP_Customize_Manager {
 			}
 
 			if ( empty( $changeset_data[ $name ] ) || ! empty( $changeset_data[ $name ]['starter_content'] ) ) {
-				$this->set_post_value( $name, $value ); //$changeset_data[ $name ]['value'] = $value;
+				$this->set_post_value( $name, $value );
 				$this->starter_content_settings_ids[] = $name;
 			}
 		}
@@ -1096,7 +1088,7 @@ final class WP_Customize_Manager {
 			}
 
 			if ( empty( $changeset_data[ $name ] ) || ! empty( $changeset_data[ $name ]['starter_content'] ) ) {
-				$this->set_post_value( $name, $value ); // $changeset_data[ $name ]['value'] = $value;
+				$this->set_post_value( $name, $value );
 				$this->starter_content_settings_ids[] = $name;
 			}
 		}
