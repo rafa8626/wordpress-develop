@@ -67,6 +67,20 @@
 		} );
 	} );
 
+	// Header image/video.
+	wp.customize( 'header_video', 'external_header_video', 'header_image', function( headerVideo, externalHeaderVideo, headerImage ) {
+		var body = $( 'body' ), toggleClass;
+		toggleClass = function() {
+			var hasHeaderImage, hasHeaderVideo;
+			hasHeaderImage = '' !== headerImage.get() && 'remove-header' !== headerImage.get();
+			hasHeaderVideo = Boolean( headerVideo.get() || externalHeaderVideo.get() );
+			body.toggleClass( 'has-header-image', hasHeaderImage || body.hasClass( 'home' ) && hasHeaderVideo );
+		};
+		_.each( [ headerVideo, externalHeaderVideo, headerImage ], function( setting ) {
+			setting.bind( toggleClass );
+		} );
+	} );
+
 	// Color scheme.
 	wp.customize( 'colorscheme', function( value ) {
 		value.bind( function( to ) {
