@@ -1021,17 +1021,42 @@ final class WP_Customize_Manager {
 
 		// Nav menus.
 		$placeholder_id = -1;
+		$reused_nav_menu_setting_ids = array();
 		foreach ( $nav_menus as $nav_menu_location => $nav_menu ) {
-			$nav_menu_term_id = $placeholder_id--;
-			$nav_menu_setting_id = sprintf( 'nav_menu[%d]', $nav_menu_term_id );
 
+			$nav_menu_term_id = null;
+			$nav_menu_setting_id = null;
+			$matches = array();
 
-			if ( empty( $changeset_data[ $nav_menu_setting_id ] ) || ! empty( $changeset_data[ $nav_menu_setting_id ]['starter_content'] ) ) {
-				$this->set_post_value( $nav_menu_setting_id, array(
-					'name' => isset( $nav_menu['name'] ) ? $nav_menu['name'] : $nav_menu_location,
-				) );
-				$this->starter_content_settings_ids[] = $nav_menu_setting_id;
+			// Look for an existing placeholder menu with starter content.
+			foreach ( $changeset_data as $setting_id => $setting_params ) {
+				$can_reuse = (
+					! empty( $setting_params['starter_content'] )
+					&&
+					! in_array( $setting_id, $reused_nav_menu_setting_ids, true )
+					&&
+					preg_match( '#^nav_menu\[(?P<nav_menu_id>-?\d+)\]$#', $setting_id, $matches )
+				);
+				if ( $can_reuse ) {
+					$nav_menu_term_id = intval( $matches['nav_menu_id'] );
+					$nav_menu_setting_id = $setting_id;
+					$reused_nav_menu_setting_ids[] = $setting_id;
+					break;
+				}
 			}
+
+			if ( ! $nav_menu_term_id ) {
+				while ( isset( $changeset_data[ sprintf( 'nav_menu[%d]', $placeholder_id ) ] ) ) {
+					$placeholder_id--;
+				}
+				$nav_menu_term_id = $placeholder_id;
+				$nav_menu_setting_id = sprintf( 'nav_menu[%d]', $placeholder_id );
+			}
+
+			$this->set_post_value( $nav_menu_setting_id, array(
+				'name' => isset( $nav_menu['name'] ) ? $nav_menu['name'] : $nav_menu_location,
+			) );
+			$this->starter_content_settings_ids[] = $nav_menu_setting_id;
 
 			// @todo Add support for menu_item_parent.
 			$position = 0;
