@@ -8,111 +8,7 @@
 class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 
 	/**
-	 * Core content.
-	 *
-	 * @var array $core_content Content taken from wp-includes/theme.php.
-	 */
-	static public $core_content;
-
-	/**
-	 * Set up before class.
-	 */
-	public static function setUpBeforeClass() {
-		self::$core_content = array(
-			'widgets' => array(
-				'text_business_info' => array( 'text', array(
-					'title' => _x( 'Find Us', 'Theme starter content' ),
-					'text' => join( '', array(
-						'<p><strong>' . _x( 'Address', 'Theme starter content' ) . '</strong><br />',
-						_x( '123 Main Street', 'Theme starter content' ) . '<br />' . _x( 'New York, NY 10001', 'Theme starter content' ) . '</p>',
-						'<p><strong>' . _x( 'Hours', 'Theme starter content' ) . '</strong><br />',
-						_x( 'Monday&mdash;Friday: 9:00AM&ndash;5:00PM', 'Theme starter content' ) . '<br />' . _x( 'Saturday &amp; Sunday: 11:00AM&ndash;3:00PM', 'Theme starter content' ) . '</p>',
-					) ),
-				) ),
-				'search' => array( 'search', array(
-					'title' => _x( 'Site Search', 'Theme starter content' ),
-				) ),
-				'text_credits' => array( 'text', array(
-					'title' => _x( 'Site Credits', 'Theme starter content' ),
-					'text' => sprintf( _x( 'This site was created on %s', 'Theme starter content' ), get_date_from_gmt( current_time( 'mysql', 1 ), 'c' ) ),
-				) ),
-			),
-			'nav_menus' => array(
-				'page_home' => array(
-					'type' => 'post_type',
-					'object' => 'page',
-					'object_id' => '{{home}}',
-				),
-				'page_about' => array(
-					'type' => 'post_type',
-					'object' => 'page',
-					'object_id' => '{{about-us}}',
-				),
-				'page_blog' => array(
-					'type' => 'post_type',
-					'object' => 'page',
-					'object_id' => '{{blog}}',
-				),
-				'page_contact' => array(
-					'type' => 'post_type',
-					'object' => 'page',
-					'object_id' => '{{contact-us}}',
-				),
-
-				'link_yelp' => array(
-					'title' => _x( 'Yelp', 'Theme starter content' ),
-					'url' => 'https://www.yelp.com',
-				),
-				'link_facebook' => array(
-					'title' => _x( 'Facebook', 'Theme starter content' ),
-					'url' => 'https://www.facebook.com/wordpress',
-				),
-				'link_twitter' => array(
-					'title' => _x( 'Twitter', 'Theme starter content' ),
-					'url' => 'https://twitter.com/wordpress',
-				),
-				'link_instagram' => array(
-					'title' => _x( 'Instagram', 'Theme starter content' ),
-					'url' => 'https://www.instagram.com/explore/tags/wordcamp/',
-				),
-				'link_email' => array(
-					'title' => _x( 'Email', 'Theme starter content' ),
-					'url' => 'mailto:wordpress@example.com',
-				),
-			),
-			'posts' => array(
-				'home' => array(
-					'post_type' => 'page',
-					'post_title' => _x( 'Homepage', 'Theme starter content' ),
-					'post_content' => _x( 'Welcome home.', 'Theme starter content' ),
-				),
-				'about-us' => array(
-					'post_type' => 'page',
-					'post_title' => _x( 'About Us', 'Theme starter content' ),
-					'post_content' => _x( 'More than you ever wanted to know.', 'Theme starter content' ),
-				),
-				'contact-us' => array(
-					'post_type' => 'page',
-					'post_title' => _x( 'Contact Us', 'Theme starter content' ),
-					'post_content' => _x( 'Call us at 999-999-9999.', 'Theme starter content' ),
-				),
-				'blog' => array(
-					'post_type' => 'page',
-					'post_title' => _x( 'Blog', 'Theme starter content' ),
-				),
-
-				'homepage-section' => array(
-					'post_type' => 'page',
-					'post_title' => _x( 'A homepage section', 'Theme starter content' ),
-					'post_content' => _x( 'This is an example of a homepage section, which are managed in theme options.', 'Theme starter content' ),
-				),
-			),
-		);
-		return parent::setUpBeforeClass();
-	}
-
-	/**
-	 * Testing passing an empty array
+	 * Testing passing an empty array as starter content.
 	 */
 	function test_add_theme_support_empty() {
 		add_theme_support( 'starter-content', array() );
@@ -122,7 +18,7 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Testing passing no parameter.
+	 * Testing passing nothing as starter content.
 	 */
 	function test_add_theme_support_single_param() {
 		add_theme_support( 'starter-content' );
@@ -132,151 +28,115 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Testing the items that have cases.
-	 *
-	 * Testing the text_credits content is problematic as the the dates won't match
-	 * so it's not included here.
-	 *
-	 * @dataProvider data_default_content_sections
-	 *
-	 * @param array $content Content.
-	 * @param array $expected_content Expected content.
+	 * Testing that placeholder starter content gets expanded, that unrecognized placeholders are discarded, and that custom items are recognized.
 	 */
-	function test_default_content_sections( $content, $expected_content ) {
+	function test_default_content_sections() {
 
-		add_theme_support( 'starter-content', $content );
-
-		$starter_content = get_theme_starter_content();
-
-		$this->assertSame( $expected_content, $starter_content );
-	}
-
-	/**
-	 * Dataprovider for test_default_content_sections
-	 *
-	 * @return array {
-	 *    array {
-	 *         array The content to pass to add_theme_support.
-	 *         array The expected output.
-	 *    }
-	 * }
-	 */
-	function data_default_content_sections() {
-
-		return array(
-			// Widgets
-			array(
-				array(
-					'widgets' => array(
-						'sidebar-1' => array(
-							'text_business_info',
-							'search',
-						),
-					),
-				),
-				array(
-					'widgets' => array(
-						'sidebar-1' => array(
-							$this->core_content['widgets']['text_business_info'],
-							$this->core_content['widgets']['search'],
-						),
-					),
+		/*
+		 * All placeholder identifiers should be referenced in this sample starter
+		 * content and then tested to ensure they get hydrated in the call to
+		 * get_theme_starter_content() to ensure that the starter content
+		 * placeholder identifiers remain intact in core.
+		 */
+		$dehydrated_starter_content = array(
+			'widgets' => array(
+				'sidebar-1' => array(
+					'text_business_info',
+					'text_about',
+					'archives',
+					'calendar',
+					'categories',
+					'meta',
+					'recent-comments',
+					'recent-posts',
+					'search',
+					'unknown',
+					'meta_custom' => array( 'meta', array(
+						'title' => 'Pre-hydrated meta widget.'
+					) ),
 				),
 			),
-
-			// Nav Menus.
-			array(
-				array(
-					'nav_menus' => array(
-						'top' => array(
-							'name'  => 'Menu Name',
-							'items' => array(
-								'page_home',
-								'page_about',
-								'page_blog',
-								'page_contact',
-								'link_yelp',
-								'link_facebook',
-								'link_twitter',
-								'link_instagram',
-								'link_email',
-							),
-						),
-					),
-				),
-				array(
-					'nav_menus' => array(
-						'top' => array(
-							'name'  => 'Menu Name',
-							'items' => array(
-								$this->core_content['nav_menus']['page_home'],
-								$this->core_content['nav_menus']['page_about'],
-								$this->core_content['nav_menus']['page_blog'],
-								$this->core_content['nav_menus']['page_contact'],
-								$this->core_content['nav_menus']['link_yelp'],
-								$this->core_content['nav_menus']['link_facebook'],
-								$this->core_content['nav_menus']['link_twitter'],
-								$this->core_content['nav_menus']['link_instagram'],
-								$this->core_content['nav_menus']['link_email'],
-							),
+			'nav_menus' => array(
+				'top' => array(
+					'name'  => 'Menu Name',
+					'items' => array(
+						'page_home',
+						'page_about',
+						'page_blog',
+						'page_news',
+						'page_contact',
+						'link_email',
+						'link_facebook',
+						'link_foursquare',
+						'link_github',
+						'link_instagram',
+						'link_linkedin',
+						'link_pinterest',
+						'link_twitter',
+						'link_yelp',
+						'link_youtube',
+						'link_unknown',
+						'link_custom' => array(
+							'title' => 'Custom',
+							'url' => 'https://custom.example.com/'
 						),
 					),
 				),
 			),
-			// Posts.
-			array(
-				array(
-					'posts' => array(
-						'home',
-						'about-us',
-						'contact-us',
-						'blog',
-						'homepage-section',
-					),
-				),
-				array(
-					'posts' => $this->core_content['posts'],
+			'posts' => array(
+				'home',
+				'about',
+				'contact',
+				'blog',
+				'news',
+				'homepage-section',
+				'unknown',
+				'custom' => array(
+					'post_type' => 'post',
+					'post_title' => 'Custom',
 				),
 			),
-
-			// Options
-			array(
-				array(
-					'options' => array(
-						'show_on_front'  => 'page',
-						'page_on_front'  => '{{home}}',
-						'page_for_posts' => '{{blog}}',
-					),
-				),
-				array(
-					'options' => array(
-						'show_on_front'  => 'page',
-						'page_on_front'  => '{{home}}',
-						'page_for_posts' => '{{blog}}',
-					),
-				),
+			'options' => array(
+				'show_on_front'  => 'page',
+				'page_on_front'  => '{{home}}',
+				'page_for_posts' => '{{blog}}',
 			),
-
-			//Theme mods.
-			array(
-				array(
-					'theme_mods' => array(
-						'panel_1' => '{{homepage-section}}',
-						'panel_2' => '{{about-us}}',
-						'panel_3' => '{{blog}}',
-						'panel_4' => '{{contact-us}}',
-					),
-				),
-				array(
-					'theme_mods' => array(
-						'panel_1' => '{{homepage-section}}',
-						'panel_2' => '{{about-us}}',
-						'panel_3' => '{{blog}}',
-						'panel_4' => '{{contact-us}}',
-					),
-				),
+			'theme_mods' => array(
+				'panel_1' => '{{homepage-section}}',
+				'panel_2' => '{{about-us}}',
+				'panel_3' => '{{blog}}',
+				'panel_4' => '{{contact-us}}',
 			),
 		);
+
+		add_theme_support( 'starter-content', $dehydrated_starter_content );
+
+		$hydrated_starter_content = get_theme_starter_content();
+		$this->assertSame( $hydrated_starter_content['theme_mods'], $dehydrated_starter_content['theme_mods'] );
+		$this->assertSame( $hydrated_starter_content['options'], $dehydrated_starter_content['options'] );
+		$this->assertCount( 16, $hydrated_starter_content['nav_menus']['top']['items'], 'Unknown should be dropped, custom should be present.' );
+		$this->assertCount( 10, $hydrated_starter_content['widgets']['sidebar-1'], 'Unknown should be dropped.' );
+
+		foreach ( $hydrated_starter_content['widgets']['sidebar-1'] as $widget ) {
+			$this->assertInternalType( 'array', $widget );
+			$this->assertCount( 2, $widget );
+			$this->assertInternalType( 'string', $widget[0] );
+			$this->assertInternalType( 'array', $widget[1] );
+			$this->assertArrayHasKey( 'title', $widget[1] );
+		}
+
+		foreach ( $hydrated_starter_content['nav_menus']['top']['items'] as $nav_menu_item ) {
+			$this->assertInternalType( 'array', $nav_menu_item );
+			$this->assertTrue( ! empty( $nav_menu_item['object_id'] ) || ! empty( $nav_menu_item['url'] ) );
+		}
+
+		foreach ( $hydrated_starter_content['posts'] as $key => $post ) {
+			$this->assertInternalType( 'string', $key );
+			$this->assertFalse( is_numeric( $key ) );
+			$this->assertInternalType( 'array', $post );
+			$this->assertArrayHasKey( 'post_type', $post );
+			$this->assertArrayHasKey( 'post_title', $post );
+		}
 	}
 
 	/**
@@ -288,44 +148,33 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 			array(
 				'widgets' => array(
 					'sidebar-1' => array(
-						'text_credits',
+						'text_about',
 					),
 				),
 			)
 		);
 
-		$expected = array(
-			'widgets' => array(
-				'sidebar-1' => array(
-					array( 'text', array(
-						'title' => __( 'Site Credits' ),
-						'text'  => 'Changed to a hardcoded string',
-					) ),
-				),
-			),
-		);
-
-		add_filter( 'get_theme_starter_content', array( $this, 'filter_text_credits' ) );
+		add_filter( 'get_theme_starter_content', array( $this, 'filter_theme_starter_content' ), 10, 2 );
 		$starter_content = get_theme_starter_content();
-		$this->assertSame( $expected, $starter_content );
+
+		$this->assertCount( 2, $starter_content['widgets']['sidebar-1'] );
+		$this->assertEquals( 'Filtered Widget', $starter_content['widgets']['sidebar-1'][1][1]['title'] );
 	}
 
 	/**
-	 * Filter the text_widget to remove the dynamic time.
+	 * Filter the append a widget starter content.
 	 *
-	 * @param $content
-	 *
-	 * @return mixed
+	 * @param array $content Starter content (hydrated).
+	 * @param array $config  Starter content config (pre-hydrated).
+	 * @return array Filtered starter content.
 	 */
-	public function filter_text_credits( $content ) {
-		$content['widgets']['sidebar-1'][0] = array(
-			'text',
-			array(
-				'title' => __( 'Site Credits' ),
-				'text'  => 'Changed to a hardcoded string',
-			),
-
-		);
+	public function filter_theme_starter_content( $content, $config ) {
+		$this->assertInternalType( 'array', $config );
+		$this->assertCount( 1, $config['widgets']['sidebar-1'] );
+		$content['widgets']['sidebar-1'][] = array( 'text', array(
+			'title' => 'Filtered Widget',
+			'text'  => 'Custom ',
+		) );
 		return $content;
 	}
 }
