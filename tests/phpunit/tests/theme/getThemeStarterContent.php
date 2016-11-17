@@ -19,7 +19,7 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 						'<p><strong>' . _x( 'Address', 'Theme starter content' ) . '</strong><br />',
 						_x( '123 Main Street', 'Theme starter content' ) . '<br />' . _x( 'New York, NY 10001', 'Theme starter content' ) . '</p>',
 						'<p><strong>' . _x( 'Hours', 'Theme starter content' ) . '</strong><br />',
-						_x( 'Monday&mdash;Friday: 9:00AM&ndash;5:00PM', 'Theme starter content' ) . '<br />' . _x( 'Saturday &amp; Sunday: 11:00AM&ndash;3:00PM', 'Theme starter content' ) . '</p>'
+						_x( 'Monday&mdash;Friday: 9:00AM&ndash;5:00PM', 'Theme starter content' ) . '<br />' . _x( 'Saturday &amp; Sunday: 11:00AM&ndash;3:00PM', 'Theme starter content' ) . '</p>',
 					) ),
 				) ),
 				'search' => array( 'search', array(
@@ -134,6 +134,8 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 	 *
 	 * @dataProvider data_default_content_sections
 	 *
+	 * @param array $content Content.
+	 * @param array $expected_content Expected content.
 	 */
 	function test_default_content_sections( $content, $expected_content ) {
 
@@ -292,13 +294,10 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 		$expected = array(
 			'widgets' => array(
 				'sidebar-1' => array(
-					 array(
-					 	'text',
-						 array(
-						 	'title' => __( 'Site Credits' ),
-						    'text'  => 'Changed to a hardcoded string',
-						 ),
-					),
+					array( 'text', array(
+						'title' => __( 'Site Credits' ),
+						'text'  => 'Changed to a hardcoded string',
+					) ),
 				),
 			),
 		);
