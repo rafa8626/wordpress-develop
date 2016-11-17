@@ -1,17 +1,24 @@
 <?php
 
 /**
+ * Tests get_theme_starter_content().
+ *
  * @group themes
  */
 class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 
 	/**
+	 * Core content.
+	 *
 	 * @var array $core_content Content taken from wp-includes/theme.php.
 	 */
-	public $core_content;
+	static public $core_content;
 
-	function setup_core_content() {
-		$this->core_content = array(
+	/**
+	 * Set up before class.
+	 */
+	public static function setUpBeforeClass() {
+		self::$core_content = array(
 			'widgets' => array(
 				'text_business_info' => array( 'text', array(
 					'title' => _x( 'Find Us', 'Theme starter content' ),
@@ -101,9 +108,8 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 				),
 			),
 		);
-
+		return parent::setUpBeforeClass();
 	}
-
 
 	/**
 	 * Testing passing an empty array
@@ -124,7 +130,6 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 
 		$this->assertEmpty( $starter_content );
 	}
-
 
 	/**
 	 * Testing the items that have cases.
@@ -157,8 +162,6 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 	 * }
 	 */
 	function data_default_content_sections() {
-
-		$this->setup_core_content();
 
 		return array(
 			// Widgets
@@ -304,7 +307,7 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 
 		add_filter( 'get_theme_starter_content', array( $this, 'filter_text_credits' ) );
 		$starter_content = get_theme_starter_content();
-		$this->assertSame( $expected , $starter_content );
+		$this->assertSame( $expected, $starter_content );
 	}
 
 	/**
@@ -325,6 +328,4 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 		);
 		return $content;
 	}
-
 }
-
