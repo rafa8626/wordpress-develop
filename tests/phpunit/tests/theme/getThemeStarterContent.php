@@ -103,9 +103,9 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 			),
 			'theme_mods' => array(
 				'panel_1' => '{{homepage-section}}',
-				'panel_2' => '{{about-us}}',
+				'panel_2' => '{{about}}',
 				'panel_3' => '{{blog}}',
-				'panel_4' => '{{contact-us}}',
+				'panel_4' => '{{contact}}',
 			),
 		);
 
