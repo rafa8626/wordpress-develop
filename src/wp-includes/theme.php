@@ -1972,9 +1972,10 @@ function get_theme_starter_content() {
 
 	foreach ( $config as $type => $args ) {
 		switch( $type ) {
-			// Use options and theme_mods as-is.
+			// Use options and theme_mods as-is. Also, attachments, for now.
 			case 'options' :
 			case 'theme_mods' :
+			case 'attachments' :
 				$content[ $type ] = $config[ $type ];
 				break;
 
@@ -2012,11 +2013,19 @@ function get_theme_starter_content() {
 				}
 				break;
 
-			// Everything else should map at the next level.
-			default :
-				foreach( $config[ $type ] as $i => $item ) {
-					if ( is_array( $item ) ) {
-						$content[ $type ][ $i ] = $item;
+			// All that's left now are posts (besides attachments). Not a default case for the sake of clarity and future work.
+			case 'posts' :
+				foreach( $config[ $type ] as $id => $item ) {
+					// Posts and pages can be passed certain other args
+					if ( is_array( $item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
+						$content[ $type ][ $id ] = $core_content[ $type ][ $id ];
+
+						foreach( $item as $key => $value ) {
+							// This is currently locked down.
+							if ( 'thumbnail' === $key || 'page_template' === $key ) {
+								$content[ $type ][ $id ][ $key ] = $value;
+							}
+						}
 					} elseif ( is_string( $item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $item ] ) ) {
 						$content[ $type ][ $item ] = $core_content[ $type ][ $item ];
 					}

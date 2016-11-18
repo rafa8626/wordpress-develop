@@ -123,10 +123,30 @@ function twentyseventeen_setup() {
 
 		'posts' => array(
 			'home',
-			'about',
-			'contact',
-			'blog',
-			'homepage-section',
+			'about' => array(
+				'thumbnail' => '{{featured-image-2}}',
+			),
+			'contact' => array(
+				'thumbnail' => '{{featured-image-1}}',
+			),
+			'blog' => array(
+				'thumbnail' => '{{featured-image-3}}',
+			),
+			'homepage-section' => array(
+				'thumbnail' => '{{featured-image-1}}',
+			),
+		),
+
+		'attachments' => array(
+			'featured-image-1' => array(
+				'file_url' => '/assets/images/espresso.jpg',
+			),
+			'featured-image-2' => array(
+				'file_url' => '/assets/images/sandwich.jpg',
+			),
+			'featured-image-3' => array(
+				'file_url' => '/assets/images/coffee.jpg',
+			),
 		),
 
 		'options' => array(

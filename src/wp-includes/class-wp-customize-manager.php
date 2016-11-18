@@ -916,6 +916,7 @@ final class WP_Customize_Manager {
 		}
 
 		$sidebars_widgets = isset( $starter_content['widgets'] ) && ! empty( $this->widgets ) ? $starter_content['widgets'] : array();
+		$attachments = isset( $starter_content['attachments'] ) && ! empty( $this->nav_menus ) ? $starter_content['attachments'] : array();
 		$posts = isset( $starter_content['posts'] ) && ! empty( $this->nav_menus ) ? $starter_content['posts'] : array();
 		$options = isset( $starter_content['options'] ) ? $starter_content['options'] : array();
 		$nav_menus = isset( $starter_content['nav_menus'] ) && ! empty( $this->nav_menus ) ? $starter_content['nav_menus'] : array();
@@ -965,9 +966,54 @@ final class WP_Customize_Manager {
 			}
 		}
 
+		$nav_menus_created_posts = array();
+
+		// Attachments are technically posts but handled differently.
+		if ( ! empty( $attachments ) ) {
+			// Such is The WordPress Way.
+			require_once( ABSPATH . 'wp-admin/includes/file.php' );
+			require_once( ABSPATH . 'wp-admin/includes/media.php' );
+			require_once( ABSPATH . 'wp-admin/includes/image.php' );
+
+			$attachment_ids = array();
+
+			foreach( $attachments as $symbol => $attributes ) {
+				$file = get_stylesheet_directory_uri() . $attributes['file_url'];
+
+				// We have to replicate logic from inside media_sideload_image() because WordPress.
+				// See https://core.trac.wordpress.org/ticket/19629
+				// Set variables for storage, fix file filename for query strings.
+				preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $file, $matches );
+				if ( ! $matches ) {
+					continue;
+				}
+
+				$file_array = array();
+				$file_array['name'] = basename( $matches[0] );
+				$file_array['tmp_name'] = download_url( $file );
+
+				if ( is_wp_error( $file_array['tmp_name'] ) ) {
+					continue;
+				}
+
+				$attachment_id = media_handle_sideload( $file_array, 0 );
+				// End duplicated logic
+				
+				if ( is_wp_error( $attachment_id ) ) {
+					continue;
+				}
+
+				// Set this to auto-draft for garbage collection later
+// Is this working? I don't think this is working.
+				wp_update_post( array( 'ID' => $attachment_id, 'post_status' => 'auto-draft' ) );
+				$attachment_ids[ $symbol ] = $attachment_id;
+
+				$nav_menus_created_posts = array_merge( $nav_menus_created_posts, array_values( $attachment_ids ) );
+			}
+		}
+
 		// Posts & pages.
 		if ( ! empty( $posts ) ) {
-			$nav_menus_created_posts = array();
 			if ( ! empty( $changeset_data['nav_menus_created_posts']['value'] ) ) {
 				$nav_menus_created_posts = $changeset_data['nav_menus_created_posts']['value'];
 			}
@@ -1004,19 +1050,34 @@ final class WP_Customize_Manager {
 					continue;
 				}
 
+				// Translate the featured image symbol
+				if ( ! empty( $posts[ $post_symbol ]['thumbnail'] )
+					&& preg_match( '/^{{(?P<symbol>.+)}}$/', $posts[ $post_symbol ]['thumbnail'], $matches )
+					&& isset( $attachment_ids[ $matches['symbol'] ] ) ) {
+					$posts[ $post_symbol ][ 'meta_input' ][ '_thumbnail_id' ] = $attachment_ids[ $matches['symbol'] ];
+				}
+
+				if ( ! empty( $posts[ $post_symbol ]['page_template'] ) ) {
+					$posts[ $post_symbol ][ 'meta_input' ][ '_wp_page_template' ] = $posts[ $post_symbol ]['page_template'];
+				}
+
 				$r = $this->nav_menus->insert_auto_draft_post( $posts[ $post_symbol ] );
 				if ( $r instanceof WP_Post ) {
 					$posts[ $post_symbol ]['ID'] = $r->ID;
 				}
 			}
 
-			// The nav_menus_created_posts setting is why nav_menus component is dependency for adding posts.
+			$nav_menus_created_posts = array_merge( $nav_menus_created_posts, wp_list_pluck( $posts, 'ID' ) );
+		}
+
+		// The nav_menus_created_posts setting is why nav_menus component is dependency for adding posts.
+		if ( ! empty( $this->nav_menus ) && ! empty( $nav_menus_created_posts ) ) {
 			$setting_id = 'nav_menus_created_posts';
-			if ( empty( $changeset_data[ $setting_id ] ) || ! empty( $changeset_data[ $setting_id ]['starter_content'] ) ) {
-				$nav_menus_created_posts = array_unique( array_merge( $nav_menus_created_posts, wp_list_pluck( $posts, 'ID' ) ) );
-				$this->set_post_value( $setting_id, array_values( $nav_menus_created_posts ) );
-				$this->pending_starter_content_settings_ids[] = $setting_id;
+			if ( ! empty( $changeset_data[ $setting_id ] ) ) {
+				$nav_menus_created_posts = array_merge( $nav_menus_created_posts, $changeset_data[ $setting_id ] );
 			}
+			$this->set_post_value( $setting_id, array_unique( array_values( $nav_menus_created_posts ) ) );
+			$this->pending_starter_content_settings_ids[] = $setting_id;
 		}
 
 		// Nav menus.
