@@ -978,7 +978,11 @@ final class WP_Customize_Manager {
 			$attachment_ids = array();
 
 			foreach( $attachments as $symbol => $attributes ) {
-				$file = get_stylesheet_directory_uri() . $attributes['file_url'];
+				if ( is_child_theme() && file_exists( get_stylesheet_directory() . $attributes['file_url'] ) ) {
+					$file = get_stylesheet_directory_uri() . $attributes['file_url'];
+				} else {
+					$file = get_template_directory_uri() . $attributes['file_url'];
+				}
 
 				// We have to replicate logic from inside media_sideload_image() because WordPress.
 				// See https://core.trac.wordpress.org/ticket/19629
@@ -998,7 +1002,7 @@ final class WP_Customize_Manager {
 
 				$attachment_id = media_handle_sideload( $file_array, 0 );
 				// End duplicated logic
-				
+
 				if ( is_wp_error( $attachment_id ) ) {
 					continue;
 				}
