@@ -139,13 +139,13 @@ function twentyseventeen_setup() {
 
 		'attachments' => array(
 			'featured-image-1' => array(
-				'file_url' => '/assets/images/espresso.jpg',
+				'file' => '/assets/images/espresso.jpg',
 			),
 			'featured-image-2' => array(
-				'file_url' => '/assets/images/sandwich.jpg',
+				'file' => '/assets/images/sandwich.jpg',
 			),
 			'featured-image-3' => array(
-				'file_url' => '/assets/images/coffee.jpg',
+				'file' => '/assets/images/coffee.jpg',
 			),
 		),
 

@@ -978,23 +978,11 @@ final class WP_Customize_Manager {
 			$attachment_ids = array();
 
 			foreach( $attachments as $symbol => $attributes ) {
-				if ( is_child_theme() && file_exists( get_stylesheet_directory() . $attributes['file_url'] ) ) {
-					$file = get_stylesheet_directory_uri() . $attributes['file_url'];
-				} else {
-					$file = get_template_directory_uri() . $attributes['file_url'];
-				}
-
 				// We have to replicate logic from inside media_sideload_image() because WordPress.
 				// See https://core.trac.wordpress.org/ticket/19629
-				// Set variables for storage, fix file filename for query strings.
-				preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $file, $matches );
-				if ( ! $matches ) {
-					continue;
-				}
-
 				$file_array = array();
-				$file_array['name'] = basename( $matches[0] );
-				$file_array['tmp_name'] = download_url( $file );
+				$file_array['name'] = $attributes['basename'];
+				$file_array['tmp_name'] = download_url( $attributes['file_url'] );
 
 				if ( is_wp_error( $file_array['tmp_name'] ) ) {
 					continue;
@@ -1008,7 +996,6 @@ final class WP_Customize_Manager {
 				}
 
 				// Set this to auto-draft for garbage collection later
-// Is this working? I don't think this is working.
 				wp_update_post( array( 'ID' => $attachment_id, 'post_status' => 'auto-draft' ) );
 				$attachment_ids[ $symbol ] = $attachment_id;
 
@@ -1061,8 +1048,8 @@ final class WP_Customize_Manager {
 					$posts[ $post_symbol ][ 'meta_input' ][ '_thumbnail_id' ] = $attachment_ids[ $matches['symbol'] ];
 				}
 
-				if ( ! empty( $posts[ $post_symbol ]['page_template'] ) ) {
-					$posts[ $post_symbol ][ 'meta_input' ][ '_wp_page_template' ] = $posts[ $post_symbol ]['page_template'];
+				if ( ! empty( $posts[ $post_symbol ]['template'] ) ) {
+					$posts[ $post_symbol ][ 'meta_input' ][ '_wp_page_template' ] = $posts[ $post_symbol ]['template'];
 				}
 
 				$r = $this->nav_menus->insert_auto_draft_post( $posts[ $post_symbol ] );
