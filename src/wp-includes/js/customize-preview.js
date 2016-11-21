@@ -343,7 +343,11 @@
 		}
 
 		if ( ! api.isLinkPreviewable( element ) ) {
-			$( element ).addClass( 'customize-unpreviewable' );
+
+			// Style link as unpreviewable only if previewing in iframe; if previewing on frontend, links will be allowed to work normally.
+			if ( api.settings.channel ) {
+				$( element ).addClass( 'customize-unpreviewable' );
+			}
 			return;
 		}
 		$( element ).removeClass( 'customize-unpreviewable' );
@@ -492,7 +496,11 @@
 		}
 
 		if ( 'GET' !== form.method.toUpperCase() || ! api.isLinkPreviewable( urlParser ) ) {
-			$( form ).addClass( 'customize-unpreviewable' );
+
+			// Style form as unpreviewable only if previewing in iframe; if previewing on frontend, all forms will be allowed to work normally.
+			if ( api.settings.channel ) {
+				$( form ).addClass( 'customize-unpreviewable' );
+			}
 			return;
 		}
 		$( form ).removeClass( 'customize-unpreviewable' );
