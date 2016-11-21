@@ -977,7 +977,7 @@ final class WP_Customize_Manager {
 
 			$attachment_ids = array();
 
-			foreach( $attachments as $symbol => $attributes ) {
+			foreach ( $attachments as $symbol => $attributes ) {
 				// We have to replicate logic from inside media_sideload_image() because WordPress.
 				// See https://core.trac.wordpress.org/ticket/19629
 				$file_array = array();
@@ -989,13 +989,13 @@ final class WP_Customize_Manager {
 				}
 
 				$attachment_id = media_handle_sideload( $file_array, 0 );
-				// End duplicated logic
+				// End duplicated logic.
 
 				if ( is_wp_error( $attachment_id ) ) {
 					continue;
 				}
 
-				// Set this to auto-draft for garbage collection later
+				// Set this to auto-draft for garbage collection later.
 				wp_update_post( array( 'ID' => $attachment_id, 'post_status' => 'auto-draft' ) );
 				$attachment_ids[ $symbol ] = $attachment_id;
 
@@ -1045,11 +1045,11 @@ final class WP_Customize_Manager {
 				if ( ! empty( $posts[ $post_symbol ]['thumbnail'] )
 					&& preg_match( '/^{{(?P<symbol>.+)}}$/', $posts[ $post_symbol ]['thumbnail'], $matches )
 					&& isset( $attachment_ids[ $matches['symbol'] ] ) ) {
-					$posts[ $post_symbol ][ 'meta_input' ][ '_thumbnail_id' ] = $attachment_ids[ $matches['symbol'] ];
+					$posts[ $post_symbol ]['meta_input']['_thumbnail_id'] = $attachment_ids[ $matches['symbol'] ];
 				}
 
 				if ( ! empty( $posts[ $post_symbol ]['template'] ) ) {
-					$posts[ $post_symbol ][ 'meta_input' ][ '_wp_page_template' ] = $posts[ $post_symbol ]['template'];
+					$posts[ $post_symbol ]['meta_input']['_wp_page_template'] = $posts[ $post_symbol ]['template'];
 				}
 
 				$r = $this->nav_menus->insert_auto_draft_post( $posts[ $post_symbol ] );

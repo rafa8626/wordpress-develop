@@ -2014,7 +2014,7 @@ function get_theme_starter_content() {
 
 			// Attachments are posts but have special treatment.
 			case 'attachments' :
-				foreach( $config[ $type ] as $id => $item ) {
+				foreach ( $config[ $type ] as $id => $item ) {
 					// Only allow items with an explicit image file extension in the name.
 					// Someday, perhaps A/V or named sources sideloaded from w.org.
 					preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $item['file'], $matches );
@@ -2036,12 +2036,12 @@ function get_theme_starter_content() {
 
 			// All that's left now are posts (besides attachments). Not a default case for the sake of clarity and future work.
 			case 'posts' :
-				foreach( $config[ $type ] as $id => $item ) {
+				foreach ( $config[ $type ] as $id => $item ) {
 					if ( is_array( $item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
 						$content[ $type ][ $id ] = $core_content[ $type ][ $id ];
 
 						// Extra fields - currently locked down because they require special treatment.
-						foreach( $item as $key => $value ) {
+						foreach ( $item as $key => $value ) {
 							if ( 'thumbnail' === $key || 'template' === $key ) {
 								$content[ $type ][ $id ][ $key ] = $value;
 							}
