@@ -978,27 +978,28 @@ final class WP_Customize_Manager {
 			$attachment_ids = array();
 
 			foreach ( $attachments as $symbol => $attributes ) {
-				// We have to replicate logic from inside media_sideload_image() because WordPress.
-				// See https://core.trac.wordpress.org/ticket/19629
+				/*
+				 * The following logic is replicated from media_sideload_image() because WordPress.
+				 * See https://core.trac.wordpress.org/ticket/19629.
+				 */
 				$file_array = array();
 				$file_array['name'] = $attributes['basename'];
 				$file_array['tmp_name'] = download_url( $attributes['file_url'] );
-
 				if ( is_wp_error( $file_array['tmp_name'] ) ) {
 					continue;
 				}
-
-				$attachment_id = media_handle_sideload( $file_array, 0 );
-				// End duplicated logic.
-
+				$attachment_post_data = array_merge(
+					wp_array_slice_assoc( $attributes, array( 'post_title', 'post_content', 'post_excerpt' ) ),
+					array(
+						'post_status' => 'auto-draft', // So attachment will be garbage collected in a week if changeset is never published.
+					)
+				);
+				$attachment_id = media_handle_sideload( $file_array, 0, null, $attachment_post_data );
 				if ( is_wp_error( $attachment_id ) ) {
 					continue;
 				}
 
-				// Set this to auto-draft for garbage collection later.
-				wp_update_post( array( 'ID' => $attachment_id, 'post_status' => 'auto-draft' ) );
 				$attachment_ids[ $symbol ] = $attachment_id;
-
 				$nav_menus_created_posts = array_merge( $nav_menus_created_posts, array_values( $attachment_ids ) );
 			}
 		}

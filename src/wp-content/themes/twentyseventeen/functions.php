@@ -139,12 +139,15 @@ function twentyseventeen_setup() {
 
 		'attachments' => array(
 			'featured-image-1' => array(
+				'post_title' => _x( 'Espresso', 'Theme starter content' ),
 				'file' => '/assets/images/espresso.jpg',
 			),
 			'featured-image-2' => array(
+				'post_title' => _x( 'Sandwich', 'Theme starter content' ),
 				'file' => '/assets/images/sandwich.jpg',
 			),
 			'featured-image-3' => array(
+				'post_title' => _x( 'Coffee', 'Theme starter content' ),
 				'file' => '/assets/images/coffee.jpg',
 			),
 		),
