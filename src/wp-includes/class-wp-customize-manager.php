@@ -977,23 +977,58 @@ final class WP_Customize_Manager {
 
 			$attachment_ids = array();
 
-			foreach ( $attachments as $symbol => $attributes ) {
-				/*
-				 * The following logic is replicated from media_sideload_image() because WordPress.
-				 * See https://core.trac.wordpress.org/ticket/19629.
-				 */
-				$file_array = array();
-				$file_array['name'] = $attributes['basename'];
-				$file_array['tmp_name'] = download_url( $attributes['file_url'] );
-				if ( is_wp_error( $file_array['tmp_name'] ) ) {
+			foreach ( $attachments as $symbol => $attachment ) {
+				if ( empty( $attachment['file'] ) ) {
 					continue;
 				}
+
+				// @todo Prevent loading sideloading attachment again if it was already loaded for this theme.
+				$file_array = array();
+				if ( preg_match( '#^https?://$#', $attachment['file'] ) ) {
+					$file_array['name'] = basename( wp_parse_url( $attachment['file'], PHP_URL_PATH ) );
+					$file_array['tmp_name'] = download_url( $attachment['file_url'] );
+					if ( is_wp_error( $file_array['tmp_name'] ) ) {
+						continue;
+					}
+				} else {
+					$file_array['name'] = basename( $attachment['file'] );
+					$file_path = null;
+					if ( file_exists( $attachment['file'] ) ) {
+						$file_path = $attachment['file']; // Could be absolute path to file in plugin.
+					} elseif ( is_child_theme() && file_exists( get_stylesheet_directory() . '/' . $attachment['file'] ) ) {
+						$file_path = get_stylesheet_directory() . '/' . $attachment['file'];
+					} elseif ( file_exists( get_template_directory() . '/' . $attachment['file'] ) ) {
+						$file_path = get_template_directory() . '/' . $attachment['file'];
+					} else {
+						continue;
+					}
+
+					// Copy file to temp location so that original file won't get deleted from theme after sideloading.
+					$tmpfname = wp_tempnam( basename( $file_path ) );
+					if ( $tmpfname && copy( $file_path, $tmpfname ) ) {
+						$file_array['tmp_name'] = $tmpfname;
+					}
+				}
+
+				if ( empty( $file_array['tmp_name'] ) ) {
+					continue;
+				}
+
+				/*
+				 * Skip files that don't have the allowed extensions.
+				 * @todo Use wp_get_mime_types() here?
+				 */
+				if ( ! preg_match( '/.(jpe?g|jpe|gif|png)$/i', $file_array['name'] ) ) {
+					continue;
+				}
+
 				$attachment_post_data = array_merge(
-					wp_array_slice_assoc( $attributes, array( 'post_title', 'post_content', 'post_excerpt' ) ),
+					wp_array_slice_assoc( $attachment, array( 'post_title', 'post_content', 'post_excerpt' ) ),
 					array(
 						'post_status' => 'auto-draft', // So attachment will be garbage collected in a week if changeset is never published.
 					)
 				);
+
 				$attachment_id = media_handle_sideload( $file_array, 0, null, $attachment_post_data );
 				if ( is_wp_error( $attachment_id ) ) {
 					continue;

@@ -2015,22 +2015,9 @@ function get_theme_starter_content() {
 			// Attachments are posts but have special treatment.
 			case 'attachments' :
 				foreach ( $config[ $type ] as $id => $item ) {
-					// Only allow items with an explicit image file extension in the name.
-					// Someday, perhaps A/V or named sources sideloaded from w.org.
-					preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $item['file'], $matches );
-					if ( ! $matches ) {
-						continue;
+					if ( ! empty( $item['file'] ) ) {
+						$content[ $type ][ $id ] = $item;
 					}
-
-					$item['basename'] = basename( $matches[0] );
-
-					if ( is_child_theme() && file_exists( get_stylesheet_directory() . $item['file'] ) ) {
-						$item['file_url'] = get_stylesheet_directory_uri() . $item['file'];
-					} else {
-						$item['file_url'] = get_template_directory_uri() . $item['file'];
-					}
-
-					$content[ $type ][ $id ] = $item;
 				}
 				break;
 
