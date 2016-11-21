@@ -1041,10 +1041,6 @@ final class WP_Customize_Manager {
 
 		// Posts & pages.
 		if ( ! empty( $posts ) ) {
-			if ( ! empty( $changeset_data['nav_menus_created_posts']['value'] ) ) {
-				$nav_menus_created_posts = $changeset_data['nav_menus_created_posts']['value'];
-			}
-
 			$existing_posts = array();
 			if ( ! empty( $nav_menus_created_posts ) ) {
 				$existing_posts_query = new WP_Query( array(
