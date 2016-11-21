@@ -106,18 +106,18 @@
 			preview.add( 'scheme', urlParser.protocol.replace( /:$/, '' ) );
 
 			preview.body = $( document.body );
-
-			preview.body.on( 'click.preview', 'a', function( event ) {
-				preview.handleLinkClick( event );
-			} );
-
-			preview.body.on( 'submit.preview', 'form', function( event ) {
-				preview.handleFormSubmit( event );
-			} );
-
 			preview.window = $( window );
 
 			if ( api.settings.channel ) {
+
+				// If in an iframe, then intercept the link clicks and form submissions.
+				preview.body.on( 'click.preview', 'a', function( event ) {
+					preview.handleLinkClick( event );
+				} );
+				preview.body.on( 'submit.preview', 'form', function( event ) {
+					preview.handleFormSubmit( event );
+				} );
+
 				preview.window.on( 'scroll.preview', debounce( function() {
 					preview.send( 'scroll', preview.window.scrollTop() );
 				}, 200 ) );
@@ -158,11 +158,6 @@
 				return;
 			}
 
-			// If not in an iframe, then allow the link click to proceed normally since the state query params are added.
-			if ( ! api.settings.channel ) {
-				return;
-			}
-
 			// Prevent initiating navigating from click and instead rely on sending url message to pane.
 			event.preventDefault();
 
@@ -196,11 +191,6 @@
 			if ( 'GET' !== form.prop( 'method' ).toUpperCase() || ! api.isLinkPreviewable( urlParser ) ) {
 				wp.a11y.speak( api.settings.l10n.formUnpreviewable );
 				event.preventDefault();
-				return;
-			}
-
-			// If not in an iframe, then allow the form submission to proceed normally with the state inputs injected.
-			if ( ! api.settings.channel ) {
 				return;
 			}
 
