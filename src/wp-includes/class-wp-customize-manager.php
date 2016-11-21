@@ -1022,8 +1022,17 @@ final class WP_Customize_Manager {
 					continue;
 				}
 
+				// Ensure post_name is set since not automatically derived from post_title for new auto-draft posts.
+				if ( empty( $attachment['post_name'] ) ) {
+					if ( ! empty( $attachment['post_title'] ) ) {
+						$attachment['post_name'] = sanitize_title( $attachment['post_title'] );
+					} else {
+						$attachment['post_name'] = sanitize_title( preg_replace( '/\.\w+$/', '', $file_array['name'] ) );
+					}
+				}
+
 				$attachment_post_data = array_merge(
-					wp_array_slice_assoc( $attachment, array( 'post_title', 'post_content', 'post_excerpt' ) ),
+					wp_array_slice_assoc( $attachment, array( 'post_title', 'post_content', 'post_excerpt', 'post_name' ) ),
 					array(
 						'post_status' => 'auto-draft', // So attachment will be garbage collected in a week if changeset is never published.
 					)
