@@ -1793,12 +1793,12 @@ final class WP_Customize_Manager {
 				}
 				continue;
 			}
-			if ( is_null( $unsanitized_value ) ) {
-				continue;
-			}
 			if ( $options['validate_capability'] && ! current_user_can( $setting->capability ) ) {
 				$validity = new WP_Error( 'unauthorized', __( 'Unauthorized to modify setting due to capability.' ) );
 			} else {
+				if ( is_null( $unsanitized_value ) ) {
+					continue;
+				}
 				$validity = $setting->validate( $unsanitized_value );
 			}
 			if ( ! is_wp_error( $validity ) ) {
@@ -2095,7 +2095,6 @@ final class WP_Customize_Manager {
 				$changed_setting_ids[] = $setting_id;
 			}
 		}
-		$post_values = wp_array_slice_assoc( $post_values, $changed_setting_ids );
 
 		/**
 		 * Fires before save validation happens.
@@ -2111,7 +2110,11 @@ final class WP_Customize_Manager {
 		do_action( 'customize_save_validation_before', $this );
 
 		// Validate settings.
-		$setting_validities = $this->validate_setting_values( $post_values, array(
+		$validated_values = array_merge(
+			array_fill_keys( array_keys( $args['data'] ), null ), // Make sure existence/capability checks are done on value-less setting updates.
+			$post_values
+		);
+		$setting_validities = $this->validate_setting_values( $validated_values, array(
 			'validate_capability' => true,
 			'validate_existence' => true,
 		) );
@@ -2128,10 +2131,6 @@ final class WP_Customize_Manager {
 			);
 			return new WP_Error( 'transaction_fail', '', $response );
 		}
-
-		$response = array(
-			'setting_validities' => $setting_validities,
-		);
 
 		// Obtain/merge data for changeset.
 		$original_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
@@ -2170,14 +2169,21 @@ final class WP_Customize_Manager {
 				// Remove setting from changeset entirely.
 				unset( $data[ $changeset_setting_id ] );
 			} else {
-				// Merge any additional setting params that have been supplied with the existing params.
+
 				if ( ! isset( $data[ $changeset_setting_id ] ) ) {
 					$data[ $changeset_setting_id ] = array();
 				}
 
+				// Merge any additional setting params that have been supplied with the existing params.
+				$merged_setting_params = array_merge( $data[ $changeset_setting_id ], $setting_params );
+
+				// Skip updating setting params if unchanged (ensuring the user_id is not overwritten).
+				if ( $data[ $changeset_setting_id ] === $merged_setting_params ) {
+					continue;
+				}
+
 				$data[ $changeset_setting_id ] = array_merge(
-					$data[ $changeset_setting_id ],
-					$setting_params,
+					$merged_setting_params,
 					array(
 						'type' => $setting->type,
 						'user_id' => $args['user_id'],
@@ -2284,6 +2290,10 @@ final class WP_Customize_Manager {
 		$this->_changeset_data = null; // Reset so WP_Customize_Manager::changeset_data() will re-populate with updated contents.
 
 		remove_filter( 'wp_save_post_revision_post_has_changed', array( $this, '_filter_revision_post_has_changed' ) );
+
+		$response = array(
+			'setting_validities' => $setting_validities,
+		);
 
 		if ( is_wp_error( $r ) ) {
 			$response['changeset_post_save_failure'] = $r->get_error_code();
