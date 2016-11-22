@@ -966,7 +966,23 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		$nav_menus_created_posts = array();
+		$starter_content_auto_draft_post_ids = array();
+		if ( ! empty( $changeset_data['nav_menus_created_posts']['value'] ) ) {
+			$starter_content_auto_draft_post_ids = array_merge( $starter_content_auto_draft_post_ids, $changeset_data['nav_menus_created_posts']['value'] );
+		}
+
+		$existing_starter_content_posts = array();
+		if ( ! empty( $starter_content_auto_draft_post_ids ) ) {
+			$existing_posts_query = new WP_Query( array(
+				'post__in' => $starter_content_auto_draft_post_ids,
+				'post_status' => 'auto-draft',
+				'post_type' => 'any',
+				'number' => -1,
+			) );
+			foreach ( $existing_posts_query->posts as $existing_post ) {
+				$existing_starter_content_posts[ $existing_post->post_type . ':' . $existing_post->post_name ] = $existing_post;
+			}
+		}
 
 		// Attachments are technically posts but handled differently.
 		if ( ! empty( $attachments ) ) {
@@ -984,7 +1000,6 @@ final class WP_Customize_Manager {
 					continue;
 				}
 
-				// @todo Prevent loading sideloading attachment again if it was already loaded for this theme.
 				$file_array = array();
 				$file_path = null;
 				if ( file_exists( $attachment['file'] ) ) {
@@ -1004,15 +1019,6 @@ final class WP_Customize_Manager {
 					continue;
 				}
 
-				// Copy file to temp location so that original file won't get deleted from theme after sideloading.
-				$temp_file_name = wp_tempnam( basename( $file_path ) );
-				if ( $temp_file_name && copy( $file_path, $temp_file_name ) ) {
-					$file_array['tmp_name'] = $temp_file_name;
-				}
-				if ( empty( $file_array['tmp_name'] ) ) {
-					continue;
-				}
-
 				// Ensure post_name is set since not automatically derived from post_title for new auto-draft posts.
 				if ( empty( $attachment['post_name'] ) ) {
 					if ( ! empty( $attachment['post_title'] ) ) {
@@ -1022,38 +1028,57 @@ final class WP_Customize_Manager {
 					}
 				}
 
-				$attachment_post_data = array_merge(
-					wp_array_slice_assoc( $attachment, array( 'post_title', 'post_content', 'post_excerpt', 'post_name' ) ),
-					array(
-						'post_status' => 'auto-draft', // So attachment will be garbage collected in a week if changeset is never published.
-					)
-				);
+				$attachment_id = null;
+				$attached_file = null;
+				if ( isset( $existing_starter_content_posts[ 'attachment:' . $attachment['post_name'] ] ) ) {
+					$attachment_post = $existing_starter_content_posts[ 'attachment:' . $attachment['post_name'] ];
+					$attachment_id = $attachment_post->ID;
+					$attached_file = get_attached_file( $attachment_id );
+					if ( empty( $attached_file ) || ! file_exists( $attached_file ) ) {
+						$attachment_id = null;
+						$attached_file = null;
+					} elseif ( $this->get_stylesheet() !== get_post_meta( $attachment_post->ID, '_starter_content_theme', true ) ) {
 
-				$attachment_id = media_handle_sideload( $file_array, 0, null, $attachment_post_data );
-				if ( is_wp_error( $attachment_id ) ) {
-					continue;
+						// Re-generate attachment metadata since it was previously generated for a different theme.
+						$metadata = wp_generate_attachment_metadata( $attachment_post->ID, $attached_file );
+						wp_update_attachment_metadata( $attachment_id, $metadata );
+						update_post_meta( $attachment_id, '_starter_content_theme', $this->get_stylesheet() );
+					}
+				}
+
+				// Insert the attachment auto-draft because it doesn't yet exist or the attached file is gone.
+				if ( ! $attachment_id ) {
+
+					// Copy file to temp location so that original file won't get deleted from theme after sideloading.
+					$temp_file_name = wp_tempnam( basename( $file_path ) );
+					if ( $temp_file_name && copy( $file_path, $temp_file_name ) ) {
+						$file_array['tmp_name'] = $temp_file_name;
+					}
+					if ( empty( $file_array['tmp_name'] ) ) {
+						continue;
+					}
+
+					$attachment_post_data = array_merge(
+						wp_array_slice_assoc( $attachment, array( 'post_title', 'post_content', 'post_excerpt', 'post_name' ) ),
+						array(
+							'post_status' => 'auto-draft', // So attachment will be garbage collected in a week if changeset is never published.
+						)
+					);
+
+					$attachment_id = media_handle_sideload( $file_array, 0, null, $attachment_post_data );
+					if ( is_wp_error( $attachment_id ) ) {
+						continue;
+					}
+					update_post_meta( $attachment_id, '_starter_content_theme', $this->get_stylesheet() );
 				}
 
 				$attachment_ids[ $symbol ] = $attachment_id;
-				$nav_menus_created_posts = array_merge( $nav_menus_created_posts, array_values( $attachment_ids ) );
+				$starter_content_auto_draft_post_ids = array_merge( $starter_content_auto_draft_post_ids, array_values( $attachment_ids ) );
 			}
 		}
 
 		// Posts & pages.
 		if ( ! empty( $posts ) ) {
-			$existing_posts = array();
-			if ( ! empty( $nav_menus_created_posts ) ) {
-				$existing_posts_query = new WP_Query( array(
-					'post__in' => $nav_menus_created_posts,
-					'post_status' => 'auto-draft',
-					'post_type' => 'any',
-					'number' => -1,
-				) );
-				foreach ( $existing_posts_query->posts as $existing_post ) {
-					$existing_posts[ $existing_post->post_type . ':' . $existing_post->post_name ] = $existing_post;
-				}
-			}
-
 			foreach ( array_keys( $posts ) as $post_symbol ) {
 				if ( empty( $posts[ $post_symbol ]['post_type'] ) ) {
 					continue;
@@ -1068,8 +1093,8 @@ final class WP_Customize_Manager {
 				}
 
 				// Use existing auto-draft post if one already exists with the same type and name.
-				if ( isset( $existing_posts[ $post_type . ':' . $post_name ] ) ) {
-					$posts[ $post_symbol ]['ID'] = $existing_posts[ $post_type . ':' . $post_name ]->ID;
+				if ( isset( $existing_starter_content_posts[ $post_type . ':' . $post_name ] ) ) {
+					$posts[ $post_symbol ]['ID'] = $existing_starter_content_posts[ $post_type . ':' . $post_name ]->ID;
 					continue;
 				}
 
@@ -1090,16 +1115,13 @@ final class WP_Customize_Manager {
 				}
 			}
 
-			$nav_menus_created_posts = array_merge( $nav_menus_created_posts, wp_list_pluck( $posts, 'ID' ) );
+			$starter_content_auto_draft_post_ids = array_merge( $starter_content_auto_draft_post_ids, wp_list_pluck( $posts, 'ID' ) );
 		}
 
 		// The nav_menus_created_posts setting is why nav_menus component is dependency for adding posts.
-		if ( ! empty( $this->nav_menus ) && ! empty( $nav_menus_created_posts ) ) {
+		if ( ! empty( $this->nav_menus ) && ! empty( $starter_content_auto_draft_post_ids ) ) {
 			$setting_id = 'nav_menus_created_posts';
-			if ( ! empty( $changeset_data[ $setting_id ]['value'] ) ) {
-				$nav_menus_created_posts = array_merge( $nav_menus_created_posts, $changeset_data[ $setting_id ]['value'] );
-			}
-			$this->set_post_value( $setting_id, array_unique( array_values( $nav_menus_created_posts ) ) );
+			$this->set_post_value( $setting_id, array_unique( array_values( $starter_content_auto_draft_post_ids ) ) );
 			$this->pending_starter_content_settings_ids[] = $setting_id;
 		}
 
