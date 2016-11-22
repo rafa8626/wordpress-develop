@@ -158,6 +158,31 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $previewed_css, $this->setting->value() );
 		$this->assertEquals( $previewed_css, wp_get_custom_css( $this->setting->stylesheet ) );
 
+		// Make sure that wp_update_custom_css_post() works as expected for updates.
+		$r = wp_update_custom_css_post( array(
+			'stylesheet' => $this->setting->stylesheet,
+			'post_content' => 'body { color:red; }',
+			'post_content_filtered' => "body\n\tcolor:red;",
+		) );
+		$this->assertInstanceOf( 'WP_Post', $r );
+		$this->assertEquals( $post_id, $r->ID );
+		$r = wp_update_custom_css_post( array(
+			'post_content' => 'body { content: "\o/"; }',
+		) );
+		$this->assertEquals( $this->wp_customize->get_stylesheet(), get_post( $r )->post_name );
+		$this->assertEquals( 'body { content: "\o/"; }', get_post( $r )->post_content );
+
+		// Make sure that wp_update_custom_css_post() works as expected for insertion.
+		$r = wp_update_custom_css_post( array(
+			'stylesheet' => 'other',
+			'post_content' => 'body { background:black; }',
+		) );
+		$this->assertInstanceOf( 'WP_Post', $r );
+		$this->assertEquals( 'other', get_post( $r )->post_name );
+		$this->assertEquals( 'body { background:black; }', get_post( $r )->post_content );
+		$this->assertEquals( 'publish', get_post( $r )->post_status );
+
+		// Test deletion.
 		wp_delete_post( $post_id );
 		$this->assertNull( wp_get_custom_css_post() );
 		$this->assertNull( wp_get_custom_css_post( get_stylesheet() ) );

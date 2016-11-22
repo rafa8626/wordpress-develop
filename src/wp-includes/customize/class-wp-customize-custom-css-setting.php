@@ -287,27 +287,13 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 		$args = apply_filters( 'customize_update_custom_css_post_content_args', $args, $css, $setting );
 		$args = wp_array_slice_assoc( $args, array( 'post_content', 'post_content_filtered' ) );
 
-		$args = array_merge(
-			$args,
-			array(
-				'post_title' => $this->stylesheet,
-				'post_name' => sanitize_title( $this->stylesheet ),
-				'post_type' => 'custom_css',
-				'post_status' => 'publish',
-			)
-		);
+		$args['stylesheet'] = $this->stylesheet;
+		$r = wp_update_custom_css_post( $args );
 
-		// Update post if it already exists, otherwise create a new one.
-		$post = wp_get_custom_css_post( $this->stylesheet );
-		if ( $post ) {
-			$args['ID'] = $post->ID;
-			$post_id = wp_update_post( wp_slash( $args ) );
-		} else {
-			$post_id = wp_insert_post( wp_slash( $args ) );
-		}
-		if ( ! $post_id ) {
+		if ( $r instanceof WP_Error ) {
 			return false;
 		}
+		$post_id = $r->ID;
 
 		// Cache post ID in theme mod for performance to avoid additional DB query.
 		if ( $this->manager->get_stylesheet() === $this->stylesheet ) {

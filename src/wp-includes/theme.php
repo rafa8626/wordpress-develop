@@ -1708,6 +1708,59 @@ function wp_get_custom_css( $stylesheet = '' ) {
 }
 
 /**
+ * Update the `custom_css` post for a given theme.
+ *
+ * Inserts a `custom_css` post when one doesn't yet exist.
+ *
+ * @since 4.7.0
+ * @access public
+ *
+ * @param array $args {
+ *     Custom CSS post args.
+ *
+ *     @type string $post_content          CSS.
+ *     @type string $post_content_filtered Pre-processed CSS. Normally empty string. Optional.
+ *     @type string $stylesheet            Stylesheet (child theme) to update.
+ * }
+ * @return WP_Post|WP_Error Post on success, error on failure.
+ */
+function wp_update_custom_css_post( $args ) {
+	$args = array_merge(
+		array(
+			'post_content' => '',
+			'post_content_filtered' => '',
+			'stylesheet' => get_stylesheet(),
+		),
+		$args
+	);
+
+	$args = array_merge(
+		$args,
+		array(
+			'post_title' => $args['stylesheet'],
+			'post_name' => sanitize_title( $args['stylesheet'] ),
+			'post_type' => 'custom_css',
+			'post_status' => 'publish',
+		)
+	);
+
+	// Update post if it already exists, otherwise create a new one.
+	$post = wp_get_custom_css_post( $args['stylesheet'] );
+	if ( $post ) {
+		$args['ID'] = $post->ID;
+		$r = wp_update_post( wp_slash( $args ), true );
+	} else {
+		$r = wp_insert_post( wp_slash( $args ), true );
+	}
+
+	if ( $r instanceof WP_Error ) {
+		return $r;
+	} else {
+		return get_post( $r );
+	}
+}
+
+/**
  * Add callback for custom TinyMCE editor stylesheets.
  *
  * The parameter $stylesheet is the name of the stylesheet, relative to
