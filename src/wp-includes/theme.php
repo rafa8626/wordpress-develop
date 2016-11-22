@@ -1988,7 +1988,7 @@ function get_theme_starter_content() {
 							if ( ! empty( $core_content[ $type ][ $id ] ) ) {
 								$widget = array(
 									$core_content[ $type ][ $id ][0],
-									array_merge( $core_content[ $type ][ $id ][1], $widget )
+									array_merge( $core_content[ $type ][ $id ][1], $widget ),
 								);
 							}
 
