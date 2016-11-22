@@ -978,36 +978,30 @@ final class WP_Customize_Manager {
 			$attachment_ids = array();
 
 			foreach ( $attachments as $symbol => $attachment ) {
-				if ( empty( $attachment['file'] ) ) {
+
+				// A file is required and URLs to files are not currently allowed.
+				if ( empty( $attachment['file'] ) || preg_match( '#^https?://$#', $attachment['file'] ) ) {
 					continue;
 				}
 
 				// @todo Prevent loading sideloading attachment again if it was already loaded for this theme.
 				$file_array = array();
-				if ( preg_match( '#^https?://$#', $attachment['file'] ) ) {
-					$file_array['name'] = basename( wp_parse_url( $attachment['file'], PHP_URL_PATH ) );
-					$file_array['tmp_name'] = download_url( $attachment['file_url'] );
-					if ( is_wp_error( $file_array['tmp_name'] ) ) {
-						continue;
-					}
+				$file_path = null;
+				if ( file_exists( $attachment['file'] ) ) {
+					$file_path = $attachment['file']; // Could be absolute path to file in plugin.
+				} elseif ( is_child_theme() && file_exists( get_stylesheet_directory() . '/' . $attachment['file'] ) ) {
+					$file_path = get_stylesheet_directory() . '/' . $attachment['file'];
+				} elseif ( file_exists( get_template_directory() . '/' . $attachment['file'] ) ) {
+					$file_path = get_template_directory() . '/' . $attachment['file'];
 				} else {
-					$file_array['name'] = basename( $attachment['file'] );
-					$file_path = null;
-					if ( file_exists( $attachment['file'] ) ) {
-						$file_path = $attachment['file']; // Could be absolute path to file in plugin.
-					} elseif ( is_child_theme() && file_exists( get_stylesheet_directory() . '/' . $attachment['file'] ) ) {
-						$file_path = get_stylesheet_directory() . '/' . $attachment['file'];
-					} elseif ( file_exists( get_template_directory() . '/' . $attachment['file'] ) ) {
-						$file_path = get_template_directory() . '/' . $attachment['file'];
-					} else {
-						continue;
-					}
+					continue;
+				}
+				$file_array['name'] = basename( $attachment['file'] );
 
-					// Copy file to temp location so that original file won't get deleted from theme after sideloading.
-					$tmpfname = wp_tempnam( basename( $file_path ) );
-					if ( $tmpfname && copy( $file_path, $tmpfname ) ) {
-						$file_array['tmp_name'] = $tmpfname;
-					}
+				// Copy file to temp location so that original file won't get deleted from theme after sideloading.
+				$temp_file_name = wp_tempnam( basename( $file_path ) );
+				if ( $temp_file_name && copy( $file_path, $temp_file_name ) ) {
+					$file_array['tmp_name'] = $temp_file_name;
 				}
 
 				if ( empty( $file_array['tmp_name'] ) ) {
