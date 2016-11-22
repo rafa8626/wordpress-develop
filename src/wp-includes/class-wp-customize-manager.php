@@ -1098,7 +1098,7 @@ final class WP_Customize_Manager {
 					continue;
 				}
 
-				// Translate the featured image symbol
+				// Translate the featured image symbol.
 				if ( ! empty( $posts[ $post_symbol ]['thumbnail'] )
 					&& preg_match( '/^{{(?P<symbol>.+)}}$/', $posts[ $post_symbol ]['thumbnail'], $matches )
 					&& isset( $attachment_ids[ $matches['symbol'] ] ) ) {

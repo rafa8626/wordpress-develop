@@ -1981,8 +1981,17 @@ function get_theme_starter_content() {
 			// Widgets are grouped into sidebars.
 			case 'widgets' :
 				foreach ( $config[ $type ] as $sidebar_id => $widgets ) {
-					foreach ( $widgets as $widget ) {
+					foreach ( $widgets as $id => $widget ) {
 						if ( is_array( $widget ) ) {
+
+							// Item extends core content.
+							if ( ! empty( $core_content[ $type ][ $id ] ) ) {
+								$widget = array(
+									$core_content[ $type ][ $id ][0],
+									array_merge( $core_content[ $type ][ $id ][1], $widget )
+								);
+							}
+
 							$content[ $type ][ $sidebar_id ][] = $widget;
 						} elseif ( is_string( $widget ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $widget ] ) ) {
 							$content[ $type ][ $sidebar_id ][] = $core_content[ $type ][ $widget ];
@@ -2002,8 +2011,14 @@ function get_theme_starter_content() {
 
 					$content[ $type ][ $nav_menu_location ]['name'] = $nav_menu['name'];
 
-					foreach ( $nav_menu['items'] as $nav_menu_item ) {
+					foreach ( $nav_menu['items'] as $id => $nav_menu_item ) {
 						if ( is_array( $nav_menu_item ) ) {
+
+							// Item extends core content.
+							if ( ! empty( $core_content[ $type ][ $id ] ) ) {
+								$nav_menu_item = array_merge( $core_content[ $type ][ $id ], $nav_menu_item );
+							}
+
 							$content[ $type ][ $nav_menu_location ]['items'][] = $nav_menu_item;
 						} elseif ( is_string( $nav_menu_item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $nav_menu_item ] ) ) {
 							$content[ $type ][ $nav_menu_location ]['items'][] = $core_content[ $type ][ $nav_menu_item ];
@@ -2024,16 +2039,29 @@ function get_theme_starter_content() {
 			// All that's left now are posts (besides attachments). Not a default case for the sake of clarity and future work.
 			case 'posts' :
 				foreach ( $config[ $type ] as $id => $item ) {
-					if ( is_array( $item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $id ] ) ) {
-						$content[ $type ][ $id ] = $core_content[ $type ][ $id ];
+					if ( is_array( $item ) ) {
 
-						// Extra fields - currently locked down because they require special treatment.
-						foreach ( $item as $key => $value ) {
-							if ( 'thumbnail' === $key || 'template' === $key ) {
-								$content[ $type ][ $id ][ $key ] = $value;
-							}
+						// Item extends core content.
+						if ( ! empty( $core_content[ $type ][ $id ] ) ) {
+							$item = array_merge( $core_content[ $type ][ $id ], $item );
 						}
-					} elseif ( is_string( $item ) && ! empty( $core_content[ $type ] ) && ! empty( $core_content[ $type ][ $item ] ) ) {
+
+						// Enforce a subset of fields.
+						$content[ $type ][ $id ] = wp_array_slice_assoc(
+							$item,
+							array(
+								'post_type',
+								'post_title',
+								'post_excerpt',
+								'post_name',
+								'post_content',
+								'menu_order',
+								'comment_status',
+								'thumbnail',
+								'template',
+							)
+						);
+					} elseif ( is_string( $item ) && ! empty( $core_content[ $type ][ $item ] ) ) {
 						$content[ $type ][ $item ] = $core_content[ $type ][ $item ];
 					}
 				}
