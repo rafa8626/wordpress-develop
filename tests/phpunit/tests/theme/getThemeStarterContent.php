@@ -108,7 +108,7 @@ class Tests_WP_Theme_Get_Theme_Starter_Content extends WP_UnitTestCase {
 					'post_title' => 'Title',
 					'post_content' => 'Description',
 					'post_excerpt' => 'Caption',
-					'file' => ABSPATH . '/wp-includes/images/w-logo-blue.png',
+					'file' => DIR_TESTDATA . '/images/waffles.jpg',
 				),
 				'featured-image-skipped' => array(
 					'post_title' => 'Skipped',

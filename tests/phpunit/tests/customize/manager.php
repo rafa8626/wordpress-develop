@@ -359,7 +359,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 					'post_title' => 'Featured Image',
 					'post_content' => 'Attachment Description',
 					'post_excerpt' => 'Attachment Caption',
-					'file' => ABSPATH . '/wp-includes/images/w-logo-blue.png',
+					'file' => DIR_TESTDATA . '/images/waffles.jpg',
 				),
 			),
 			'options' => array(
@@ -421,7 +421,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$attachment_metadata = wp_get_attachment_metadata( $posts_by_name['featured-image'] );
 		$this->assertEquals( 'Featured Image', get_post( $posts_by_name['featured-image'] )->post_title );
 		$this->assertArrayHasKey( 'file', $attachment_metadata );
-		$this->assertContains( 'w-logo-blue', $attachment_metadata['file'] );
+		$this->assertContains( 'waffles', $attachment_metadata['file'] );
 
 		$this->assertEquals( 'page', $changeset_values['show_on_front'] );
 		$this->assertEquals( $posts_by_name['home'], $changeset_values['page_on_front'] );
