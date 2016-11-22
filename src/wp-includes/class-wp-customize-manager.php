@@ -998,21 +998,18 @@ final class WP_Customize_Manager {
 				}
 				$file_array['name'] = basename( $attachment['file'] );
 
+				// Skip file types that are not recognized.
+				$checked_filetype = wp_check_filetype( $file_array['name'] );
+				if ( empty( $checked_filetype['type'] ) ) {
+					continue;
+				}
+
 				// Copy file to temp location so that original file won't get deleted from theme after sideloading.
 				$temp_file_name = wp_tempnam( basename( $file_path ) );
 				if ( $temp_file_name && copy( $file_path, $temp_file_name ) ) {
 					$file_array['tmp_name'] = $temp_file_name;
 				}
-
 				if ( empty( $file_array['tmp_name'] ) ) {
-					continue;
-				}
-
-				/*
-				 * Skip files that don't have the allowed extensions.
-				 * @todo Use wp_get_mime_types() here?
-				 */
-				if ( ! preg_match( '/.(jpe?g|jpe|gif|png)$/i', $file_array['name'] ) ) {
 					continue;
 				}
 
