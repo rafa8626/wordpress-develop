@@ -1755,9 +1755,8 @@ function wp_update_custom_css_post( $args ) {
 
 	if ( $r instanceof WP_Error ) {
 		return $r;
-	} else {
-		return get_post( $r );
 	}
+	return get_post( $r );
 }
 
 /**
