@@ -1065,6 +1065,10 @@ final class WP_Customize_Manager {
 						)
 					);
 
+					// In PHP < 5.4 filesize() returns 0 for the temp files unless we clear the file status cache.
+					// @todo: Figure out why this is, and maybe don't clear for 5.4+
+					clearstatcache();
+
 					$attachment_id = media_handle_sideload( $file_array, 0, null, $attachment_post_data );
 					if ( is_wp_error( $attachment_id ) ) {
 						continue;
