@@ -1720,7 +1720,7 @@ function wp_get_custom_css( $stylesheet = '' ) {
  *
  *     @type string $post_content          CSS.
  *     @type string $post_content_filtered Pre-processed CSS. Normally empty string. Optional.
- *     @type string $stylesheet            Stylesheet (child theme) to update.
+ *     @type string $stylesheet            Stylesheet (child theme) to update. Optional, defaults to current theme/stylesheet.
  * }
  * @return WP_Post|WP_Error Post on success, error on failure.
  */
