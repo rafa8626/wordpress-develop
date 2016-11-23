@@ -245,13 +245,9 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			$css = '';
 		}
 
-		$args = array(
-			'post_content' => $css,
-			'post_content_filtered' => '',
-		);
-
-		$args['stylesheet'] = $this->stylesheet;
-		$r = wp_update_custom_css_post( $css, $args );
+		$r = wp_update_custom_css_post( $css, array(
+			'stylesheet' => $this->stylesheet,
+		) );
 
 		if ( $r instanceof WP_Error ) {
 			return false;

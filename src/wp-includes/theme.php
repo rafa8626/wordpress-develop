@@ -1760,9 +1760,15 @@ function wp_update_custom_css_post( $css, $args = array() ) {
 	 *     @type string $css          CSS stored in `post_content`.
 	 *     @type string $preprocessed Pre-processed CSS stored in `post_content_filtered`. Normally empty string.
 	 * }
-	 * @param string $stylesheet The stylesheet (theme) being updated.
+	 * @param array $args {
+	 *     The args passed into `wp_update_custom_css_post()` merged with defaults.
+	 *
+	 *     @type string $css          The original CSS passed in to be updated.
+	 *     @type string $preprocessed The original preprocessed CSS passed in to be updated.
+	 *     @type string $stylesheet   The stylesheet (theme) being updated.
+	 * }
 	 */
-	$data = apply_filters( 'update_custom_css_data', $data, $args['stylesheet'] );
+	$data = apply_filters( 'update_custom_css_data', $data, array_merge( $args, compact( 'css' ) ) );
 
 	$post_data = array(
 		'post_title' => $args['stylesheet'],

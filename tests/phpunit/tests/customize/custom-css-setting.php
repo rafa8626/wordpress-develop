@@ -151,6 +151,7 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 		$this->assertTrue( false !== $saved );
 		$this->assertEquals( $updated_css, $this->setting->value() );
 		$this->assertEquals( $updated_css, wp_get_custom_css( $this->setting->stylesheet ) );
+		$this->assertEquals( $updated_css, get_post( $post_id )->post_content );
 
 		$previewed_css = 'body { color: red; }';
 		$this->wp_customize->set_post_value( $this->setting->id, $previewed_css );
@@ -165,9 +166,12 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 		) );
 		$this->assertInstanceOf( 'WP_Post', $r );
 		$this->assertEquals( $post_id, $r->ID );
+		$this->assertEquals( 'body { color:red; }', get_post( $r )->post_content );
+		$this->assertEquals( "body\n\tcolor:red;", get_post( $r )->post_content_filtered );
 		$r = wp_update_custom_css_post( 'body { content: "\o/"; }' );
 		$this->assertEquals( $this->wp_customize->get_stylesheet(), get_post( $r )->post_name );
 		$this->assertEquals( 'body { content: "\o/"; }', get_post( $r )->post_content );
+		$this->assertEquals( '', get_post( $r )->post_content_filtered );
 
 		// Make sure that wp_update_custom_css_post() works as expected for insertion.
 		$r = wp_update_custom_css_post( 'body { background:black; }', array(
@@ -259,15 +263,18 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 	/**
 	 * Filter `customize_update_custom_css_post_content_args`.
 	 *
-	 * @param array  $data       Data.
-	 * @param string $stylesheet Stylesheet.
+	 * @param array  $data Data.
+	 * @param string $args Args.
 	 * @return array Data.
 	 */
-	function filter_update_custom_css_data( $data, $stylesheet ) {
+	function filter_update_custom_css_data( $data, $args ) {
 		$this->assertInternalType( 'array', $data );
 		$this->assertEqualSets( array( 'css', 'preprocessed' ), array_keys( $data ) );
 		$this->assertEquals( '', $data['preprocessed'] );
-		$this->assertInternalType( 'string', $stylesheet );
+		$this->assertInternalType( 'array', $args );
+		$this->assertEqualSets( array( 'css', 'preprocessed', 'stylesheet' ), array_keys( $args ) );
+		$this->assertEquals( $args['css'], $data['css'] );
+		$this->assertEquals( $args['preprocessed'], $data['preprocessed'] );
 
 		$data['css'] .= '/* filtered post_content */';
 		$data['preprocessed'] = '/* filtered post_content_filtered */';
