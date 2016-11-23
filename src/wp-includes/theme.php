@@ -1725,14 +1725,11 @@ function wp_get_custom_css( $stylesheet = '' ) {
  * @return WP_Post|WP_Error Post on success, error on failure.
  */
 function wp_update_custom_css_post( $args ) {
-	$args = array_merge(
-		array(
-			'post_content' => '',
-			'post_content_filtered' => '',
-			'stylesheet' => get_stylesheet(),
-		),
-		$args
-	);
+	$args = wp_parse_args( $args, array(
+		'post_content' => '',
+		'post_content_filtered' => '',
+		'stylesheet' => get_stylesheet(),
+	) );
 
 	$args = array_merge(
 		$args,
