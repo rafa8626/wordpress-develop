@@ -256,39 +256,8 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 			'post_content_filtered' => '',
 		);
 
-		/**
-		 * Filters the `post_content` and `post_content_filtered` args for a `custom_css` post being updated.
-		 *
-		 * This filter can be used by plugin that offer CSS pre-processors, to store the original
-		 * pre-processed CSS in `post_content_filtered` and then store processed CSS in `post_content`.
-		 * When used in this way, the `post_content_filtered` should be supplied as the setting value
-		 * instead of `post_content` via a the `customize_value_custom_css` filter, for example:
-		 *
-		 * <code>
-		 * add_filter( 'customize_value_custom_css', function( $value, $setting ) {
-		 *     $post = wp_get_custom_css_post( $setting->stylesheet );
-		 *     if ( $post && ! empty( $post->post_content_filtered ) ) {
-		 *         $css = $post->post_content_filtered;
-		 *     }
-		 *     return $css;
-		 * }, 10, 2 );
-		 * </code>
-		 *
-		 * @since 4.7.0
-		 * @param array  $args {
-		 *     Content post args (unslashed) for `wp_update_post()`/`wp_insert_post()`.
-		 *
-		 *     @type string $post_content          CSS.
-		 *     @type string $post_content_filtered Pre-processed CSS. Normally empty string.
-		 * }
-		 * @param string                          $css     Original CSS being updated.
-		 * @param WP_Customize_Custom_CSS_Setting $setting Custom CSS Setting.
-		 */
-		$args = apply_filters( 'customize_update_custom_css_post_content_args', $args, $css, $setting );
-		$args = wp_array_slice_assoc( $args, array( 'post_content', 'post_content_filtered' ) );
-
 		$args['stylesheet'] = $this->stylesheet;
-		$r = wp_update_custom_css_post( $args );
+		$r = wp_update_custom_css_post( $css, $args );
 
 		if ( $r instanceof WP_Error ) {
 			return false;
