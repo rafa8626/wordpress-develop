@@ -245,8 +245,6 @@ final class WP_Customize_Custom_CSS_Setting extends WP_Customize_Setting {
 	 * @return int|false The post ID or false if the value could not be saved.
 	 */
 	public function update( $css ) {
-		$setting = $this;
-
 		if ( empty( $css ) ) {
 			$css = '';
 		}
