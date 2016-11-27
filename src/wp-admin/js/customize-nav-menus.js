@@ -800,14 +800,6 @@
 
 				panel.saveManageColumnsState();
 			});
-			this.container.find( '.hide-column-tog' ).each( function() {
-			var $t = $( this ), column = $t.val();
-				if ( $t.prop( 'checked' ) ) {
-					panel.checked( column );
-				} else {
-					panel.unchecked( column );
-				}
-			});
 		},
 
 		saveManageColumnsState: _.debounce( function() {
@@ -827,11 +819,15 @@
 		}, 2000 ),
 
 		checked: function( column ) {
-			this.container.addClass( 'field-' + column + '-active' );
+			_.each( this.sections(), function( section ) {
+				section.container.addClass( 'field-' + column + '-active' );
+			} );
 		},
 
 		unchecked: function( column ) {
-			this.container.removeClass( 'field-' + column + '-active' );
+			_.each( this.sections(), function( section ) {
+				section.container.removeClass( 'field-' + column + '-active' );
+			} );
 		},
 
 		hidden: function() {
@@ -923,6 +919,12 @@
 				section.container.find( '.menu-item.move-left-disabled .menus-move-left' ).attr({ 'tabindex': '-1', 'aria-hidden': 'true' });
 				section.container.find( '.menu-item.move-right-disabled .menus-move-right' ).attr({ 'tabindex': '-1', 'aria-hidden': 'true' });
 			} );
+
+			// Set the initial classes for active fields.
+			api.panel( 'nav_menus' ).container.find( '.hide-column-tog' ).each( function() {
+				var $toggle = $( this ), column = $toggle.val();
+				section.container.toggleClass( 'field-' + column + '-active', $toggle.prop( 'checked' ) );
+			});
 		},
 
 		populateControls: function() {
