@@ -790,18 +790,19 @@
 		 */
 		ready: function() {
 			var panel = this;
-			this.container.find( '.hide-column-tog' ).click( function() {
-				var $t = $( this ), column = $t.val();
-				if ( $t.prop( 'checked' ) ) {
-					panel.checked( column );
-				} else {
-					panel.unchecked( column );
-				}
-
+			panel.container.find( '.hide-column-tog' ).click( function() {
 				panel.saveManageColumnsState();
 			});
 		},
 
+		/**
+		 * Save hidden column states.
+		 *
+		 * @since 4.3.0
+		 * @private
+		 *
+		 * @returns {void}
+		 */
 		saveManageColumnsState: _.debounce( function() {
 			var panel = this;
 			if ( panel._updateHiddenColumnsRequest ) {
@@ -818,18 +819,24 @@
 			} );
 		}, 2000 ),
 
-		checked: function( column ) {
-			_.each( this.sections(), function( section ) {
-				section.container.addClass( 'field-' + column + '-active' );
-			} );
-		},
+		/**
+		 * @deprecated Since 4.7.0 now that the nav_menu sections are responsible for toggling the classes on their own containers.
+		 */
+		checked: function() {},
 
-		unchecked: function( column ) {
-			_.each( this.sections(), function( section ) {
-				section.container.removeClass( 'field-' + column + '-active' );
-			} );
-		},
+		/**
+		 * @deprecated Since 4.7.0 now that the nav_menu sections are responsible for toggling the classes on their own containers.
+		 */
+		unchecked: function() {},
 
+		/**
+		 * Get hidden fields.
+		 *
+		 * @since 4.3.0
+		 * @private
+		 *
+		 * @returns {Array} Fields (columns) that are hidden.
+		 */
 		hidden: function() {
 			return $( '.hide-column-tog' ).not( ':checked' ).map( function() {
 				var id = this.id;
@@ -867,7 +874,7 @@
 		 * Ready.
 		 */
 		ready: function() {
-			var section = this;
+			var section = this, fieldActiveToggles, handleFieldActiveToggle;
 
 			if ( 'undefined' === typeof section.params.menu_id ) {
 				throw new Error( 'params.menu_id was not defined' );
@@ -920,11 +927,19 @@
 				section.container.find( '.menu-item.move-right-disabled .menus-move-right' ).attr({ 'tabindex': '-1', 'aria-hidden': 'true' });
 			} );
 
-			// Set the initial classes for active fields.
-			api.panel( 'nav_menus' ).container.find( '.hide-column-tog' ).each( function() {
-				var $toggle = $( this ), column = $toggle.val();
-				section.container.toggleClass( 'field-' + column + '-active', $toggle.prop( 'checked' ) );
-			});
+			/**
+			 * Update the active field class for the content container for a given checkbox toggle.
+			 *
+			 * @this {jQuery}
+			 * @returns {void}
+			 */
+			handleFieldActiveToggle = function() {
+				var className = 'field-' + $( this ).val() + '-active';
+				section.contentContainer.toggleClass( className, $( this ).prop( 'checked' ) );
+			};
+			fieldActiveToggles = api.panel( 'nav_menus' ).contentContainer.find( '.metabox-prefs:first' ).find( '.hide-column-tog' );
+			fieldActiveToggles.each( handleFieldActiveToggle );
+			fieldActiveToggles.on( 'click', handleFieldActiveToggle );
 		},
 
 		populateControls: function() {
