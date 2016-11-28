@@ -211,7 +211,6 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$this->assertFalse( $this->_last_response_parsed['success'] );
 		$this->assertEquals( 'bad_customize_changeset_date', $this->_last_response_parsed['data'] );
 		$_POST['customize_changeset_date'] = '2010-01-01 00:00:00';
-		$_POST['customize_changeset_status'] = 'future';
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
 		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data'] );
@@ -354,27 +353,26 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$this->assertTrue( $this->_last_response_parsed['success'] );
 		$changeset_post_schedule = get_post( $post_id );
 		$this->assertEquals( $future_date, $changeset_post_schedule->post_date );
-
 		// Success if draft with past date.
-		$_POST['customize_changeset_status'] = 'draft';
-		$past_date = '2010-01-01 00:00:00';
-		$_POST['customize_changeset_date'] = $past_date;
-		$this->make_ajax_call( 'customize_save' );
-		$this->assertTrue( $this->_last_response_parsed['success'] );
-		$changeset_past_draft = get_post( $post_id );
-		$this->assertNotEquals( $past_date, $changeset_past_draft->post_date );
+		$now = current_time( 'mysql' );
+		wp_update_post( array(
+			'ID' => $post_id,
+			'post_status' => 'draft',
+			'post_date' => $now,
+			'post_date_gmt' => get_gmt_from_date( $now ),
+		) );
 
 		// Fail if future request and existing date is past.
 		$_POST['customize_changeset_status'] = 'future';
 		unset( $_POST['customize_changeset_date'] );
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
-		$this->assertEquals( 'schedule_changeset_needs_future_date', $this->_last_response_parsed['data'] );
+		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data'] );
 
 		// Success publish changeset reset date to current.
 		wp_update_post( array(
 			'ID' => $post_id,
-			'status' => 'future',
+			'post_status' => 'future',
 			'post_date' => $future_date,
 			'post_date_gmt' => get_gmt_from_date( $future_date ),
 		) );

@@ -2036,20 +2036,17 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		$changeset_post = get_post( $changeset_post_id );
 		$now = gmdate( 'Y-m-d H:i:59' );
-		$is_valid_changeset_post_and_future_date = ( $changeset_post instanceof WP_Post
-		                                             &&
-		                                             ( mysql2date( 'U', $changeset_post->post_date_gmt, false ) > mysql2date( 'U', $now, false ) ) );
+		$is_updating_future_dated_changeset = false;
+		if ( $changeset_post_id ) {
+			$changeset_post = get_post( $changeset_post_id );
+			$is_updating_future_dated_changeset = mysql2date( 'U', $changeset_post->post_date_gmt, false ) > mysql2date( 'U', $now, false );
+		}
 
 		if ( isset( $changeset_date_gmt ) ) {
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
 			if ( ! $is_future_dated ) {
-				if ( 'future' === $changeset_status ) {
-					wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
-				} else {
-					$changeset_date_gmt = '0000-00-00 00:00:00';
-				}
+				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
 			}
 
 			if ( ! $this->is_theme_active() && $is_future_dated ) {
@@ -2059,16 +2056,9 @@ final class WP_Customize_Manager {
 			if ( $will_remain_auto_draft ) {
 				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
 			}
-		} elseif ( ! $is_valid_changeset_post_and_future_date && 'future' === $changeset_status ) {
-			// Bail if date is not passed existing date is not in future.
-			wp_send_json_error( 'schedule_changeset_needs_future_date' );
-		}
-
-		/*
-		 * Reset post date if we are publishing.
-		 */
-		if ( 'publish' === $changeset_status ) {
-			$changeset_date_gmt = '0000-00-00 00:00:00';
+		} elseif ( ! $is_updating_future_dated_changeset && 'future' === $changeset_status ) {
+			// Bail if date is not passed and existing date is not in future.
+			wp_send_json_error( 'not_future_date' );
 		}
 
 		$arg = array(
@@ -2372,7 +2362,11 @@ final class WP_Customize_Manager {
 		if ( $args['status'] ) {
 			$post_array['post_status'] = $args['status'];
 		}
-		if ( $args['date_gmt'] ) {
+
+		if ( 'publish' === $args['status'] ) {
+			// Reset post date if we are publishing.
+			$post_array['post_date_gmt'] = $post_array['post_date'] = '0000-00-00 00:00:00';
+		} elseif ( $args['date_gmt'] ) {
 			$post_array['post_date_gmt'] = $args['date_gmt'];
 			$post_array['post_date'] = get_date_from_gmt( $args['date_gmt'] );
 		}
