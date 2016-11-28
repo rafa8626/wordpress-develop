@@ -211,6 +211,7 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$this->assertFalse( $this->_last_response_parsed['success'] );
 		$this->assertEquals( 'bad_customize_changeset_date', $this->_last_response_parsed['data'] );
 		$_POST['customize_changeset_date'] = '2010-01-01 00:00:00';
+		$_POST['customize_changeset_status'] = 'future';
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
 		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data'] );
@@ -306,5 +307,82 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$this->assertArrayHasKey( 'next_changeset_uuid', $this->_last_response_parsed['data'] );
 		$this->assertEquals( 'New Site Title', get_option( 'blogname' ) );
 		$this->assertEquals( 'Published', get_post( $post_id )->post_title );
+	}
+
+	/**
+	 * Test WP_Customize_Manager::save().
+	 *
+	 * @ticket 38943
+	 * @covers WP_Customize_Manager::save()
+	 */
+	function test_success_save_post_date() {
+		$uuid = wp_generate_uuid4();
+		$post_id = $this->factory()->post->create( array(
+			'post_name' => $uuid,
+			'post_title' => 'Original',
+			'post_type' => 'customize_changeset',
+			'post_status' => 'auto-draft',
+			'post_content' => wp_json_encode( array(
+				'blogname' => array(
+					'value' => 'New Site Title',
+				),
+			) ),
+		) );
+		$wp_customize = $this->set_up_valid_state( $uuid );
+
+		// Success future schedule date.
+		$future_date = ( gmdate( 'Y' ) + 1 ) . '-01-01 00:00:00';
+		$_POST['customize_changeset_status'] = 'future';
+		$_POST['customize_changeset_title'] = 'Future date';
+		$_POST['customize_changeset_date'] = $future_date;
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertTrue( $this->_last_response_parsed['success'] );
+		$changeset_post_schedule = get_post( $post_id );
+		$this->assertEquals( $future_date, $changeset_post_schedule->post_date );
+
+		// Success future changeset change to draft keeping existing date.
+		unset( $_POST['customize_changeset_date'] );
+		$_POST['customize_changeset_status'] = 'draft';
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertTrue( $this->_last_response_parsed['success'] );
+		$changeset_post_draft = get_post( $post_id );
+		$this->assertEquals( $future_date, $changeset_post_draft->post_date );
+
+		// Success if date is not passed with schedule changeset and stored changeset have future date.
+		$_POST['customize_changeset_status'] = 'future';
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertTrue( $this->_last_response_parsed['success'] );
+		$changeset_post_schedule = get_post( $post_id );
+		$this->assertEquals( $future_date, $changeset_post_schedule->post_date );
+
+		// Success if draft with past date.
+		$_POST['customize_changeset_status'] = 'draft';
+		$past_date = '2010-01-01 00:00:00';
+		$_POST['customize_changeset_date'] = $past_date;
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertTrue( $this->_last_response_parsed['success'] );
+		$changeset_past_draft = get_post( $post_id );
+		$this->assertEquals( $past_date, $changeset_past_draft->post_date );
+
+		// Fail if future request and existing date is past.
+		$_POST['customize_changeset_status'] = 'future';
+		unset( $_POST['customize_changeset_date'] );
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertFalse( $this->_last_response_parsed['success'] );
+		$this->assertEquals( 'schedule_changeset_needs_future_date', $this->_last_response_parsed['data'] );
+
+		// Success publish changeset reset date to current.
+		wp_update_post( array(
+			'ID' => $post_id,
+			'status' => 'future',
+			'post_date' => $future_date,
+			'post_date_gmt' => get_gmt_from_date( $future_date ),
+		) );
+		unset( $_POST['customize_changeset_date'] );
+		$_POST['customize_changeset_status'] = 'publish';
+		$this->make_ajax_call( 'customize_save' );
+		$this->assertTrue( $this->_last_response_parsed['success'] );
+		$changeset_post_publish = get_post( $post_id );
+		$this->assertNotEquals( $future_date, $changeset_post_publish->post_date );
 	}
 }
