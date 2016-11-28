@@ -2034,28 +2034,53 @@ final class WP_Customize_Manager {
 				}
 				$changeset_date_gmt = gmdate( 'Y-m-d H:i:s', $timestamp );
 			}
-			$now = gmdate( 'Y-m-d H:i:59' );
+		}
 
+		$changeset_post = get_post( $changeset_post_id );
+		$now = gmdate( 'Y-m-d H:i:59' );
+		$is_valid_changeset_post_and_future_date = ( $changeset_post instanceof WP_Post
+		                                             &&
+		                                             ( mysql2date( 'U', $changeset_post->post_date_gmt, false ) > mysql2date( 'U', $now, false ) ) );
+
+		if ( isset( $changeset_date_gmt ) ) {
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
-			if ( ! $is_future_dated ) {
+			if ( $is_future_dated && 'draft' === $changeset_status ) {
+				$changeset_date_gmt = '0000-00-00 00:00:00';
+			} elseif ( ! $is_future_dated && 'future' === $changeset_status ) {
 				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
 			}
 
-			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
+			if ( ! $this->is_theme_active() && $is_future_dated ) {
 				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
 			}
 			$will_remain_auto_draft = ( ! $changeset_status && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
-			if ( $changeset_date && $will_remain_auto_draft ) {
+			if ( $will_remain_auto_draft ) {
 				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
 			}
+		} elseif ( ! $is_valid_changeset_post_and_future_date && 'future' === $changeset_status ) {
+			// Bail if date is not passed existing date is not in future.
+			wp_send_json_error( 'schedule_changeset_needs_future_date' );
 		}
 
-		$r = $this->save_changeset_post( array(
+		/*
+		 * Reset post date if we are publishing.
+		 * If date is of future, wp_update_post will change post_status to future.
+		 * If date is of past then we should keep chronological order of publishing.
+		 */
+		if ( 'publish' === $changeset_status ) {
+			$changeset_date_gmt = '0000-00-00 00:00:00';
+		}
+
+		$arg = array(
 			'status' => $changeset_status,
 			'title' => $changeset_title,
-			'date_gmt' => $changeset_date_gmt,
 			'data' => $input_changeset_data,
-		) );
+		);
+		if ( isset( $changeset_date_gmt ) ) {
+			$arg['date_gmt'] = $changeset_date_gmt;
+		}
+		$r = $this->save_changeset_post( $arg );
+
 		if ( is_wp_error( $r ) ) {
 			$response = $r->get_error_data();
 		} else {
