@@ -2044,10 +2044,12 @@ final class WP_Customize_Manager {
 
 		if ( isset( $changeset_date_gmt ) ) {
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
-			if ( $is_future_dated && 'draft' === $changeset_status ) {
-				$changeset_date_gmt = '0000-00-00 00:00:00';
-			} elseif ( ! $is_future_dated && 'future' === $changeset_status ) {
-				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
+			if ( ! $is_future_dated ) {
+				if ( 'future' === $changeset_status ) {
+					wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
+				} else {
+					$changeset_date_gmt = '0000-00-00 00:00:00';
+				}
 			}
 
 			if ( ! $this->is_theme_active() && $is_future_dated ) {
@@ -2064,8 +2066,6 @@ final class WP_Customize_Manager {
 
 		/*
 		 * Reset post date if we are publishing.
-		 * If date is of future, wp_update_post will change post_status to future.
-		 * If date is of past then we should keep chronological order of publishing.
 		 */
 		if ( 'publish' === $changeset_status ) {
 			$changeset_date_gmt = '0000-00-00 00:00:00';

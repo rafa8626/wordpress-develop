@@ -362,7 +362,7 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertTrue( $this->_last_response_parsed['success'] );
 		$changeset_past_draft = get_post( $post_id );
-		$this->assertEquals( $past_date, $changeset_past_draft->post_date );
+		$this->assertNotEquals( $past_date, $changeset_past_draft->post_date );
 
 		// Fail if future request and existing date is past.
 		$_POST['customize_changeset_status'] = 'future';
