@@ -2043,7 +2043,15 @@ final class WP_Customize_Manager {
 			'data' => $input_changeset_data,
 		) );
 		if ( is_wp_error( $r ) ) {
-			$response = $r->get_error_data();
+			$response = array(
+				'message' => $r->get_error_message(),
+				'code' => $r->get_error_code(),
+			);
+			if ( is_array( $r->get_error_data() ) ) {
+				$response = array_merge( $response, $r->get_error_data() );
+			} else {
+				$response['data'] = $r->get_error_data();
+			}
 		} else {
 			$response = $r;
 

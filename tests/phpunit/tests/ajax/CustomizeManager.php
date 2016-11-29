@@ -213,7 +213,7 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$_POST['customize_changeset_date'] = '2010-01-01 00:00:00';
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
-		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data'] );
+		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data']['code'] );
 		$_POST['customize_changeset_date'] = ( gmdate( 'Y' ) + 1 ) . '-01-01 00:00:00';
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertTrue( $this->_last_response_parsed['success'] );
@@ -367,7 +367,7 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		unset( $_POST['customize_changeset_date'] );
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
-		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data'] );
+		$this->assertEquals( 'not_future_date', $this->_last_response_parsed['data']['code'] );
 
 		// Success publish changeset reset date to current.
 		wp_update_post( array(
