@@ -2043,7 +2043,7 @@ final class WP_Customize_Manager {
 				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
 			}
 
-			if ( ! $this->is_theme_active() && $is_future_dated ) {
+			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
 				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
 			}
 			$will_remain_auto_draft = ( ! $changeset_status && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
