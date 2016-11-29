@@ -2036,29 +2036,6 @@ final class WP_Customize_Manager {
 			}
 		}
 
-		$now = gmdate( 'Y-m-d H:i:59' );
-		if ( $changeset_date_gmt ) {
-			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
-			if ( ! $is_future_dated ) {
-				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
-			}
-
-			if ( ! $this->is_theme_active() && ( 'future' === $changeset_status || $is_future_dated ) ) {
-				wp_send_json_error( 'cannot_schedule_theme_switches', 400 ); // This should be allowed in the future, when theme is a regular setting.
-			}
-			$will_remain_auto_draft = ( ! $changeset_status && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
-			if ( $will_remain_auto_draft ) {
-				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
-			}
-		} elseif ( $changeset_post_id && 'future' === $changeset_status ) {
-
-			// Fail if the new status is future but the existing post's date is not in the future.
-			$changeset_post = get_post( $changeset_post_id );
-			if ( mysql2date( 'U', $changeset_post->post_date_gmt, false ) <= mysql2date( 'U', $now, false ) ) {
-				wp_send_json_error( 'not_future_date' );
-			}
-		}
-
 		$r = $this->save_changeset_post( array(
 			'status' => $changeset_status,
 			'title' => $changeset_title,
@@ -2142,6 +2119,29 @@ final class WP_Customize_Manager {
 		$existing_changeset_data = array();
 		if ( $changeset_post_id ) {
 			$existing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
+		}
+
+		$now = gmdate( 'Y-m-d H:i:59' );
+		if ( $args['date_gmt'] ) {
+			$is_future_dated = ( mysql2date( 'U', $args['date_gmt'], false ) > mysql2date( 'U', $now, false ) );
+			if ( ! $is_future_dated ) {
+				return new WP_Error( 'not_future_date' ); // Only future dates are allowed.
+			}
+
+			if ( ! $this->is_theme_active() && ( 'future' === $args['status'] || $is_future_dated ) ) {
+				return new WP_Error( 'cannot_schedule_theme_switches' ); // This should be allowed in the future, when theme is a regular setting.
+			}
+			$will_remain_auto_draft = ( ! $args['status'] && ( ! $changeset_post_id || 'auto-draft' === get_post_status( $changeset_post_id ) ) );
+			if ( $will_remain_auto_draft ) {
+				return new WP_Error( 'cannot_supply_date_for_auto_draft_changeset' );
+			}
+		} elseif ( $changeset_post_id && 'future' === $args['status'] ) {
+
+			// Fail if the new status is future but the existing post's date is not in the future.
+			$changeset_post = get_post( $changeset_post_id );
+			if ( mysql2date( 'U', $changeset_post->post_date_gmt, false ) <= mysql2date( 'U', $now, false ) ) {
+				return new WP_Error( 'not_future_date' );
+			}
 		}
 
 		// The request was made via wp.customize.previewer.save().
