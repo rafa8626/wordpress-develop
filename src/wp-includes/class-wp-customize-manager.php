@@ -2061,16 +2061,12 @@ final class WP_Customize_Manager {
 			wp_send_json_error( 'not_future_date' );
 		}
 
-		$arg = array(
+		$r = $this->save_changeset_post( array(
 			'status' => $changeset_status,
 			'title' => $changeset_title,
+			'date_gmt' => $changeset_date_gmt,
 			'data' => $input_changeset_data,
-		);
-		if ( isset( $changeset_date_gmt ) ) {
-			$arg['date_gmt'] = $changeset_date_gmt;
-		}
-		$r = $this->save_changeset_post( $arg );
-
+		) );
 		if ( is_wp_error( $r ) ) {
 			$response = $r->get_error_data();
 		} else {
