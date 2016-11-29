@@ -2037,13 +2037,7 @@ final class WP_Customize_Manager {
 		}
 
 		$now = gmdate( 'Y-m-d H:i:59' );
-		$is_updating_future_dated_changeset = false;
-		if ( $changeset_post_id ) {
-			$changeset_post = get_post( $changeset_post_id );
-			$is_updating_future_dated_changeset = mysql2date( 'U', $changeset_post->post_date_gmt, false ) > mysql2date( 'U', $now, false );
-		}
-
-		if ( isset( $changeset_date_gmt ) ) {
+		if ( $changeset_date_gmt ) {
 			$is_future_dated = ( mysql2date( 'U', $changeset_date_gmt, false ) > mysql2date( 'U', $now, false ) );
 			if ( ! $is_future_dated ) {
 				wp_send_json_error( 'not_future_date', 400 ); // Only future dates are allowed.
@@ -2056,9 +2050,13 @@ final class WP_Customize_Manager {
 			if ( $will_remain_auto_draft ) {
 				wp_send_json_error( 'cannot_supply_date_for_auto_draft_changeset', 400 );
 			}
-		} elseif ( ! $is_updating_future_dated_changeset && 'future' === $changeset_status ) {
-			// Bail if date is not passed and existing date is not in future.
-			wp_send_json_error( 'not_future_date' );
+		} elseif ( $changeset_post_id && 'future' === $changeset_status ) {
+
+			// Fail if the new status is future but the existing post's date is not in the future.
+			$changeset_post = get_post( $changeset_post_id );
+			if ( mysql2date( 'U', $changeset_post->post_date_gmt, false ) <= mysql2date( 'U', $now, false ) ) {
+				wp_send_json_error( 'not_future_date' );
+			}
 		}
 
 		$r = $this->save_changeset_post( array(
