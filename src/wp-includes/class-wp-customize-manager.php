@@ -1999,13 +1999,8 @@ final class WP_Customize_Manager {
 				wp_send_json_error( 'bad_customize_changeset_status', 400 );
 			}
 			$is_publish = ( 'publish' === $changeset_status || 'future' === $changeset_status );
-			if ( $is_publish ) {
-				if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
-					wp_send_json_error( 'changeset_publish_unauthorized', 403 );
-				}
-				if ( false === has_action( 'transition_post_status', '_wp_customize_publish_changeset' ) ) {
-					wp_send_json_error( 'missing_publish_callback', 500 );
-				}
+			if ( $is_publish && ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->publish_posts ) ) {
+				wp_send_json_error( 'changeset_publish_unauthorized', 403 );
 			}
 		}
 
@@ -2129,6 +2124,12 @@ final class WP_Customize_Manager {
 			$existing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
 		}
 
+		// Fail if attempting to publish but publish hook is missing.
+		if ( 'publish' === $args['status'] && false === has_action( 'transition_post_status', '_wp_customize_publish_changeset' ) ) {
+			return new WP_Error( 'missing_publish_callback' );
+		}
+
+		// Validate date.
 		$now = gmdate( 'Y-m-d H:i:59' );
 		if ( $args['date_gmt'] ) {
 			$is_future_dated = ( mysql2date( 'U', $args['date_gmt'], false ) > mysql2date( 'U', $now, false ) );
