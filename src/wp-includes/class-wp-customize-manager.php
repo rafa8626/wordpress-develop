@@ -1217,8 +1217,14 @@ final class WP_Customize_Manager {
 
 		// Options.
 		foreach ( $options as $name => $value ) {
-			if ( preg_match( '/^{{(?P<symbol>.+)}}$/', $value, $matches ) && isset( $posts[ $matches['symbol'] ] ) ) {
-				$value = $posts[ $matches['symbol'] ]['ID'];
+			if ( preg_match( '/^{{(?P<symbol>.+)}}$/', $value, $matches ) ) {
+				if ( isset( $posts[ $matches['symbol'] ] ) ) {
+					$value = $posts[ $matches['symbol'] ]['ID'];
+				} elseif ( isset( $attachment_ids[ $matches['symbol'] ] ) ) {
+					$value = $attachment_ids[ $matches['symbol'] ];
+				} else {
+					continue;
+				}
 			}
 
 			if ( empty( $changeset_data[ $name ] ) || ! empty( $changeset_data[ $name ]['starter_content'] ) ) {
@@ -1229,8 +1235,29 @@ final class WP_Customize_Manager {
 
 		// Theme mods.
 		foreach ( $theme_mods as $name => $value ) {
-			if ( preg_match( '/^{{(?P<symbol>.+)}}$/', $value, $matches ) && isset( $posts[ $matches['symbol'] ] ) ) {
-				$value = $posts[ $matches['symbol'] ]['ID'];
+			if ( preg_match( '/^{{(?P<symbol>.+)}}$/', $value, $matches ) ) {
+				if ( isset( $posts[ $matches['symbol'] ] ) ) {
+					$value = $posts[ $matches['symbol'] ]['ID'];
+				} elseif ( isset( $attachment_ids[ $matches['symbol'] ] ) ) {
+					$value = $attachment_ids[ $matches['symbol'] ];
+				} else {
+					continue;
+				}
+			}
+
+			// Handle header image as special case since setting has a legacy format.
+			if ( 'header_image' === $name ) {
+				$name = 'header_image_data';
+				$metadata = wp_get_attachment_metadata( $value );
+				if ( empty( $metadata ) ) {
+					continue;
+				}
+				$value = array(
+					'attachment_id' => $value,
+					'url' => wp_get_attachment_url( $value ),
+					'height' => $metadata['height'],
+					'width' => $metadata['width'],
+				);
 			}
 
 			if ( empty( $changeset_data[ $name ] ) || ! empty( $changeset_data[ $name ]['starter_content'] ) ) {
