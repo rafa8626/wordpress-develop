@@ -2119,7 +2119,7 @@ final class WP_Customize_Manager {
 		if ( $changeset_post_id ) {
 			$existing_status = get_post_status( $changeset_post_id );
 			if ( 'publish' === $existing_status || 'trash' === $existing_status ) {
-				return new WP_Error( 'changeset_already_published' ); // @todo Add test for this.
+				return new WP_Error( 'changeset_already_published' );
 			}
 
 			$existing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
