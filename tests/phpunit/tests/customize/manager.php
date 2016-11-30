@@ -316,7 +316,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		register_nav_menu( 'top', 'Top' );
 		add_theme_support( 'custom-logo' );
 		add_theme_support( 'custom-header' );
-		add_theme_support( 'custom-backgorund' );
+		add_theme_support( 'custom-background' );
 
 		$canola_file = DIR_TESTDATA . '/images/canola.jpg';
 		$existing_canola_attachment_id = self::factory()->attachment->create_object( $canola_file, 0, array(
@@ -517,8 +517,10 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		// Publish.
 		$this->assertEmpty( get_custom_logo() );
 		$this->assertEmpty( get_header_image() );
+		$this->assertEmpty( get_background_image() );
 		$this->assertEmpty( get_theme_mod( 'custom_logo' ) );
 		$this->assertEmpty( get_theme_mod( 'header_image' ) );
+		$this->assertEmpty( get_theme_mod( 'background_image' ) );
 		$this->assertEquals( 'auto-draft', get_post( $posts_by_name['about'] )->post_status );
 		$this->assertEquals( 'auto-draft', get_post( $posts_by_name['waffles'] )->post_status );
 		$this->assertNotEquals( $changeset_data['blogname']['value'], get_option( 'blogname' ) );
@@ -529,10 +531,13 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertEquals( $changeset_data['blogname']['value'], get_option( 'blogname' ) );
 		$this->assertNotEmpty( get_theme_mod( 'custom_logo' ) );
 		$this->assertNotEmpty( get_theme_mod( 'header_image' ) );
+		$this->assertNotEmpty( get_theme_mod( 'background_image' ) );
 		$this->assertNotEmpty( get_custom_logo() );
 		$this->assertNotEmpty( get_header_image() );
+		$this->assertNotEmpty( get_background_image() );
 		$this->assertContains( 'canola', get_custom_logo() );
 		$this->assertContains( 'waffles', get_header_image() );
+		$this->assertContains( 'waffles', get_background_image() );
 	}
 
 	/**

@@ -1258,6 +1258,8 @@ final class WP_Customize_Manager {
 					'height' => $metadata['height'],
 					'width' => $metadata['width'],
 				);
+			} elseif ( 'background_image' === $name ) {
+				$value = wp_get_attachment_url( $value );
 			}
 
 			if ( empty( $changeset_data[ $name ] ) || ! empty( $changeset_data[ $name ]['starter_content'] ) ) {
