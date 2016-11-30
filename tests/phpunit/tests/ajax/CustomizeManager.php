@@ -164,7 +164,7 @@ class Tests_Ajax_CustomizeManager extends WP_Ajax_UnitTestCase {
 		$wp_customize->save_changeset_post( array( 'status' => 'publish' ) );
 		$this->make_ajax_call( 'customize_save' );
 		$this->assertFalse( $this->_last_response_parsed['success'] );
-		$this->assertEquals( 'changeset_already_published', $this->_last_response_parsed['data'] );
+		$this->assertEquals( 'changeset_already_published', $this->_last_response_parsed['data']['code'] );
 		wp_update_post( array( 'ID' => $wp_customize->changeset_post_id(), 'post_status' => 'auto-draft' ) );
 
 		// User cannot edit.
