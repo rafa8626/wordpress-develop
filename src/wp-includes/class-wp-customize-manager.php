@@ -1961,10 +1961,6 @@ final class WP_Customize_Manager {
 		}
 
 		$changeset_post_id = $this->changeset_post_id();
-		if ( $changeset_post_id && in_array( get_post_status( $changeset_post_id ), array( 'publish', 'trash' ) ) ) {
-			wp_send_json_error( 'changeset_already_published' );
-		}
-
 		if ( empty( $changeset_post_id ) ) {
 			if ( ! current_user_can( get_post_type_object( 'customize_changeset' )->cap->create_posts ) ) {
 				wp_send_json_error( 'cannot_create_changeset_post' );
@@ -2121,6 +2117,11 @@ final class WP_Customize_Manager {
 		$changeset_post_id = $this->changeset_post_id();
 		$existing_changeset_data = array();
 		if ( $changeset_post_id ) {
+			$existing_status = get_post_status( $changeset_post_id );
+			if ( 'publish' === $existing_status || 'trash' === $existing_status ) {
+				return new WP_Error( 'changeset_already_published' ); // @todo Add test for this.
+			}
+
 			$existing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
 		}
 
