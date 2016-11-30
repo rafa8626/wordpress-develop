@@ -786,7 +786,7 @@
 		},
 
 		/**
-		 * Show/hide/save screen options (columns). From common.js.
+		 * Update field visibility when clicking on the field toggles.
 		 */
 		ready: function() {
 			var panel = this;
