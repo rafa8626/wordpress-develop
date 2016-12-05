@@ -806,7 +806,7 @@ final class WP_Customize_Nav_Menus {
 		if ( ! isset( $postarr['meta_input'] ) ) {
 			$postarr['meta_input'] = array();
 		}
-		$postarr['meta_input']['_starter_content_post_name'] = $postarr['post_name'];
+		$postarr['meta_input']['_customize_draft_post_name'] = $postarr['post_name'];
 		unset( $postarr['post_name'] );
 
 		add_filter( 'wp_insert_post_empty_content', '__return_false', 1000 );
@@ -1201,7 +1201,7 @@ final class WP_Customize_Nav_Menus {
 					'ID' => $post_id,
 					'post_status' => $target_status,
 				);
-				$post_name = get_post_meta( $post_id, '_starter_content_post_name', true );
+				$post_name = get_post_meta( $post_id, '_customize_draft_post_name', true );
 				if ( $post_name ) {
 					$args['post_name'] = $post_name;
 				}
@@ -1209,7 +1209,7 @@ final class WP_Customize_Nav_Menus {
 				// Note that wp_publish_post() cannot be used because unique slugs need to be assigned.
 				wp_update_post( wp_slash( $args ) );
 
-				delete_post_meta( $post_id, '_starter_content_post_name' );
+				delete_post_meta( $post_id, '_customize_draft_post_name' );
 			}
 		}
 	}

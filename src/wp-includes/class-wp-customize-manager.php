@@ -1008,7 +1008,7 @@ final class WP_Customize_Manager {
 			foreach ( $existing_posts_query->posts as $existing_post ) {
 				$post_name = $existing_post->post_name;
 				if ( empty( $post_name ) ) {
-					$post_name = get_post_meta( $existing_post->ID, '_starter_content_post_name', true );
+					$post_name = get_post_meta( $existing_post->ID, '_customize_draft_post_name', true );
 				}
 				$existing_starter_content_posts[ $existing_post->post_type . ':' . $post_name ] = $existing_post;
 			}

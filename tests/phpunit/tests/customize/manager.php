@@ -456,7 +456,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 			}
 			$post_name = $post->post_name;
 			if ( empty( $post_name ) ) {
-				$post_name = get_post_meta( $post->ID, '_starter_content_post_name', true );
+				$post_name = get_post_meta( $post->ID, '_customize_draft_post_name', true );
 			}
 			$posts_by_name[ $post_name ] = $post->ID;
 		}
