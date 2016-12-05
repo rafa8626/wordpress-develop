@@ -454,7 +454,11 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 			} else {
 				$this->assertEquals( 'auto-draft', $post->post_status );
 			}
-			$posts_by_name[ $post->post_name ] = $post->ID;
+			$post_name = $post->post_name;
+			if ( empty( $post_name ) ) {
+				$post_name = get_post_meta( $post->ID, '_starter_content_post_name', true );
+			}
+			$posts_by_name[ $post_name ] = $post->ID;
 		}
 		$this->assertEquals( array( 'waffles', 'canola', 'home', 'about', 'blog', 'custom' ), array_keys( $posts_by_name ) );
 		$this->assertEquals( 'Custom', get_post( $posts_by_name['custom'] )->post_title );
