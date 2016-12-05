@@ -453,6 +453,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 				$this->assertEquals( 'inherit', $post->post_status );
 			} else {
 				$this->assertEquals( 'auto-draft', $post->post_status );
+				$this->assertEmpty( $post->post_name );
 			}
 			$post_name = $post->post_name;
 			if ( empty( $post_name ) ) {
@@ -468,6 +469,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertEquals( '', get_post_thumbnail_id( $posts_by_name['blog'] ) );
 		$attachment_metadata = wp_get_attachment_metadata( $posts_by_name['waffles'] );
 		$this->assertEquals( 'Waffles', get_post( $posts_by_name['waffles'] )->post_title );
+		$this->assertEquals( 'waffles', get_post_meta( $posts_by_name['waffles'], '_customize_draft_post_name', true ) );
 		$this->assertArrayHasKey( 'file', $attachment_metadata );
 		$this->assertContains( 'waffles', $attachment_metadata['file'] );
 
@@ -492,7 +494,7 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		// Ensure that re-importing doesn't cause auto-drafts to balloon.
 		$wp_customize->import_theme_starter_content();
 		$changeset_data = $wp_customize->changeset_data();
-		$this->assertEqualSets( array_values( $posts_by_name ), $changeset_data['nav_menus_created_posts']['value'], 'Auto-drafts should not get re-created and amended with each import.' );
+		$this->assertEqualSets( array_values( $posts_by_name ), $changeset_data['nav_menus_created_posts']['value'] ); // Auto-drafts should not get re-created and amended with each import.
 
 		// Test that saving non-starter content on top of the changeset clears the starter_content flag.
 		$wp_customize->save_changeset_post( array(
@@ -543,6 +545,8 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 		$this->assertContains( 'canola', get_custom_logo() );
 		$this->assertContains( 'waffles', get_header_image() );
 		$this->assertContains( 'waffles', get_background_image() );
+		$this->assertEquals( 'waffles', get_post( $posts_by_name['waffles'] )->post_name );
+		$this->assertEmpty(  get_post_meta( $posts_by_name['waffles'], '_customize_draft_post_name', true ) );
 	}
 
 	/**
