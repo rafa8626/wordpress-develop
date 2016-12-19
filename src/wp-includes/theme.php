@@ -1655,14 +1655,14 @@ function wp_get_custom_css_post( $stylesheet = '' ) {
 		}
 
 		// `-1` indicates no post exists; no query necessary.
-		if ( ! $post && ( -1 !== $post_id ) ) {
+		if ( ! $post && -1 !== $post_id ) {
 			$query = new WP_Query( $custom_css_query_vars );
 			$post = $query->post;
 			/*
-			 * Cache the lookup. See WP_Customize_Custom_CSS_Setting::update().
+			 * Cache the lookup. See wp_update_custom_css_post().
 			 * @todo This should get cleared if a custom_css post is added/removed.
 			 */
-			set_theme_mod( 'custom_css_post_id', ( $post ) ? $post->ID : -1 );
+			set_theme_mod( 'custom_css_post_id', $post ? $post->ID : -1 );
 		}
 	} else {
 		$query = new WP_Query( $custom_css_query_vars );
