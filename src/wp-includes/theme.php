@@ -1652,18 +1652,17 @@ function wp_get_custom_css_post( $stylesheet = '' ) {
 
 		if ( $post_id > 0 && get_post( $post_id ) ) {
 			$post = get_post( $post_id );
-		} else {
+		}
+
+		// `-1` indicates no post exists; no query necessary.
+		if ( ! $post && ( -1 !== $post_id ) ) {
 			$query = new WP_Query( $custom_css_query_vars );
 			$post = $query->post;
 			/*
 			 * Cache the lookup. See WP_Customize_Custom_CSS_Setting::update().
 			 * @todo This should get cleared if a custom_css post is added/removed.
 			 */
-			if ( $post ) {
-				set_theme_mod( 'custom_css_post_id', $post->ID );
-			} elseif ( -1 !== $post_id ) {
-				set_theme_mod( 'custom_css_post_id', -1 );
-			}
+			set_theme_mod( 'custom_css_post_id', ( $post ) ? $post->ID : -1 );
 		}
 	} else {
 		$query = new WP_Query( $custom_css_query_vars );
@@ -1787,9 +1786,13 @@ function wp_update_custom_css_post( $css, $args = array() ) {
 	} else {
 		$r = wp_insert_post( wp_slash( $post_data ), true );
 
-		// Trigger creation of a revision. This should be removed once #30854 is resolved.
-		if ( ! is_wp_error( $r ) && 0 === count( wp_get_post_revisions( $r ) ) ) {
-			wp_save_post_revision( $r );
+		if ( ! is_wp_error( $r ) ) {
+			set_theme_mod( 'custom_css_post_id', $r );
+
+			// Trigger creation of a revision. This should be removed once #30854 is resolved.
+			if ( 0 === count( wp_get_post_revisions( $r ) ) ) {
+				wp_save_post_revision( $r );
+			}
 		}
 	}
 
