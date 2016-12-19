@@ -133,9 +133,8 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 			'post_status' => 'publish',
 			'post_type' => 'custom_css',
 		) );
+		remove_theme_mod( 'custom_css_post_id' ); // @todo Core should eventually do this automatically when save_post_custom_css happens.
 		$twentyten_setting = new WP_Customize_Custom_CSS_Setting( $this->wp_customize, 'custom_css[twentyten]' );
-
-		remove_theme_mod( 'custom_css_post_id' );
 
 		$this->assertEquals( $post_id, wp_get_custom_css_post()->ID );
 		$this->assertEquals( $post_id, wp_get_custom_css_post( $this->setting->stylesheet )->ID );
@@ -262,7 +261,7 @@ class Test_WP_Customize_Custom_CSS_Setting extends WP_UnitTestCase {
 			'post_status' => 'publish',
 			'post_type' => 'custom_css',
 		) );
-		remove_theme_mod( 'custom_css_post_id' );
+		remove_theme_mod( 'custom_css_post_id' ); // @todo Core should eventually do this automatically when save_post_custom_css happens.
 		$this->assertEquals( '/*custom*//*filtered*/', $this->setting->value() );
 
 		$this->wp_customize->set_post_value( $this->setting->id, '/*overridden*/' );
