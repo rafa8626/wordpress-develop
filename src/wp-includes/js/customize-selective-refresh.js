@@ -334,7 +334,41 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 		 * @param {Placement} placement
 		 */
 		preparePlacement: function( placement ) {
+			var partial = this;
 			$( placement.container ).addClass( 'customize-partial-refreshing' );
+			partial.scrollIntoView( placement );
+		},
+
+		/**
+		 * Scroll a placement container into view.
+		 *
+		 * @since 4.8.0
+		 *
+		 * @param {Placement} [placement] Placement, if not provided then the first found placement will be used.
+		 * @returns {void}
+		 */
+		scrollIntoView: function( placement ) {
+			var partial = this, container, docViewTop, docViewBottom, elemTop, elemBottom, selectedPlacement;
+			selectedPlacement = placement || partial.placements()[0];
+			if ( ! selectedPlacement ) {
+				return;
+			}
+			container = $( selectedPlacement.container );
+			if ( ! container[0] ) {
+				return;
+			}
+			if ( container[0].scrollIntoViewIfNeeded ) {
+				container[0].scrollIntoViewIfNeeded();
+			} else {
+				// Props http://stackoverflow.com/a/488073/93579
+				docViewTop = $( window ).scrollTop();
+				docViewBottom = docViewTop + $( window ).height();
+				elemTop = container.offset().top;
+				elemBottom = elemTop + container.height();
+				if ( ( elemBottom > docViewBottom ) || ( elemTop < docViewTop ) ) {
+					container[0].scrollIntoView( elemTop < docViewTop );
+				}
+			}
 		},
 
 		/**
@@ -468,6 +502,9 @@ wp.customize.selectiveRefresh = ( function( $, api ) {
 
 			// Prevent placement container from being being re-triggered as being rendered among nested partials.
 			placement.container.data( 'customize-partial-content-rendered', true );
+
+			// Make sure partial is in view.
+			partial.scrollIntoView( placement );
 
 			/**
 			 * Announce when a partial's placement has been rendered so that dynamic elements can be re-built.
