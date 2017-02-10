@@ -821,7 +821,7 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 			}
 
 			// Otherwise, only trash if we haven't already.
-			if ( 'trash' === $post->post_status ) {
+			if ( 'trash' === get_post_status( $post ) ) {
 				return new WP_Error( 'rest_already_trashed', __( 'The post has already been deleted.' ), array( 'status' => 410 ) );
 			}
 
@@ -1275,19 +1275,20 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 		if ( ! $this->check_is_post_type_allowed( $post_type ) ) {
 			return false;
 		}
+		$post_status = get_post_status( $post );
 
 		// Is the post readable?
-		if ( 'publish' === $post->post_status || current_user_can( $post_type->cap->read_post, $post->ID ) ) {
+		if ( 'publish' === $post_status || current_user_can( $post_type->cap->read_post, $post->ID ) ) {
 			return true;
 		}
 
-		$post_status_obj = get_post_status_object( $post->post_status );
+		$post_status_obj = get_post_status_object( $post_status );
 		if ( $post_status_obj && $post_status_obj->public ) {
 			return true;
 		}
 
 		// Can we read the parent if we're inheriting?
-		if ( 'inherit' === $post->post_status && $post->post_parent > 0 ) {
+		if ( 'inherit' === $post_status && $post->post_parent > 0 ) {
 			$parent = get_post( $post->post_parent );
 			return $this->check_read_permission( $parent );
 		}
@@ -1296,7 +1297,7 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 		 * If there isn't a parent, but the status is set to inherit, assume
 		 * it's published (as per get_post_status()).
 		 */
-		if ( 'inherit' === $post->post_status ) {
+		if ( 'inherit' === $post_status ) {
 			return true;
 		}
 
@@ -1417,7 +1418,7 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 		}
 
 		if ( ! empty( $schema['properties']['status'] ) ) {
-			$data['status'] = $post->post_status;
+			$data['status'] = get_post_status( $post );
 		}
 
 		if ( ! empty( $schema['properties']['type'] ) ) {

@@ -456,12 +456,13 @@ class WP_REST_Comments_Controller extends WP_REST_Controller {
 		if ( ! $post ) {
 			return new WP_Error( 'rest_comment_invalid_post_id', __( 'Sorry, you are not allowed to create this comment without a post.' ), array( 'status' => 403 ) );
 		}
+		$post_status = get_post_status( $post );
 
-		if ( 'draft' === $post->post_status ) {
+		if ( 'draft' === $post_status ) {
 			return new WP_Error( 'rest_comment_draft_post', __( 'Sorry, you are not allowed to create a comment on this post.' ), array( 'status' => 403 ) );
 		}
 
-		if ( 'trash' === $post->post_status ) {
+		if ( 'trash' === $post_status ) {
 			return new WP_Error( 'rest_comment_trash_post', __( 'Sorry, you are not allowed to create a comment on this post.' ), array( 'status' => 403 ) );
 		}
 
