@@ -1079,6 +1079,7 @@
 		loading: false,
 		fullyLoaded: false,
 		term: '',
+		nextTerm: '',
 		filterContainer: $(),
 
 		/**
@@ -1411,6 +1412,16 @@
 			request.done(function( data ) {
 				var themes = data.themes,
 				    themeControl, newThemeControls;
+
+				// Stop and try again if the term changed.
+				if ( section.nextTerm ) {
+					section.term = section.nextTerm;
+					section.nextTerm = '';
+					section.loading = false;
+					section.loadControls();
+					return;
+				}
+
 				if ( 0 !== themes.length ) {
 					newThemeControls = [];
 					// Add controls for each theme.
@@ -1545,7 +1556,11 @@
 			if ( '' !== newTerm ) { // Empty term should not show any results.
 				// Run a new query, with loadControls handling paging, etc.
 				section.term = newTerm;
-				section.loadControls();
+				if ( ! section.loading ) {
+					section.loadControls();
+				} else {
+					section.nextTerm = newTerm; // This will reload with the newest term once the current batch is loaded.
+				}
 				if ( ! section.expanded() ) {
 					section.expand(); // Expand the section if it isn't expanded.
 				}
