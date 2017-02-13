@@ -231,7 +231,7 @@ function wp_default_scripts( &$scripts ) {
 
 	// Strings for 'jquery-ui-autocomplete' live region messages
 	did_action( 'init' ) && $scripts->localize( 'jquery-ui-autocomplete', 'uiAutocompleteL10n', array(
-		'noResults' => __( 'No search results.' ),
+		'noResults' => __( 'No results found.' ),
 		/* translators: Number of results found when using jQuery UI Autocomplete */
 		'oneResult' => __( '1 result found. Use up and down arrow keys to navigate.' ),
 		/* translators: %d: Number of results found when using jQuery UI Autocomplete */
@@ -280,7 +280,7 @@ function wp_default_scripts( &$scripts ) {
 		'queue_limit_exceeded' => __('You have attempted to queue too many files.'),
 		'file_exceeds_size_limit' => __('%s exceeds the maximum upload size for this site.'),
 		'zero_byte_file' => __('This file is empty. Please try another.'),
-		'invalid_filetype' => __('This file type is not allowed. Please try another.'),
+		'invalid_filetype' => __('Sorry, this file type is not permitted for security reasons.'),
 		'not_an_image' => __('This file is not an image. Please try another.'),
 		'image_memory_exceeded' => __('Memory exceeded. Please try another smaller file.'),
 		'image_dimensions_exceeded' => __('This is larger than the maximum size. Please try another.'),
@@ -289,6 +289,7 @@ function wp_default_scripts( &$scripts ) {
 		'upload_limit_exceeded' => __('You may only upload 1 file.'),
 		'http_error' => __('HTTP error.'),
 		'upload_failed' => __('Upload failed.'),
+		/* translators: 1: Opening link tag, 2: Closing link tag */
 		'big_upload_failed' => __('Please try uploading this file with the %1$sbrowser uploader%2$s.'),
 		'big_upload_queued' => __('%s exceeds the maximum upload size for the multi-file uploader when used in your browser.'),
 		'io_error' => __('IO error.'),
@@ -467,8 +468,8 @@ function wp_default_scripts( &$scripts ) {
 		'notAllowed'         => __( 'Sorry, you are not allowed to customize this site.' ),
 		'previewIframeTitle' => __( 'Site Preview' ),
 		'loginIframeTitle'   => __( 'Session expired' ),
-		'collapseSidebar'    => __( 'Hide Controls' ),
-		'expandSidebar'      => __( 'Show Controls' ),
+		'collapseSidebar'    => _x( 'Hide Controls', 'label for hide controls button without length constraints' ),
+		'expandSidebar'      => _x( 'Show Controls', 'label for hide controls button without length constraints' ),
 		'untitledBlogName'   => __( '(Untitled)' ),
 		// Used for overriding the file types allowed in plupload.
 		'allowedFiles'       => __( 'Allowed Files' ),
@@ -481,7 +482,7 @@ function wp_default_scripts( &$scripts ) {
 	$scripts->add( 'customize-nav-menus', "/wp-admin/js/customize-nav-menus$suffix.js", array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'nav-menu' ), false, 1 );
 	$scripts->add( 'customize-preview-nav-menus', "/wp-includes/js/customize-preview-nav-menus$suffix.js", array( 'jquery', 'wp-util', 'customize-preview', 'customize-selective-refresh' ), false, 1 );
 
-	$scripts->add( 'wp-custom-header', "/wp-includes/js/wp-custom-header$suffix.js", array(), false, 1 );
+	$scripts->add( 'wp-custom-header', "/wp-includes/js/wp-custom-header$suffix.js", array( 'wp-a11y' ), false, 1 );
 
 	$scripts->add( 'accordion', "/wp-admin/js/accordion$suffix.js", array( 'jquery' ), false, 1 );
 
@@ -506,7 +507,7 @@ function wp_default_scripts( &$scripts ) {
 	$scripts->add( 'wp-api', "/wp-includes/js/wp-api$suffix.js", array( 'jquery', 'backbone', 'underscore' ), false, 1 );
 	did_action( 'init' ) && $scripts->localize( 'wp-api', 'wpApiSettings', array(
 		'root'          => esc_url_raw( get_rest_url() ),
-		'nonce'         => wp_create_nonce( 'wp_rest' ),
+		'nonce'         => ( wp_installing() && ! is_multisite() ) ? '' : wp_create_nonce( 'wp_rest' ),
 		'versionString' => 'wp/v2/',
 	) );
 
@@ -636,32 +637,34 @@ function wp_default_scripts( &$scripts ) {
 				'noPlugins'                  => __( 'You do not appear to have any plugins available at this time.' ),
 				'noItemsSelected'            => __( 'Please select at least one item to perform this action on.' ),
 				'updating'                   => __( 'Updating...' ), // No ellipsis.
-				'updated'                    => __( 'Updated!' ),
+				'pluginUpdated'              => _x( 'Updated!', 'plugin' ),
+				'themeUpdated'               => _x( 'Updated!', 'theme' ),
 				'update'                     => __( 'Update' ),
 				'updateNow'                  => __( 'Update Now' ),
 				/* translators: %s: Plugin name and version */
-				'updateNowLabel'             => __( 'Update %s now' ),
+				'pluginUpdateNowLabel'       => _x( 'Update %s now', 'plugin' ),
 				'updateFailedShort'          => __( 'Update Failed!' ),
 				/* translators: %s: Error string for a failed update */
 				'updateFailed'               => __( 'Update Failed: %s' ),
 				/* translators: %s: Plugin name and version */
-				'updatingLabel'              => __( 'Updating %s...' ), // No ellipsis.
+				'pluginUpdatingLabel'        => _x( 'Updating %s...', 'plugin' ), // No ellipsis.
 				/* translators: %s: Plugin name and version */
-				'updatedLabel'               => __( '%s updated!' ),
+				'pluginUpdatedLabel'         => _x( '%s updated!', 'plugin' ),
 				/* translators: %s: Plugin name and version */
-				'updateFailedLabel'          => __( '%s update failed' ),
-				/* translators: JavaScript accessible string */
+				'pluginUpdateFailedLabel'    => _x( '%s update failed', 'plugin' ),
+				/* translators: Accessibility text */
 				'updatingMsg'                => __( 'Updating... please wait.' ), // No ellipsis.
-				/* translators: JavaScript accessible string */
+				/* translators: Accessibility text */
 				'updatedMsg'                 => __( 'Update completed successfully.' ),
-				/* translators: JavaScript accessible string */
+				/* translators: Accessibility text */
 				'updateCancel'               => __( 'Update canceled.' ),
 				'beforeunload'               => __( 'Updates may not complete if you navigate away from this page.' ),
 				'installNow'                 => __( 'Install Now' ),
 				/* translators: %s: Plugin name */
-				'installNowLabel'            => __( 'Install %s now' ),
+				'pluginInstallNowLabel'      => _x( 'Install %s now', 'plugin' ),
 				'installing'                 => __( 'Installing...' ),
-				'installed'                  => __( 'Installed!' ),
+				'pluginInstalled'            => _x( 'Installed!', 'plugin' ),
+				'themeInstalled'             => _x( 'Installed!', 'theme' ),
 				'installFailedShort'         => __( 'Install Failed!' ),
 				/* translators: %s: Error string for a failed installation */
 				'installFailed'              => __( 'Installation failed: %s' ),
@@ -690,7 +693,8 @@ function wp_default_scripts( &$scripts ) {
 				'deleting'                   => __( 'Deleting...' ),
 				/* translators: %s: Error string for a failed deletion */
 				'deleteFailed'               => __( 'Deletion failed: %s' ),
-				'deleted'                    => __( 'Deleted!' ),
+				'pluginDeleted'              => _x( 'Deleted!', 'plugin' ),
+				'themeDeleted'               => _x( 'Deleted!', 'theme' ),
 				'livePreview'                => __( 'Live Preview' ),
 				'activatePlugin'             => is_network_admin() ? __( 'Network Activate' ) : __( 'Activate' ),
 				'activateTheme'              => is_network_admin() ? __( 'Network Enable' ) : __( 'Activate' ),
@@ -882,7 +886,7 @@ function wp_default_styles( &$styles ) {
 	$rtl_styles = array(
 		// wp-admin
 		'common', 'forms', 'admin-menu', 'dashboard', 'list-tables', 'edit', 'revisions', 'media', 'themes', 'about', 'nav-menus',
-		'widgets', 'site-icon', 'l10n', 'install', 'wp-color-picker', 'customize-controls', 'customize-widgets', 'customize-nav-menus',
+		'widgets', 'site-icon', 'l10n', 'install', 'wp-color-picker', 'customize-controls', 'customize-widgets', 'customize-nav-menus', 'customize-preview',
 		'ie', 'login', 'press-this',
 		// wp-includes
 		'buttons', 'admin-bar', 'wp-auth-check', 'editor-buttons', 'media-views', 'wp-pointer',

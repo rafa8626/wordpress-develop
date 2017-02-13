@@ -476,7 +476,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 			 *
 			 * @param string $post_type The post type slug.
 			 * @param string $which     The location of the extra table nav markup:
-			 *                          'top' or 'bottom'.
+			 *                          'top' or 'bottom' for WP_Posts_List_Table,
+			 *                          'bar' for WP_Media_List_Table.
 			 */
 			do_action( 'restrict_manage_posts', $this->screen->post_type, $which );
 
@@ -955,7 +956,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 		echo "</strong>\n";
 
 		if ( ! is_post_type_hierarchical( $this->screen->post_type ) && 'excerpt' === $mode && current_user_can( 'read_post', $post->ID ) ) {
-			the_excerpt();
+			echo esc_html( get_the_excerpt() );
 		}
 
 		get_inline_data( $post );
@@ -1420,7 +1421,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 		if ( post_type_supports( $screen->post_type, 'author' ) ) :
 			$authors_dropdown = '';
 
-			if ( is_super_admin() || current_user_can( $post_type_object->cap->edit_others_posts ) ) :
+			if ( current_user_can( $post_type_object->cap->edit_others_posts ) ) :
 				$users_opt = array(
 					'hide_if_only_one_author' => false,
 					'who' => 'authors',
@@ -1555,7 +1556,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 				$default_title = apply_filters( 'default_page_template_title',  __( 'Default Template' ), 'quick-edit' );
                 ?>
 				<option value="default"><?php echo esc_html( $default_title ); ?></option>
-				<?php page_template_dropdown( $post->page_template, $screen->post_type ) ?>
+				<?php page_template_dropdown( '', $screen->post_type ) ?>
 			</select>
 		</label>
 	<?php endif; ?>

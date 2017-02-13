@@ -294,6 +294,8 @@ function is_taxonomy_hierarchical($taxonomy) {
  * @since 4.4.0 The `show_ui` argument is now enforced on the term editing screen.
  * @since 4.4.0 The `public` argument now controls whether the taxonomy can be queried on the front end.
  * @since 4.5.0 Introduced `publicly_queryable` argument.
+ * @since 4.7.0 Introduced `show_in_rest`, 'rest_base' and 'rest_controller_class'
+ *              arguments to register the Taxonomy in REST API.
  *
  * @global array $wp_taxonomies Registered taxonomies.
  *
@@ -323,6 +325,9 @@ function is_taxonomy_hierarchical($taxonomy) {
  *                                                (default true).
  *     @type bool          $show_in_nav_menus     Makes this taxonomy available for selection in navigation menus. If not
  *                                                set, the default is inherited from `$public` (default true).
+ *     @type bool          $show_in_rest          Whether to include the taxonomy in the REST API.
+ *     @type string        $rest_base             To change the base url of REST API route. Default is $taxonomy.
+ *     @type string        $rest_controller_class REST API Controller class name. Default is 'WP_REST_Terms_Controller'.
  *     @type bool          $show_tagcloud         Whether to list the taxonomy in the Tag Cloud Widget controls. If not set,
  *                                                the default is inherited from `$show_ui` (default true).
  *     @type bool          $show_in_quick_edit    Whether to show the taxonomy in the quick/bulk edit panel. It not set,
@@ -393,7 +398,7 @@ function register_taxonomy( $taxonomy, $object_type, $args = array() ) {
 	 * @param array|string $object_type Object type or array of object types.
 	 * @param array        $args        Array of taxonomy registration arguments.
 	 */
-	do_action( 'registered_taxonomy', $taxonomy, $object_type, $args );
+	do_action( 'registered_taxonomy', $taxonomy, $object_type, (array) $taxonomy_object );
 }
 
 /**
@@ -709,7 +714,8 @@ function get_tax_sql( $tax_query, $primary_table, $primary_id_column ) {
  *                                 filters and return a `WP_Term` object corresponding to the `$term` data. If `WP_Term`,
  *                                 will return `$term`.
  * @param string     $taxonomy Optional. Taxonomy name that $term is part of.
- * @param string     $output   Constant OBJECT, ARRAY_A, or ARRAY_N
+ * @param string     $output   Optional. The required return type. One of OBJECT, ARRAY_A, or ARRAY_N, which correspond to
+ *                             a WP_Term object, an associative array, or a numeric array, respectively. Default OBJECT.
  * @param string     $filter   Optional, default is raw or no WordPress defined filter will applied.
  * @return array|WP_Term|WP_Error|null Object of the type specified by `$output` on success. When `$output` is 'OBJECT',
  *                                     a WP_Term instance is returned. If taxonomy does not exist, a WP_Error is
@@ -816,10 +822,11 @@ function get_term( $term, $taxonomy = '', $output = OBJECT, $filter = 'raw' ) {
  * @param string     $field    Either 'slug', 'name', 'id' (term_id), or 'term_taxonomy_id'
  * @param string|int $value    Search for this term value
  * @param string     $taxonomy Taxonomy name. Optional, if `$field` is 'term_taxonomy_id'.
- * @param string     $output   Constant OBJECT, ARRAY_A, or ARRAY_N
+ * @param string     $output   Optional. The required return type. One of OBJECT, ARRAY_A, or ARRAY_N, which correspond to
+ *                             a WP_Term object, an associative array, or a numeric array, respectively. Default OBJECT.
  * @param string     $filter   Optional, default is raw or no WordPress defined filter will applied.
- * @return WP_Term|bool WP_Term instance on success. Will return false if `$taxonomy` does not exist
- *                      or `$term` was not found.
+ * @return WP_Term|array|false WP_Term instance (or array) on success. Will return false if `$taxonomy` does not exist
+ *                             or `$term` was not found.
  */
 function get_term_by( $field, $value, $taxonomy = '', $output = OBJECT, $filter = 'raw' ) {
 
@@ -1870,6 +1877,8 @@ function wp_get_object_terms($object_ids, $taxonomies, $args = array()) {
 		$object_ids = array($object_ids);
 	$object_ids = array_map('intval', $object_ids);
 
+	$args = wp_parse_args( $args );
+
 	$args['taxonomy'] = $taxonomies;
 	$args['object_ids'] = $object_ids;
 
@@ -2204,8 +2213,9 @@ function wp_insert_term( $term, $taxonomy, $args = array() ) {
  * @global wpdb $wpdb The WordPress database abstraction object.
  *
  * @param int              $object_id The object to relate to.
- * @param array|int|string $terms     A single term slug, single term id, or array of either term slugs or ids.
- *                                    Will replace all existing related terms in this taxonomy.
+ * @param string|int|array $terms     A single term slug, single term id, or array of either term slugs or ids.
+ *                                    Will replace all existing related terms in this taxonomy. Passing an
+ *                                    empty value will remove all related terms.
  * @param string           $taxonomy  The context in which to relate the term to the object.
  * @param bool             $append    Optional. If false will delete difference of terms. Default false.
  * @return array|WP_Error Term taxonomy IDs of the affected terms.
@@ -2332,7 +2342,7 @@ function wp_set_object_terms( $object_id, $terms, $taxonomy, $append = false ) {
  * @since 3.6.0
  *
  * @param int              $object_id The ID of the object to which the terms will be added.
- * @param array|int|string $terms     The slug(s) or ID(s) of the term(s) to add.
+ * @param string|int|array $terms     The slug(s) or ID(s) of the term(s) to add.
  * @param array|string     $taxonomy  Taxonomy name.
  * @return array|WP_Error Term taxonomy IDs of the affected terms.
  */
@@ -2348,7 +2358,7 @@ function wp_add_object_terms( $object_id, $terms, $taxonomy ) {
  * @global wpdb $wpdb WordPress database abstraction object.
  *
  * @param int              $object_id The ID of the object from which the terms will be removed.
- * @param array|int|string $terms     The slug(s) or ID(s) of the term(s) to remove.
+ * @param string|int|array $terms     The slug(s) or ID(s) of the term(s) to remove.
  * @param array|string     $taxonomy  Taxonomy name.
  * @return bool|WP_Error True on success, false or WP_Error on failure.
  */
@@ -2653,10 +2663,12 @@ function wp_update_term( $term_id, $taxonomy, $args = array() ) {
 	if ( $duplicate && $duplicate->term_id != $term_id ) {
 		// If an empty slug was passed or the parent changed, reset the slug to something unique.
 		// Otherwise, bail.
-		if ( $empty_slug || ( $parent != $term['parent']) )
+		if ( $empty_slug || ( $parent != $term['parent']) ) {
 			$slug = wp_unique_term_slug($slug, (object) $args);
-		else
+		} else {
+			/* translators: 1: Taxonomy term slug */
 			return new WP_Error('duplicate_term_slug', sprintf(__('The slug &#8220;%s&#8221; is already in use by another term'), $slug));
+		}
 	}
 
 	$tt_id = (int) $wpdb->get_var( $wpdb->prepare( "SELECT tt.term_taxonomy_id FROM $wpdb->term_taxonomy AS tt INNER JOIN $wpdb->terms AS t ON tt.term_id = t.term_id WHERE tt.taxonomy = %s AND t.term_id = %d", $taxonomy, $term_id) );
@@ -2932,7 +2944,7 @@ function clean_object_term_cache($object_ids, $object_type) {
 	 * @since 2.5.0
 	 *
 	 * @param array  $object_ids An array of object IDs.
-	 * @param string $objet_type Object type.
+	 * @param string $object_type Object type.
 	 */
 	do_action( 'clean_object_term_cache', $object_ids, $object_type );
 }
@@ -3016,7 +3028,7 @@ function clean_term_cache($ids, $taxonomy = '', $clean_taxonomy = true) {
  * function only fetches relationship data that is already in the cache.
  *
  * @since 2.3.0
- * @since 4.6.2 Returns a WP_Error object if get_term() returns an error for
+ * @since 4.7.0 Returns a WP_Error object if get_term() returns an error for
  *              any of the matched terms.
  *
  * @param int    $id       Term object ID.

@@ -120,7 +120,7 @@ input#link_url {
 #editable-post-name input {
 	font-size: 13px;
 	font-weight: 400;
-	height: 22px;
+	height: 24px;
 	margin: 0;
 	width: 16em;
 }
@@ -626,6 +626,15 @@ span.wp-media-buttons-icon:before {
 .ie8 #poststuff .inside #parent_id,
 .ie8 #poststuff .inside #page_template {
 	width: 250px;
+}
+
+.post-attributes-label-wrapper {
+	margin-bottom: 0.5em;
+}
+
+.post-attributes-label {
+	vertical-align: baseline;
+	font-weight: 600;
 }
 
 #post-visibility-select {
@@ -1220,6 +1229,7 @@ table.links-table {
 }
 
 .focus-on .wrap > h1,
+.focus-on .page-title-action,
 .focus-on #wpfooter,
 .focus-on .postbox-container > *,
 .focus-on div.updated,
@@ -1243,6 +1253,7 @@ table.links-table {
 }
 
 .focus-off .wrap > h1,
+.focus-off .page-title-action,
 .focus-off #wpfooter,
 .focus-off .postbox-container > *,
 .focus-off div.updated,

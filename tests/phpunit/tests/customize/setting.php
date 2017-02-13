@@ -395,7 +395,28 @@ class Tests_WP_Customize_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $post_data_overrides[ $name ], $this->custom_type_getter( $name, $this->undefined ) );
 		$this->assertEquals( $post_data_overrides[ $name ], $setting->value() );
 
+		// Custom type that does not handle supplying the post value from the customize_value_{$id_base} filter.
+		$setting_id = 'custom_without_previewing_value_filter';
+		$setting = $this->manager->add_setting( $setting_id, array(
+			'type' => 'custom_preview_test',
+			'default' => 123,
+			'sanitize_callback' => array( $this->manager->nav_menus, 'intval_base10' ),
+		) );
+
+		/*
+		 * In #36952 the conditions were such that get_theme_mod() be erroneously used
+		 * to source the root value for a custom multidimensional type.
+		 * Add a theme mod with the same name as the custom setting to test fix.
+		 */
+		set_theme_mod( $setting_id, 999 );
+		$this->assertSame( 123, $setting->value() );
+
+		$this->manager->set_post_value( $setting_id, '456' );
+		$setting->preview();
+		$this->assertSame( 456, $setting->value() );
+
 		unset( $this->custom_type_data_previewed, $this->custom_type_data_saved );
+		remove_theme_mod( $setting_id );
 	}
 
 	/**
@@ -444,7 +465,7 @@ class Tests_WP_Customize_Setting extends WP_UnitTestCase {
 
 		// Satisfy all requirements for save to happen.
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
-		$this->assertTrue( false !== $setting->save() );
+		$this->assertNotFalse( $setting->save() );
 		$this->assertTrue( 1 === did_action( 'customize_update_custom' ) );
 		$this->assertTrue( 1 === did_action( 'customize_save_foo' ) );
 	}
