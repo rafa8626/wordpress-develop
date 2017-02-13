@@ -1174,10 +1174,6 @@
 
 			// Expand section/panel. Only collapse when opening another section.
 			section.filterContainer.on( 'click', '.customize-themes-section-title', function() {
-				// Open the section.
-				if ( ! section.expanded() ) {
-					section.expand();
-				}
 
 				// Toggle filters.
 				if ( section.filterContainer.find( '.filter-details' ).length ) {
@@ -1187,6 +1183,17 @@
 							return attr === 'true' ? 'false' : 'true';
 						});
 					section.filterContainer.find( '.filter-details' ).slideToggle( 180 );
+				}
+
+				// Open the section.
+				if ( ! section.expanded() ) {
+
+					// Don't expand if there's nothing to show.
+					if ( -1 !== $.inArray( section.params.action, [ 'search', 'favorites', 'feature_filter' ] ) && '' === section.term ) {
+						return;
+					} else {
+						section.expand();
+					}
 				}
 			});
 
@@ -1249,6 +1256,7 @@
 					}
 				});
 			} else if ( 'favorites' === section.params.action ) {
+				section.checkTerm( section ); // Expand the section if there's already a term.
 				section.container.on( 'click', '.favorites-form-submit', function() {
 					section.checkTerm( section );
 				});
@@ -1259,6 +1267,7 @@
 					section.checkTerm( section );
 				});
 			} else if ( 'feature_filter' === section.params.action ) {
+				section.checkTerm( section ); // Expand the section if there's already a term.
 				section.container.on( 'click', '.filter-group input', function() {
 					section.filtersChecked();
 					section.checkTerm( section );
