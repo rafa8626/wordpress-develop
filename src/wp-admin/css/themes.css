@@ -1741,7 +1741,8 @@ body.full-overlay-active {
 	display: none;
 }
 
-#customize-container {
+#customize-container,
+#customize-themes-loading-container {
 	display: none;
 	background: #fff;
 	z-index: 500000;
@@ -1756,6 +1757,7 @@ body.full-overlay-active {
 
 /* Make the Customizer and Theme installer overlays the only available content. */
 #customize-container,
+#customize-themes-loading-container,
 .theme-install-overlay {
 	visibility: visible;
 }
@@ -1861,6 +1863,7 @@ body.full-overlay-active {
 
 #customize-preview.wp-full-overlay-main:before,
 .customize-loading #customize-container:before,
+.customize-loading #customize-themes-loading-container:before,
 .theme-install-overlay .wp-full-overlay-main:before {
 	content: "";
 	display: block;
@@ -1900,6 +1903,7 @@ body.full-overlay-active {
 
 	#customize-preview.wp-full-overlay-main:before,
 	.customize-loading #customize-container:before,
+	.customize-loading #customize-themes-loading-container:before,
 	.theme-install-overlay .wp-full-overlay-main:before {
 		background-image: url(../images/spinner-2x.gif);
 	}

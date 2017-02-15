@@ -2236,6 +2236,10 @@
 				var theme = false, customizeId, themeControl;
 				if ( preview ) {
 
+					// Update loading message. Everything else is handled by reloading the page.
+					$( '#customize-themes-loading-container span' ).hide();
+					$( '#customize-themes-loading-container .customize-loading-text' ).css( 'display', 'block' );
+
 					panel.loadThemePreview( slug ).fail( function() {
 						$( '.wp-full-overlay' ).removeClass( 'customize-loading' );
 					} );

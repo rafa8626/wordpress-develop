@@ -1198,11 +1198,26 @@ p.customize-section-description {
 	100% { opacity: 1; }
 }
 
-/* #customize-container is reused from customize-loader.js, hence the naming. */
-.wp-customizer .customize-loading #customize-container {
+.wp-customizer .customize-loading #customize-themes-loading-container {
 	display: block;
 	-webkit-animation: customize-reload .75s; /* Can't use `transition` because `display` changes here. */
 	animation: customize-reload .75s;
+}
+
+.customize-loading #customize-themes-loading-container span {
+    clear: both;
+    color: #555d66;
+    font-size: 18px;
+    font-style: normal;
+    margin: 0;
+    padding: 100px 0;
+    text-align: center;
+	width: 100%;
+	display: block;
+}
+
+.customize-loading #customize-themes-loading-container .customize-loading-text {
+	display: none;
 }
 
 #customize-theme-controls .control-panel-themes {
@@ -1851,7 +1866,7 @@ body.cheatin {
 body.cheatin h1 {
 	border-bottom: 1px solid #ddd;
 	clear: both;
-	color: #666;
+	color: #555d66;
 	font-size: 24px;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 	margin: 30px 0 0 0;
