@@ -670,11 +670,12 @@ function customize_themes_print_templates() {
 						</div>
 					<# } #>
 
-					<p class="theme-description">{{{ data.description }}}</p>
-
 					<# if ( data.parent ) { #>
 						<p class="parent-theme"><?php printf( __( 'This is a child theme of %s.' ), '<strong>{{{ data.parent }}}</strong>' ); ?></p>
 					<# } #>
+
+					<p class="theme-description">{{{ data.description }}}</p>
+
 					<# if ( data.tags ) { #>
 						<p class="theme-tags"><span><?php _e( 'Tags:' ); ?></span> {{{ data.tags }}}</p>
 					<# } #>

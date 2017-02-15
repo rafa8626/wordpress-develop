@@ -4297,17 +4297,17 @@ final class WP_Customize_Manager {
 				'per_page' => 100,
 				'page' => absint( $_POST['page'] ),
 				'fields' => array(
-					'slug' => true,
-					'screenshot' => true,
+					'screenshot_url' => true,
 					'description' => true,
-					'requires' => true,
 					'rating' => true,
 					'downloaded' => true,
-					'downloadLink' => true,
+					'downloadlink' => true,
 					'last_updated' => true,
 					'homepage' => true,
 					'num_ratings' => true,
 					'tags' => true,
+					'parent' => true,
+					//'extended_author' => true, @todo: WordPress.org throws a 500 server error when this is here.
 				),
 			);
 
