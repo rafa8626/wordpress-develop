@@ -106,6 +106,45 @@ if ( empty( $file ) ) {
 validate_file_to_edit( $file, $allowed_files );
 $scrollto = isset( $_REQUEST['scrollto'] ) ? (int) $_REQUEST['scrollto'] : 0;
 
+$codemirror_opts = false;
+switch ( @pathinfo( $file, PATHINFO_EXTENSION ) ) {
+	case 'css' :
+		wp_enqueue_script( 'codemirror-mode-css' );
+		wp_enqueue_style( 'codemirror' );
+		$codemirror_opts = array(
+			'inputStyle'  => 'contenteditable',
+			'lineNumbers' => true,
+			'mode'        => 'text/css',
+		);
+		break;
+	case 'php' :
+		wp_enqueue_script( 'codemirror-mode-html' );
+		wp_enqueue_script( 'codemirror-mode-xml' );
+		wp_enqueue_script( 'codemirror-mode-javascript' );
+		wp_enqueue_script( 'codemirror-mode-css' );
+		wp_enqueue_script( 'codemirror-mode-php' );
+		wp_enqueue_style( 'codemirror' );
+		$codemirror_opts = array(
+			'inputStyle'     => 'contenteditable',
+			'lineNumbers'    => true,
+			'mode'           => 'application/x-httpd-php',
+			'indentUnit'     => 4,
+        	'indentWithTabs' => true,
+		);
+		break;
+	default :
+		break;
+}
+/**
+ * Give folks a chance to filter the arguments passed to CodeMirror -- This will let them enable
+ * or disable it (by returning something that evaluates to false) as they choose as well.
+ *
+ * @param $codemirror_opts The array of options to be passed to codemirror. Falsey doesn't use codemirror.
+ * @param $file            The file being displayed.
+ * @param $theme           The WP_Theme object for the current theme being edited.
+ */
+$codemirror_opts = apply_filters( 'theme_editor_codemirror_opts', $codemirror_opts, $file, $theme );
+
 switch( $action ) {
 case 'update':
 	check_admin_referer( 'edit-theme_' . $file . $stylesheet );
@@ -289,6 +328,10 @@ endif; // $error
 jQuery(document).ready(function($){
 	$('#template').submit(function(){ $('#scrollto').val( $('#newcontent').scrollTop() ); });
 	$('#newcontent').scrollTop( $('#scrollto').val() );
+	/** CODEMIRROR */
+	<?php if ( $codemirror_opts ) : ?>
+	wp.codemirror = CodeMirror.fromTextArea( document.getElementById('newcontent'), <?php echo json_encode( $codemirror_opts ); ?> );
+	<?php endif; ?>
 });
 </script>
 <?php

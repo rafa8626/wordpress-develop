@@ -511,6 +511,44 @@ function wp_default_scripts( &$scripts ) {
 		'versionString' => 'wp/v2/',
 	) );
 
+	// CodeMirror
+	$scripts->add( 'codemirror', "/wp-includes/js/codemirror/lib/codemirror.js", array(), '5.23.0' );
+
+	$scripts->add( 'codemirror-addon-hint-show',       "/wp-includes/js/codemirror/addon/hint/show-hint.js",       array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-hint-css',        "/wp-includes/js/codemirror/addon/hint/css-hint.js",        array( 'codemirror-addon-hint-show', 'codemirror-mode-css' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-hint-html',       "/wp-includes/js/codemirror/addon/hint/html-hint.js",       array( 'codemirror-addon-hint-show', 'codemirror-mode-html' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-hint-javascript', "/wp-includes/js/codemirror/addon/hint/javascript-hint.js", array( 'codemirror-addon-hint-show', 'codemirror-mode-javascript' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-hint-sql',        "/wp-includes/js/codemirror/addon/hint/sql-hint.js",        array( 'codemirror-addon-hint-show', 'codemirror-mode-sql' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-hint-xml',        "/wp-includes/js/codemirror/addon/hint/xml-hint.js",        array( 'codemirror-addon-hint-show', 'codemirror-mode-xml' ), '5.23.0' );
+
+	$scripts->add( 'codemirror-addon-comment',                 "/wp-includes/js/codemirror/addon/comment/comment.js",         array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-comment-continuecomment', "/wp-includes/js/codemirror/addon/comment/continuecomment.js", array( 'codemirror' ), '5.23.0' );
+
+	$scripts->add( 'codemirror-addon-edit-closebrackets', "/wp-includes/js/codemirror/addon/edit/closebrackets.js", array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-edit-closetag',      "/wp-includes/js/codemirror/addon/edit/closetag.js",      array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-edit-continuelist',  "/wp-includes/js/codemirror/addon/edit/continuelist.js",  array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-edit-matchbrackets', "/wp-includes/js/codemirror/addon/edit/matchbrackets.js", array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-edit-matchtags',     "/wp-includes/js/codemirror/addon/edit/matchtags.js",     array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-edit-trailingspace', "/wp-includes/js/codemirror/addon/edit/trailingspace.js", array( 'codemirror' ), '5.23.0' );
+
+	$scripts->add( 'codemirror-addon-selection-active-line',    "/wp-includes/js/codemirror/addon/selection/active-line.js",       array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-selection-mark-selection', "/wp-includes/js/codemirror/addon/selection/mark-selection.js",    array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-addon-selection-pointer',        "/wp-includes/js/codemirror/addon/selection/selection-pointer.js", array( 'codemirror' ), '5.23.0' );
+
+	$scripts->add( 'codemirror-mode-clike',      "/wp-includes/js/codemirror/mode/clike/clike.js",           array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-css',        "/wp-includes/js/codemirror/mode/css/css.js",               array( 'codemirror',
+	                                                                                                                'codemirror-addon-edit-matchbrackets' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-diff',       "/wp-includes/js/codemirror/mode/diff/diff.js",             array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-html',       "/wp-includes/js/codemirror/mode/htmlmixed/htmlmixed.js",   array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-http',       "/wp-includes/js/codemirror/mode/http/http.js",             array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-javascript', "/wp-includes/js/codemirror/mode/javascript/javascript.js", array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-markdown',   "/wp-includes/js/codemirror/mode/markdown/markdown.js",     array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-php',        "/wp-includes/js/codemirror/mode/php/php.js",               array( 'codemirror-mode-clike',
+	                                                                                                                'codemirror-addon-edit-matchbrackets' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-shell',      "/wp-includes/js/codemirror/mode/shell/shell.js",           array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-sql',        "/wp-includes/js/codemirror/mode/sql/sql.js",               array( 'codemirror' ), '5.23.0' );
+	$scripts->add( 'codemirror-mode-xml',        "/wp-includes/js/codemirror/mode/xml/xml.js",               array( 'codemirror' ), '5.23.0' );
+
 	if ( is_admin() ) {
 		$scripts->add( 'admin-tags', "/wp-admin/js/tags$suffix.js", array( 'jquery', 'wp-ajax-response' ), false, 1 );
 		did_action( 'init' ) && $scripts->localize( 'admin-tags', 'tagsl10n', array(
@@ -874,6 +912,8 @@ function wp_default_styles( &$styles ) {
 	$styles->add( 'mediaelement',        "/wp-includes/js/mediaelement/mediaelementplayer.min.css", array(), '2.22.0' );
 	$styles->add( 'wp-mediaelement',     "/wp-includes/js/mediaelement/wp-mediaelement$suffix.css", array( 'mediaelement' ) );
 	$styles->add( 'thickbox',            '/wp-includes/js/thickbox/thickbox.css', array( 'dashicons' ) );
+	$styles->add( 'codemirror',          "/wp-includes/js/codemirror/lib/codemirror.css", array(), '5.23.0' );
+	$styles->add( 'codemirror-addon-show-hint', "/wp-includes/js/codemirror/lib/codemirror.css", array( 'codemirror' ), '5.23.0' );
 
 	// Deprecated CSS
 	$styles->add( 'deprecated-media', "/wp-admin/css/deprecated-media$suffix.css" );
