@@ -33,7 +33,7 @@
 	$( document ).ready( function () {
 
 		// Expand/Collapse accordion sections on click.
-		$( '.accordion-container' ).on( 'click keydown', '.accordion-section-title', function( e ) {
+		$( '.accordion-container' ).on( 'click keydown', '.accordion-section-title, .handlediv', function( e ) {
 			if ( e.type === 'keydown' && 13 !== e.which ) { // "return" key
 				return;
 			}
