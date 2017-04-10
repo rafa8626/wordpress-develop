@@ -91,11 +91,37 @@
 	box-sizing: border-box;
 }
 
-.sidebar-name-arrow {
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
+.js .sidebar-name .handlediv {
+	float: right;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+.js .sidebar-name .handlediv:focus {
+	box-shadow: none;
+	outline: none;
+}
+
+.js #widgets-left .sidebar-name .handlediv:focus .sidebar-name-arrow {
+	display: block;
+}
+
+.js .sidebar-name .handlediv:focus .sidebar-name-arrow:before {
+	box-shadow:
+		0 0 0 1px #5b9dd9,
+		0 0 2px 1px rgba(30, 140, 190, .8);
+}
+
+.js .sidebar-name .sidebar-name-arrow:before {
+	margin-top: 14px;
+	width: 20px;
+	border-radius: 50%;
+	text-indent: -1px; /* account for the dashicon alignment */
+}
+
+.js .widget-liquid-left .sidebar-name .sidebar-name-arrow:before {
+	margin-top: 7px;
 }
 
 .js .sidebar-name {
@@ -154,10 +180,6 @@ div#widgets-left .sidebar-name h2,
 div#widgets-left .sidebar-name h3 {
 	padding: 10px 0;
 	margin: 0 10px 0 0;
-}
-
-#widgets-left .sidebar-name .sidebar-name-arrow:before {
-	padding: 9px;
 }
 
 #widgets-left .widgets-holder-wrap,
@@ -247,10 +269,6 @@ div#widgets-right .sidebar-description {
 div#widgets-right .sidebar-name h2,
 div#widgets-right .sidebar-name h3 {
 	padding: 15px 7px;
-}
-
-div#widgets-right .sidebar-name .sidebar-name-arrow:before {
-	top: 2px;
 }
 
 div#widgets-right .widget-top {
