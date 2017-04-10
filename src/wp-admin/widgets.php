@@ -387,7 +387,10 @@ do_action( 'widgets_admin_page' ); ?>
 <div id="widgets-left">
 	<div id="available-widgets" class="widgets-holder-wrap">
 		<div class="sidebar-name">
-			<div class="sidebar-name-arrow"><br /></div>
+			<button type="button" class="handlediv button-link" aria-expanded="true">
+				<span class="screen-reader-text">Toggle panel: <?php _e( 'Available Widgets' ); ?></span>
+				<span class="sidebar-name-arrow" aria-hidden="true"></span>
+			</button>
 			<h2><?php _e( 'Available Widgets' ); ?> <span id="removing-widget"><?php _ex( 'Deactivate', 'removing-widget' ); ?> <span></span></span></h2>
 		</div>
 		<div class="widget-holder">
