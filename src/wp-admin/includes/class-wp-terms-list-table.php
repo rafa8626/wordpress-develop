@@ -235,7 +235,7 @@ class WP_Terms_List_Table extends WP_List_Table {
 		$terms = get_terms( $taxonomy, $args );
 
 		if ( empty( $terms ) || ! is_array( $terms ) ) {
-			echo '<tr class="no-items"><td class="colspanchange" colspan="' . $this->get_column_count() . '">';
+			echo '<tr class="no-items"><td class="colspanchange">';
 			$this->no_items();
 			echo '</td></tr>';
 			return;
