@@ -1165,7 +1165,7 @@ function do_accordion_sections( $screen, $context, $object ) {
 							<span class="screen-reader-text"><?php echo sprintf( __( 'Toggle panel: %s' ), esc_html( $box['title'] ) ); ?></span>
 							<span class="sidebar-name-arrow" aria-hidden="true"></span>
 						</button>
-						<h3 class="accordion-section-title">
+						<h3 class="accordion-section-title hndle">
 							<?php echo esc_html( $box['title'] ); ?>
 						</h3>
 						<div class="accordion-section-content <?php postbox_classes( $box['id'], $page ); ?>">
