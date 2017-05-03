@@ -561,12 +561,9 @@ class Tests_WP_Customize_Setting extends WP_UnitTestCase {
 	 *
 	 * @ticket 31428
 	 * @group multisite
+	 * @group ms-required
 	 */
 	function test_previewing_with_switch_to_blog() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Cannot test WP_Customize_Setting::is_current_blog_previewed() with switch_to_blog() if not on multisite.' );
-		}
-
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$type = 'option';
 		$name = 'blogdescription';

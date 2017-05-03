@@ -198,6 +198,28 @@ class WP_UnitTestCase extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
+	 * Allow tests to be skipped when Multisite is not in use.
+	 *
+	 * Use in conjunction with the ms-required group.
+	 */
+	public function skipWithoutMultisite() {
+		if ( ! is_multisite() ) {
+			$this->markTestSkipped( 'Test only runs on Multisite' );
+		}
+	}
+
+	/**
+	 * Allow tests to be skipped when Multisite is in use.
+	 *
+	 * Use in conjunction with the ms-excluded group.
+	 */
+	public function skipWithMultisite() {
+		if ( is_multisite() ) {
+			$this->markTestSkipped( 'Test does not run on Multisite' );
+		}
+	}
+
+	/**
 	 * Unregister existing post types and register defaults.
 	 *
 	 * Run before each test in order to clean up the global scope, in case
@@ -388,8 +410,12 @@ class WP_UnitTestCase extends PHPUnit_Framework_TestCase {
 			$errors[] = "Unexpected incorrect usage notice for $unexpected";
 		}
 
-		if ( ! empty( $errors ) ) {
-			$this->fail( implode( "\n", $errors ) );
+		// Perform an assertion, but only if there are expected or unexpected deprecated calls or wrongdoings
+		if ( ! empty( $this->expected_deprecated ) ||
+			! empty( $this->expected_doing_it_wrong ) ||
+			! empty( $this->caught_deprecated ) ||
+			! empty( $this->caught_doing_it_wrong ) ) {
+			$this->assertEmpty( $errors, implode( "\n", $errors ) );
 		}
 	}
 
@@ -551,6 +577,17 @@ class WP_UnitTestCase extends PHPUnit_Framework_TestCase {
 	protected function checkRequirements() {
 		parent::checkRequirements();
 
+		$annotations = $this->getAnnotations();
+
+		if ( ! empty( $annotations['group'] ) ) {
+			if ( in_array( 'ms-required', $annotations['group'], true ) ) {
+				$this->skipWithoutMultisite();
+			}
+			if ( in_array( 'ms-excluded', $annotations['group'], true ) ) {
+				$this->skipWithMultisite();
+			}
+		}
+
 		// Core tests no longer check against open Trac tickets, but others using WP_UnitTestCase may do so.
 		if ( defined( 'WP_RUN_CORE_TESTS' ) && WP_RUN_CORE_TESTS ) {
 			return;
@@ -562,10 +599,6 @@ class WP_UnitTestCase extends PHPUnit_Framework_TestCase {
 		foreach ( $tickets as $ticket ) {
 			if ( is_numeric( $ticket ) ) {
 				$this->knownWPBug( $ticket );
-			} elseif ( 'UT' == substr( $ticket, 0, 2 ) ) {
-				$ticket = substr( $ticket, 2 );
-				if ( $ticket && is_numeric( $ticket ) )
-					$this->knownUTBug( $ticket );
 			} elseif ( 'Plugin' == substr( $ticket, 0, 6 ) ) {
 				$ticket = substr( $ticket, 6 );
 				if ( $ticket && is_numeric( $ticket ) )
@@ -585,13 +618,10 @@ class WP_UnitTestCase extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
-	 * Skips the current test if there is an open unit tests ticket with id $ticket_id
+	 * @deprecated No longer used since the unit test Trac was merged into Core's.
 	 */
 	function knownUTBug( $ticket_id ) {
-		if ( WP_TESTS_FORCE_KNOWN_BUGS || in_array( 'UT' . $ticket_id, self::$forced_tickets ) )
-			return;
-		if ( ! TracTickets::isTracTicketClosed( 'https://unit-tests.trac.wordpress.org', $ticket_id ) )
-			$this->markTestSkipped( sprintf( 'Unit Tests Ticket #%d is not fixed', $ticket_id ) );
+		return;
 	}
 
 	/**

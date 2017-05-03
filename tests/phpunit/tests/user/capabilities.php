@@ -611,11 +611,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		return $data;
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	function test_super_admin_caps() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite' );
-			return;
-		}
 		$caps = $this->getAllCapsAndRoles();
 		$user = self::$super_admin;
 
@@ -1355,12 +1354,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		wp_set_current_user( $old_uid );
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	function test_borked_current_user_can_for_blog() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite' );
-			return;
-		}
-
 		$orig_blog_id = get_current_blog_id();
 		$blog_id = self::factory()->blog->create();
 
@@ -1416,12 +1413,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		$this->assertFalse( current_user_can( 'edit_post', $post + 1 ) );
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	function test_multisite_administrator_can_not_edit_users() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite' );
-			return;
-		}
-
 		$user = self::$users['administrator'];
 		$other_user = self::$users['subscriber'];
 
@@ -1450,11 +1445,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		$this->assertFalse( user_can( self::$users['subscriber']->ID,   'remove_user', self::$users['subscriber']->ID ) );
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	public function test_only_super_admins_can_delete_users_on_multisite() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs on multisite' );
-		}
-
 		$this->assertTrue( user_can( self::$super_admin->ID,             'delete_user', self::$users['subscriber']->ID ) );
 
 		$this->assertFalse( user_can( self::$users['administrator']->ID, 'delete_user', self::$users['subscriber']->ID ) );
@@ -1464,11 +1458,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		$this->assertFalse( user_can( self::$users['subscriber']->ID,    'delete_user', self::$users['subscriber']->ID ) );
 	}
 
+	/**
+	 * @group ms-excluded
+	 */
 	public function test_only_admins_can_delete_users_on_single_site() {
-		if ( is_multisite() ) {
-			$this->markTestSkipped( 'Test does not run on multisite' );
-		}
-
 		$this->assertTrue( user_can( self::$users['administrator']->ID, 'delete_user', self::$users['subscriber']->ID ) );
 
 		$this->assertFalse( user_can( self::$users['editor']->ID,       'delete_user', self::$users['subscriber']->ID ) );
@@ -1522,12 +1515,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	function test_multisite_administrator_with_manage_network_users_can_edit_users() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite' );
-			return;
-		}
-
 		$user = self::$users['administrator'];
 		$user->add_cap( 'manage_network_users' );
 		$other_user = self::$users['subscriber'];
@@ -1541,12 +1532,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		$this->assertTrue( $can_edit_user );
 	}
 
+	/**
+	 * @group ms-required
+	 */
 	function test_multisite_administrator_with_manage_network_users_can_not_edit_super_admin() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite' );
-			return;
-		}
-
 		$user = self::$users['administrator'];
 		$user->add_cap( 'manage_network_users' );
 
@@ -1561,6 +1550,7 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 
 	/**
 	 * @ticket 16956
+	 * @expectedIncorrectUsage map_meta_cap
 	 */
 	function test_require_edit_others_posts_if_post_type_doesnt_exist() {
 		register_post_type( 'existed' );
@@ -1570,7 +1560,6 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		$subscriber_id = self::$users['subscriber']->ID;
 		$editor_id = self::$users['editor']->ID;
 
-		$this->setExpectedIncorrectUsage( 'map_meta_cap' );
 		foreach ( array( 'delete_post', 'edit_post', 'read_post', 'publish_post' ) as $cap ) {
 			wp_set_current_user( $subscriber_id );
 			$this->assertSame( array( 'edit_others_posts' ), map_meta_cap( $cap, $subscriber_id, $post_id ) );
@@ -1637,6 +1626,10 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 		foreach ( $caps as $cap => $roles ) {
 			$this->assertFalse( current_user_can( $cap ), "Non-logged-in user should not have the {$cap} capability" );
 		}
+
+		// Special cases for link manager and unfiltered uploads:
+		$this->assertFalse( current_user_can( 'manage_links' ), "Non-logged-in user should not have the manage_links capability" );
+		$this->assertFalse( current_user_can( 'unfiltered_upload' ), "Non-logged-in user should not have the unfiltered_upload capability" );
 
 		$this->assertFalse( current_user_can( 'start_a_fire' ), "Non-logged-in user should not have a custom capability" );
 		$this->assertFalse( current_user_can( 'do_not_allow' ), "Non-logged-in user should not have the do_not_allow capability" );
@@ -1764,12 +1757,9 @@ class Tests_User_Capabilities extends WP_UnitTestCase {
 
 	/**
 	 * @ticket 39063
+	 * @group ms-required
 	 */
 	public function test_only_super_admins_can_remove_themselves_on_multisite() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( 'Test only runs in multisite.' );
-		}
-
 		$this->assertTrue( user_can( self::$super_admin->ID, 'remove_user', self::$super_admin->ID ) );
 
 		$this->assertFalse( user_can( self::$users['administrator']->ID, 'remove_user', self::$users['administrator']->ID ) );
