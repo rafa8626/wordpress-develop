@@ -617,7 +617,6 @@ p.customize-section-description {
 
 .customize-control select {
 	width: 100%;
-	max-width: 300px;
 	height: 28px;
 	line-height: 28px;
 }
@@ -744,7 +743,6 @@ p.customize-section-description {
 
 .customize-control-dropdown-pages .new-content-item {
 	width: 100%;
-	max-width: 300px;
 	padding: 5px 0 5px 1px;
 	position: relative;
 }
@@ -1189,20 +1187,18 @@ p.customize-section-description {
 .customize-section-description-container + #customize-control-custom_css:last-child {
 	margin-left: -12px;
 	width: 299px;
+	width: -webkit-calc( 100% + 24px );
+	width: calc( 100% + 24px );
 	margin-bottom: -12px;
 }
 
 @media screen and ( max-width: 640px ) {
 	.customize-section-description-container + #customize-control-custom_css:last-child {
-		margin-left: 0;
 		margin-right: 0;
-		width: 100%;
 	}
 	.customize-section-description-container + #customize-control-custom_css:last-child textarea {
 		height: -webkit-calc( 100vh - 140px );
 		height: calc( 100vh - 140px );
-		width: 100%;
-		border: solid 1px #ddd;
 	}
 }
 

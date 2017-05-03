@@ -253,12 +253,9 @@ class Test_oEmbed_Controller extends WP_UnitTestCase {
 
 	/**
 	 * @group multisite
+	 * @group ms-required
 	 */
 	function test_request_ms_child_in_root_blog() {
-		if ( ! is_multisite() ) {
-			$this->markTestSkipped( __METHOD__ . ' is a multisite-only test.' );
-		}
-
 		$child = self::factory()->blog->create();
 		switch_to_blog( $child );
 
