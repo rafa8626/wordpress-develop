@@ -11,6 +11,12 @@
  */
 class Test_WP_Widget_Media extends WP_UnitTestCase {
 
+	function setUp() {
+		parent::setUp();
+
+		set_current_screen( 'customize' );
+	}
+
 	/**
 	 * Get instance for mocked media widget class.
 	 *
