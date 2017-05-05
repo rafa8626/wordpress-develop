@@ -13,10 +13,17 @@
  */
 class Test_WP_Widget_Media_Image extends WP_UnitTestCase {
 
-	function setUp() {
-		parent::setUp();
-
-		set_current_screen( 'customize' );
+	/**
+	 * Clean up global scope.
+	 *
+	 * @global WP_Scripts $wp_scripts
+	 * @global WP_Styles $wp_styles
+	 */
+	function clean_up_global_scope() {
+		global $wp_scripts, $wp_styles;
+		parent::clean_up_global_scope();
+		$wp_scripts = null;
+		$wp_styles = null;
 	}
 
 	/**
@@ -448,6 +455,7 @@ class Test_WP_Widget_Media_Image extends WP_UnitTestCase {
 	 * @covers WP_Widget_Media_Image::enqueue_admin_scripts
 	 */
 	function test_enqueue_admin_scripts() {
+		set_current_screen( 'widgets.php' );
 		$widget = new WP_Widget_Media_Image();
 		$widget->enqueue_admin_scripts();
 

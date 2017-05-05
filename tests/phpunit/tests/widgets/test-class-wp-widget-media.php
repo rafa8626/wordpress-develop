@@ -18,6 +18,19 @@ class Test_WP_Widget_Media extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Clean up global scope.
+	 *
+	 * @global WP_Scripts $wp_scripts
+	 * @global WP_Styles $wp_styles
+	 */
+	function clean_up_global_scope() {
+		global $wp_scripts, $wp_styles;
+		parent::clean_up_global_scope();
+		$wp_scripts = null;
+		$wp_styles = null;
+	}
+
+	/**
 	 * Get instance for mocked media widget class.
 	 *
 	 * @param string $id_base         Base ID for the widget, lowercase and unique.
