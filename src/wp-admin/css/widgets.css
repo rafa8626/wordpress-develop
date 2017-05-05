@@ -55,6 +55,89 @@
 	color: #a0a5aa;
 }
 
+/* Media Widgets */
+.media-widget-control.selected .placeholder,
+.media-widget-control.selected .not-selected,
+.media-widget-control .selected {
+	display: none;
+}
+
+.media-widget-control.selected .selected {
+	display: inline-block;
+}
+
+.media-widget-buttons {
+	text-align: left;
+	margin-bottom: 10px;
+}
+
+.media-widget-control .media-widget-buttons .button {
+	margin: 8px 0 0 8px;
+	width: auto;
+}
+.media-widget-control:not(.selected) .media-widget-buttons .button,
+.media-widget-buttons .button:first-child {
+	margin-left: 0;
+}
+
+.media-widget-control .placeholder {
+	border: 1px dashed #b4b9be;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	cursor: default;
+	line-height: 20px;
+	padding: 9px 0;
+	position: relative;
+	text-align: center;
+	width: 100%;
+}
+
+.media-widget-control .media-widget-preview {
+	text-align: center;
+}
+.media-widget-control .media-widget-preview .notice {
+	text-align: initial;
+}
+.media-widget-control .media-widget-preview img {
+	max-width: 100%;
+}
+.media-widget-control .media-widget-preview .wp-video-shortcode {
+	background: #000;
+}
+.media-frame.media-widget .image-details .embed-media-settings .setting.align,
+.media-frame.media-widget .attachment-display-settings .setting.align,
+.media-frame.media-widget .embed-media-settings .setting.align,
+.media-frame.media-widget .embed-link-settings .setting.link-text,
+.media-frame.media-widget .replace-attachment,
+.media-frame.media-widget .checkbox-setting.autoplay {
+	display: none;
+}
+
+.media-widget-video-preview {
+	width: 100%;
+}
+
+.media-widget-video-link {
+	display: inline-block;
+	min-height: 132px;
+	width: 100%;
+	background: black;
+}
+
+.media-widget-video-link .dashicons {
+	font: normal 60px/1 'dashicons';
+	position: relative;
+	width: 100%;
+	top: -90px;
+	color: white;
+	text-decoration: none;
+}
+
+.media-widget-video-link.no-poster .dashicons {
+	top: 30px;
+}
+
 /* Widget Dragging Helpers */
 .widget.ui-draggable-dragging {
 	min-width: 100%;
