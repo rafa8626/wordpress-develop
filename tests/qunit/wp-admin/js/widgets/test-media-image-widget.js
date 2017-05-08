@@ -78,10 +78,9 @@
 		equal( mappedProps.title, 'title of image', 'mapModelToMediaFrameProps should set title from model.image_title' );
 	});
 
-	asyncTest( 'image widget control renderPreview', function() {
-		var imageWidgetControlInstance, imageWidgetModelInstance;
-
-		expect( 2 );
+	test( 'image widget control renderPreview', function( assert ) {
+		var imageWidgetControlInstance, imageWidgetModelInstance, done;
+		done = assert.async();
 
 		imageWidgetModelInstance = new wp.mediaWidgets.modelConstructors.media_image();
 		imageWidgetControlInstance = new wp.mediaWidgets.controlConstructors.media_image({
@@ -93,9 +92,10 @@
 		// Due to renderPreview being deferred.
 		setTimeout( function() {
 			equal( imageWidgetControlInstance.$el.find( 'img[src="http://s.w.org/style/images/wp-header-logo.png"]' ).length, 1, 'One image should be rendered' );
+			done();
 		}, 50 );
 
-		setTimeout( start, 1000 );
+		start();
 	});
 
 	test( 'image media model', function() {
