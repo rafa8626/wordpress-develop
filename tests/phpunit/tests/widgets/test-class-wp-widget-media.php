@@ -402,6 +402,7 @@ class Test_WP_Widget_Media extends WP_UnitTestCase {
 	 * @covers WP_Widget_Media::enqueue_admin_scripts()
 	 */
 	function test_enqueue_admin_scripts() {
+		set_current_screen( 'widgets.php' );
 		$widget = $this->get_mocked_class_instance();
 		$widget->enqueue_admin_scripts();
 
