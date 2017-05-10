@@ -28,7 +28,10 @@ class WP_Widget_Text extends WP_Widget {
 			'description' => __( 'Arbitrary text or HTML.' ),
 			'customize_selective_refresh' => true,
 		);
-		$control_ops = array( 'width' => 400, 'height' => 350 );
+		$control_ops = array(
+			'width' => 400,
+			'height' => 350,
+		);
 		parent::__construct( 'text', __( 'Text' ), $widget_ops, $control_ops );
 	}
 
@@ -39,8 +42,12 @@ class WP_Widget_Text extends WP_Widget {
 	 * @access public
 	 */
 	public function _register() {
+
+		// Note that the widgets component in the customizer will also do the 'admin_print_scripts-widgets.php' action in WP_Customize_Widgets::print_scripts().
 		add_action( 'admin_print_scripts-widgets.php', array( $this, 'enqueue_admin_scripts' ) );
-		add_action( 'customize_controls_print_scripts', array( $this, 'enqueue_admin_scripts' ) );
+
+		// Note that the widgets component in the customizer will also do the 'admin_footer-widgets.php' action in WP_Customize_Widgets::print_footer_scripts().
+		add_action( 'admin_footer-widgets.php', array( $this, 'render_control_template_scripts' ) );
 
 		parent::_register();
 	}
@@ -100,8 +107,9 @@ class WP_Widget_Text extends WP_Widget {
 			echo $args['before_title'] . $title . $args['after_title'];
 		}
 
-		printf( '<div class="textwidget">%s</div>', $text );
-
+		?>
+			<div class="textwidget"><?php echo $text; ?></div>
+		<?php
 		echo $args['after_widget'];
 	}
 
@@ -137,12 +145,26 @@ class WP_Widget_Text extends WP_Widget {
 	}
 
 	/**
+	 * Loads the required scripts and styles for the widget control.
+	 *
+	 * @since 4.8.0
+	 * @access public
+	 */
+	public function enqueue_admin_scripts() {
+		wp_enqueue_editor();
+		wp_enqueue_script( 'text-widgets' );
+	}
+
+	/**
 	 * Outputs the Text widget settings form.
 	 *
 	 * @since 2.8.0
+	 * @since 4.8.0 Form only contains hidden inputs which are synced with JS template.
 	 * @access public
+	 * @see WP_Widget_Visual_Text::render_control_template_scripts()
 	 *
 	 * @param array $instance Current settings.
+	 * @return void
 	 */
 	public function form( $instance ) {
 		$instance = wp_parse_args(
@@ -152,29 +174,31 @@ class WP_Widget_Text extends WP_Widget {
 				'text' => '',
 			)
 		);
-
-		$title = sanitize_text_field( $instance['title'] );
 		?>
-		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label>
-			<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
-		</p>
-
-		<p>
-			<label for="<?php echo $this->get_field_id( 'text' ); ?>" class="screen-reader-text"><?php _e( 'Content:' ); ?></label>
-			<textarea class="widefat" style="height: 200px" rows="16" cols="20" id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>"><?php echo esc_textarea( $instance['text'] ); ?></textarea>
-		</p>
+		<input id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" class="title" type="hidden" value="<?php echo esc_attr( $instance['title'] ); ?>">
+		<input id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>" class="text" type="hidden" value="<?php echo esc_attr( $instance['text'] ); ?>">
 		<?php
 	}
 
 	/**
-	 * Loads the required scripts and styles for the widget control.
+	 * Render form template scripts.
 	 *
 	 * @since 4.8.0
 	 * @access public
 	 */
-	public function enqueue_admin_scripts() {
-		wp_enqueue_editor();
-		wp_enqueue_script( 'text-widgets' );
+	public function render_control_template_scripts() {
+		?>
+		<script type="text/html" id="tmpl-widget-text-control-fields">
+			<# var elementIdPrefix = 'el' + String( Math.random() ).replace( /\D/g, '' ) + '_' #>
+			<p>
+				<label for="{{ elementIdPrefix }}title"><?php esc_html_e( 'Title:' ); ?></label>
+				<input id="{{ elementIdPrefix }}title" type="text" class="widefat title">
+			</p>
+			<p>
+				<label for="{{ elementIdPrefix }}text" class="screen-reader-text"><?php esc_html_e( 'Content:' ); ?></label>
+				<textarea id="{{ elementIdPrefix }}text" class="widefat text" style="height: 200px" rows="16" cols="20"></textarea>
+			</p>
+		</script>
+		<?php
 	}
 }
