@@ -33,6 +33,19 @@ class WP_Widget_Text extends WP_Widget {
 	}
 
 	/**
+	 * Add hooks for enqueueing assets when registering all widget instances of this widget class.
+	 *
+	 * @since 4.8.0
+	 * @access public
+	 */
+	public function _register() {
+		add_action( 'admin_print_scripts-widgets.php', array( $this, 'enqueue_admin_scripts' ) );
+		add_action( 'customize_controls_print_scripts', array( $this, 'enqueue_admin_scripts' ) );
+
+		parent::_register();
+	}
+
+	/**
 	 * Outputs the content for the current Text widget instance.
 	 *
 	 * @since 2.8.0
@@ -61,12 +74,34 @@ class WP_Widget_Text extends WP_Widget {
 		 */
 		$text = apply_filters( 'widget_text', $widget_text, $instance, $this );
 
+		if ( isset( $instance['filter'] ) ) {
+			if ( 'content' === $instance['filter'] ) {
+
+				/**
+				 * Filters the content of the Text widget to apply changes expected from the visual (TinyMCE) editor.
+				 *
+				 * By default a subset of the_content filters are applied, including wpautop and wptexturize.
+				 *
+				 * @since 4.8.0
+				 *
+				 * @param string         $widget_text The widget content.
+				 * @param array          $instance    Array of settings for the current widget.
+				 * @param WP_Widget_Text $this        Current Text widget instance.
+				 */
+				$text = apply_filters( 'widget_text_content', $widget_text, $instance, $this );
+
+			} elseif ( $instance['filter'] ) {
+				$text = wpautop( $text ); // Back-compat for instances prior to 4.8.
+			}
+		}
+
 		echo $args['before_widget'];
 		if ( ! empty( $title ) ) {
 			echo $args['before_title'] . $title . $args['after_title'];
-		} ?>
-			<div class="textwidget"><?php echo !empty( $instance['filter'] ) ? wpautop( $text ) : $text; ?></div>
-		<?php
+		}
+
+		printf( '<div class="textwidget">%s</div>', $text );
+
 		echo $args['after_widget'];
 	}
 
@@ -89,7 +124,15 @@ class WP_Widget_Text extends WP_Widget {
 		} else {
 			$instance['text'] = wp_kses_post( $new_instance['text'] );
 		}
-		$instance['filter'] = ! empty( $new_instance['filter'] );
+
+		/*
+		 * Re-use legacy 'filter' (wpautop) property to now indicate content filters will always apply.
+		 * Prior to 4.8, this is a boolean value used to indicate whether or not wpautop should be
+		 * applied. By re-using this property, downgrading WordPress from 4.8 to 4.7 will ensure
+		 * that the content for Text widgets created with TinyMCE will continue to get wpautop.
+		 */
+		$instance['filter'] = 'content';
+
 		return $instance;
 	}
 
@@ -102,17 +145,36 @@ class WP_Widget_Text extends WP_Widget {
 	 * @param array $instance Current settings.
 	 */
 	public function form( $instance ) {
-		$instance = wp_parse_args( (array) $instance, array( 'title' => '', 'text' => '' ) );
-		$filter = isset( $instance['filter'] ) ? $instance['filter'] : 0;
+		$instance = wp_parse_args(
+			(array) $instance,
+			array(
+				'title' => '',
+				'text' => '',
+			)
+		);
+
 		$title = sanitize_text_field( $instance['title'] );
 		?>
-		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?></label>
-		<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>" /></p>
+		<p>
+			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label>
+			<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
+		</p>
 
-		<p><label for="<?php echo $this->get_field_id( 'text' ); ?>"><?php _e( 'Content:' ); ?></label>
-		<textarea class="widefat" rows="16" cols="20" id="<?php echo $this->get_field_id('text'); ?>" name="<?php echo $this->get_field_name('text'); ?>"><?php echo esc_textarea( $instance['text'] ); ?></textarea></p>
-
-		<p><input id="<?php echo $this->get_field_id('filter'); ?>" name="<?php echo $this->get_field_name('filter'); ?>" type="checkbox"<?php checked( $filter ); ?> />&nbsp;<label for="<?php echo $this->get_field_id('filter'); ?>"><?php _e('Automatically add paragraphs'); ?></label></p>
+		<p>
+			<label for="<?php echo $this->get_field_id( 'text' ); ?>" class="screen-reader-text"><?php _e( 'Content:' ); ?></label>
+			<textarea class="widefat" style="height: 200px" rows="16" cols="20" id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>"><?php echo esc_textarea( $instance['text'] ); ?></textarea>
+		</p>
 		<?php
+	}
+
+	/**
+	 * Loads the required scripts and styles for the widget control.
+	 *
+	 * @since 4.8.0
+	 * @access public
+	 */
+	public function enqueue_admin_scripts() {
+		wp_enqueue_editor();
+		wp_enqueue_script( 'text-widgets' );
 	}
 }
