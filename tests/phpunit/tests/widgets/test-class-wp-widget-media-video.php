@@ -66,13 +66,14 @@ class Test_WP_Widget_Media_Video extends WP_UnitTestCase {
 		$this->assertEquals( 'video', $widget->widget_options['mime_type'] );
 		$this->assertEqualSets( array(
 			'add_to_widget',
-			'change_media',
+			'replace_media',
+			'unsupported_file_type',
 			'edit_media',
 			'media_library_state_multi',
 			'media_library_state_single',
 			'missing_attachment',
 			'no_media_selected',
-			'select_media',
+			'add_media',
 		), array_keys( $widget->l10n ) );
 	}
 

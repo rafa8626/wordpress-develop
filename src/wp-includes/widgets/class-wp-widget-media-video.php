@@ -30,8 +30,8 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 
 		$this->l10n = array_merge( $this->l10n, array(
 			'no_media_selected' => __( 'No video selected' ),
-			'select_media' => _x( 'Select Video', 'label for button in the video widget; should not be longer than ~13 characters long' ),
-			'change_media' => _x( 'Change Video', 'label for button in the video widget; should not be longer than ~13 characters long' ),
+			'add_media' => _x( 'Add Video', 'label for button in the video widget; should not be longer than ~13 characters long' ),
+			'replace_media' => _x( 'Replace Video', 'label for button in the video widget; should not be longer than ~13 characters long' ),
 			'edit_media' => _x( 'Edit Video', 'label for button in the video widget; should not be longer than ~13 characters long' ),
 			'missing_attachment' => sprintf(
 				/* translators: placeholder is URL to media library */
@@ -41,6 +41,8 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 			/* translators: %d is widget count */
 			'media_library_state_multi' => _n_noop( 'Video Widget (%d)', 'Video Widget (%d)' ),
 			'media_library_state_single' => __( 'Video Widget' ),
+			/* translators: placeholder is a list of valid video file extensions */
+			'unsupported_file_type' => sprintf( __( 'Sorry, we can&#8217;t display the video file type selected. Please select a supported video file (%1$s) or stream (YouTube or Vimeo) instead.' ), '<code>.' . implode( '</code>, <code>.', wp_get_video_extensions() ) . '</code>' ),
 		) );
 	}
 
@@ -206,7 +208,7 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 			sprintf(
 				'
 					wp.mediaWidgets.controlConstructors[ %1$s ].prototype.mime_type = %2$s;
-					_.extend( wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n, %3$s );
+					wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n = _.extend( {}, wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n, %3$s );
 				',
 				wp_json_encode( $this->id_base ),
 				wp_json_encode( $this->widget_options['mime_type'] ),
@@ -229,6 +231,10 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 				<div class="notice notice-error notice-alt notice-missing-attachment">
 					<p><?php echo $this->l10n['missing_attachment']; ?></p>
 				</div>
+			<# } else if ( data.error && 'unsupported_file_type' === data.error ) { #>
+				<div class="notice notice-error notice-alt notice-missing-attachment">
+					<p><?php echo $this->l10n['unsupported_file_type']; ?></p>
+				</div>
 			<# } else if ( data.error ) { #>
 				<div class="notice notice-error notice-alt">
 					<p><?php _e( 'Unable to preview media due to an unknown error.' ); ?></p>
@@ -242,7 +248,7 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 					<span class="dashicons dashicons-format-video"></span>
 				</a>
 			<# } else if ( data.model.src ) { #>
-				<?php wp_underscore_video_template(); ?>
+				<?php wp_underscore_video_template() ?>
 			<# } #>
 		</script>
 		<?php

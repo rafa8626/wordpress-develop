@@ -30,8 +30,8 @@ class WP_Widget_Media_Audio extends WP_Widget_Media {
 
 		$this->l10n = array_merge( $this->l10n, array(
 			'no_media_selected' => __( 'No audio selected' ),
-			'select_media' => _x( 'Select File', 'label for button in the audio widget; should not be longer than ~13 characters long' ),
-			'change_media' => _x( 'Change Audio', 'label for button in the audio widget; should not be longer than ~13 characters long' ),
+			'add_media' => _x( 'Add File', 'label for button in the audio widget; should not be longer than ~13 characters long' ),
+			'replace_media' => _x( 'Replace Audio', 'label for button in the audio widget; should not be longer than ~13 characters long' ),
 			'edit_media' => _x( 'Edit Audio', 'label for button in the audio widget; should not be longer than ~13 characters long' ),
 			'missing_attachment' => sprintf(
 				/* translators: placeholder is URL to media library */
@@ -41,6 +41,7 @@ class WP_Widget_Media_Audio extends WP_Widget_Media {
 			/* translators: %d is widget count */
 			'media_library_state_multi' => _n_noop( 'Audio Widget (%d)', 'Audio Widget (%d)' ),
 			'media_library_state_single' => __( 'Audio Widget' ),
+			'unsupported_file_type' => __( 'Looks like this isn&#8217;t the correct kind of file. Please link to an audio file instead.' ),
 		) );
 	}
 
@@ -167,7 +168,7 @@ class WP_Widget_Media_Audio extends WP_Widget_Media {
 			sprintf(
 				'
 					wp.mediaWidgets.controlConstructors[ %1$s ].prototype.mime_type = %2$s;
-					_.extend( wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n, %3$s );
+					wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n = _.extend( {}, wp.mediaWidgets.controlConstructors[ %1$s ].prototype.l10n, %3$s );
 				',
 				wp_json_encode( $this->id_base ),
 				wp_json_encode( $this->widget_options['mime_type'] ),
@@ -195,7 +196,7 @@ class WP_Widget_Media_Audio extends WP_Widget_Media {
 					<p><?php _e( 'Unable to preview media due to an unknown error.' ); ?></p>
 				</div>
 			<# } else if ( data.model && data.model.src ) { #>
-				<?php wp_underscore_audio_template(); ?>
+				<?php wp_underscore_audio_template() ?>
 			<# } #>
 		</script>
 		<?php

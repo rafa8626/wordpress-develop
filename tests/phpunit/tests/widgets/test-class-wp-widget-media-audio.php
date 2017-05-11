@@ -65,13 +65,14 @@ class Test_WP_Widget_Media_Audio extends WP_UnitTestCase {
 		$this->assertEquals( 'audio', $widget->widget_options['mime_type'] );
 		$this->assertEqualSets( array(
 			'add_to_widget',
-			'change_media',
+			'replace_media',
 			'edit_media',
 			'media_library_state_multi',
 			'media_library_state_single',
 			'missing_attachment',
 			'no_media_selected',
-			'select_media',
+			'add_media',
+			'unsupported_file_type',
 		), array_keys( $widget->l10n ) );
 	}
 
@@ -216,9 +217,14 @@ class Test_WP_Widget_Media_Audio extends WP_UnitTestCase {
 	/**
 	 * Test enqueue_preview_scripts method.
 	 *
+	 * @global WP_Scripts $wp_scripts
+	 * @global WP_Styles $wp_styles
 	 * @covers WP_Widget_Media_Audio::enqueue_preview_scripts
 	 */
 	function test_enqueue_preview_scripts() {
+		global $wp_scripts, $wp_styles;
+		$wp_scripts = null;
+		$wp_styles = null;
 		$widget = new WP_Widget_Media_Audio();
 
 		$this->assertFalse( wp_script_is( 'wp-mediaelement' ) );

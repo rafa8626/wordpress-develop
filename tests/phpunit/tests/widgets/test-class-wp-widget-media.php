@@ -70,20 +70,19 @@ class Test_WP_Widget_Media extends WP_UnitTestCase {
 		$this->assertEmpty( $widget->widget_options['mime_type'] );
 		$this->assertEqualSets( array(
 			'add_to_widget',
-			'change_media',
+			'replace_media',
 			'edit_media',
 			'media_library_state_multi',
 			'media_library_state_single',
 			'missing_attachment',
 			'no_media_selected',
-			'select_media',
+			'add_media',
+			'unsupported_file_type',
 		), array_keys( $widget->l10n ) );
 		$this->assertEquals( count( $widget->l10n ), count( array_filter( $widget->l10n ) ), 'Expected all translation strings to be defined.' );
 		$this->assertEquals( 10, has_action( 'admin_print_scripts-widgets.php', array( $widget, 'enqueue_admin_scripts' ) ) );
-		$this->assertEquals( 10, has_action( 'customize_controls_print_scripts', array( $widget, 'enqueue_admin_scripts' ) ) );
 		$this->assertFalse( has_action( 'wp_enqueue_scripts', array( $widget, 'enqueue_preview_scripts' ) ), 'Did not expect preview scripts to be enqueued when not in customize preview context.' );
 		$this->assertEquals( 10, has_action( 'admin_footer-widgets.php', array( $widget, 'render_control_template_scripts' ) ) );
-		$this->assertEquals( 10, has_action( 'customize_controls_print_footer_scripts', array( $widget, 'render_control_template_scripts' ) ) );
 
 		// With non-default args.
 		$id_base = 'media_pdf';
@@ -409,6 +408,7 @@ class Test_WP_Widget_Media extends WP_UnitTestCase {
 		$widget->enqueue_admin_scripts();
 
 		$this->assertTrue( wp_script_is( 'media-widgets' ) );
+		$this->assertTrue( wp_style_is( 'media-widgets' ) );
 	}
 
 	/**
