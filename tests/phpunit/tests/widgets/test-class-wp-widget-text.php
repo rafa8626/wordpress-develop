@@ -164,9 +164,10 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 		$this->assertTrue( ! empty( $expected['filter'] ) );
 
 		wp_get_current_user()->add_cap( 'unfiltered_html' );
+		wp_get_current_user()->add_cap( 'delete_users' );
 		$expected['text'] = '<script>alert( "Howdy!" );</script>';
 		$result = $widget->update( $expected, $instance );
-		if ( defined( 'WP_TESTS_MULTISITE') && WP_TESTS_MULTISITE ) {
+		if ( ! is_super_admin() ) {
 			$expected['text'] = 'alert( "Howdy!" );';
 		}
 		$this->assertSame( $result, $expected );
