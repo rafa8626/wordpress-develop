@@ -402,7 +402,6 @@ class Test_WP_Widget_Media extends WP_UnitTestCase {
 		$widget->enqueue_admin_scripts();
 
 		$this->assertTrue( wp_script_is( 'media-widgets' ) );
-		$this->assertTrue( wp_style_is( 'media-widgets' ) );
 	}
 
 	/**
