@@ -107,7 +107,7 @@ wp.textWidgets = ( function( $ ) {
 		 * @returns {void}
 		 */
 		initializeEditor: function initializeEditor() {
-			var control = this, changeDebounceDelay = 1000, iframeKeepAliveInterval = 1000, id, textarea, restoreTextMode = false;
+			var control = this, changeDebounceDelay = 1000, id, textarea, restoreTextMode = false;
 			textarea = control.fields.text;
 			id = textarea.attr( 'id' );
 
@@ -118,6 +118,11 @@ wp.textWidgets = ( function( $ ) {
 			 */
 			function buildEditor() {
 				var editor, triggerChangeIfDirty, onInit;
+
+				// Abort building if the textarea is gone, likely due to the widget having been deleted entirely.
+				if ( ! document.getElementById( id ) ) {
+					return;
+				}
 
 				// Destroy any existing editor so that it can be re-initialized after a widget-updated event.
 				if ( tinymce.get( id ) )    {
@@ -137,7 +142,11 @@ wp.textWidgets = ( function( $ ) {
 					throw new Error( 'Failed to initialize editor' );
 				}
 				onInit = function() {
-					watchForDestroyedBody( control.$el.find( 'iframe' )[0] );
+
+					// When a widget is moved in the DOM the dynamically-created TinyMCE iframe will be destroyed and has to be re-built.
+					$( editor.getWin() ).on( 'unload', function() {
+						_.defer( buildEditor );
+					});
 
 					// If a prior mce instance was replaced, and it was in text mode, toggle to text mode.
 					if ( restoreTextMode ) {
@@ -153,7 +162,28 @@ wp.textWidgets = ( function( $ ) {
 
 				control.editorFocused = false;
 				triggerChangeIfDirty = function() {
+					var updateWidgetBuffer = 300; // See wp.customize.Widgets.WidgetControl._setupUpdateUI() which uses 250ms for updateWidgetDebounced.
 					if ( editor.isDirty() ) {
+
+						/*
+						 * Account for race condition in customizer where user clicks Save & Publish while
+						 * focus was just previously given to to the editor. Since updates to the editor
+						 * are debounced at 1 second and since widget input changes are only synced to
+						 * settings after 250ms, the customizer needs to be put into the processing
+						 * state during the time between the change event is triggered and updateWidget
+						 * logic starts. Note that the debounced update-widget request should be able
+						 * to be removed with the removal of the update-widget request entirely once
+						 * widgets are able to mutate their own instance props directly in JS without
+						 * having to make server round-trips to call the respective WP_Widget::update()
+						 * callbacks. See <https://core.trac.wordpress.org/ticket/33507>.
+						 */
+						if ( wp.customize ) {
+							wp.customize.state( 'processing' ).set( wp.customize.state( 'processing' ).get() + 1 );
+							_.delay( function() {
+								wp.customize.state( 'processing' ).set( wp.customize.state( 'processing' ).get() - 1 );
+							}, updateWidgetBuffer );
+						}
+
 						editor.save();
 						textarea.trigger( 'change' );
 					}
@@ -168,23 +198,6 @@ wp.textWidgets = ( function( $ ) {
 				} );
 
 				control.editor = editor;
-			}
-
-			/**
-			 * Watch an iframe for the destruction of its TinyMCE contenteditable contents.
-			 *
-			 * @todo There may be a better way to listen for an iframe being destroyed.
-			 * @param {HTMLIFrameElement} iframe - TinyMCE iframe.
-			 * @returns {void}
-			 */
-			function watchForDestroyedBody( iframe ) {
-				var timeoutId = setInterval( function() {
-					if ( ! iframe.contentWindow || iframe.contentWindow.document.body.id ) {
-						return;
-					}
-					clearInterval( timeoutId );
-					buildEditor();
-				}, iframeKeepAliveInterval );
 			}
 
 			buildEditor();
