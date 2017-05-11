@@ -152,31 +152,71 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 	function test_update() {
 		$widget = new WP_Widget_Text();
 		$instance = array(
-			'text'  => '',
-			'title' => '',
+			'title' => "The\nTitle",
+			'text'  => "The\n\nText",
+			'filter' => false,
 		);
 
-		$user = wp_set_current_user( $this->factory()->user->create( array(
-			'role' => 'author',
+		wp_set_current_user( $this->factory()->user->create( array(
+			'role' => 'administrator',
 		) ) );
 
 		// Should return valid instance.
 		$expected = array(
-			'text'   => '',
-			'title'  => '',
+			'title'  => sanitize_text_field( $instance['title'] ),
+			'text'   => $instance['text'],
 			'filter' => 'content',
 		);
-		$result = $widget->update( $expected, $instance );
-		$this->assertSame( $result, $expected );
+		$result = $widget->update( $instance, array() );
+		$this->assertEquals( $result, $expected );
+		$this->assertTrue( ! empty( $expected['filter'] ), 'Expected filter prop to be truthy, to handle case where 4.8 is downgraded to 4.7.' );
 
-		// Back-compat with pre-4.8.
-		$this->assertTrue( ! empty( $expected['filter'] ) );
+		// Make sure KSES is applying as expected.
+		add_filter( 'map_meta_cap', array( $this, 'grant_unfiltered_html_cap' ), 10, 2 );
+		$this->assertTrue( current_user_can( 'unfiltered_html' ) );
+		$instance['text'] = '<script>alert( "Howdy!" );</script>';
+		$expected['text'] = $instance['text'];
+		$result = $widget->update( $instance, array() );
+		$this->assertEquals( $result, $expected );
 
-		$user->set_role( 'administrator' );
-		grant_super_admin( $user->ID );
-		$expected['text'] = '<script>alert( "Howdy!" );</script>';
-		$result = $widget->update( $expected, $instance );
-		$this->assertSame( $result, $expected );
+		remove_filter( 'map_meta_cap', array( $this, 'grant_unfiltered_html_cap' ) );
+		add_filter( 'map_meta_cap', array( $this, 'revoke_unfiltered_html_cap' ), 10, 2 );
+		$this->assertFalse( current_user_can( 'unfiltered_html' ) );
+		$instance['text'] = '<script>alert( "Howdy!" );</script>';
+		$expected['text'] = wp_kses_post( $instance['text'] );
+		$result = $widget->update( $instance, array() );
+		$this->assertEquals( $result, $expected );
+		remove_filter( 'map_meta_cap', array( $this, 'revoke_unfiltered_html_cap' ), 10, 2 );
+	}
+
+	/**
+	 * Grant unfiltered_html cap via map_meta_cap.
+	 *
+	 * @param array  $caps    Returns the user's actual capabilities.
+	 * @param string $cap     Capability name.
+	 * @return array Caps.
+	 */
+	function grant_unfiltered_html_cap( $caps, $cap ) {
+		if ( 'unfiltered_html' === $cap ) {
+			$caps = array_diff( $caps, array( 'do_not_allow' ) );
+			$caps[] = 'unfiltered_html';
+		}
+		return $caps;
+	}
+
+	/**
+	 * Revoke unfiltered_html cap via map_meta_cap.
+	 *
+	 * @param array  $caps    Returns the user's actual capabilities.
+	 * @param string $cap     Capability name.
+	 * @return array Caps.
+	 */
+	function revoke_unfiltered_html_cap( $caps, $cap ) {
+		if ( 'unfiltered_html' === $cap ) {
+			$caps = array_diff( $caps, array( 'unfiltered_html' ) );
+			$caps[] = 'do_not_allow';
+		}
+		return $caps;
 	}
 
 	/**
