@@ -147,7 +147,7 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 			'title' => '',
 		);
 
-		wp_set_current_user( $this->factory()->user->create( array(
+		$user = wp_set_current_user( $this->factory()->user->create( array(
 			'role' => 'author',
 		) ) );
 
@@ -163,13 +163,10 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 		// Back-compat with pre-4.8.
 		$this->assertTrue( ! empty( $expected['filter'] ) );
 
-		wp_get_current_user()->add_cap( 'unfiltered_html' );
-		wp_get_current_user()->add_cap( 'delete_users' );
+		$user->set_role( 'administrator' );
+		grant_super_admin( $user->ID );
 		$expected['text'] = '<script>alert( "Howdy!" );</script>';
 		$result = $widget->update( $expected, $instance );
-		if ( ! is_super_admin() ) {
-			$expected['text'] = 'alert( "Howdy!" );';
-		}
 		$this->assertSame( $result, $expected );
 	}
 
