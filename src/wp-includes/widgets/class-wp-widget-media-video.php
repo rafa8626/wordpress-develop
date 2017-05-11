@@ -92,7 +92,6 @@ class WP_Widget_Media_Video extends WP_Widget_Media {
 			);
 		}
 
-		// TODO: height and width?
 		return $schema;
 	}
 
