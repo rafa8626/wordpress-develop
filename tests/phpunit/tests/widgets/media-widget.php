@@ -13,12 +13,6 @@
  */
 class Test_WP_Widget_Media extends WP_UnitTestCase {
 
-	function setUp() {
-		parent::setUp();
-
-		set_current_screen( 'customize' );
-	}
-
 	/**
 	 * Clean up global scope.
 	 *
