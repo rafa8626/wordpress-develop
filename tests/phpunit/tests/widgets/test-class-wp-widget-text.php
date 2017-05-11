@@ -12,6 +12,32 @@
  * @group widgets
  */
 class Test_WP_Widget_Text extends WP_UnitTestCase {
+	/**
+	 * Args passed to the widget_text filter.
+	 *
+	 * @var array
+	 */
+	protected $widget_text_args;
+
+	/**
+	 * Args passed to the widget_text_content filter.
+	 *
+	 * @var array
+	 */
+	protected $widget_text_content_args;
+
+	/**
+	 * Clean up global scope.
+	 *
+	 * @global WP_Scripts $wp_scripts
+	 * @global WP_Styles  $wp_style
+	 */
+	function clean_up_global_scope() {
+		global $wp_scripts, $wp_styles;
+		parent::clean_up_global_scope();
+		$wp_scripts = null;
+		$wp_styles = null;
+	}
 
 	/**
 	 * Test enqueue_admin_scripts method.
@@ -48,11 +74,13 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 			'filter' => false,
 		);
 
+		add_filter( 'widget_text_content', array( $this, 'filter_widget_text_content' ), 10, 3 );
 		ob_start();
 		$widget->widget( $args, $instance );
 		$output = ob_get_clean();
 		$this->assertNotContains( '<p>', $output );
 		$this->assertNotContains( '<br />', $output );
+		$this->assertEmpty( $this->widget_text_content_args );
 
 		$instance['filter'] = true;
 		ob_start();
@@ -60,13 +88,51 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 		$output = ob_get_clean();
 		$this->assertContains( '<p>', $output );
 		$this->assertContains( '<br />', $output );
+		$this->assertEmpty( $this->widget_text_content_args );
 
+		add_filter( 'widget_text', array( $this, 'filter_widget_text' ), 10, 3 );
 		$instance['filter'] = 'content';
 		ob_start();
 		$widget->widget( $args, $instance );
 		$output = ob_get_clean();
 		$this->assertContains( '<p>', $output );
 		$this->assertContains( '<br />', $output );
+		$this->assertCount( 3, $this->widget_text_args );
+		$this->assertEquals( $instance['text'], $this->widget_text_args[0] );
+		$this->assertEquals( $instance, $this->widget_text_args[1] );
+		$this->assertEquals( $widget, $this->widget_text_args[2] );
+		$this->assertCount( 3, $this->widget_text_content_args );
+		$this->assertEquals( wpautop( $instance['text'] ), $this->widget_text_content_args[0] );
+		$this->assertEquals( $instance, $this->widget_text_content_args[1] );
+		$this->assertEquals( $widget, $this->widget_text_content_args[2] );
+	}
+
+	/**
+	 * Filters the content of the Text widget.
+	 *
+	 * @param string         $widget_text The widget content.
+	 * @param array          $instance    Array of settings for the current widget.
+	 * @param WP_Widget_Text $widget      Current Text widget instance.
+	 * @return string Widget text.
+	 */
+	function filter_widget_text( $widget_text, $instance, $widget ) {
+		$this->widget_text_args = func_get_args();
+
+		return $widget_text;
+	}
+
+	/**
+	 * Filters the content of the Text widget to apply changes expected from the visual (TinyMCE) editor.
+	 *
+	 * @param string         $widget_text The widget content.
+	 * @param array          $instance    Array of settings for the current widget.
+	 * @param WP_Widget_Text $widget      Current Text widget instance.
+	 * @return string Widget content.
+	 */
+	function filter_widget_text_content( $widget_text, $instance, $widget ) {
+		$this->widget_text_content_args = func_get_args();
+
+		return $widget_text;
 	}
 
 	/**
@@ -100,6 +166,9 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 		wp_get_current_user()->add_cap( 'unfiltered_html' );
 		$expected['text'] = '<script>alert( "Howdy!" );</script>';
 		$result = $widget->update( $expected, $instance );
+		if ( defined( 'WP_TESTS_MULTISITE') && WP_TESTS_MULTISITE ) {
+			$expected['text'] = 'alert( "Howdy!" );';
+		}
 		$this->assertSame( $result, $expected );
 	}
 
