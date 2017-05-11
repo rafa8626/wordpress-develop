@@ -75,22 +75,31 @@ class Test_WP_Widget_Text extends WP_UnitTestCase {
 		);
 
 		add_filter( 'widget_text_content', array( $this, 'filter_widget_text_content' ), 10, 3 );
+		add_filter( 'widget_text', array( $this, 'filter_widget_text' ), 10, 3 );
+
+		// Test with filter=false.
 		ob_start();
 		$widget->widget( $args, $instance );
 		$output = ob_get_clean();
 		$this->assertNotContains( '<p>', $output );
 		$this->assertNotContains( '<br />', $output );
 		$this->assertEmpty( $this->widget_text_content_args );
+		$this->assertNotEmpty( $this->widget_text_args );
 
+		// Test with filter=true.
 		$instance['filter'] = true;
 		ob_start();
 		$widget->widget( $args, $instance );
 		$output = ob_get_clean();
 		$this->assertContains( '<p>', $output );
 		$this->assertContains( '<br />', $output );
+		$this->assertNotEmpty( $this->widget_text_args );
+		$this->assertEquals( $instance['text'], $this->widget_text_args[0] );
+		$this->assertEquals( $instance, $this->widget_text_args[1] );
+		$this->assertEquals( $widget, $this->widget_text_args[2] );
 		$this->assertEmpty( $this->widget_text_content_args );
 
-		add_filter( 'widget_text', array( $this, 'filter_widget_text' ), 10, 3 );
+		// Test with filter=content, the upgraded widget.
 		$instance['filter'] = 'content';
 		ob_start();
 		$widget->widget( $args, $instance );
