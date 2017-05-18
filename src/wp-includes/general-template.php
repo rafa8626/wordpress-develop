@@ -2845,7 +2845,7 @@ function wp_resource_hints() {
 	 * The path is removed in the foreach loop below.
 	 */
 	/** This filter is documented in wp-includes/formatting.php */
-	$hints['dns-prefetch'][] = apply_filters( 'emoji_svg_url', 'https://s.w.org/images/core/emoji/2.2.1/svg/' );
+	$hints['dns-prefetch'][] = apply_filters( 'emoji_svg_url', 'https://s.w.org/images/core/emoji/2.2.5/svg/' );
 
 	foreach ( $hints as $relation_type => $urls ) {
 		$unique_urls = array();
@@ -2988,7 +2988,9 @@ function user_can_richedit() {
 		if ( get_user_option( 'rich_editing' ) == 'true' || ! is_user_logged_in() ) { // default to 'true' for logged out users
 			if ( $is_safari ) {
 				$wp_rich_edit = ! wp_is_mobile() || ( preg_match( '!AppleWebKit/(\d+)!', $_SERVER['HTTP_USER_AGENT'], $match ) && intval( $match[1] ) >= 534 );
-			} elseif ( $is_gecko || $is_chrome || $is_IE || $is_edge || ( $is_opera && !wp_is_mobile() ) ) {
+			} elseif ( $is_IE ) {
+				$wp_rich_edit = ( strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE ' ) === false );
+			} elseif ( $is_gecko || $is_chrome || $is_edge || ( $is_opera && !wp_is_mobile() ) ) {
 				$wp_rich_edit = true;
 			}
 		}

@@ -3414,6 +3414,7 @@ function wp_enqueue_media( $args = array() ) {
 		'captions'  => ! apply_filters( 'disable_captions', '' ),
 		'nonce'     => array(
 			'sendToEditor' => wp_create_nonce( 'media-send-to-editor' ),
+			'wpRestApi'    => wp_create_nonce( 'wp_rest' ),
 		),
 		'post'    => array(
 			'id' => 0,
@@ -3423,6 +3424,7 @@ function wp_enqueue_media( $args = array() ) {
 			'audio' => ( $show_audio_playlist ) ? 1 : 0,
 			'video' => ( $show_video_playlist ) ? 1 : 0,
 		),
+		'oEmbedProxyUrl' => rest_url( 'oembed/1.0/proxy' ),
 		'embedExts'    => $exts,
 		'embedMimes'   => $ext_mimes,
 		'contentWidth' => $content_width,
@@ -3495,8 +3497,8 @@ function wp_enqueue_media( $args = array() ) {
 		'unattached'             => __( 'Unattached' ),
 		'trash'                  => _x( 'Trash', 'noun' ),
 		'uploadedToThisPost'     => $post_type_object->labels->uploaded_to_this_item,
-		'warnDelete'             => __( "You are about to permanently delete this item.\nThis will remove it from your site.\n 'Cancel' to stop, 'OK' to delete." ),
-		'warnBulkDelete'         => __( "You are about to permanently delete these items.\nThis will remove them from your site.\n 'Cancel' to stop, 'OK' to delete." ),
+		'warnDelete'             => __( "You are about to permanently delete this item from your site.\nThis action cannot be undone.\n 'Cancel' to stop, 'OK' to delete." ),
+		'warnBulkDelete'         => __( "You are about to permanently delete these items from your site.\nThis action cannot be undone.\n 'Cancel' to stop, 'OK' to delete." ),
 		'warnBulkTrash'          => __( "You are about to trash these items.\n  'Cancel' to stop, 'OK' to delete." ),
 		'bulkSelect'             => __( 'Bulk Select' ),
 		'cancelSelection'        => __( 'Cancel Selection' ),
@@ -3544,7 +3546,8 @@ function wp_enqueue_media( $args = array() ) {
 		'cropImage' => __( 'Crop Image' ),
 		'cropYourImage' => __( 'Crop your image' ),
 		'cropping' => __( 'Cropping&hellip;' ),
-		'suggestedDimensions' => __( 'Suggested image dimensions:' ),
+		/* translators: 1: suggested width number, 2: suggested height number. */
+		'suggestedDimensions' => __( 'Suggested image dimensions: %1$s by %2$s pixels.' ),
 		'cropError' => __( 'There has been an error cropping your image.' ),
 
 		// Edit Audio
@@ -3742,7 +3745,7 @@ function get_post_galleries( $post, $html = true ) {
 			if ( 'gallery' === $shortcode[2] ) {
 				$srcs = array();
 
-				$shortcode_attrs = shortcode_parse_atts( $shortcode[3] ); 
+				$shortcode_attrs = shortcode_parse_atts( $shortcode[3] );
 				if ( ! is_array( $shortcode_attrs ) ) {
 					$shortcode_attrs = array();
 				}

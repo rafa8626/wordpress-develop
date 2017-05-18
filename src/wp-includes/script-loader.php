@@ -77,7 +77,7 @@ function wp_default_scripts( &$scripts ) {
 
 	$scripts->add( 'common', "/wp-admin/js/common$suffix.js", array('jquery', 'hoverIntent', 'utils'), false, 1 );
 	did_action( 'init' ) && $scripts->localize( 'common', 'commonL10n', array(
-		'warnDelete'   => __( "You are about to permanently delete these items.\nThis will remove them from your site.\n 'Cancel' to stop, 'OK' to delete." ),
+		'warnDelete'   => __( "You are about to permanently delete these items from your site.\nThis action cannot be undone.\n 'Cancel' to stop, 'OK' to delete." ),
 		'dismiss'      => __( 'Dismiss this notice.' ),
 		'collapseMenu' => __( 'Collapse Main menu' ),
 		'expandMenu'   => __( 'Expand Main menu' ),
@@ -602,6 +602,14 @@ function wp_default_scripts( &$scripts ) {
 		$scripts->add( 'admin-gallery', "/wp-admin/js/gallery$suffix.js", array( 'jquery-ui-sortable' ) );
 
 		$scripts->add( 'admin-widgets', "/wp-admin/js/widgets$suffix.js", array( 'jquery-ui-sortable', 'jquery-ui-draggable', 'jquery-ui-droppable' ), false, 1 );
+		$scripts->add( 'media-widgets', "/wp-admin/js/widgets/media-widgets$suffix.js", array( 'jquery', 'media-models', 'media-views' ) );
+		$scripts->add_inline_script( 'media-widgets', 'wp.mediaWidgets.init();', 'after' );
+
+		$scripts->add( 'media-audio-widget', "/wp-admin/js/widgets/media-audio-widget$suffix.js", array( 'media-widgets', 'media-audiovideo' ) );
+		$scripts->add( 'media-image-widget', "/wp-admin/js/widgets/media-image-widget$suffix.js", array( 'media-widgets' ) );
+		$scripts->add( 'media-video-widget', "/wp-admin/js/widgets/media-video-widget$suffix.js", array( 'media-widgets', 'media-audiovideo' ) );
+		$scripts->add( 'text-widgets', "/wp-admin/js/widgets/text-widgets$suffix.js", array( 'jquery', 'backbone', 'editor', 'wp-util' ) );
+		$scripts->add_inline_script( 'text-widgets', 'wp.textWidgets.init();', 'after' );
 
 		$scripts->add( 'theme', "/wp-admin/js/theme$suffix.js", array( 'wp-backbone', 'wp-a11y' ), false, 1 );
 
@@ -724,7 +732,7 @@ function wp_default_scripts( &$scripts ) {
 			'current' => __( 'Current Color' ),
 		) );
 
-		$scripts->add( 'dashboard', "/wp-admin/js/dashboard$suffix.js", array( 'jquery', 'admin-comments', 'postbox' ), false, 1 );
+		$scripts->add( 'dashboard', "/wp-admin/js/dashboard$suffix.js", array( 'jquery', 'admin-comments', 'postbox', 'wp-util', 'wp-a11y' ), false, 1 );
 
 		$scripts->add( 'list-revisions', "/wp-includes/js/wp-list-revisions$suffix.js" );
 
