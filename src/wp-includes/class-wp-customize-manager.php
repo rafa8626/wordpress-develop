@@ -281,7 +281,7 @@ final class WP_Customize_Manager {
 		$this->original_stylesheet = get_stylesheet();
 		$this->theme = wp_get_theme( $args['theme'] );
 		$this->messenger_channel = $args['messenger_channel'];
-		$this->skip_setting_preview = boolval( $args['skip_setting_preview'] );
+		$this->skip_setting_preview = true === $args['skip_setting_preview'];
 		$this->_changeset_uuid = $args['changeset_uuid'];
 
 		require_once( ABSPATH . WPINC . '/class-wp-customize-setting.php' );
