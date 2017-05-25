@@ -216,6 +216,20 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test WP_Customize_Manager::should_preview_settings().
+	 *
+	 * @ticket 39221
+	 * @covers WP_Customize_Manager::should_preview_settings()
+	 */
+	function test_should_preview_settings() {
+		$wp_customize = new WP_Customize_Manager( array( 'skip_setting_preview' => true ) );
+		$this->assertSame( false, $wp_customize->should_preview_settings() );
+
+		$wp_customize = new WP_Customize_Manager();
+		$this->assertSame( true, $wp_customize->should_preview_settings() );
+	}
+
+	/**
 	 * Test WP_Customize_Manager::changeset_uuid().
 	 *
 	 * @ticket 30937

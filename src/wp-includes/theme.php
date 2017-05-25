@@ -2816,8 +2816,23 @@ function _wp_customize_include() {
 		$messenger_channel = sanitize_key( $input_vars['customize_messenger_channel'] );
 	}
 
+	/*
+	 * Note that settings must be previewed even outside the customizer preview
+	 * and also in the customizer pane itself. This is to enable loading an existing
+	 * changeset into the customizer. Previewing the settings only has to be prevented
+	 * here in the case of a customize_save action because this will cause WP to think
+	 * there is nothing changed that needs to be saved.
+	 */
+	$skip_setting_preview = (
+		wp_doing_ajax()
+		&&
+		isset( $_REQUEST['action'] )
+		&&
+		'customize_save' === wp_unslash( $_REQUEST['action'] )
+	);
+
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
-	$GLOBALS['wp_customize'] = new WP_Customize_Manager( compact( 'changeset_uuid', 'theme', 'messenger_channel' ) );
+	$GLOBALS['wp_customize'] = new WP_Customize_Manager( compact( 'changeset_uuid', 'theme', 'messenger_channel', 'skip_setting_preview' ) );
 }
 
 /**
