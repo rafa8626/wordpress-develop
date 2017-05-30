@@ -216,17 +216,17 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test WP_Customize_Manager::should_preview_settings().
+	 * Test WP_Customize_Manager::settings_previewed().
 	 *
 	 * @ticket 39221
-	 * @covers WP_Customize_Manager::should_preview_settings()
+	 * @covers WP_Customize_Manager::settings_previewed()
 	 */
-	function test_should_preview_settings() {
-		$wp_customize = new WP_Customize_Manager( array( 'skip_setting_preview' => true ) );
-		$this->assertSame( false, $wp_customize->should_preview_settings() );
+	function test_settings_previewed() {
+		$wp_customize = new WP_Customize_Manager( array( 'settings_previewed' => false ) );
+		$this->assertSame( false, $wp_customize->settings_previewed() );
 
 		$wp_customize = new WP_Customize_Manager();
-		$this->assertSame( true, $wp_customize->should_preview_settings() );
+		$this->assertSame( true, $wp_customize->settings_previewed() );
 	}
 
 	/**

@@ -207,7 +207,7 @@ final class WP_Customize_Widgets {
 
 		$settings = $this->manager->add_dynamic_settings( array_unique( $widget_setting_ids ) );
 
-		if ( $this->manager->should_preview_settings() ) {
+		if ( $this->manager->settings_previewed() ) {
 			foreach ( $settings as $setting ) {
 				$setting->preview();
 			}
@@ -505,7 +505,7 @@ final class WP_Customize_Widgets {
 			}
 		}
 
-		if ( $this->manager->should_preview_settings() ) {
+		if ( $this->manager->settings_previewed() ) {
 			foreach ( $new_setting_ids as $new_setting_id ) {
 				$this->manager->get_setting( $new_setting_id )->preview();
 			}

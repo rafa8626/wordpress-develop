@@ -2823,7 +2823,7 @@ function _wp_customize_include() {
 	 * here in the case of a customize_save action because this will cause WP to think
 	 * there is nothing changed that needs to be saved.
 	 */
-	$skip_setting_preview = (
+	$settings_previewed = (
 		wp_doing_ajax()
 		&&
 		isset( $_REQUEST['action'] )
@@ -2832,7 +2832,7 @@ function _wp_customize_include() {
 	);
 
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
-	$GLOBALS['wp_customize'] = new WP_Customize_Manager( compact( 'changeset_uuid', 'theme', 'messenger_channel', 'skip_setting_preview' ) );
+	$GLOBALS['wp_customize'] = new WP_Customize_Manager( compact( 'changeset_uuid', 'theme', 'messenger_channel', 'settings_previewed' ) );
 }
 
 /**

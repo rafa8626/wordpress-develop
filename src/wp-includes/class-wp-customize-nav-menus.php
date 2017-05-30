@@ -539,7 +539,7 @@ final class WP_Customize_Nav_Menus {
 			}
 		}
 		$settings = $this->manager->add_dynamic_settings( $nav_menus_setting_ids );
-		if ( $this->manager->should_preview_settings() ) {
+		if ( $this->manager->settings_previewed() ) {
 			foreach ( $settings as $setting ) {
 				$setting->preview();
 			}
