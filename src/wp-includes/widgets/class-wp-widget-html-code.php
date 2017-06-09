@@ -8,7 +8,7 @@
  */
 
 /**
- * Core class used to implement a Text widget.
+ * Core class used to implement a HTML Code widget.
  *
  * @since 4.8.1
  *
@@ -49,7 +49,7 @@ class WP_Widget_HTML_Code extends WP_Widget {
 	 *
 	 * @param array $args     Display arguments including 'before_title', 'after_title',
 	 *                        'before_widget', and 'after_widget'.
-	 * @param array $instance Settings for the current Text widget instance.
+	 * @param array $instance Settings for the current HTML Code widget instance.
 	 */
 	public function widget( $args, $instance ) {
 
@@ -67,7 +67,7 @@ class WP_Widget_HTML_Code extends WP_Widget {
 		 *
 		 * @param string              $content  The widget content.
 		 * @param array               $instance Array of settings for the current widget.
-		 * @param WP_Widget_HTML_Code $this     Current Text widget instance.
+		 * @param WP_Widget_HTML_Code $this     Current HTML Code widget instance.
 		 */
 		$content = apply_filters( 'widget_html_code_content', $content, $instance, $this );
 
@@ -80,7 +80,7 @@ class WP_Widget_HTML_Code extends WP_Widget {
 	}
 
 	/**
-	 * Handles updating settings for the current Text widget instance.
+	 * Handles updating settings for the current HTML Code widget instance.
 	 *
 	 * @since 4.8.1
 	 *
@@ -101,7 +101,7 @@ class WP_Widget_HTML_Code extends WP_Widget {
 	}
 
 	/**
-	 * Outputs the Text widget settings form.
+	 * Outputs the HTML Code widget settings form.
 	 *
 	 * @since 4.8.1
 	 *
