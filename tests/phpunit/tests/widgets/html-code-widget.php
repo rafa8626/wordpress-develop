@@ -27,7 +27,7 @@ class Test_WP_Widget_HTML_Code extends WP_UnitTestCase {
 	 */
 	function test_widget() {
 		$widget = new WP_Widget_HTML_Code();
-		$content = "<i>Custom HTML</i>\n\n<b>CODE</b>\nLast line.";
+		$content = "<i>Custom HTML</i>\n\n<b>CODE</b>\nLast line.<u>unclosed";
 
 		$args = array(
 			'before_title'  => '<h2>',
@@ -40,8 +40,10 @@ class Test_WP_Widget_HTML_Code extends WP_UnitTestCase {
 			'content' => $content,
 		);
 
-		add_filter( 'widget_html_code_content', array( $this, 'filter_widget_html_code_content' ), 5, 3 );
+		$this->assertEquals( 10, has_filter( 'widget_html_code_content', 'balanceTags' ) );
 
+		update_option( 'use_balanceTags', 0 );
+		add_filter( 'widget_html_code_content', array( $this, 'filter_widget_html_code_content' ), 5, 3 );
 		ob_start();
 		$this->widget_html_code_content_args = null;
 		$widget->widget( $args, $instance );
@@ -50,8 +52,16 @@ class Test_WP_Widget_HTML_Code extends WP_UnitTestCase {
 		$this->assertContains( '[filter:widget_html_code_content]', $output );
 		$this->assertNotContains( '<p>', $output );
 		$this->assertNotContains( '<br>', $output );
+		$this->assertNotContains( '</u>', $output );
 		$this->assertEquals( $instance, $this->widget_html_code_content_args[1] );
 		$this->assertSame( $widget, $this->widget_html_code_content_args[2] );
+		remove_filter( 'widget_html_code_content', array( $this, 'filter_widget_html_code_content' ), 5, 3 );
+
+		update_option( 'use_balanceTags', 1 );
+		ob_start();
+		$widget->widget( $args, $instance );
+		$output = ob_get_clean();
+		$this->assertContains( '</u>', $output );
 	}
 
 	/**
