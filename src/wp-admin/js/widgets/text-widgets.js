@@ -357,7 +357,7 @@ wp.textWidgets = ( function( $ ) {
 			});
 
 			// Accessibility mode.
-			$( window ).load( function() {
+			$( window ).on( 'load', function() {
 				component.setupAccessibleMode();
 			});
 		});

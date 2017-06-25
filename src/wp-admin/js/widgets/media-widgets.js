@@ -1208,7 +1208,7 @@ wp.mediaWidgets = ( function( $ ) {
 			});
 
 			// Accessibility mode.
-			$( window ).load( function() { // @todo Deprecated.
+			$( window ).on( 'load', function() {
 				component.setupAccessibleMode();
 			});
 		});
