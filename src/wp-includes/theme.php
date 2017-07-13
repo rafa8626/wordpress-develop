@@ -2859,7 +2859,10 @@ function _wp_customize_publish_changeset( $new_status, $old_status, $changeset_p
 
 	if ( empty( $wp_customize ) ) {
 		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
-		$wp_customize = new WP_Customize_Manager( array( 'changeset_uuid' => $changeset_post->post_name ) );
+		$wp_customize = new WP_Customize_Manager( array(
+			'changeset_uuid' => $changeset_post->post_name,
+			'settings_previewed' => false,
+		) );
 	}
 
 	if ( ! did_action( 'customize_register' ) ) {
