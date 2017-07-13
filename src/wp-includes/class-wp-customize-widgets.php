@@ -35,9 +35,23 @@ final class WP_Customize_Widgets {
 	 * @var array
 	 */
 	protected $core_widget_id_bases = array(
-		'archives', 'calendar', 'categories', 'links', 'meta',
-		'nav_menu', 'pages', 'recent-comments', 'recent-posts',
-		'rss', 'search', 'tag_cloud', 'text',
+		'archives',
+		'calendar',
+		'categories',
+		'custom_html',
+		'links',
+		'media_audio',
+		'media_image',
+		'media_video',
+		'meta',
+		'nav_menu',
+		'pages',
+		'recent-comments',
+		'recent-posts',
+		'rss',
+		'search',
+		'tag_cloud',
+		'text',
 	);
 
 	/**
@@ -130,6 +144,8 @@ final class WP_Customize_Widgets {
 	 *
 	 * @since 4.5.0
 	 * @access public
+	 *
+	 * @global WP_Widget_Factory $wp_widget_factory
 	 *
 	 * @return array Mapping of id_base to support. If theme doesn't support
 	 *               selective refresh, an empty array is returned.
@@ -2050,7 +2066,7 @@ final class WP_Customize_Widgets {
 	 * @deprecated 4.2.0 Deprecated in favor of the {@see 'customize_dynamic_setting_args'} filter.
 	 */
 	public function setup_widget_addition_previews() {
-		_deprecated_function( __METHOD__, '4.2.0' );
+		_deprecated_function( __METHOD__, '4.2.0', 'customize_dynamic_setting_args' );
 	}
 
 	/**
@@ -2062,7 +2078,7 @@ final class WP_Customize_Widgets {
 	 * @deprecated 4.2.0 Deprecated in favor of the {@see 'customize_dynamic_setting_args'} filter.
 	 */
 	public function prepreview_added_sidebars_widgets() {
-		_deprecated_function( __METHOD__, '4.2.0' );
+		_deprecated_function( __METHOD__, '4.2.0', 'customize_dynamic_setting_args' );
 	}
 
 	/**
@@ -2074,7 +2090,7 @@ final class WP_Customize_Widgets {
 	 * @deprecated 4.2.0 Deprecated in favor of the {@see 'customize_dynamic_setting_args'} filter.
 	 */
 	public function prepreview_added_widget_instance() {
-		_deprecated_function( __METHOD__, '4.2.0' );
+		_deprecated_function( __METHOD__, '4.2.0', 'customize_dynamic_setting_args' );
 	}
 
 	/**
@@ -2086,6 +2102,6 @@ final class WP_Customize_Widgets {
 	 * @deprecated 4.2.0 Deprecated in favor of the {@see 'customize_dynamic_setting_args'} filter.
 	 */
 	public function remove_prepreview_filters() {
-		_deprecated_function( __METHOD__, '4.2.0' );
+		_deprecated_function( __METHOD__, '4.2.0', 'customize_dynamic_setting_args' );
 	}
 }

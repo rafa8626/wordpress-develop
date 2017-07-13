@@ -2282,6 +2282,9 @@ final class WP_Customize_Manager {
 			}
 
 			$existing_changeset_data = $this->get_changeset_post_data( $changeset_post_id );
+			if ( is_wp_error( $existing_changeset_data ) ) {
+				return $existing_changeset_data;
+			}
 		}
 
 		// Fail if attempting to publish but publish hook is missing.

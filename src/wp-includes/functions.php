@@ -158,6 +158,8 @@ function date_i18n( $dateformatstring, $unixtimestamp = false, $gmt = false ) {
  *
  * @since 4.4.0
  *
+ * @global WP_Locale $wp_locale
+ *
  * @param string $date Formatted date string.
  * @return string The date, declined if locale specifies it.
  */
@@ -4361,7 +4363,7 @@ function wp_suspend_cache_addition( $suspend = null ) {
 /**
  * Suspend cache invalidation.
  *
- * Turns cache invalidation on and off. Useful during imports where you don't wont to do
+ * Turns cache invalidation on and off. Useful during imports where you don't want to do
  * invalidations every time a post is inserted. Callers must be sure that what they are
  * doing won't lead to an inconsistent cache when invalidation is suspended.
  *
@@ -5453,6 +5455,8 @@ function wp_delete_file( $file ) {
  * This prevents reusing the same tab for a preview when the user has navigated away.
  *
  * @since 4.3.0
+ *
+ * @global WP_Post $post
  */
 function wp_post_preview_js() {
 	global $post;
