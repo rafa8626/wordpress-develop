@@ -1306,6 +1306,54 @@ class Tests_WP_Customize_Manager extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test saving settings by publishing a changeset outside of Customizer entirely.
+	 *
+	 * Widgets get their settings registered and previewed early in the admin,
+	 * so this ensures that the previewing is bypassed when in the context of
+	 * publishing
+	 *
+	 * @ticket 39221
+	 * @covers _wp_customize_publish_changeset()
+	 * @see WP_Customize_Widgets::schedule_customize_register()
+	 * @see WP_Customize_Widgets::customize_register()
+	 */
+	function test_wp_customize_publish_changeset() {
+		global $wp_customize;
+		$wp_customize = null;
+
+		// Set the admin current screen to cause WP_Customize_Widgets::schedule_customize_register() to do early setting registration.
+		set_current_screen( 'edit' );
+		$this->assertTrue( is_admin() );
+
+		$old_sidebars_widgets = get_option( 'sidebars_widgets' );
+		$new_sidebars_widgets = $old_sidebars_widgets;
+		$this->assertGreaterThan( 2, count( $new_sidebars_widgets['sidebar-1'] ) );
+		$new_sidebar_1 = array_reverse( $new_sidebars_widgets['sidebar-1'] );
+
+		$post_id = $this->factory()->post->create( array(
+			'post_type' => 'customize_changeset',
+			'post_status' => 'draft',
+			'post_name' => wp_generate_uuid4(),
+			'post_content' => wp_json_encode( array(
+				'sidebars_widgets[sidebar-1]' => array(
+					'value' => $new_sidebar_1,
+				),
+			) ),
+		) );
+
+		// Save the updated sidebar widgets into the options table by publishing the changeset.
+		wp_publish_post( $post_id );
+
+		// Make sure previewing filters were never added, since WP_Customize_Manager should be constructed with settings_previewed=false.
+		$this->assertFalse( has_filter( 'option_sidebars_widgets' ) );
+		$this->assertFalse( has_filter( 'default_option_sidebars_widgets' ) );
+
+		// Ensure that the value has actually been written to the DB.
+		$updated_sidebars_widgets = get_option( 'sidebars_widgets' );
+		$this->assertEquals( $new_sidebar_1, $updated_sidebars_widgets['sidebar-1'] );
+	}
+
+	/**
 	 * Ensure that save_changeset_post method bails updating an underlying changeset which is invalid.
 	 *
 	 * @ticket 41252
