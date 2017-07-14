@@ -195,7 +195,7 @@ final class WP_Customize_Manager {
 	/**
 	 * If settings should be previewed.
 	 *
-	 * @since 4.?.?
+	 * @since 4.9.0
 	 * @access protected
 	 * @var bool
 	 */
@@ -275,8 +275,8 @@ final class WP_Customize_Manager {
 		}
 
 		if ( ! isset( $args['settings_previewed'] ) ) {
-		    $args['settings_previewed'] = true;
-        }
+			$args['settings_previewed'] = true;
+		}
 
 		$this->original_stylesheet = get_stylesheet();
 		$this->theme = wp_get_theme( $args['theme'] );
@@ -662,7 +662,7 @@ final class WP_Customize_Manager {
 	/**
 	 * If should preview settings.
 	 *
-	 * @since 4.?.?
+	 * @since 4.9.0
 	 * @access public
 	 *
 	 * @return bool
