@@ -574,7 +574,12 @@ function _is_valid_nav_menu_item( $item ) {
 }
 
 /**
- * Return all menu items of a navigation menu.
+ * Retrieves all menu items of a navigation menu.
+ *
+ * Note: Most arguments passed to the `$args` parameter – save for 'output_key' – are
+ * specifically for retrieving nav_menu_item posts from get_posts() and may only
+ * indirectly affect the ultimate ordering and content of the resulting nav menu
+ * items that get returned from this function.
  *
  * @since 3.0.0
  *
@@ -582,7 +587,22 @@ function _is_valid_nav_menu_item( $item ) {
  * @staticvar array $fetched
  *
  * @param string $menu Menu name, ID, or slug.
- * @param array  $args Optional. Arguments to pass to get_posts().
+ * @param array  $args {
+ *     Optional. Arguments to pass to get_posts().
+ *
+ *     @type string $order       How to order nav menu items as queried with get_posts(). Will be ignored
+ *                               if 'output' is ARRAY_A. Default 'ASC'.
+ *     @type string $orderby     Field to order menu items by as retrieved from get_posts(). Supply an orderby
+ *                               field via 'output_key' to affect the output order of nav menu items.
+ *                               Default 'menu_order'.
+ *     @type string $post_type   Menu items post type. Default 'nav_menu_item'.
+ *     @type string $post_status Menu items post status. Default 'publish'.
+ *     @type string $output      How to order outputted menu items. Default ARRAY_A.
+ *     @type string $output_key  Key to use for ordering the actual menu items that get returned. Note that
+ *                               that is not a get_posts() argument and will only affect output of menu items
+ *                               processed in this function. Default 'menu_order'.
+ *     @type bool   $nopaging    Whether to retrieve all menu items (true) or paginate (false). Default true.
+ * }
  * @return false|array $items Array of menu items, otherwise false.
  */
 function wp_get_nav_menu_items( $menu, $args = array() ) {
@@ -977,4 +997,32 @@ function _wp_auto_add_pages_to_menu( $new_status, $old_status, $post ) {
 		}
 		wp_update_nav_menu_item( $menu_id, 0, $args );
 	}
+}
+
+/**
+ * Delete auto-draft posts associated with the supplied changeset.
+ *
+ * @since 4.8.0
+ * @access private
+ *
+ * @param int $post_id Post ID for the customize_changeset.
+ */
+function _wp_delete_customize_changeset_dependent_auto_drafts( $post_id ) {
+	$post = get_post( $post_id );
+
+	if ( ! $post || 'customize_changeset' !== $post->post_type ) {
+		return;
+	}
+
+	$data = json_decode( $post->post_content, true );
+	if ( empty( $data['nav_menus_created_posts']['value'] ) ) {
+		return;
+	}
+	remove_action( 'delete_post', '_wp_delete_customize_changeset_dependent_auto_drafts' );
+	foreach ( $data['nav_menus_created_posts']['value'] as $post_id ) {
+		if ( ! empty( $post_id ) && 'auto-draft' === get_post_status( $post_id ) ) {
+			wp_delete_post( $post_id, true );
+		}
+	}
+	add_action( 'delete_post', '_wp_delete_customize_changeset_dependent_auto_drafts' );
 }
