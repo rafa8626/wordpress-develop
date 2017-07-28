@@ -307,10 +307,17 @@ class WP_Widget_Media_Image extends WP_Widget_Media {
 		parent::render_control_template_scripts();
 
 		?>
+		<script type="text/html" id="tmpl-wp-media-widget-image-extra">
+			<# var elementIdPrefix = 'el' + String( Math.random() ) + '_'; #>
+			<# if ( data.url ) { #>
+			<p class="media-widget-image-link">
+				<label for="{{ elementIdPrefix }}linkUrl"><?php esc_html_e( 'Link to:' ); ?></label>
+				<input id="{{ elementIdPrefix }}linkUrl" type="text" class="widefat link extra" value="{{ data.link_url }}" placeholder="http://" data-attr="link_url">
+			</p>
+			<# } #>
+		</script>
 		<script type="text/html" id="tmpl-wp-media-widget-image-preview">
-			<#
-			var describedById = 'describedBy-' + String( Math.random() );
-			#>
+			<# var describedById = 'describedBy-' + String( Math.random() ); #>
 			<# if ( data.error && 'missing_attachment' === data.error ) { #>
 				<div class="notice notice-error notice-alt notice-missing-attachment">
 					<p><?php echo $this->l10n['missing_attachment']; ?></p>

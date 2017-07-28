@@ -513,6 +513,13 @@ wp.mediaWidgets = ( function( $ ) {
 				});
 			});
 
+			// Update extra attributes.
+			control.$el.on( 'input change', '.extra', function updateExtra() {
+				var newValues = {};
+				newValues[ $( this ).attr( 'data-attr' ) ] = $.trim( $( this ).val() );
+				control.model.set( newValues );
+			});
+
 			/*
 			 * Copy current display settings from the widget model to serve as basis
 			 * of customized display settings for the current media frame session.

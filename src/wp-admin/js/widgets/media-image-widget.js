@@ -30,7 +30,7 @@
 		 * @returns {void}
 		 */
 		renderPreview: function renderPreview() {
-			var control = this, previewContainer, previewTemplate;
+			var control = this, previewContainer, previewTemplate, extraContainer, extraTemplate, linkInput;
 			if ( ! control.model.get( 'attachment_id' ) && ! control.model.get( 'url' ) ) {
 				return;
 			}
@@ -38,6 +38,13 @@
 			previewContainer = control.$el.find( '.media-widget-preview' );
 			previewTemplate = wp.template( 'wp-media-widget-image-preview' );
 			previewContainer.html( previewTemplate( _.extend( control.previewTemplateProps.toJSON() ) ) );
+
+			linkInput = control.$el.find( '.link' );
+			if ( ! linkInput.is( document.activeElement ) ) {
+				extraContainer = control.$el.find( '.media-widget-extra' );
+				extraTemplate = wp.template( 'wp-media-widget-image-extra' );
+				extraContainer.html( extraTemplate( _.extend( control.previewTemplateProps.toJSON() ) ) );
+			}
 		},
 
 		/**
@@ -134,6 +141,7 @@
 			url = control.model.get( 'url' );
 			mediaFrameProps = component.MediaWidgetControl.prototype.mapModelToPreviewTemplateProps.call( control );
 			mediaFrameProps.currentFilename = url ? url.replace( /\?.*$/, '' ).replace( /^.+\//, '' ) : '';
+			mediaFrameProps.link_url = control.model.get( 'link_url' );
 			return mediaFrameProps;
 		}
 	});
