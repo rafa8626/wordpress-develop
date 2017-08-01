@@ -515,8 +515,13 @@ wp.mediaWidgets = ( function( $ ) {
 
 			// Update extra attributes.
 			control.$el.on( 'input change', '.extra', function updateExtra() {
-				var newValues = {};
-				newValues[ $( this ).attr( 'data-attr' ) ] = $.trim( $( this ).val() );
+				var newValues = {}, attr;
+				attr = $( this ).attr( 'data-attr' );
+				newValues[ attr ] = $.trim( $( this ).val() );
+
+				if ( attr === 'link_url' ) {
+					newValues.link_type = 'custom';
+				}
 				control.model.set( newValues );
 			});
 
