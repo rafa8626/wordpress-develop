@@ -20,7 +20,6 @@ final class WP_oEmbed_Controller {
 	 * Register the oEmbed REST API route.
 	 *
 	 * @since 4.4.0
-	 * @access public
 	 */
 	public function register_routes() {
 		/**
@@ -101,7 +100,6 @@ final class WP_oEmbed_Controller {
 	 * Returns the JSON object for the post.
 	 *
 	 * @since 4.4.0
-	 * @access public
 	 *
 	 * @param WP_REST_Request $request Full data about the request.
 	 * @return WP_Error|array oEmbed response data or WP_Error on failure.
@@ -132,7 +130,6 @@ final class WP_oEmbed_Controller {
 	 * Checks if current user can make a proxy oEmbed request.
 	 *
 	 * @since 4.8.0
-	 * @access public
 	 *
 	 * @return true|WP_Error True if the request has read access, WP_Error object otherwise.
 	 */
@@ -149,11 +146,10 @@ final class WP_oEmbed_Controller {
 	 * Returns the JSON object for the proxied item.
 	 *
 	 * @since 4.8.0
-	 * @access public
 	 *
 	 * @see WP_oEmbed::get_html()
 	 * @param WP_REST_Request $request Full data about the request.
-	 * @return WP_Error|array oEmbed response data or WP_Error on failure.
+	 * @return object|WP_Error oEmbed response data or WP_Error on failure.
 	 */
 	public function get_proxy_item( $request ) {
 		$args = $request->get_params();
@@ -168,6 +164,14 @@ final class WP_oEmbed_Controller {
 
 		$url = $request['url'];
 		unset( $args['url'] );
+
+		// Copy maxwidth/maxheight to width/height since WP_oEmbed::fetch() uses these arg names.
+		if ( isset( $args['maxwidth'] ) ) {
+			$args['width'] = $args['maxwidth'];
+		}
+		if ( isset( $args['maxheight'] ) ) {
+			$args['height'] = $args['maxheight'];
+		}
 
 		$data = _wp_oembed_get_object()->get_data( $url, $args );
 
