@@ -174,10 +174,9 @@ final class WP_Customize_Manager {
 	protected $messenger_channel;
 
 	/**
-	 * If settings should be previewed.
+	 * Whether settings should be previewed.
 	 *
 	 * @since 4.9.0
-	 * @access protected
 	 * @var bool
 	 */
 	protected $settings_previewed;
@@ -637,10 +636,10 @@ final class WP_Customize_Manager {
 	}
 
 	/**
-	 * If should preview settings.
+	 * Gets whether settings are or will be previewed.
 	 *
 	 * @since 4.9.0
-	 * @access public
+	 * @see WP_Customize_Setting::preview()
 	 *
 	 * @return bool
 	 */
