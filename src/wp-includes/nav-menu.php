@@ -1028,13 +1028,13 @@ function _wp_delete_customize_changeset_dependent_auto_drafts( $post_id ) {
 }
 
 /**
- * Handle menu config after theme change
+ * Handle menu config after theme change.
  *
  * @access private
- * @since 4.8.0
+ * @since 4.9.0
  */
 function _wp_menus_changed() {
-	$old_nav_menu_locations = get_option( 'theme_switch_menu_locations' );
+	$old_nav_menu_locations = get_option( 'theme_switch_menu_locations', array() );
 	$new_nav_menu_locations = get_nav_menu_locations();
 	$registered_nav_menus   = get_registered_nav_menus();
 
@@ -1058,18 +1058,43 @@ function _wp_menus_changed() {
 			 * from within the same group, make an educated guess and map it.
 			 */
 			$common_slug_groups = array(
-				array( 'main', 'primary', 'navigation', 'top' ),
-				array( 'secondary', 'footer', 'subsidiary', 'bottom' ),
-				array( 'social' ),
+				array( 'header', 'main', 'navigation', 'primary', 'top' ),
+				array( 'bottom', 'footer', 'secondary', 'subsidiary' ),
+				array( 'social' ), // TODO: Find a second slug or remove, since locations with same slug are already mapped.
 			);
 
-			foreach( $common_slug_groups as $slug_group ) {
-				foreach( $old_nav_menu_locations as $location => $menu_id ) {
-					foreach ( $slug_group as $slug ) {
-						if ( strpos( $location, $slug ) || strpos( $slug, $location ) ) {
-							foreach( $registered_nav_menus as $new_location => $name ) {
-								if ( strpos( $new_location, $slug ) || strpos( $slug, $new_location ) ) {
-									$new_nav_menu_locations[ $new_location ] = $old_nav_menu_locations[ $location ];
+			// Go through each group...
+			foreach ( $common_slug_groups as $slug_group ) {
+
+				// ...and see if any of these slugs...
+				foreach ( $slug_group as $slug ) {
+
+					// ...and any of the new menu locations...
+					foreach ( $registered_nav_menus as $new_location => $name ) {
+
+						// ...actually match!
+						if ( false !== stripos( $new_location, $slug ) || false !== stripos( $slug, $new_location ) ) {
+
+							// Then see if any of the old locations...
+							foreach ( $old_nav_menu_locations as $location => $menu_id ) {
+
+								// ...match a slug in the same group.
+								foreach ( $slug_group as $slug ) {
+									if ( false !== stripos( $location, $slug ) || false !== stripos( $slug, $location ) ) {
+
+										// Make sure this location wasn't mapped and removed previously.
+										if ( ! empty( $old_nav_menu_locations[ $location ] ) ) {
+
+											// We have a match that can be mapped!
+											$new_nav_menu_locations[ $new_location ] = $old_nav_menu_locations[ $location ];
+
+											// Remove the mapped location so it can't be mapped again.
+											unset( $old_nav_menu_locations[ $location ] );
+
+											// Go back and check the next new menu location.
+											continue 3;
+										}
+									}
 								}
 							}
 						}
