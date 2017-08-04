@@ -61,7 +61,7 @@ class WP_Widget_Text extends WP_Widget {
 		add_action( 'admin_print_scripts-widgets.php', array( $this, 'enqueue_admin_scripts' ) );
 
 		// Note that the widgets component in the customizer will also do the 'admin_footer-widgets.php' action in WP_Customize_Widgets::print_footer_scripts().
-		add_action( 'admin_footer-widgets.php', array( $this, 'render_control_template_scripts' ) );
+		add_action( 'admin_footer-widgets.php', array( 'WP_Widget_Text', 'render_control_template_scripts' ) );
 	}
 
 	/**
@@ -378,8 +378,9 @@ class WP_Widget_Text extends WP_Widget {
 	 * Render form template scripts.
 	 *
 	 * @since 4.8.0
+	 * @since 4.8.2 The method is now static.
 	 */
-	public function render_control_template_scripts() {
+	static public function render_control_template_scripts() {
 		$dismissed_pointers = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
 		?>
 		<script type="text/html" id="tmpl-widget-text-control-fields">
