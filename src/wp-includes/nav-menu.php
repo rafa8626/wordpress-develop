@@ -1026,3 +1026,59 @@ function _wp_delete_customize_changeset_dependent_auto_drafts( $post_id ) {
 	}
 	add_action( 'delete_post', '_wp_delete_customize_changeset_dependent_auto_drafts' );
 }
+
+/**
+ * Handle menu config after theme change
+ *
+ * @access private
+ * @since 4.8.0
+ */
+function _wp_menus_changed() {
+	$old_nav_menu_locations = get_option( 'theme_switch_menu_locations' );
+	$new_nav_menu_locations = get_nav_menu_locations();
+	$registered_nav_menus   = get_registered_nav_menus();
+
+	// If old and new theme have just one location, map it.
+	if ( 1 === count( $old_nav_menu_locations ) && 1 === count( $registered_nav_menus ) ) {
+		$new_nav_menu_locations[ key( $registered_nav_menus ) ] = array_pop( $old_nav_menu_locations );
+	} else {
+		$old_locations = array_keys( $old_nav_menu_locations );
+
+		// Map locations with the same slug.
+		foreach ( $registered_nav_menus as $location => $name ) {
+			if ( in_array( $location, $old_locations ) ) {
+				$new_nav_menu_locations[ $location ] = $old_nav_menu_locations[ $location ];
+				unset( $old_nav_menu_locations[ $location ] );
+			}
+		}
+
+		if ( ! empty( $old_nav_menu_locations ) ) {
+			/*
+			 * If old and new theme both have locations that contain phrases
+			 * from within the same group, make an educated guess and map it.
+			 */
+			$common_slug_groups = array(
+				array( 'main', 'primary', 'navigation', 'top' ),
+				array( 'secondary', 'footer', 'subsidiary', 'bottom' ),
+				array( 'social' ),
+			);
+
+			foreach( $common_slug_groups as $slug_group ) {
+				foreach( $old_nav_menu_locations as $location => $menu_id ) {
+					foreach ( $slug_group as $slug ) {
+						if ( strpos( $location, $slug ) || strpos( $slug, $location ) ) {
+							foreach( $registered_nav_menus as $new_location => $name ) {
+								if ( strpos( $new_location, $slug ) || strpos( $slug, $new_location ) ) {
+									$new_nav_menu_locations[ $new_location ] = $old_nav_menu_locations[ $location ];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	set_theme_mod( 'nav_menu_locations', $new_nav_menu_locations );
+	delete_option( 'theme_switch_menu_locations' );
+}
