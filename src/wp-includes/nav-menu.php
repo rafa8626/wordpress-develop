@@ -1051,76 +1051,87 @@ function _wp_menus_changed() {
  * @return array Nav menus remapped to new nav menu locations.
  */
 function wp_get_remapped_nav_menu_locations( $new_nav_menu_locations, $old_nav_menu_locations ) {
-	$registered_nav_menus   = get_registered_nav_menus();
+	$registered_nav_menus = get_registered_nav_menus();
 
-	if ( ! empty( $old_nav_menu_locations ) ) {
-		// If old and new theme have just one location, map it.
-		if ( 1 === count( $old_nav_menu_locations ) && 1 === count( $registered_nav_menus ) ) {
-			$new_nav_menu_locations[ key( $registered_nav_menus ) ] = array_pop( $old_nav_menu_locations );
-		} else {
-			$old_locations = array_keys( $old_nav_menu_locations );
+	// Short-circuit if there are no old nav menu location assignments to map.
+	if ( empty( $old_nav_menu_locations ) ) {
+		return $new_nav_menu_locations;
+	}
 
-			// Map locations with the same slug.
-			foreach ( $registered_nav_menus as $location => $name ) {
-				if ( in_array( $location, $old_locations, true ) ) {
-					$new_nav_menu_locations[ $location ] = $old_nav_menu_locations[ $location ];
-					unset( $old_nav_menu_locations[ $location ] );
-				}
-			}
+	// If old and new theme have just one location, map it and we're done.
+	if ( 1 === count( $old_nav_menu_locations ) && 1 === count( $registered_nav_menus ) ) {
+		$new_nav_menu_locations[ key( $registered_nav_menus ) ] = array_pop( $old_nav_menu_locations );
+		return $new_nav_menu_locations;
+	}
 
-			if ( ! empty( $old_nav_menu_locations ) ) {
-				/*
-				 * If old and new theme both have locations that contain phrases
-				 * from within the same group, make an educated guess and map it.
-				 */
-				$common_slug_groups = array(
-					array( 'header', 'main', 'navigation', 'primary', 'top' ),
-					array( 'bottom', 'footer', 'secondary', 'subsidiary' ),
-					array( 'social' ),
-					// TODO: Find a second slug or remove, since locations with same slug are already mapped.
-				);
+	$old_locations = array_keys( $old_nav_menu_locations );
 
-				// Go through each group...
-				foreach ( $common_slug_groups as $slug_group ) {
-
-					// ...and see if any of these slugs...
-					foreach ( $slug_group as $slug ) {
-
-						// ...and any of the new menu locations...
-						foreach ( $registered_nav_menus as $new_location => $name ) {
-
-							// ...actually match!
-							if ( false !== stripos( $new_location, $slug ) || false !== stripos( $slug, $new_location ) ) {
-
-								// Then see if any of the old locations...
-								foreach ( $old_nav_menu_locations as $location => $menu_id ) {
-
-									// ...match a slug in the same group.
-									foreach ( $slug_group as $slug ) {
-										if ( false !== stripos( $location, $slug ) || false !== stripos( $slug, $location ) ) {
-
-											// Make sure this location wasn't mapped and removed previously.
-											if ( ! empty( $old_nav_menu_locations[ $location ] ) ) {
-
-												// We have a match that can be mapped!
-												$new_nav_menu_locations[ $new_location ] = $old_nav_menu_locations[ $location ];
-
-												// Remove the mapped location so it can't be mapped again.
-												unset( $old_nav_menu_locations[ $location ] );
-
-												// Go back and check the next new menu location.
-												continue 3;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+	// Map locations with the same slug.
+	foreach ( $registered_nav_menus as $location => $name ) {
+		if ( in_array( $location, $old_locations, true ) ) {
+			$new_nav_menu_locations[ $location ] = $old_nav_menu_locations[ $location ];
+			unset( $old_nav_menu_locations[ $location ] );
 		}
 	}
+
+	// If there are no old nav menu locations left, then we're done.
+	if ( empty( $old_nav_menu_locations ) ) {
+		return $new_nav_menu_locations;
+	}
+
+	/*
+	 * If old and new theme both have locations that contain phrases
+	 * from within the same group, make an educated guess and map it.
+	 */
+	$common_slug_groups = array(
+		array( 'header', 'main', 'navigation', 'primary', 'top' ),
+		array( 'bottom', 'footer', 'secondary', 'subsidiary' ),
+		array( 'social' ),
+		// TODO: Find a second slug or remove, since locations with same slug are already mapped.
+	);
+
+	// Go through each group...
+	foreach ( $common_slug_groups as $slug_group ) {
+
+		// ...and see if any of these slugs...
+		foreach ( $slug_group as $slug ) {
+
+			// ...and any of the new menu locations...
+			foreach ( $registered_nav_menus as $new_location => $name ) {
+
+				// ...actually match!
+				if ( false === stripos( $new_location, $slug ) && false === stripos( $slug, $new_location ) ) {
+					continue;
+				}
+
+				// Then see if any of the old locations...
+				foreach ( $old_nav_menu_locations as $location => $menu_id ) {
+
+					// ...match a slug in the same group.
+					foreach ( $slug_group as $slug ) {
+
+						// But skip if the location and slug don't match.
+						if ( false === stripos( $location, $slug ) && false === stripos( $slug, $location ) ) {
+							continue;
+						}
+
+						// Make sure this location wasn't mapped and removed previously.
+						if ( ! empty( $old_nav_menu_locations[ $location ] ) ) {
+
+							// We have a match that can be mapped!
+							$new_nav_menu_locations[ $new_location ] = $old_nav_menu_locations[ $location ];
+
+							// Remove the mapped location so it can't be mapped again.
+							unset( $old_nav_menu_locations[ $location ] );
+
+							// Go back and check the next new menu location.
+							continue 3;
+						}
+					} // endforeach ( $slug_group as $slug )
+				} // endforeach ( $old_nav_menu_locations as $location => $menu_id )
+			} // endforeach foreach ( $registered_nav_menus as $new_location => $name )
+		} // endforeach ( $slug_group as $slug )
+	} // endforeach ( $common_slug_groups as $slug_group )
 
 	return $new_nav_menu_locations;
 }
