@@ -5,21 +5,20 @@
  */
 class Tests_Nav_Menu_Theme_Change extends WP_UnitTestCase {
 
+	/**
+	 * Set up.
+	 */
 	function setUp() {
+		parent::setUp();
+
+		// Unregister all nav menu locations.
+		foreach ( array_keys( get_registered_nav_menus() ) as $location ) {
+			unregister_nav_menu( $location );
+		}
+
 		register_nav_menus( array(
 			'primary' => 'Primary',
 		) );
-
-		parent::setUp();
-	}
-
-	function tearDown() {
-		global $_wp_registered_nav_menus;
-
-		remove_theme_mod( 'nav_menu_locations' );
-		$_wp_registered_nav_menus = array();
-
-		parent::tearDown();
 	}
 
 	/**
