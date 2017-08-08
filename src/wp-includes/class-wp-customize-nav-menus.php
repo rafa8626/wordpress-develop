@@ -29,10 +29,20 @@ final class WP_Customize_Nav_Menus {
 	/**
 	 * Previewed Menus.
 	 *
+	 * @todo This is unused and can be removed.
+	 *
 	 * @since 4.3.0
 	 * @var array
 	 */
 	public $previewed_menus;
+
+	/**
+	 * Original nav menu locations before the theme was switched.
+	 *
+	 * @since 4.9.0
+	 * @var array
+	 */
+	protected $original_nav_menu_locations;
 
 	/**
 	 * Constructor.
@@ -42,8 +52,9 @@ final class WP_Customize_Nav_Menus {
 	 * @param object $manager An instance of the WP_Customize_Manager class.
 	 */
 	public function __construct( $manager ) {
-		$this->previewed_menus = array();
-		$this->manager         = $manager;
+		$this->previewed_menus = array(); // @todo This is unused and can be removed.
+		$this->manager = $manager;
+		$this->original_nav_menu_locations = get_nav_menu_locations();
 
 		// See https://github.com/xwp/wp-customize-snapshots/blob/962586659688a5b1fd9ae93618b7ce2d4e7a421c/php/class-customize-snapshot-manager.php#L469-L499
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 );
@@ -582,6 +593,12 @@ final class WP_Customize_Nav_Menus {
 			$choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
 		}
 
+		// Attempt to re-map the nav menu location assignments when previewing a theme switch.
+		$remapped_nav_menu_locations = array();
+		if ( ! $this->manager->is_theme_active() ) {
+			$remapped_nav_menu_locations = wp_get_remapped_nav_menu_locations( get_nav_menu_locations(), $this->original_nav_menu_locations );
+		}
+
 		foreach ( $locations as $location => $description ) {
 			$setting_id = "nav_menu_locations[{$location}]";
 
@@ -598,6 +615,11 @@ final class WP_Customize_Nav_Menus {
 					'transport'         => 'postMessage',
 					'default'           => 0,
 				) );
+			}
+
+			// Override the assigned nav menu location if remapped during previewed theme switch.
+			if ( isset( $remapped_nav_menu_locations[ $location ] ) ) {
+				$this->manager->set_post_value( $setting_id, $remapped_nav_menu_locations[ $location ] );
 			}
 
 			$this->manager->add_control( new WP_Customize_Nav_Menu_Location_Control( $this->manager, $setting_id, array(
