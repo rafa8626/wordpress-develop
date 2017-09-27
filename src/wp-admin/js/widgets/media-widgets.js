@@ -429,6 +429,7 @@ wp.mediaWidgets = ( function( $ ) {
 		events: {
 			'click .notice-missing-attachment a': 'handleMediaLibraryLinkClick',
 			'click .select-media': 'selectMedia',
+			'click .placeholder': 'selectMedia',
 			'click .edit-media': 'editMedia'
 		},
 
@@ -591,17 +592,25 @@ wp.mediaWidgets = ( function( $ ) {
 		syncModelToInputs: function syncModelToInputs() {
 			var control = this;
 			control.syncContainer.find( '.media-widget-instance-property' ).each( function() {
-				var input = $( this ), value;
-				value = control.model.get( input.data( 'property' ) );
+				var input = $( this ), value, propertyName;
+				propertyName = input.data( 'property' );
+				value = control.model.get( propertyName );
 				if ( _.isUndefined( value ) ) {
 					return;
 				}
-				value = String( value );
-				if ( input.val() === value ) {
-					return;
+
+				if ( 'array' === control.model.schema[ propertyName ].type && _.isArray( value ) ) {
+					value = value.join( ',' );
+				} else if ( 'boolean' === control.model.schema[ propertyName ].type ) {
+					value = value ? '1' : ''; // Because in PHP, strval( true ) === '1' && strval( false ) === ''.
+				} else {
+					value = String( value );
 				}
-				input.val( value );
-				input.trigger( 'change' );
+
+				if ( input.val() !== value ) {
+					input.val( value );
+					input.trigger( 'change' );
+				}
 			});
 		},
 
@@ -1002,7 +1011,22 @@ wp.mediaWidgets = ( function( $ ) {
 					return;
 				}
 				type = model.schema[ name ].type;
-				if ( 'integer' === type ) {
+				if ( 'array' === type ) {
+					castedAttrs[ name ] = value;
+					if ( ! _.isArray( castedAttrs[ name ] ) ) {
+						castedAttrs[ name ] = castedAttrs[ name ].split( /,/ ); // Good enough for parsing an ID list.
+					}
+					if ( model.schema[ name ].items && 'integer' === model.schema[ name ].items.type ) {
+						castedAttrs[ name ] = _.filter(
+							_.map( castedAttrs[ name ], function( id ) {
+								return parseInt( id, 10 );
+							},
+							function( id ) {
+								return 'number' === typeof id;
+							}
+						) );
+					}
+				} else if ( 'integer' === type ) {
 					castedAttrs[ name ] = parseInt( value, 10 );
 				} else if ( 'boolean' === type ) {
 					castedAttrs[ name ] = ! ( ! value || '0' === value || 'false' === value );
@@ -1069,7 +1093,7 @@ wp.mediaWidgets = ( function( $ ) {
 
 		/*
 		 * Create a container element for the widget control (Backbone.View).
-		 * This is inserted into the DOM immediately before the the .widget-content
+		 * This is inserted into the DOM immediately before the .widget-content
 		 * element because the contents of this element are essentially "managed"
 		 * by PHP, where each widget update cause the entire element to be emptied
 		 * and replaced with the rendered output of WP_Widget::form() which is

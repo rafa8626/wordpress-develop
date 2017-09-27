@@ -169,6 +169,8 @@ add_filter( 'widget_text_content', 'capital_P_dangit', 11 );
 add_filter( 'widget_text_content', 'wptexturize'          );
 add_filter( 'widget_text_content', 'convert_smilies',  20 );
 add_filter( 'widget_text_content', 'wpautop'              );
+add_filter( 'widget_text_content', 'shortcode_unautop'    );
+add_filter( 'widget_text_content', 'do_shortcode',     11 ); // Runs after wpautop(); note that $post global will be null when shortcodes run.
 
 add_filter( 'date_i18n', 'wp_maybe_decline_date' );
 
@@ -511,5 +513,8 @@ add_filter( 'the_excerpt_embed',      'wp_embed_excerpt_attachment'           );
 add_filter( 'oembed_dataparse',       'wp_filter_oembed_result',        10, 3 );
 add_filter( 'oembed_response_data',   'get_oembed_response_data_rich',  10, 4 );
 add_filter( 'pre_oembed_result',      'wp_filter_pre_oembed_result',    10, 3 );
+
+// Capabilities
+add_filter( 'user_has_cap', 'wp_maybe_grant_install_languages_cap', 1 );
 
 unset( $filter, $action );

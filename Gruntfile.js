@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 		fs = require( 'fs' ),
 		SOURCE_DIR = 'src/',
 		BUILD_DIR = 'build/',
+ 		BANNER_TEXT = '/*! This file is auto-generated */',
 		autoprefixer = require('autoprefixer'),
 		mediaConfig = {},
 		mediaBuilds = ['audiovideo', 'grid', 'models', 'views'];
@@ -56,6 +57,20 @@ module.exports = function(grunt) {
 				dest: BUILD_DIR,
 				src: [
 					'wp-admin/css/colors/*/colors.css'
+				]
+			}
+		},
+ 		usebanner: {
+			options: {
+				position: 'top',
+				banner: BANNER_TEXT,
+				linebreak: true
+			},
+			files: {
+				src: [
+					BUILD_DIR + 'wp-admin/css/*.min.css',
+					BUILD_DIR + 'wp-includes/css/*.min.css',
+					BUILD_DIR + 'wp-admin/css/colors/*/*.css'
 				]
 			}
 		},
@@ -345,6 +360,7 @@ module.exports = function(grunt) {
 					'wp-includes/js/tinymce/plugins/wordpress/plugin.js',
 					'wp-includes/js/tinymce/plugins/wp*/plugin.js',
 					// Third party scripts
+					'!wp-includes/js/codemirror/*.js',
 					'!wp-admin/js/farbtastic.js',
 					'!wp-includes/js/backbone*.js',
 					'!wp-includes/js/swfobject.js',
@@ -354,7 +370,8 @@ module.exports = function(grunt) {
 					'!wp-includes/js/json2.js',
 					'!wp-includes/js/tw-sack.js',
 					'!wp-includes/js/twemoji.js',
-					'!**/*.min.js'
+					'!**/*.min.js',
+					'!wp-includes/js/wp-hooks.js'
 				],
 				// Remove once other JSHint errors are resolved
 				options: {
@@ -420,6 +437,14 @@ module.exports = function(grunt) {
 				}
 			}
 		},
+		jsdoc : {
+			dist : {
+				dest: 'jsdoc',
+				options: {
+					configure : 'jsdoc.conf.json'
+				}
+			}
+		},
 		qunit: {
 			files: [
 				'tests/qunit/**/*.html',
@@ -461,15 +486,13 @@ module.exports = function(grunt) {
 				src: [
 					'wp-admin/js/**/*.js',
 					'wp-includes/js/*.js',
+					'wp-includes/js/plupload/*.js',
 					'wp-includes/js/mediaelement/wp-mediaelement.js',
 					'wp-includes/js/mediaelement/wp-playlist.js',
-					'wp-includes/js/plupload/handlers.js',
-					'wp-includes/js/plupload/wp-plupload.js',
 					'wp-includes/js/tinymce/plugins/wordpress/plugin.js',
 					'wp-includes/js/tinymce/plugins/wp*/plugin.js',
 
 					// Exceptions
-					'!wp-admin/js/bookmarklet.*', // Minified and updated in /src with the precommit task. See uglify:bookmarklet.
 					'!wp-admin/js/custom-header.js', // Why? We should minify this.
 					'!wp-admin/js/farbtastic.js',
 					'!wp-admin/js/iris.min.js',
@@ -515,15 +538,6 @@ module.exports = function(grunt) {
 				dest: BUILD_DIR,
 				ext: '.min.js',
 				src: ['wp-includes/js/jquery/ui/*.js']
-			},
-			bookmarklet: {
-				options: {
-					compress: {
-						negate_iife: false
-					}
-				},
-				src: SOURCE_DIR + 'wp-admin/js/bookmarklet.js',
-				dest: SOURCE_DIR + 'wp-admin/js/bookmarklet.min.js'
 			},
 			masonry: {
 				options: {
@@ -799,7 +813,6 @@ module.exports = function(grunt) {
 	grunt.registerTask( 'precommit:js', [
 		'browserify',
 		'jshint:corejs',
-		'uglify:bookmarklet',
 		'uglify:masonry',
 		'qunit:compiled'
 	] );
@@ -919,6 +932,7 @@ module.exports = function(grunt) {
 		'concat:emoji',
 		'includes:emoji',
 		'includes:embed',
+		'usebanner',
 		'jsvalidate:build'
 	] );
 
