@@ -183,11 +183,14 @@ class WP_Widget_Text extends WP_Widget {
 	 *
 	 * @since 2.8.0
 	 *
+	 * @global WP_Post $post
+	 *
 	 * @param array $args     Display arguments including 'before_title', 'after_title',
 	 *                        'before_widget', and 'after_widget'.
 	 * @param array $instance Settings for the current Text widget instance.
 	 */
 	public function widget( $args, $instance ) {
+		global $post;
 
 		/** This filter is documented in wp-includes/widgets/class-wp-widget-pages.php */
 		$title = apply_filters( 'widget_title', empty( $instance['title'] ) ? '' : $instance['title'], $instance, $this->id_base );
@@ -205,16 +208,22 @@ class WP_Widget_Text extends WP_Widget {
 		}
 
 		/*
-		 * Just-in-time temporarily upgrade Visual Text widget shortcode handling
-		 * (with support added by plugin) from the widget_text filter to
-		 * widget_text_content:11 to prevent wpautop from corrupting HTML output
-		 * added by the shortcode.
+		 * Suspend legacy plugin-supplied do_shortcode() for 'widget_text' filter for the visual Text widget to prevent
+		 * shortcodes being processed twice. Now do_shortcode() is added to the 'widget_text_content' filter in core itself
+		 * and it applies after wpautop() to prevent corrupting HTML output added by the shortcode. When do_shortcode() is
+		 * added to 'widget_text_content' then do_shortcode() will be manually called when in legacy mode as well.
 		 */
 		$widget_text_do_shortcode_priority = has_filter( 'widget_text', 'do_shortcode' );
-		$should_upgrade_shortcode_handling = ( $is_visual_text_widget && false !== $widget_text_do_shortcode_priority );
-		if ( $should_upgrade_shortcode_handling ) {
+		$should_suspend_legacy_shortcode_support = ( $is_visual_text_widget && false !== $widget_text_do_shortcode_priority );
+		if ( $should_suspend_legacy_shortcode_support ) {
 			remove_filter( 'widget_text', 'do_shortcode', $widget_text_do_shortcode_priority );
-			add_filter( 'widget_text_content', 'do_shortcode', 11 );
+		}
+
+		// Nullify the $post global during widget rendering to prevent shortcodes from running with the unexpected context.
+		$suspended_post = null;
+		if ( isset( $post ) ) {
+			$suspended_post = $post;
+			$post = null;
 		}
 
 		/**
@@ -244,14 +253,35 @@ class WP_Widget_Text extends WP_Widget {
 			 * @param WP_Widget_Text $this     Current Text widget instance.
 			 */
 			$text = apply_filters( 'widget_text_content', $text, $instance, $this );
+		} else {
+			// Now in legacy mode, add paragraphs and line breaks when checkbox is checked.
+			if ( ! empty( $instance['filter'] ) ) {
+				$text = wpautop( $text );
+			}
 
-		} elseif ( ! empty( $instance['filter'] ) ) {
-			$text = wpautop( $text ); // Back-compat for instances prior to 4.8.
+			/*
+			 * Manually do shortcodes on the content when the core-added filter is present. It is added by default
+			 * in core by adding do_shortcode() to the 'widget_text_content' filter to apply after wpautop().
+			 * Since the legacy Text widget runs wpautop() after 'widget_text' filters are applied, the widget in
+			 * legacy mode here manually applies do_shortcode() on the content unless the default
+			 * core filter for 'widget_text_content' has been removed, or if do_shortcode() has already
+			 * been applied via a plugin adding do_shortcode() to 'widget_text' filters.
+			 */
+			if ( has_filter( 'widget_text_content', 'do_shortcode' ) && ! $widget_text_do_shortcode_priority ) {
+				if ( ! empty( $instance['filter'] ) ) {
+					$text = shortcode_unautop( $text );
+				}
+				$text = do_shortcode( $text );
+			}
 		}
 
-		// Undo temporary upgrade of the plugin-supplied shortcode handling.
-		if ( $should_upgrade_shortcode_handling ) {
-			remove_filter( 'widget_text_content', 'do_shortcode', 11 );
+		// Restore post global.
+		if ( isset( $suspended_post ) ) {
+			$post = $suspended_post;
+		}
+
+		// Undo suspension of legacy plugin-supplied shortcode handling.
+		if ( $should_suspend_legacy_shortcode_support ) {
 			add_filter( 'widget_text', 'do_shortcode', $widget_text_do_shortcode_priority );
 		}
 
@@ -323,6 +353,7 @@ class WP_Widget_Text extends WP_Widget {
 	public function enqueue_admin_scripts() {
 		wp_enqueue_editor();
 		wp_enqueue_script( 'text-widgets' );
+		wp_add_inline_script( 'text-widgets', 'wp.textWidgets.init();', 'after' );
 	}
 
 	/**
@@ -332,6 +363,7 @@ class WP_Widget_Text extends WP_Widget {
 	 * @since 4.8.0 Form only contains hidden inputs which are synced with JS template.
 	 * @since 4.8.1 Restored original form to be displayed when in legacy mode.
 	 * @see WP_Widget_Visual_Text::render_control_template_scripts()
+	 * @see _WP_Editors::editor()
 	 *
 	 * @param array $instance Current settings.
 	 * @return void
@@ -346,10 +378,31 @@ class WP_Widget_Text extends WP_Widget {
 		);
 		?>
 		<?php if ( ! $this->is_legacy_instance( $instance ) ) : ?>
-			<input id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" class="title" type="hidden" value="<?php echo esc_attr( $instance['title'] ); ?>">
-			<input id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>" class="text" type="hidden" value="<?php echo esc_attr( $instance['text'] ); ?>">
-			<input id="<?php echo $this->get_field_id( 'filter' ); ?>" name="<?php echo $this->get_field_name( 'filter' ); ?>" class="filter" type="hidden" value="on">
-			<input id="<?php echo $this->get_field_id( 'visual' ); ?>" name="<?php echo $this->get_field_name( 'visual' ); ?>" class="visual" type="hidden" value="on">
+			<?php
+
+			if ( user_can_richedit() ) {
+				add_filter( 'the_editor_content', 'format_for_editor', 10, 2 );
+				$default_editor = 'tinymce';
+			} else {
+				$default_editor = 'html';
+			}
+
+			/** This filter is documented in wp-includes/class-wp-editor.php */
+			$text = apply_filters( 'the_editor_content', $instance['text'], $default_editor );
+
+			// Reset filter addition.
+			if ( user_can_richedit() ) {
+				remove_filter( 'the_editor_content', 'format_for_editor' );
+			}
+
+			// Prevent premature closing of textarea in case format_for_editor() didn't apply or the_editor_content filter did a wrong thing.
+			$escaped_text = preg_replace( '#</textarea#i', '&lt;/textarea', $text );
+
+			?>
+			<input id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" class="title sync-input" type="hidden" value="<?php echo esc_attr( $instance['title'] ); ?>">
+			<textarea id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>" class="text sync-input" hidden><?php echo $escaped_text; ?></textarea>
+			<input id="<?php echo $this->get_field_id( 'filter' ); ?>" name="<?php echo $this->get_field_name( 'filter' ); ?>" class="filter sync-input" type="hidden" value="on">
+			<input id="<?php echo $this->get_field_id( 'visual' ); ?>" name="<?php echo $this->get_field_name( 'visual' ); ?>" class="visual sync-input" type="hidden" value="on">
 		<?php else : ?>
 			<input id="<?php echo $this->get_field_id( 'visual' ); ?>" name="<?php echo $this->get_field_name( 'visual' ); ?>" class="visual" type="hidden" value="">
 			<p>
@@ -395,9 +448,9 @@ class WP_Widget_Text extends WP_Widget {
 					<div class="wp-pointer-content">
 						<h3><?php _e( 'New Custom HTML Widget' ); ?></h3>
 						<?php if ( is_customize_preview() ) : ?>
-							<p><?php _e( 'Hey, did you hear we have a &#8220;Custom HTML&#8221; widget now? You can find it by pressing the &#8220;<a class="add-widget" href="#">Add a Widget</a>&#8221; button and searching for &#8220;HTML&#8221;. Check it out to add some custom code to your site!' ); ?></p>
+							<p><?php _e( 'Did you know there is a &#8220;Custom HTML&#8221; widget now? You can find it by pressing the &#8220;<a class="add-widget" href="#">Add a Widget</a>&#8221; button and searching for &#8220;HTML&#8221;. Check it out to add some custom code to your site!' ); ?></p>
 						<?php else : ?>
-							<p><?php _e( 'Hey, did you hear we have a &#8220;Custom HTML&#8221; widget now? You can find it by scanning the list of available widgets on this screen. Check it out to add some custom code to your site!' ); ?></p>
+							<p><?php _e( 'Did you know there is a &#8220;Custom HTML&#8221; widget now? You can find it by scanning the list of available widgets on this screen. Check it out to add some custom code to your site!' ); ?></p>
 						<?php endif; ?>
 						<div class="wp-pointer-buttons">
 							<a class="close" href="#"><?php _e( 'Dismiss' ); ?></a>
