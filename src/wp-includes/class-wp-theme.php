@@ -252,7 +252,7 @@ final class WP_Theme implements ArrayAccess {
 
 		if ( ! $this->template && $this->stylesheet === $this->headers['Template'] ) {
 			/* translators: %s: Template */
-			$this->errors = new WP_Error( 'theme_child_invalid', sprintf( __( 'The theme defines itself as its parent theme. Please check the "%s" header.' ), 'Template' ) );
+			$this->errors = new WP_Error( 'theme_child_invalid', sprintf( __( 'The theme defines itself as its parent theme. Please check the %s header.' ), '<code>Template</code>' ) );
 			$this->cache_add( 'theme', array( 'headers' => $this->headers, 'errors' => $this->errors, 'stylesheet' => $this->stylesheet ) );
 
 			return;
@@ -1426,7 +1426,7 @@ final class WP_Theme implements ArrayAccess {
 	 *
 	 * @static
 	 *
-	 * @param array $themes Array of themes to sort, passed by reference.
+	 * @param array $themes Array of themes to sort (passed by reference).
 	 */
 	public static function sort_by_name( &$themes ) {
 		if ( 0 === strpos( get_user_locale(), 'en_' ) ) {
