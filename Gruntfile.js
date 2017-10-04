@@ -1,5 +1,8 @@
 /* jshint node:true */
 /* globals Set */
+var webpackConfig = require( './webpack.config.prod' );
+var webpackDevConfig = require( './webpack.config.dev' );
+
 module.exports = function(grunt) {
 	var path = require('path'),
 		fs = require( 'fs' ),
@@ -7,20 +10,12 @@ module.exports = function(grunt) {
 		SOURCE_DIR = 'src/',
 		BUILD_DIR = 'build/',
  		BANNER_TEXT = '/*! This file is auto-generated */',
-		autoprefixer = require('autoprefixer'),
-		mediaConfig = {},
-		mediaBuilds = ['audiovideo', 'grid', 'models', 'views'];
+		autoprefixer = require( 'autoprefixer' );
 
 	// Load tasks.
 	require('matchdep').filterDev(['grunt-*', '!grunt-legacy-util']).forEach( grunt.loadNpmTasks );
 	// Load legacy utils
 	grunt.util = require('grunt-legacy-util');
-
-	mediaBuilds.forEach( function ( build ) {
-		var path = SOURCE_DIR + 'wp-includes/js/media';
-		mediaConfig[ build ] = { files : {} };
-		mediaConfig[ build ].files[ path + '-' + build + '.js' ] = [ path + '/' + build + '.manifest.js' ];
-	} );
 
 	// Project configuration.
 	grunt.initConfig({
@@ -177,7 +172,6 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-		browserify: mediaConfig,
 		sass: {
 			colors: {
 				expand: true,
@@ -338,9 +332,6 @@ module.exports = function(grunt) {
 				]
 			},
 			media: {
-				options: {
-					browserify: true
-				},
 				src: [
 					SOURCE_DIR + 'wp-includes/js/media/**/*.js'
 				]
@@ -372,8 +363,7 @@ module.exports = function(grunt) {
 					'!wp-includes/js/json2.js',
 					'!wp-includes/js/tw-sack.js',
 					'!wp-includes/js/twemoji.js',
-					'!**/*.min.js',
-					'!wp-includes/js/wp-hooks.js'
+					'!**/*.min.js'
 				],
 				// Remove once other JSHint errors are resolved
 				options: {
@@ -554,7 +544,10 @@ module.exports = function(grunt) {
 				dest: SOURCE_DIR + 'wp-includes/js/jquery/jquery.masonry.min.js'
 			}
 		},
-
+		webpack: {
+			prod: webpackConfig,
+			dev: webpackDevConfig
+		},
 		concat: {
 			tinymce: {
 				options: {
@@ -720,7 +713,11 @@ module.exports = function(grunt) {
 				}
 			},
 			config: {
-				files: 'Gruntfile.js'
+				files: [
+					'Gruntfile.js',
+					'webpack-dev.config.js',
+					'webpack.config.js'
+				]
 			},
 			colors: {
 				files: [SOURCE_DIR + 'wp-admin/css/colors/**'],
@@ -758,6 +755,9 @@ module.exports = function(grunt) {
 
 	// Register tasks.
 
+	// Webpack task.
+	grunt.loadNpmTasks( 'grunt-webpack' );
+
 	// RTL task.
 	grunt.registerTask('rtl', ['rtlcss:core', 'rtlcss:colors']);
 
@@ -781,15 +781,9 @@ module.exports = function(grunt) {
 	grunt.renameTask( 'watch', '_watch' );
 
 	grunt.registerTask( 'watch', function() {
-		if ( ! this.args.length || this.args.indexOf( 'browserify' ) > -1 ) {
-			grunt.config( 'browserify.options', {
-				browserifyOptions: {
-					debug: true
-				},
-				watch: true
-			} );
+		if ( ! this.args.length || this.args.indexOf( 'webpack' ) > -1 ) {
 
-			grunt.task.run( 'browserify' );
+			grunt.task.run( 'webpack:dev' );
 		}
 
 		grunt.task.run( '_' + this.nameArgs );
@@ -800,7 +794,7 @@ module.exports = function(grunt) {
 	] );
 
 	grunt.registerTask( 'precommit:js', [
-		'browserify',
+		'webpack:prod',
 		'jshint:corejs',
 		'uglify:masonry',
 		'qunit:compiled'
@@ -839,8 +833,22 @@ module.exports = function(grunt) {
 					error ? find( set ) : run( path.basename( dir ).substr( 1 ) );
 				} );
 			} else {
-				grunt.fatal( 'This WordPress install is not under version control.' );
+				runAllTasks();
 			}
+		}
+
+		function runAllTasks() {
+			grunt.log.writeln( 'Cannot determine which files are modified as SVN and GIT are not available.' );
+			grunt.log.writeln( 'Running all tasks and all tests.' );
+			grunt.task.run([
+				'precommit:js',
+				'precommit:css',
+				'precommit:image',
+				'precommit:emoji',
+				'precommit:php'
+			]);
+
+			done();
 		}
 
 		function run( type ) {
@@ -851,10 +859,6 @@ module.exports = function(grunt) {
 				args: command
 			}, function( error, result, code ) {
 				var taskList = [];
-
-				if ( code !== 0 ) {
-					grunt.fatal( 'The `' +  map[ type ] + '` command returned a non-zero exit code.', code );
-				}
 
 				// Callback for finding modified paths.
 				function testPath( path ) {
@@ -868,31 +872,34 @@ module.exports = function(grunt) {
 					return regex.test( result.stdout );
 				}
 
-				if ( [ 'package.json', 'Gruntfile.js' ].some( testPath ) ) {
-					grunt.log.writeln( 'Configuration files modified. Running `prerelease`.' );
-					taskList.push( 'prerelease' );
-				} else {
-					if ( [ 'png', 'jpg', 'gif', 'jpeg' ].some( testExtension ) ) {
-						grunt.log.writeln( 'Image files modified. Minifying.' );
-						taskList.push( 'precommit:image' );
-					}
-
-					[ 'js', 'css', 'php' ].forEach( function( extension ) {
-						if ( testExtension( extension ) ) {
-							grunt.log.writeln( extension.toUpperCase() + ' files modified. ' + extension.toUpperCase() + ' tests will be run.' );
-							taskList.push( 'precommit:' + extension );
+				if ( code === 0 ) {
+					if ( [ 'package.json', 'Gruntfile.js' ].some( testPath ) ) {
+						grunt.log.writeln( 'Configuration files modified. Running `prerelease`.' );
+						taskList.push( 'prerelease' );
+					} else {
+						if ( [ 'png', 'jpg', 'gif', 'jpeg' ].some( testExtension ) ) {
+							grunt.log.writeln( 'Image files modified. Minifying.' );
+							taskList.push( 'precommit:image' );
 						}
-					} );
 
-					if ( [ 'twemoji.js' ].some( testPath ) ) {
-						grunt.log.writeln( 'twemoji.js has updated. Running `precommit:emoji.' );
-						taskList.push( 'precommit:emoji' );
+						[ 'js', 'css', 'php' ].forEach( function( extension ) {
+							if ( testExtension( extension ) ) {
+								grunt.log.writeln( extension.toUpperCase() + ' files modified. ' + extension.toUpperCase() + ' tests will be run.' );
+								taskList.push( 'precommit:' + extension );
+							}
+						} );
+
+						if ( [ 'twemoji.js' ].some( testPath ) ) {
+							grunt.log.writeln( 'twemoji.js has updated. Running `precommit:emoji.' );
+							taskList.push( 'precommit:emoji' );
+						}
 					}
+
+					grunt.task.run( taskList );
+					done();
+				} else {
+					runAllTasks();
 				}
-
-				grunt.task.run( taskList );
-
-				done();
 			} );
 		}
 	} );
@@ -966,7 +973,7 @@ module.exports = function(grunt) {
 	grunt.event.on('watch', function( action, filepath, target ) {
 		var src;
 
-		if ( [ 'all', 'rtl', 'browserify' ].indexOf( target ) === -1 ) {
+		if ( [ 'all', 'rtl', 'webpack' ].indexOf( target ) === -1 ) {
 			return;
 		}
 
