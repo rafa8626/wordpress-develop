@@ -607,7 +607,7 @@ final class WP_Customize_Manager {
 		if ( empty( $this->_changeset_uuid ) ) {
 			$changeset_uuid = null;
 
-			if ( ! $this->branching() ) {
+			if ( ! $this->branching() && $this->is_theme_active() ) {
 				$unpublished_changeset_posts = $this->get_changeset_posts( array(
 					'post_status' => array_diff( get_post_stati(), array( 'auto-draft', 'publish', 'trash', 'inherit', 'private' ) ),
 					'exclude_restore_dismissed' => false,
@@ -2489,7 +2489,7 @@ final class WP_Customize_Manager {
 			if ( 'publish' === $existing_status || 'trash' === $existing_status ) {
 				return new WP_Error(
 					'changeset_already_published',
-					__( 'The previous set of changes already been published. Please try saving your current set of changes again.' ),
+					__( 'The previous set of changes has already been published. Please try saving your current set of changes again.' ),
 					array(
 						'next_changeset_uuid' => wp_generate_uuid4(),
 					)
@@ -3770,7 +3770,7 @@ final class WP_Customize_Manager {
 					<span class="preview-control-element" data-component="url"></span>
 					<span class="screen-reader-text"><?php _e( '(opens in a new window)' ); ?></span>
 				</a>
-				<input id="{{ elementPrefix }}customize-preview-link-input" readonly class="preview-control-element" data-component="input">
+				<input id="{{ elementPrefix }}customize-preview-link-input" readonly tabindex="-1" class="preview-control-element" data-component="input">
 				<button class="customize-copy-preview-link preview-control-element button button-secondary" data-component="button" data-copy-text="<?php esc_attr_e( 'Copy' ); ?>" data-copied-text="<?php esc_attr_e( 'Copied' ); ?>" ><?php esc_html_e( 'Copy' ); ?></button>
 			</div>
 		</script>
@@ -4236,6 +4236,7 @@ final class WP_Customize_Manager {
 			),
 			'url'      => array(
 				'preview'       => esc_url_raw( $this->get_preview_url() ),
+				'return'        => esc_url_raw( $this->get_return_url() ),
 				'parent'        => esc_url_raw( admin_url() ),
 				'activated'     => esc_url_raw( home_url( '/' ) ),
 				'ajax'          => esc_url_raw( admin_url( 'admin-ajax.php', 'relative' ) ),
@@ -4397,7 +4398,10 @@ final class WP_Customize_Manager {
 
 		$this->add_panel( new WP_Customize_Themes_Panel( $this, 'themes', array(
 			'title'       => $this->theme()->display( 'Name' ),
-			'description' => __( 'Once themes are installed, you can live-preview them on your site, customize them, and publish your new design. Browse available themes via the filters in this menu.' ),
+			'description' => (
+				'<p>' . __( 'Looking for a theme? You can search or browse the WordPress.org theme directory, install and preview themes, then activate them right here.' ) . '</p>' .
+				'<p>' . __( 'While previewing a new theme, you can continue to tailor things like widgets and menus, and explore theme-specific options.' ) . '</p>'
+			),
 			'capability'  => 'switch_themes',
 			'priority'    => 0,
 		) ) );
@@ -4414,6 +4418,7 @@ final class WP_Customize_Manager {
 			$this->add_section( new WP_Customize_Themes_Section( $this, 'wporg_themes', array(
 				'title'       => __( 'WordPress.org themes' ),
 				'action'      => 'wporg',
+				'filter_type' => 'remote',
 				'capability'  => 'install_themes',
 				'panel'       => 'themes',
 				'priority'    => 5,
@@ -4849,7 +4854,7 @@ final class WP_Customize_Manager {
 		$section_description .= '<ul>';
 		$section_description .= '<li id="editor-keyboard-trap-help-2">' . __( 'In the editing area, the Tab key enters a tab character.' ) . '</li>';
 		$section_description .= '<li id="editor-keyboard-trap-help-3">' . __( 'To move away from this area, press the Esc key followed by the Tab key.' ) . '</li>';
-		$section_description .= '<li id="editor-keyboard-trap-help-4">' . __( 'Screen reader users: when in forms mode, you may need to press the Esc key twice.' ) . '</li>';
+		$section_description .= '<li id="editor-keyboard-trap-help-4">' . __( 'Screen reader users: when in forms mode, you may need to press the escape key twice.' ) . '</li>';
 		$section_description .= '</ul>';
 
 		if ( 'false' !== wp_get_current_user()->syntax_highlighting ) {
@@ -4946,23 +4951,48 @@ final class WP_Customize_Manager {
 		}
 		$theme_action = sanitize_key( $_POST['theme_action'] );
 		$themes = array();
+		$args = array();
+
+		// Define query filters based on user input.
+		if ( ! array_key_exists( 'search', $_POST ) ) {
+			$args['search'] = '';
+		} else {
+			$args['search'] = sanitize_text_field( wp_unslash( $_POST['search'] ) );
+		}
+
+		if ( ! array_key_exists( 'tags', $_POST ) ) {
+			$args['tag'] = '';
+		} else {
+			$args['tag'] = array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['tags'] ) );
+		}
+
+		if ( ! array_key_exists( 'page', $_POST ) ) {
+			$args['page'] = 1;
+		} else {
+			$args['page'] = absint( $_POST['page'] );
+		}
 
 		require_once ABSPATH . 'wp-admin/includes/theme.php';
+
 		if ( 'installed' === $theme_action ) {
+
+			// Load all installed themes from wp_prepare_themes_for_js().
 			$themes = array( 'themes' => wp_prepare_themes_for_js() );
 			foreach ( $themes['themes'] as &$theme ) {
 				$theme['type'] = 'installed';
 				$theme['active'] = ( isset( $_POST['customized_theme'] ) && $_POST['customized_theme'] === $theme['id'] );
 			}
+
 		} elseif ( 'wporg' === $theme_action ) {
+
+			// Load WordPress.org themes from the .org API and normalize data to match installed theme objects.
 			if ( ! current_user_can( 'install_themes' ) ) {
 				wp_die( -1 );
 			}
 
 			// Arguments for all queries.
-			$args = array(
+			$wporg_args = array(
 				'per_page' => 100,
-				'page' => isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1,
 				'fields' => array(
 					'screenshot_url' => true,
 					'description' => true,
@@ -4978,18 +5008,7 @@ final class WP_Customize_Manager {
 				),
 			);
 
-			// Define query filters based on user input.
-			if ( ! array_key_exists( 'search', $_POST ) ) {
-				$args['search'] = '';
-			} else {
-				$args['search'] = sanitize_text_field( wp_unslash( $_POST['search'] ) );
-			}
-
-			if ( ! array_key_exists( 'tags', $_POST ) ) {
-				$args['tag'] = '';
-			} else {
-				$args['tag'] = array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['tags'] ) );
-			}
+			$args = array_merge( $wporg_args, $args );
 
 			if ( '' === $args['search'] && '' === $args['tag'] ) {
 				$args['browse'] = 'new'; // Sort by latest themes by default.
@@ -5060,6 +5079,26 @@ final class WP_Customize_Manager {
 				unset( $theme->author );
 			} // End foreach().
 		} // End if().
+
+		/**
+		 * Filters the theme data loaded in the customizer.
+		 *
+		 * This allows theme data to be loading from an external source,
+		 * or modification of data loaded from `wp_prepare_themes_for_js()`
+		 * or WordPress.org via `themes_api()`.
+		 *
+		 * @since 4.9.0
+		 *
+		 * @see wp_prepare_themes_for_js()
+		 * @see themes_api()
+		 * @see WP_Customize_Manager::__construct()
+		 *
+		 * @param array                $themes  Nested array of theme data.
+		 * @param array                $args    List of arguments, such as page, search term, and tags to query for.
+		 * @param WP_Customize_Manager $manager Instance of Customize manager.
+		 */
+		$themes = apply_filters( 'customize_load_themes', $themes, $args, $this );
+
 		wp_send_json_success( $themes );
 	}
 

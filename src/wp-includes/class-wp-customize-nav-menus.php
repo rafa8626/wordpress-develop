@@ -414,6 +414,7 @@ final class WP_Customize_Nav_Menus {
 				'page_label'             => get_post_type_object( 'page' )->labels->singular_name,
 				/* translators: %s:      menu location */
 				'menuLocation'           => _x( '(Currently set to: %s)', 'menu' ),
+				'locationsTitle'         => 1 === $num_locations ? __( 'Menu Location' ) : __( 'Menu Locations' ),
 				'locationsDescription'   => $locations_description,
 				'menuNameLabel'          => __( 'Menu Name' ),
 				'newMenuNameDescription' => __( 'If your theme has multiple menus, giving them clear names will help you manage them.' ),
@@ -583,10 +584,10 @@ final class WP_Customize_Nav_Menus {
 		}
 
 		$this->manager->add_section( 'menu_locations', array(
-			'title'       	=> __( 'View All Locations' ),
-			'panel'       	=> 'nav_menus',
-			'priority'    	=> 30,
-			'description' 	=> $description
+			'title'       => 1 === $num_locations ? _x( 'View Location', 'menu locations' ) : _x( 'View All Locations', 'menu locations' ),
+			'panel'       => 'nav_menus',
+			'priority'    => 30,
+			'description' => $description,
 		) );
 
 		$choices = array( '0' => __( '&mdash; Select &mdash;' ) );
@@ -597,7 +598,14 @@ final class WP_Customize_Nav_Menus {
 		// Attempt to re-map the nav menu location assignments when previewing a theme switch.
 		$mapped_nav_menu_locations = array();
 		if ( ! $this->manager->is_theme_active() ) {
-			$mapped_nav_menu_locations = wp_map_nav_menu_locations( get_nav_menu_locations(), $this->original_nav_menu_locations );
+			$theme_mods = get_option( 'theme_mods_' . $this->manager->get_stylesheet(), array() );
+
+			// If there is no data from a previous activation, start fresh.
+			if ( empty( $theme_mods['nav_menu_locations'] ) ) {
+				$theme_mods['nav_menu_locations'] = array();
+			}
+
+			$mapped_nav_menu_locations = wp_map_nav_menu_locations( $theme_mods['nav_menu_locations'], $this->original_nav_menu_locations );
 		}
 
 		foreach ( $locations as $location => $description ) {
@@ -938,7 +946,7 @@ final class WP_Customize_Nav_Menus {
 		</script>
 
 		<script type="text/html" id="tmpl-nav-menu-locations-header">
-			<span class="customize-control-title customize-section-title-menu_locations-heading"><?php _e( 'Menu Locations' ); ?></span>
+			<span class="customize-control-title customize-section-title-menu_locations-heading">{{ data.l10n.locationsTitle }}</span>
 			<p class="customize-control-description customize-section-title-menu_locations-description">{{ data.l10n.locationsDescription }}</p>
 		</script>
 

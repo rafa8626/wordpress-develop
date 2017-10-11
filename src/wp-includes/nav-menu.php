@@ -1084,7 +1084,8 @@ function _wp_menus_changed() {
  * @return array Nav menus mapped to new nav menu locations.
  */
 function wp_map_nav_menu_locations( $new_nav_menu_locations, $old_nav_menu_locations ) {
-	$registered_nav_menus = get_registered_nav_menus();
+	$registered_nav_menus   = get_registered_nav_menus();
+	$new_nav_menu_locations = array_intersect_key( $new_nav_menu_locations, $registered_nav_menus );
 
 	// Short-circuit if there are no old nav menu location assignments to map.
 	if ( empty( $old_nav_menu_locations ) ) {
@@ -1119,6 +1120,7 @@ function wp_map_nav_menu_locations( $new_nav_menu_locations, $old_nav_menu_locat
 	$common_slug_groups = array(
 		array( 'header', 'main', 'navigation', 'primary', 'top' ),
 		array( 'bottom', 'footer', 'secondary', 'subsidiary' ),
+		array( 'social' ),
 	);
 
 	// Go through each group...
