@@ -3,10 +3,15 @@
 
 	window.wp = window.wp || {};
 
-	// Remove `plugins` since they don't exist in MEJS anymore
-	if (mejs.plugins !== undefined) {
-		delete mejs.plugins;
+	// Reintegrate `plugins` since they don't exist in MEJS anymore; it won't affect anything in the player
+	if (mejs.plugins === undefined) {
+		mejs.plugins = {};
+		mejs.plugins.silverlight = [];
+		mejs.plugins.silverlight.push({
+			types: []
+		});
 	}
+
 
 	// Add missing global variables for backward compatibility
 	if (mejs.MediaFeatures === undefined) {
