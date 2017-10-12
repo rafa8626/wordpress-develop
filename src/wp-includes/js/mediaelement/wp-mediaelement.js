@@ -35,7 +35,6 @@
 		this.$media = this.$node = $(this.node);
 		this.options.classPrefix = 'mejs-';
 		init.call(this);
-		this.$container = $(this.container);
 	};
 
 	// Add jQuery ONLY to most of custom features' arguments for backward compatibility; default features rely 100%
@@ -56,11 +55,11 @@
 				try {
 					// Use jQuery for non-default features
 					if (defaultFeatures.indexOf(feature) === -1) {
-						controls = $(controls);
-						layers = $(layers);
-						media = $(media);
+						this['build' + feature](player, $(controls), $(layers), media);
+					} else {
+						this['build' + feature](player, controls, layers, media);
 					}
-					this['build' + feature](player, controls, layers, media);
+
 				} catch (e) {
 					console.error('error building ' + feature, e);
 				}
