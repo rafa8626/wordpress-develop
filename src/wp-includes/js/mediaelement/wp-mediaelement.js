@@ -37,6 +37,11 @@
 		init.call(this);
 	};
 
+	// Override method so certain elements can be called with jQuery
+	MediaElementPlayer.prototype.getElement = function( el ) {
+		return $ !== undefined && el instanceof $ ? el[0] : el;
+	};
+
 	// Add jQuery ONLY to most of custom features' arguments for backward compatibility; default features rely 100%
 	// on the arguments being HTML elements to work properly
 	MediaElementPlayer.prototype.buildfeatures = function (player, controls, layers, media) {
