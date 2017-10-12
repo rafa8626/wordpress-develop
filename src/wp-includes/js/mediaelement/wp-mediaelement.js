@@ -3,6 +3,53 @@
 
 	window.wp = window.wp || {};
 
+	// Add missing global variables for backward compatibility
+	if (mejs.MediaFeatures === undefined) {
+		mejs.MediaFeatures = mejs.Features;
+		console.log(mejs.MediaFeatures)
+	}
+
+	if (mejs.Utility === undefined) {
+		mejs.Utility = mejs.Utils;
+	}
+
+	var init = MediaElementPlayer.prototype.init;
+	MediaElementPlayer.prototype.init = function() {
+		this.$media = this.$node = $(this.node);
+		this.options.classPrefix = 'mejs-';
+		init.call(this);
+	};
+
+	// Add jQuery to arguments in custom features for backward compatibility
+	MediaElementPlayer.prototype.buildfeatures = function (player, controls, layers, media) {
+		var defaultFeatures = [
+			'playpause',
+			'current',
+			'progress',
+			'duration',
+			'tracks',
+			'volume',
+			'fullscreen'
+		];
+		for (var i = 0, total = this.options.features.length; i < total; i++) {
+			var feature = this.options.features[i];
+			if (this['build' + feature]) {
+				try {
+					// Use jQuery for non-default features
+					if (defaultFeatures.indexOf(feature) === -1) {
+						player = $(player);
+						controls = $(controls);
+						layers = $(layers);
+						media = $(media);
+					}
+					this['build' + feature](player, controls, layers, media);
+				} catch (e) {
+					console.error('error building ' + feature, e);
+				}
+			}
+		}
+	};
+
 	function wpMediaElement() {
 		var settings = {};
 
