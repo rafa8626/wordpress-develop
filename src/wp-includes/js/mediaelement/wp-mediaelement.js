@@ -3,24 +3,38 @@
 
 	window.wp = window.wp || {};
 
+	// Remove `plugins` since they don't exist in MEJS anymore
+	if (mejs.plugins !== undefined) {
+		delete mejs.plugins;
+	}
+
 	// Add missing global variables for backward compatibility
 	if (mejs.MediaFeatures === undefined) {
 		mejs.MediaFeatures = mejs.Features;
-		console.log(mejs.MediaFeatures)
 	}
-
 	if (mejs.Utility === undefined) {
 		mejs.Utility = mejs.Utils;
 	}
 
+	/**
+	 * Create missing variables and have default `classPrefix` overridden to avoid issues.
+	 *
+	 * `media` is now a fake wrapper needed to simplify manipulation of various media types,
+	 * so in order to access the `video` or `audio` tag, use `media.originalNode` or `player.node`;
+	 * `player.container` used to be jQuery but now is a HTML element, and many elements inside
+	 * the player rely on it being a HTML now, so its conversion is difficult; however, a
+	 * `player.$container` new variable has been added to be used as jQuery object
+	 */
 	var init = MediaElementPlayer.prototype.init;
 	MediaElementPlayer.prototype.init = function() {
 		this.$media = this.$node = $(this.node);
 		this.options.classPrefix = 'mejs-';
 		init.call(this);
+		this.$container = $(this.container);
 	};
 
-	// Add jQuery to arguments in custom features for backward compatibility
+	// Add jQuery ONLY to most of custom features' arguments for backward compatibility; default features rely 100%
+	// on the arguments being HTML elements to work properly
 	MediaElementPlayer.prototype.buildfeatures = function (player, controls, layers, media) {
 		var defaultFeatures = [
 			'playpause',
@@ -37,7 +51,6 @@
 				try {
 					// Use jQuery for non-default features
 					if (defaultFeatures.indexOf(feature) === -1) {
-						player = $(player);
 						controls = $(controls);
 						layers = $(layers);
 						media = $(media);
