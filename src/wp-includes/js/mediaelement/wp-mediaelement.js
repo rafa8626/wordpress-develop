@@ -31,14 +31,17 @@
 	 * `player.$container` new variable has been added to be used as jQuery object
 	 */
 	var init = MediaElementPlayer.prototype.init;
-	MediaElementPlayer.prototype.init = function() {
-		this.$media = this.$node = $(this.node);
+	MediaElementPlayer.prototype.init = function () {
 		this.options.classPrefix = 'mejs-';
+		this.$media = this.$node = $(this.node);
 		init.call(this);
+		this.container = $(this.container);
+		this.controls = $(this.controls);
+		this.layers = $(this.layers);
 	};
 
 	// Override method so certain elements can be called with jQuery
-	MediaElementPlayer.prototype.getElement = function( el ) {
+	MediaElementPlayer.prototype.getElement = function (el) {
 		return $ !== undefined && el instanceof $ ? el[0] : el;
 	};
 
