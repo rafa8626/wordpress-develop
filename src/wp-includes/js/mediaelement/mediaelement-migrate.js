@@ -1,6 +1,4 @@
-/* global mejs */
-/* global MediaElementPlayer */
-/* global console */
+/* global console, MediaElementPlayer, mejs */
 (function ( window, $ ) {
 	// Reintegrate `plugins` since they don't exist in MEJS anymore; it won't affect anything in the player
 	if (mejs.plugins === undefined) {
