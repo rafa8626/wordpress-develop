@@ -1,4 +1,7 @@
-(function (window, $) {
+/* global mejs */
+/* global MediaElementPlayer */
+/* global console */
+(function ( window, $ ) {
 	// Reintegrate `plugins` since they don't exist in MEJS anymore; it won't affect anything in the player
 	if (mejs.plugins === undefined) {
 		mejs.plugins = {};
@@ -8,6 +11,10 @@
 		});
 	}
 
+	// Inclusion of old `HtmlMediaElementShim` if it doesn't exist
+	mejs.HtmlMediaElementShim = mejs.HtmlMediaElementShim || {
+		getTypeFromFile: mejs.Utils.getTypeFromFile
+	};
 
 	// Add missing global variables for backward compatibility
 	if (mejs.MediaFeatures === undefined) {
@@ -29,26 +36,26 @@
 	var init = MediaElementPlayer.prototype.init;
 	MediaElementPlayer.prototype.init = function () {
 		this.options.classPrefix = 'mejs-';
-		this.$media = this.$node = $(this.node);
-		init.call(this);
+		this.$media = this.$node = $( this.node );
+		init.call( this );
 	};
 
 	var ready = MediaElementPlayer.prototype._meReady;
 	MediaElementPlayer.prototype._meReady = function () {
-		this.container = $(this.container);
-		this.controls = $(this.controls);
-		this.layers = $(this.layers);
-		ready.apply(this, arguments);
+		this.container = $( this.container) ;
+		this.controls = $( this.controls );
+		this.layers = $( this.layers );
+		ready.apply( this, arguments );
 	};
 
 	// Override method so certain elements can be called with jQuery
-	MediaElementPlayer.prototype.getElement = function (el) {
+	MediaElementPlayer.prototype.getElement = function ( el ) {
 		return $ !== undefined && el instanceof $ ? el[0] : el;
 	};
 
 	// Add jQuery ONLY to most of custom features' arguments for backward compatibility; default features rely 100%
 	// on the arguments being HTML elements to work properly
-	MediaElementPlayer.prototype.buildfeatures = function (player, controls, layers, media) {
+	MediaElementPlayer.prototype.buildfeatures = function ( player, controls, layers, media ) {
 		var defaultFeatures = [
 			'playpause',
 			'current',
@@ -64,15 +71,16 @@
 				try {
 					// Use jQuery for non-default features
 					if (defaultFeatures.indexOf(feature) === -1) {
-						this['build' + feature](player, $(controls), $(layers), media);
+						this['build' + feature]( player, $(controls), $(layers), media );
 					} else {
-						this['build' + feature](player, controls, layers, media);
+						this['build' + feature]( player, controls, layers, media );
 					}
 
 				} catch (e) {
-					console.error('error building ' + feature, e);
+					console.error( 'error building ' + feature, e );
 				}
 			}
 		}
 	};
-})(window, jQuery);
+
+})( window, jQuery );
