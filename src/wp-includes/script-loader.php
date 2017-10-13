@@ -445,6 +445,7 @@ function wp_default_scripts( &$scripts ) {
 
 
 	$scripts->add( 'mediaelement-vimeo', "/wp-includes/js/mediaelement/renderers/vimeo.min.js", array('mediaelement'), '4.2.6-37c0f9d', 1 );
+	$scripts->add( 'mediaelement-migrate', "/wp-includes/js/mediaelement/mediaelement-migrate$suffix.js", array('mediaelement'), false, 1);
 	$scripts->add( 'wp-mediaelement', "/wp-includes/js/mediaelement/wp-mediaelement$suffix.js", array('mediaelement'), false, 1 );
 	$mejs_settings = array(
 		'pluginPath'    => includes_url( 'js/mediaelement/', 'relative' ),

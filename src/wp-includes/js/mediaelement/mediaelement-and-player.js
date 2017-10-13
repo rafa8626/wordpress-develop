@@ -4488,7 +4488,7 @@ var MediaElementPlayer = function () {
 			var isIframe = _window2.default.self !== _window2.default.top && _window2.default.frameElement !== null;
 			var parent = function () {
 				var parentEl = void 0,
-				    el = t.container;
+				    el = t.getElement(t.container);
 
 				while (el) {
 					try {
@@ -4600,7 +4600,7 @@ var MediaElementPlayer = function () {
 		value: function setControlsSize() {
 			var t = this;
 
-			if (!dom.visible(t.container)) {
+			if (!dom.visible(t.getElement(t.container))) {
 				return;
 			}
 
@@ -4700,7 +4700,7 @@ var MediaElementPlayer = function () {
 		value: function setPoster(url) {
 			var t = this;
 
-			if (t.container) {
+			if (t.getElement(t.container)) {
 				var posterDiv = t.getElement(t.container).querySelector('.' + t.options.classPrefix + 'poster');
 
 				if (!posterDiv) {
@@ -5216,7 +5216,7 @@ var MediaElementPlayer = function () {
 
 			delete _mejs2.default.players[t.id];
 
-			if (_typeof(t.container) === 'object') {
+			if (_typeof(t.getElement(t.container)) === 'object') {
 				var offscreen = t.getElement(t.container).parentNode.querySelector('.' + t.options.classPrefix + 'offscreen');
 				offscreen.remove();
 				t.getElement(t.container).remove();
