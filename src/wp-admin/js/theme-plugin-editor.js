@@ -52,7 +52,7 @@ wp.themePluginEditor = (function( $ ) {
 
 		if ( component.warning.length > 0 ) {
 			$( 'body' ).addClass( 'modal-open' );
-			component.warning.find( '.file-editor-warning-dismiss' ).focus();
+			component.warning.find( '.file-editor-warning-go-back' ).focus();
 			component.warning.on( 'click', '.file-editor-warning-dismiss', component.dismissWarning );
 		}
 
@@ -376,8 +376,12 @@ wp.themePluginEditor = (function( $ ) {
 		} );
 
 		// Scroll the current file into view.
-		$templateside.find( '.current-file' ).each( function() {
-			this.scrollIntoView( false );
+		$templateside.find( '.current-file:first' ).each( function() {
+			if ( this.scrollIntoViewIfNeeded ) {
+				this.scrollIntoViewIfNeeded();
+			} else {
+				this.scrollIntoView( false );
+			}
 		} );
 	};
 
