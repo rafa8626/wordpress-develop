@@ -529,10 +529,11 @@ final class WP_Customize_Nav_Menus {
 	 * @since 4.3.0
 	 */
 	public function customize_register() {
+		$changeset = $this->manager->unsanitized_post_values();
 
 		// Preview settings for nav menus early so that the sections and controls will be added properly.
 		$nav_menus_setting_ids = array();
-		foreach ( array_keys( $this->manager->unsanitized_post_values() ) as $setting_id ) {
+		foreach ( array_keys( $changeset ) as $setting_id ) {
 			if ( preg_match( '/^(nav_menu_locations|nav_menu|nav_menu_item)\[/', $setting_id ) ) {
 				$nav_menus_setting_ids[] = $setting_id;
 			}
@@ -627,7 +628,7 @@ final class WP_Customize_Nav_Menus {
 			}
 
 			// Override the assigned nav menu location if mapped during previewed theme switch.
-			if ( isset( $mapped_nav_menu_locations[ $location ] ) ) {
+			if ( empty( $changeset[ $setting_id ] ) && isset( $mapped_nav_menu_locations[ $location ] ) ) {
 				$this->manager->set_post_value( $setting_id, $mapped_nav_menu_locations[ $location ] );
 			}
 
@@ -794,6 +795,10 @@ final class WP_Customize_Nav_Menus {
 			return new WP_Error( 'status_forbidden', __( 'Status is forbidden' ) );
 		}
 
+		/*
+		 * If the changeset is a draft, this will change to draft the next time the changeset
+		 * is updated; otherwise, auto-draft will persist in autosave revisions, until save.
+		 */
 		$postarr['post_status'] = 'auto-draft';
 
 		// Auto-drafts are allowed to have empty post_names, so it has to be explicitly set.
@@ -804,6 +809,7 @@ final class WP_Customize_Nav_Menus {
 			$postarr['meta_input'] = array();
 		}
 		$postarr['meta_input']['_customize_draft_post_name'] = $postarr['post_name'];
+		$postarr['meta_input']['_customize_changeset_uuid'] = $this->manager->changeset_uuid();
 		unset( $postarr['post_name'] );
 
 		add_filter( 'wp_insert_post_empty_content', '__return_false', 1000 );
@@ -941,7 +947,7 @@ final class WP_Customize_Nav_Menus {
 		</script>
 
 		<script type="text/html" id="tmpl-nav-menu-submit-new-button">
-			<p id="customize-new-menu-submit-description"><?php _e( 'Click "next" to start adding links to your new menu.' ); ?></p>
+			<p id="customize-new-menu-submit-description"><?php _e( 'Click &#8220;Next&#8221; to start adding links to your new menu.' ); ?></p>
 			<button id="customize-new-menu-submit" type="button" class="button" aria-describedby="customize-new-menu-submit-description"><?php _e( 'Next' ); ?></button>
 		</script>
 
@@ -1172,7 +1178,7 @@ final class WP_Customize_Nav_Menus {
 	}
 
 	/**
-	 * Sanitize post IDs for auto-draft posts created for nav menu items to be published.
+	 * Sanitize post IDs for posts created for nav menu items to be published.
 	 *
 	 * @since 4.7.0
 	 *
@@ -1186,7 +1192,7 @@ final class WP_Customize_Nav_Menus {
 				continue;
 			}
 			$post = get_post( $post_id );
-			if ( 'auto-draft' !== $post->post_status ) {
+			if ( 'auto-draft' !== $post->post_status && 'draft' !== $post->post_status ) {
 				continue;
 			}
 			$post_type_obj = get_post_type_object( $post->post_type );
@@ -1217,6 +1223,13 @@ final class WP_Customize_Nav_Menus {
 		$post_ids = $setting->post_value();
 		if ( ! empty( $post_ids ) ) {
 			foreach ( $post_ids as $post_id ) {
+
+				// Prevent overriding the status that a user may have prematurely updated the post to.
+				$current_status = get_post_status( $post_id );
+				if ( 'auto-draft' !== $current_status && 'draft' !== $current_status ) {
+					continue;
+				}
+
 				$target_status = 'attachment' === get_post_type( $post_id ) ? 'inherit' : 'publish';
 				$args = array(
 					'ID' => $post_id,
