@@ -1175,6 +1175,20 @@ final class WP_Customize_Manager {
 
 		$changeset_data = array();
 		if ( $this->changeset_post_id() ) {
+			/*
+			 * Don't re-import starter content into a changeset saved persistently.
+			 * This will need to be revisited in the future once theme switching
+			 * is allowed with drafted/scheduled changesets, since switching to
+			 * another theme could result in more starter content being applied.
+			 * However, when doing an explicit save it is currently possible for
+			 * nav menus and nav menu items specifically to lose their starter_content
+			 * flags, thus resulting in duplicates being created since they fail
+			 * to get re-used. See #40146.
+			 */
+			if ( 'auto-draft' !== get_post_status( $this->changeset_post_id() ) ) {
+				return;
+			}
+
 			$changeset_data = $this->get_changeset_post_data( $this->changeset_post_id() );
 		}
 
@@ -4111,6 +4125,18 @@ final class WP_Customize_Manager {
 			</li>
 		</script>
 
+		<script type="text/html" id="tmpl-customize-code-editor-lint-error-notification">
+			<li class="notice notice-{{ data.type || 'info' }} {{ data.alt ? 'notice-alt' : '' }} {{ data.dismissible ? 'is-dismissible' : '' }} {{ data.containerClasses || '' }}" data-code="{{ data.code }}" data-type="{{ data.type }}">
+				<div class="notification-message">{{{ data.message || data.code }}}</div>
+
+				<p>
+					<# var elementId = 'el-' + String( Math.random() ); #>
+					<input id="{{ elementId }}" type="checkbox">
+					<label for="{{ elementId }}"><?php _e( 'Update anyway, even though it might break your site?' ); ?></label>
+				</p>
+			</li>
+		</script>
+
 		<?php
 		/* The following template is obsolete in core but retained for plugins. */
 		?>
@@ -4569,10 +4595,14 @@ final class WP_Customize_Manager {
 			$changeset_post = get_post( $changeset_post_id );
 		}
 
-		if ( $this->changeset_post_id() && 'future' === get_post_status( $this->changeset_post_id() ) ) {
-			$initial_date = get_the_time( 'Y-m-d H:i:s', $this->changeset_post_id() );
-		} else {
-			$initial_date = current_time( 'mysql', false );
+		// Determine initial date to be at present or future, not past.
+		$current_time = current_time( 'mysql', false );
+		$initial_date = $current_time;
+		if ( $changeset_post ) {
+			$initial_date = get_the_time( 'Y-m-d H:i:s', $changeset_post->ID );
+			if ( $initial_date < $current_time ) {
+				$initial_date = $current_time;
+			}
 		}
 
 		$lock_user_id = false;
@@ -4593,7 +4623,7 @@ final class WP_Customize_Manager {
 				'statusChoices' => $status_choices,
 				'lockUser' => $lock_user_id ? $this->get_lock_user_data( $lock_user_id ) : null,
 			),
-			'initialServerDate' => current_time( 'mysql', false ),
+			'initialServerDate' => $current_time,
 			'dateFormat' => get_option( 'date_format' ),
 			'timeFormat' => get_option( 'time_format' ),
 			'initialServerTimestamp' => floor( microtime( true ) * 1000 ),
@@ -5428,7 +5458,12 @@ final class WP_Customize_Manager {
 				$theme->id           = $theme->slug;
 				$theme->screenshot   = array( $theme->screenshot_url );
 				$theme->authorAndUri = $theme->author;
-				$theme->parent       = ( $theme->slug === $theme->template ) ? false : $theme->template; // The .org API does not seem to return the parent in a documented way; however, this check should yield a similar result in most cases.
+				// The .org API can return the full parent theme details if passed the 'parent' arg, or if passed the 'template' option it'll return that in the event it's a child theme.
+				if ( isset( $theme->parent ) ) {
+					$theme->parent = $theme->parent['slug'];
+				} else {
+					$theme->parent = false;
+				}
 				unset( $theme->slug );
 				unset( $theme->screenshot_url );
 				unset( $theme->author );

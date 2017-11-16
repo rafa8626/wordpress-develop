@@ -1867,6 +1867,9 @@
 				// Search terms.
 				debounced = _.debounce( section.checkTerm, 500 ); // Wait until there is no input for 500 milliseconds to initiate a search.
 				section.contentContainer.on( 'input', '.wp-filter-search', function() {
+					if ( ! api.panel( 'themes' ).expanded() ) {
+						return;
+					}
 					debounced( section );
 					if ( ! section.expanded() ) {
 						section.expand();
@@ -2549,11 +2552,24 @@
 		 * @returns {void}
 		 */
 		showDetails: function ( theme, callback ) {
-			var section = this;
+			var section = this, panel = api.panel( 'themes' );
 			section.currentTheme = theme.id;
 			section.overlay.html( section.template( theme ) )
 				.fadeIn( 'fast' )
 				.focus();
+
+			function disableSwitchButtons() {
+				return ! panel.canSwitchTheme( theme.id );
+			}
+
+			// Temporary special function since supplying SFTP credentials does not work yet. See #42184.
+			function disableInstallButtons() {
+				return disableSwitchButtons() || true === api.settings.theme._filesystemCredentialsNeeded;
+			}
+
+			section.overlay.find( 'button.preview, button.preview-theme' ).toggleClass( 'disabled', disableSwitchButtons() );
+			section.overlay.find( 'button.theme-install' ).toggleClass( 'disabled', disableInstallButtons() );
+
 			section.$body.addClass( 'modal-open' );
 			section.containFocus( section.overlay );
 			section.updateLimits();
@@ -3031,6 +3047,21 @@
 		},
 
 		/**
+		 * Determine whether a given theme can be switched to, or in general.
+		 *
+		 * @since 4.9.0
+		 *
+		 * @param {string} [slug] - Theme slug.
+		 * @returns {boolean} Whether the theme can be switched to.
+		 */
+		canSwitchTheme: function canSwitchTheme( slug ) {
+			if ( slug && slug === api.settings.theme.stylesheet ) {
+				return true;
+			}
+			return 'publish' === api.state( 'selectedChangesetStatus' ).get() && ( '' === api.state( 'changesetStatus' ).get() || 'auto-draft' === api.state( 'changesetStatus' ).get() );
+		},
+
+		/**
 		 * Attach events.
 		 *
 		 * @since 4.9.0
@@ -3052,7 +3083,7 @@
 			}
 
 			function toggleDisabledNotifications() {
-				if ( 'publish' === api.state( 'selectedChangesetStatus' ).get() ) {
+				if ( panel.canSwitchTheme() ) {
 					panel.notifications.remove( 'theme_switch_unavailable' );
 				} else {
 					panel.notifications.add( new api.Notification( 'theme_switch_unavailable', {
@@ -3063,6 +3094,7 @@
 			}
 			toggleDisabledNotifications();
 			api.state( 'selectedChangesetStatus' ).bind( toggleDisabledNotifications );
+			api.state( 'changesetStatus' ).bind( toggleDisabledNotifications );
 
 			// Collapse panel to customize the current theme.
 			panel.contentContainer.on( 'click', '.customize-theme', function() {
@@ -3173,7 +3205,7 @@
 			}
 
 			// Prevent loading a non-active theme preview when there is a drafted/scheduled changeset.
-			if ( 'publish' !== api.state( 'selectedChangesetStatus' ).get() && slug !== api.settings.theme.stylesheet ) {
+			if ( ! panel.canSwitchTheme( slug ) ) {
 				deferred.reject({
 					errorCode: 'theme_switch_unavailable'
 				});
@@ -3266,11 +3298,14 @@
 		 * @returns {jQuery.promise} Promise.
 		 */
 		loadThemePreview: function( themeId ) {
-			var deferred = $.Deferred(), onceProcessingComplete, urlParser, queryParams;
+			var panel = this, deferred = $.Deferred(), onceProcessingComplete, urlParser, queryParams;
 
 			// Prevent loading a non-active theme preview when there is a drafted/scheduled changeset.
-			if ( 'publish' !== api.state( 'selectedChangesetStatus' ).get() && themeId !== api.settings.theme.stylesheet ) {
-				return deferred.reject().promise();
+			if ( ! panel.canSwitchTheme( themeId ) ) {
+				deferred.reject({
+					errorCode: 'theme_switch_unavailable'
+				});
+				return deferred.promise();
 			}
 
 			urlParser = document.createElement( 'a' );
@@ -5089,25 +5124,23 @@
 		 * @since 4.2.0
 		 */
 		ready: function() {
-			var control = this;
+			var control = this, panel = api.panel( 'themes' );
 
 			function disableSwitchButtons() {
-				return 'publish' !== api.state( 'selectedChangesetStatus' ).get() && control.params.theme.id !== api.settings.theme.stylesheet;
+				return ! panel.canSwitchTheme( control.params.theme.id );
 			}
 
 			// Temporary special function since supplying SFTP credentials does not work yet. See #42184.
 			function disableInstallButtons() {
 				return disableSwitchButtons() || true === api.settings.theme._filesystemCredentialsNeeded;
 			}
-			function updateButtons( container ) {
-				var _container = container || control.container;
-				_container.find( 'button.preview, button.preview-theme' ).toggleClass( 'disabled', disableSwitchButtons() );
-				_container.find( 'button.theme-install' ).toggleClass( 'disabled', disableInstallButtons() );
+			function updateButtons() {
+				control.container.find( 'button.preview, button.preview-theme' ).toggleClass( 'disabled', disableSwitchButtons() );
+				control.container.find( 'button.theme-install' ).toggleClass( 'disabled', disableInstallButtons() );
 			}
 
-			api.state( 'selectedChangesetStatus' ).bind( function() {
-				updateButtons();
-			});
+			api.state( 'selectedChangesetStatus' ).bind( updateButtons );
+			api.state( 'changesetStatus' ).bind( updateButtons );
 			updateButtons();
 
 			control.container.on( 'touchmove', '.theme', function() {
@@ -5134,7 +5167,6 @@
 				event.preventDefault(); // Keep this AFTER the key filter above
 				section = api.section( control.section() );
 				section.showDetails( control.params.theme, function() {
-					updateButtons( section.overlay.find( '.theme-actions' ) );
 
 					// Temporary special function since supplying SFTP credentials does not work yet. See #42184.
 					if ( api.settings.theme._filesystemCredentialsNeeded ) {
@@ -5251,6 +5283,27 @@
 				codemirror: $.Deferred()
 			} );
 			api.Control.prototype.initialize.call( control, id, options );
+
+			// Note that rendering is debounced so the props will be used when rendering happens after add event.
+			control.notifications.bind( 'add', function( notification ) {
+
+				// Skip if control notification is not from setting csslint_error notification.
+				if ( notification.code !== control.setting.id + ':csslint_error' ) {
+					return;
+				}
+
+				// Customize the template and behavior of csslint_error notifications.
+				notification.templateId = 'customize-code-editor-lint-error-notification';
+				notification.render = (function( render ) {
+					return function() {
+						var li = render.call( this );
+						li.find( 'input[type=checkbox]' ).on( 'click', function() {
+							control.setting.notifications.remove( 'csslint_error' );
+						} );
+						return li;
+					};
+				})( notification.render );
+			} );
 		},
 
 		/**
@@ -5577,6 +5630,13 @@
 						control.notifications.remove( 'invalid_date' );
 					}
 				} ) );
+
+				// Add zero-padding when blurring field.
+				input.on( 'blur', _.debounce( function() {
+					if ( ! control.invalidDate ) {
+						control.populateDateInputs();
+					}
+				} ) );
 			} );
 
 			control.inputElements.month.bind( control.updateDaysForMonth );
@@ -5822,8 +5882,27 @@
 			}
 
 			_.each( control.inputElements, function( element, component ) {
-				if ( 'meridian' === component || parseInt( parsed[ component ], 10 ) !== parseInt( element(), 10 ) ) {
-					element.set( parsed[ component ] );
+				var value = parsed[ component ]; // This will be zero-padded string.
+
+				// Set month and meridian regardless of focused state since they are dropdowns.
+				if ( 'month' === component || 'meridian' === component ) {
+
+					// Options in dropdowns are not zero-padded.
+					value = value.replace( /^0/, '' );
+
+					element.set( value );
+				} else {
+
+					value = parseInt( value, 10 );
+					if ( ! element.element.is( document.activeElement ) ) {
+
+						// Populate element with zero-padded value if not focused.
+						element.set( parsed[ component ] );
+					} else if ( value !== parseInt( element(), 10 ) ) {
+
+						// Forcibly update the value if its underlying value changed, regardless of zero-padding.
+						element.set( String( value ) );
+					}
 				}
 			} );
 
@@ -7723,9 +7802,6 @@
 				if ( ! api.state( 'activated' ).get() ) {
 					params.customize_theme = api.settings.theme.stylesheet;
 				}
-				if ( api.settings.changeset.autosaved || ! api.state( 'saved' ).get() ) {
-					params.customize_autosaved = 'on';
-				}
 
 				urlParser.search = $.param( params );
 				return urlParser.href;
@@ -8196,6 +8272,7 @@
 
 		// Set up initial notifications.
 		(function() {
+			var removedQueryParams = [], autosaveDismissed = false;
 
 			/**
 			 * Obtain the URL to restore the autosave.
@@ -8242,6 +8319,25 @@
 			}
 
 			/**
+			 * Dismiss autosave.
+			 *
+			 * @returns {void}
+			 */
+			function dismissAutosave() {
+				if ( autosaveDismissed ) {
+					return;
+				}
+				wp.ajax.post( 'customize_dismiss_autosave_or_lock', {
+					wp_customize: 'on',
+					customize_theme: api.settings.theme.stylesheet,
+					customize_changeset_uuid: api.settings.changeset.uuid,
+					nonce: api.settings.nonce.dismiss_autosave_or_lock,
+					dismiss_autosave: true
+				} );
+				autosaveDismissed = true;
+			}
+
+			/**
 			 * Add notification regarding the availability of an autosave to restore.
 			 *
 			 * @returns {void}
@@ -8266,15 +8362,7 @@
 						} );
 
 						// Handle dismissal of notice.
-						li.find( '.notice-dismiss' ).on( 'click', function() {
-							wp.ajax.post( 'customize_dismiss_autosave_or_lock', {
-								wp_customize: 'on',
-								customize_theme: api.settings.theme.stylesheet,
-								customize_changeset_uuid: api.settings.changeset.uuid,
-								nonce: api.settings.nonce.dismiss_autosave_or_lock,
-								dismiss_autosave: true
-							} );
-						} );
+						li.find( '.notice-dismiss' ).on( 'click', dismissAutosave );
 
 						return li;
 					}
@@ -8282,6 +8370,7 @@
 
 				// Remove the notification once the user starts making changes.
 				onStateChange = function() {
+					dismissAutosave();
 					api.notifications.remove( code );
 					api.unbind( 'change', onStateChange );
 					api.state( 'changesetStatus' ).unbind( onStateChange );
@@ -8292,9 +8381,13 @@
 
 			if ( api.settings.changeset.autosaved ) {
 				api.state( 'saved' ).set( false );
-				stripParamsFromLocation( [ 'customize_autosaved' ] ); // Remove param when restoring autosave revision.
-			} else if ( ! api.settings.changeset.branching && 'auto-draft' === api.settings.changeset.status ) {
-				stripParamsFromLocation( [ 'changeset_uuid' ] ); // Remove UUID when restoring autosave auto-draft.
+				removedQueryParams.push( 'customize_autosaved' );
+			}
+			if ( ! api.settings.changeset.branching && ( ! api.settings.changeset.status || 'auto-draft' === api.settings.changeset.status ) ) {
+				removedQueryParams.push( 'changeset_uuid' ); // Remove UUID when restoring autosave auto-draft.
+			}
+			if ( removedQueryParams.length > 0 ) {
+				stripParamsFromLocation( removedQueryParams );
 			}
 			if ( api.settings.changeset.latestAutoDraftUuid || api.settings.changeset.hasAutosaveRevision ) {
 				addAutosaveRestoreNotification();
@@ -9134,12 +9227,14 @@
 
 			api.unbind( 'change', startAutosaving ); // Ensure startAutosaving only fires once.
 
-			api.state( 'saved' ).bind( function( isSaved ) {
+			function onChangeSaved( isSaved ) {
 				if ( ! isSaved && ! api.settings.changeset.autosaved ) {
 					api.settings.changeset.autosaved = true; // Once a change is made then autosaving kicks in.
 					api.previewer.send( 'autosaving' );
 				}
-			} );
+			}
+			api.state( 'saved' ).bind( onChangeSaved );
+			onChangeSaved( api.state( 'saved' ).get() );
 
 			/**
 			 * Request changeset update and then re-schedule the next changeset update time.
