@@ -884,7 +884,7 @@ function upgrade_160() {
 			$wpdb->update( $wpdb->posts, array(	'post_status' => 'attachment',
 												'post_mime_type' => $object->post_type,
 												'post_type' => ''),
-										 array( 'ID' => $object->ID ) );
+										array( 'ID' => $object->ID ) );
 
 			$meta = get_post_meta($object->ID, 'imagedata', true);
 			if ( ! empty($meta['file']) )
@@ -2248,8 +2248,9 @@ function dbDelta( $queries = '', $execute = true ) {
 					 */
 
 					// Extract type, name and columns from the definition.
+					// phpcs:disable Squiz.Strings.ConcatenationSpacing.PaddingFound -- don't remove regex indentation
 					preg_match(
-						  '/^'
+						'/^'
 						.   '(?P<index_type>'             // 1) Type of the index.
 						.       'PRIMARY\s+KEY|(?:UNIQUE|FULLTEXT|SPATIAL)\s+(?:KEY|INDEX)|KEY|INDEX'
 						.   ')'
@@ -2271,6 +2272,7 @@ function dbDelta( $queries = '', $execute = true ) {
 						$fld,
 						$index_matches
 					);
+					// phpcs:enable
 
 					// Uppercase the index type and normalize space characters.
 					$index_type = strtoupper( preg_replace( '/\s+/', ' ', trim( $index_matches['index_type'] ) ) );
@@ -2288,7 +2290,7 @@ function dbDelta( $queries = '', $execute = true ) {
 					foreach ( $index_columns as $id => &$index_column ) {
 						// Extract column name and number of indexed characters (sub_part).
 						preg_match(
-							  '/'
+							'/'
 							.   '`?'                      // Name can be escaped with a backtick.
 							.       '(?P<column_name>'    // 1) Name of the column.
 							.           '(?:[0-9a-zA-Z$_-]|[\xC2-\xDF][\x80-\xBF])+'

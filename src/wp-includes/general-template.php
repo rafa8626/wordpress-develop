@@ -703,7 +703,7 @@ function get_bloginfo( $show = '', $filter = 'raw' ) {
 			 */
 			$output = __( 'html_lang_attribute' );
 			if ( 'html_lang_attribute' === $output || preg_match( '/[^a-zA-Z0-9-]/', $output ) ) {
-				$output = get_locale();
+				$output = is_admin() ? get_user_locale() : get_locale();
 				$output = str_replace( '_', '-', $output );
 			}
 			break;
@@ -2948,8 +2948,8 @@ function wp_resource_hints() {
 
 			foreach ( $atts as $attr => $value ) {
 				if ( ! is_scalar( $value ) ||
-				     ( ! in_array( $attr, array( 'as', 'crossorigin', 'href', 'pr', 'rel', 'type' ), true ) && ! is_numeric( $attr ))
-				) {
+					( ! in_array( $attr, array( 'as', 'crossorigin', 'href', 'pr', 'rel', 'type' ), true ) && ! is_numeric( $attr )) ) {
+
 					continue;
 				}
 

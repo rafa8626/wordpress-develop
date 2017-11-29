@@ -414,8 +414,7 @@ function wp_edit_theme_plugin_file( $args ) {
 			return new WP_Error( 'non_existent_theme', __( 'The requested theme does not exist.' ) );
 		}
 
-		$real_file = $theme->get_stylesheet_directory() . '/' . $file;
-		if ( ! wp_verify_nonce( $args['nonce'], 'edit-theme_' . $real_file . $stylesheet ) ) {
+		if ( ! wp_verify_nonce( $args['nonce'], 'edit-theme_' . $stylesheet . '_' . $file ) ) {
 			return new WP_Error( 'nonce_failure' );
 		}
 
@@ -445,11 +444,15 @@ function wp_edit_theme_plugin_file( $args ) {
 			}
 		}
 
-		if ( 0 !== validate_file( $real_file, $allowed_files ) ) {
+		// Compare based on relative paths
+		if ( 0 !== validate_file( $file, array_keys( $allowed_files ) ) ) {
 			return new WP_Error( 'disallowed_theme_file', __( 'Sorry, that file cannot be edited.' ) );
 		}
 
+		$real_file = $theme->get_stylesheet_directory() . '/' . $file;
+
 		$is_active = ( get_stylesheet() === $stylesheet || get_template() === $stylesheet );
+
 	} else {
 		return new WP_Error( 'missing_theme_or_plugin' );
 	}
@@ -624,7 +627,7 @@ function wp_tempnam( $filename = '', $dir = '' ) {
 	}
 
 	if ( empty( $filename ) || '.' == $filename || '/' == $filename || '\\' == $filename ) {
-		$filename = time();
+		$filename = uniqid();
 	}
 
 	// Use the basename of the given file without the extension as the name for the temporary directory
@@ -1466,7 +1469,7 @@ function get_filesystem_method( $args = array(), $context = '', $allow_relaxed_f
 
 	if ( ! $method ) {
 
-		$temp_file_name = $context . 'temp-write-test-' . time();
+		$temp_file_name = $context . 'temp-write-test-' . str_replace( '.', '-', uniqid( '', true ) );
 		$temp_handle = @fopen($temp_file_name, 'w');
 		if ( $temp_handle ) {
 
@@ -1702,6 +1705,11 @@ echo "<$heading_tag id='request-filesystem-credentials-title'>" . __( 'Connectio
 		echo ' ';
 	}
 	_e('If you do not remember your credentials, you should contact your web host.');
+
+	$password_value = '';
+	if ( defined('FTP_PASS') ) {
+		$password_value = '*****';
+	}
 ?></p>
 <label for="hostname">
 	<span class="field-title"><?php _e( 'Hostname' ) ?></span>
@@ -1716,7 +1724,7 @@ echo "<$heading_tag id='request-filesystem-credentials-title'>" . __( 'Connectio
 <div class="ftp-password">
 	<label for="password">
 		<span class="field-title"><?php echo $label_pass; ?></span>
-		<input name="password" type="password" id="password" value="<?php if ( defined('FTP_PASS') ) echo '*****'; ?>"<?php disabled( defined('FTP_PASS') ); ?> />
+		<input name="password" type="password" id="password" value="<?php echo $password_value; ?>"<?php disabled( defined('FTP_PASS') ); ?> />
 		<em><?php if ( ! defined('FTP_PASS') ) _e( 'This password will not be stored on the server.' ); ?></em>
 	</label>
 </div>

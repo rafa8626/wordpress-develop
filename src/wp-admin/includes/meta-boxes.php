@@ -37,8 +37,14 @@ function post_submit_meta_box( $post, $args = array() ) {
 
 <div id="minor-publishing-actions">
 <div id="save-action">
-<?php if ( 'publish' != $post->post_status && 'future' != $post->post_status && 'pending' != $post->post_status ) { ?>
-<input <?php if ( 'private' == $post->post_status ) { ?>style="display:none"<?php } ?> type="submit" name="save" id="save-post" value="<?php esc_attr_e('Save Draft'); ?>" class="button" />
+<?php
+	if ( 'publish' != $post->post_status && 'future' != $post->post_status && 'pending' != $post->post_status ) {
+		$private_style = '';
+		if ( 'private' == $post->post_status ) {
+			$private_style = 'style="display:none"';
+		}
+?>
+<input <?php echo $private_style; ?> type="submit" name="save" id="save-post" value="<?php esc_attr_e('Save Draft'); ?>" class="button" />
 <span class="spinner"></span>
 <?php } elseif ( 'pending' == $post->post_status && $can_publish ) { ?>
 <input type="submit" name="save" id="save-post" value="<?php esc_attr_e('Save as Pending'); ?>" class="button" />
@@ -103,8 +109,14 @@ switch ( $post->post_status ) {
 }
 ?>
 </span>
-<?php if ( 'publish' == $post->post_status || 'private' == $post->post_status || $can_publish ) { ?>
-<a href="#post_status" <?php if ( 'private' == $post->post_status ) { ?>style="display:none;" <?php } ?>class="edit-post-status hide-if-no-js" role="button"><span aria-hidden="true"><?php _e( 'Edit' ); ?></span> <span class="screen-reader-text"><?php _e( 'Edit status' ); ?></span></a>
+<?php
+	if ( 'publish' == $post->post_status || 'private' == $post->post_status || $can_publish ) {
+		$private_style = '';
+		if ( 'private' == $post->post_status ) {
+			$private_style = 'style="display:none"';
+		}
+?>
+<a href="#post_status" <?php echo $private_style; ?> class="edit-post-status hide-if-no-js" role="button"><span aria-hidden="true"><?php _e( 'Edit' ); ?></span> <span class="screen-reader-text"><?php _e( 'Edit status' ); ?></span></a>
 
 <div id="post-status-select" class="hide-if-js">
 <input type="hidden" name="hidden_post_status" id="hidden_post_status" value="<?php echo esc_attr( ('auto-draft' == $post->post_status ) ? 'draft' : $post->post_status); ?>" />
@@ -124,8 +136,8 @@ switch ( $post->post_status ) {
 <option<?php selected( $post->post_status, 'draft' ); ?> value='draft'><?php _e('Draft') ?></option>
 <?php endif; ?>
 </select>
- <a href="#post_status" class="save-post-status hide-if-no-js button"><?php _e('OK'); ?></a>
- <a href="#post_status" class="cancel-post-status hide-if-no-js button-cancel"><?php _e('Cancel'); ?></a>
+<a href="#post_status" class="save-post-status hide-if-no-js button"><?php _e('OK'); ?></a>
+<a href="#post_status" class="cancel-post-status hide-if-no-js button-cancel"><?php _e('Cancel'); ?></a>
 </div>
 
 <?php } ?>
@@ -168,8 +180,8 @@ echo esc_html( $visibility_trans ); ?></span>
 <input type="radio" name="visibility" id="visibility-radio-private" value="private" <?php checked( $visibility, 'private' ); ?> /> <label for="visibility-radio-private" class="selectit"><?php _e('Private'); ?></label><br />
 
 <p>
- <a href="#visibility" class="save-post-visibility hide-if-no-js button"><?php _e('OK'); ?></a>
- <a href="#visibility" class="cancel-post-visibility hide-if-no-js button-cancel"><?php _e('Cancel'); ?></a>
+	<a href="#visibility" class="save-post-visibility hide-if-no-js button"><?php _e('OK'); ?></a>
+	<a href="#visibility" class="cancel-post-visibility hide-if-no-js button-cancel"><?php _e('Cancel'); ?></a>
 </p>
 </div>
 <?php } ?>
